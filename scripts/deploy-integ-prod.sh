@@ -67,7 +67,6 @@ install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root/releases"
 chown -R "$runtime_user:$shared_group" "$remote_data" "$remote_root"
 chmod -R g+rwX "$remote_data" "$remote_root"
 find "$remote_data" "$remote_root" -type d -exec chmod g+s {} +
-find "$remote_data" -type f -exec chmod 0660 {} +
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$release_dir"
 install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc-server" "$release_dir/edc-server"
 install -m 0644 "$stage_dir/$service.service" "/etc/systemd/system/$service.service"
