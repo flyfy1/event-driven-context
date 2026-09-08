@@ -214,7 +214,7 @@ make build
 
 测试覆盖真实 CLI 子进程与 stdio MCP 子进程、官方 MCP HTTP 客户端、旧协议版本协商、跨用户共享、跨项目访问拒绝、伪造作者拒绝、自由 metadata 及大整数无损、文件字节往返、幂等并发重试、分页快照、SQLite 重开后的持久化、事务失败回滚、数据库追加约束和令牌吊销。
 
-服务默认仅绑定 loopback。公开部署时需配置 HTTPS 入口；浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。没有启用跨域浏览器 CORS。应用限制认证并发与全局速率，公网入口仍应按客户端限制滥用。
+服务默认仅绑定 loopback。公开部署时需配置 HTTPS 入口；浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单。本生产部署允许 `https://context.integ.life` 访问 API。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。应用限制认证并发与全局速率，公网入口仍应按客户端限制滥用。
 
 数据库单连接、文件 BLOB 存 SQLite，适合第一版的小团队使用。备份请使用 SQLite 一致性备份方式，或停服务后复制数据库；运行时不要只复制 WAL 模式的主文件。
 
