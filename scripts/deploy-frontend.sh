@@ -13,7 +13,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 git clone --quiet --branch gh-pages "git@github.com:${REPOSITORY}.git" "$TEMP_DIR/site"
-rsync -a --delete --exclude '.DS_Store' frontend/ "$TEMP_DIR/site/"
+rsync -a --delete --exclude '.git' --exclude '.DS_Store' frontend/ "$TEMP_DIR/site/"
 git -C "$TEMP_DIR/site" add --all
 if git -C "$TEMP_DIR/site" diff --cached --quiet; then
   echo "Frontend already published"
