@@ -16,8 +16,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -31,9 +31,11 @@ var schema string
 type Store struct {
 	db        *sql.DB
 	dummyHash []byte
+	dataDir   string
+	mu        sync.Mutex
 }
 
-func Open(path string) (*Store, error) {
+func Open(path string, dataPaths ...string) (*Store, error) {
 	if path != ":memory:" {
 		abs, err := filepath.Abs(path)
 		if err != nil {
@@ -51,6 +53,20 @@ func Open(path string) (*Store, error) {
 			return nil, err
 		}
 		if err = os.Chmod(path, 0600); err != nil {
+			return nil, err
+		}
+	}
+	dataDir := filepath.Join(filepath.Dir(path), "data")
+	if len(dataPaths) > 0 && dataPaths[0] != "" {
+		dataDir = dataPaths[0]
+	}
+	if dataDir != ":memory:" {
+		abs, err := filepath.Abs(dataDir)
+		if err != nil {
+			return nil, err
+		}
+		dataDir = abs
+		if err := os.MkdirAll(dataDir, 0700); err != nil {
 			return nil, err
 		}
 	}
@@ -73,7 +89,12 @@ func Open(path string) (*Store, error) {
 		db.Close()
 		return nil, err
 	}
-	return &Store{db: db, dummyHash: hash}, nil
+	s := &Store{db: db, dummyHash: hash, dataDir: dataDir}
+	if err := s.migrateLegacyEventStorage(context.Background()); err != nil {
+		db.Close()
+		return nil, err
+	}
+	return s, nil
 }
 func (s *Store) Close() error    { return s.db.Close() }
 func newID(prefix string) string { return prefix + "_" + strings.ToLower(rand.Text()) }
@@ -369,297 +390,3 @@ func prepareRecord(in RecordInput) (RecordInput, []byte, error) {
 	}
 	return in, data, nil
 }
-
-func (s *Store) RecordEvent(ctx context.Context, in RecordInput) (Event, error) {
-	if err := s.requireMember(ctx, in.ProjectID); err != nil {
-		return Event{}, err
-	}
-	in, data, err := prepareRecord(in)
-	if err != nil {
-		return Event{}, err
-	}
-	b, _ := json.Marshal(in)
-	requestHash := digest(b)
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return Event{}, err
-	}
-	defer tx.Rollback()
-	if in.IdempotencyKey != "" {
-		var id, hash string
-		err = tx.QueryRowContext(ctx, "SELECT id,request_hash FROM events WHERE project_id=? AND actor_user_id=? AND idempotency_key=?", in.ProjectID, UserID(ctx), in.IdempotencyKey).Scan(&id, &hash)
-		if err == nil {
-			tx.Rollback()
-			if hash != requestHash {
-				return Event{}, ErrConflict
-			}
-			return s.GetEvent(ctx, EventRef{id})
-		}
-		if !errors.Is(err, sql.ErrNoRows) {
-			return Event{}, err
-		}
-	}
-	e := Event{ID: newID("evt"), ProjectID: in.ProjectID, ActorUserID: UserID(ctx), RecordedAt: now(), OccurredAt: in.OccurredAt, Content: Content{Kind: in.Content.Kind, Text: in.Content.Text}, Metadata: in.Metadata}
-	var fileID any
-	if in.Content.File != nil {
-		f := in.Content.File
-		info := FileInfo{newID("file"), f.Filename, f.MediaType, len(data), digest(data)}
-		e.Content.File = &info
-		fileID = info.ID
-		if _, err = tx.ExecContext(ctx, "INSERT INTO files VALUES(?,?,?,?,?,?,?)", info.ID, in.ProjectID, info.Filename, info.MediaType, info.SizeBytes, info.SHA256, data); err != nil {
-			return Event{}, err
-		}
-	}
-	meta, _ := json.Marshal(in.Metadata)
-	if _, err = tx.ExecContext(ctx, "INSERT INTO events(id,project_id,actor_user_id,recorded_at,occurred_at,text_content,file_id,metadata,idempotency_key,request_hash) VALUES(?,?,?,?,?,?,?,?,?,?)", e.ID, e.ProjectID, e.ActorUserID, e.RecordedAt, nullString(e.OccurredAt), in.Content.Text, fileID, string(meta), nullString(in.IdempotencyKey), requestHash); err != nil {
-		return Event{}, err
-	}
-	for k, v := range in.Metadata {
-		typ, val, err := canonical(v)
-		if err != nil {
-			return Event{}, err
-		}
-		if _, err = tx.ExecContext(ctx, "INSERT INTO event_metadata VALUES(?,?,?,?)", e.ID, k, typ, val); err != nil {
-			return Event{}, err
-		}
-	}
-	if err = tx.Commit(); err != nil {
-		return Event{}, err
-	}
-	return s.GetEvent(ctx, EventRef{e.ID})
-}
-func nullString(v string) any {
-	if v == "" {
-		return nil
-	}
-	return v
-}
-
-const eventSelect = `SELECT e.id,e.project_id,e.actor_user_id,u.username,e.recorded_at,e.occurred_at,e.text_content,e.metadata,f.id,f.filename,f.media_type,f.size_bytes,f.sha256 FROM events e JOIN users u ON u.id=e.actor_user_id LEFT JOIN files f ON f.id=e.file_id `
-
-type scanner interface{ Scan(...any) error }
-
-func scanEvent(row scanner) (Event, error) {
-	var e Event
-	var occurred, txt, fid, name, media, sha sql.NullString
-	var size sql.NullInt64
-	var meta string
-	err := row.Scan(&e.ID, &e.ProjectID, &e.ActorUserID, &e.ActorUsername, &e.RecordedAt, &occurred, &txt, &meta, &fid, &name, &media, &size, &sha)
-	if err != nil {
-		return e, err
-	}
-	e.OccurredAt = occurred.String
-	e.Content.Kind = "text"
-	if txt.Valid {
-		e.Content.Text = &txt.String
-	}
-	if fid.Valid {
-		e.Content.Kind = "file"
-		e.Content.File = &FileInfo{fid.String, name.String, media.String, int(size.Int64), sha.String}
-	}
-	err = json.Unmarshal([]byte(meta), &e.Metadata)
-	return e, err
-}
-func (s *Store) GetEvent(ctx context.Context, in EventRef) (Event, error) {
-	if UserID(ctx) == "" {
-		return Event{}, ErrUnauthenticated
-	}
-	e, err := scanEvent(s.db.QueryRowContext(ctx, eventSelect+"WHERE e.id=? AND EXISTS (SELECT 1 FROM members m WHERE m.project_id=e.project_id AND m.user_id=?)", in.EventID, UserID(ctx)))
-	if errors.Is(err, sql.ErrNoRows) {
-		return Event{}, ErrNotFound
-	}
-	return e, err
-}
-func (s *Store) GetFile(ctx context.Context, in FileRef) (FileResult, error) {
-	if UserID(ctx) == "" {
-		return FileResult{}, ErrUnauthenticated
-	}
-	var out FileResult
-	var data []byte
-	err := s.db.QueryRowContext(ctx, "SELECT f.id,f.filename,f.media_type,f.size_bytes,f.sha256,f.data FROM files f WHERE f.id=? AND EXISTS(SELECT 1 FROM members m WHERE m.project_id=f.project_id AND m.user_id=?)", in.FileID, UserID(ctx)).Scan(&out.File.ID, &out.File.Filename, &out.File.MediaType, &out.File.SizeBytes, &out.File.SHA256, &data)
-	if errors.Is(err, sql.ErrNoRows) {
-		return out, ErrNotFound
-	}
-	out.DataBase64 = base64.StdEncoding.EncodeToString(data)
-	return out, err
-}
-
-type eventCursor struct {
-	After     int64  `json:"after"`
-	Snapshot  int64  `json:"snapshot"`
-	QueryHash string `json:"query"`
-}
-
-func (s *Store) QueryEvents(ctx context.Context, in QueryInput) (Events, error) {
-	out := Events{Events: []Event{}}
-	if err := s.requireMember(ctx, in.ProjectID); err != nil {
-		return out, err
-	}
-	if in.Limit == 0 {
-		in.Limit = 50
-	}
-	if in.Limit < 1 || in.Limit > 100 {
-		return out, Invalid("limit must be 1-100")
-	}
-	if in.TimeField == "" {
-		in.TimeField = "recorded_at"
-	}
-	if in.TimeField != "recorded_at" && in.TimeField != "occurred_at" {
-		return out, Invalid("time_field must be recorded_at or occurred_at")
-	}
-	var err error
-	for _, p := range []*string{&in.From, &in.To} {
-		if *p != "" {
-			*p, err = normalizedTime(*p)
-			if err != nil {
-				return out, err
-			}
-		}
-	}
-	if in.From != "" && in.To != "" && in.From >= in.To {
-		return out, Invalid("from must be before to")
-	}
-	in.Metadata, err = normalizeMetadata(in.Metadata)
-	if err != nil {
-		return out, err
-	}
-	if len(in.MetadataExists) > 128 {
-		return out, Invalid("metadata_exists max 128 keys")
-	}
-	for _, k := range in.MetadataExists {
-		if len(k) == 0 || len(k) > 128 {
-			return out, Invalid("metadata key must be 1-128 bytes")
-		}
-	}
-	in.MetadataExists = append([]string(nil), in.MetadataExists...)
-	sort.Strings(in.MetadataExists)
-	rawCursor := in.Cursor
-	in.Cursor = ""
-	queryBytes, _ := json.Marshal(in)
-	queryHash := digest(queryBytes)
-	cur := eventCursor{QueryHash: queryHash}
-	if rawCursor != "" {
-		b, e := base64.RawURLEncoding.DecodeString(rawCursor)
-		if e != nil || len(b) > 1024 || json.Unmarshal(b, &cur) != nil || cur.QueryHash != queryHash || cur.After < 0 || cur.Snapshot < cur.After {
-			return out, Invalid("invalid cursor or changed query parameters")
-		}
-	} else if err = s.db.QueryRowContext(ctx, "SELECT COALESCE(MAX(seq),0) FROM events WHERE project_id=?", in.ProjectID).Scan(&cur.Snapshot); err != nil {
-		return out, err
-	}
-	where := "WHERE e.project_id=? AND e.seq>? AND e.seq<=?"
-	args := []any{in.ProjectID, cur.After, cur.Snapshot}
-	if in.From != "" {
-		where += " AND e." + in.TimeField + ">=?"
-		args = append(args, in.From)
-	}
-	if in.To != "" {
-		where += " AND e." + in.TimeField + "<?"
-		args = append(args, in.To)
-	}
-	for k, v := range in.Metadata {
-		typ, val, _ := canonical(v)
-		where += " AND EXISTS(SELECT 1 FROM event_metadata em WHERE em.event_id=e.id AND em.key=? AND em.type=? AND em.value=?)"
-		args = append(args, k, typ, val)
-	}
-	for _, k := range in.MetadataExists {
-		where += " AND EXISTS(SELECT 1 FROM event_metadata em WHERE em.event_id=e.id AND em.key=?)"
-		args = append(args, k)
-	}
-	args = append(args, in.Limit+1)
-	rows, err := s.db.QueryContext(ctx, eventSelect+where+" ORDER BY e.seq ASC LIMIT ?", args...)
-	if err != nil {
-		return out, err
-	}
-	pageBytes, hasMore := 0, false
-	for rows.Next() {
-		e, err := scanEvent(rows)
-		if err != nil {
-			rows.Close()
-			return out, err
-		}
-		encoded, err := json.Marshal(e)
-		if err != nil {
-			rows.Close()
-			return out, err
-		}
-		// limit is an upper bound. Bound page bytes too, while always allowing
-		// one complete event even if JSON escaping makes it exceed the budget.
-		if len(out.Events) == in.Limit || (len(out.Events) > 0 && pageBytes+len(encoded) > MaxQueryPageBytes) {
-			hasMore = true
-			break
-		}
-		pageBytes += len(encoded)
-		out.Events = append(out.Events, e)
-	}
-	err = rows.Err()
-	rows.Close()
-	if err != nil {
-		return out, err
-	}
-	if hasMore {
-		if err = s.db.QueryRowContext(ctx, "SELECT seq FROM events WHERE id=?", out.Events[len(out.Events)-1].ID).Scan(&cur.After); err != nil {
-			return out, err
-		}
-		b, _ := json.Marshal(cur)
-		out.NextCursor = base64.RawURLEncoding.EncodeToString(b)
-	}
-	return out, nil
-}
-func (s *Store) ListMetadata(ctx context.Context, in MetadataInput) (MetadataResult, error) {
-	out := MetadataResult{}
-	if err := s.requireMember(ctx, in.ProjectID); err != nil {
-		return out, err
-	}
-	if in.Limit == 0 {
-		in.Limit = 50
-	}
-	if in.Limit < 1 || in.Limit > 100 || in.Offset < 0 {
-		return out, Invalid("limit must be 1-100; offset must be nonnegative")
-	}
-	if in.Key != nil {
-		if len(*in.Key) == 0 || len(*in.Key) > 128 {
-			return out, Invalid("key must be 1-128 bytes")
-		}
-		rows, err := s.db.QueryContext(ctx, "SELECT em.value,COUNT(*) FROM event_metadata em JOIN events e ON e.id=em.event_id WHERE e.project_id=? AND em.key=? GROUP BY em.value ORDER BY em.value LIMIT ? OFFSET ?", in.ProjectID, *in.Key, in.Limit+1, in.Offset)
-		if err != nil {
-			return out, err
-		}
-		defer rows.Close()
-		for rows.Next() {
-			var v MetadataValue
-			var raw string
-			if err = rows.Scan(&raw, &v.EventCount); err != nil {
-				return out, err
-			}
-			v.Value = json.RawMessage(raw)
-			out.Values = append(out.Values, v)
-		}
-		if len(out.Values) > in.Limit {
-			out.HasMore = true
-			out.Values = out.Values[:in.Limit]
-		}
-		return out, rows.Err()
-	}
-	rows, err := s.db.QueryContext(ctx, "SELECT em.key,GROUP_CONCAT(DISTINCT em.type),COUNT(*) FROM event_metadata em JOIN events e ON e.id=em.event_id WHERE e.project_id=? GROUP BY em.key ORDER BY em.key LIMIT ? OFFSET ?", in.ProjectID, in.Limit+1, in.Offset)
-	if err != nil {
-		return out, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var f MetadataField
-		var types string
-		if err = rows.Scan(&f.Key, &types, &f.EventCount); err != nil {
-			return out, err
-		}
-		f.Types = strings.Split(types, ",")
-		sort.Strings(f.Types)
-		out.Fields = append(out.Fields, f)
-	}
-	if len(out.Fields) > in.Limit {
-		out.HasMore = true
-		out.Fields = out.Fields[:in.Limit]
-	}
-	return out, rows.Err()
-}
-
-var _ Backend = (*Store)(nil)

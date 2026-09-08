@@ -13,10 +13,10 @@ make build
 ./bin/edc-server
 ```
 
-默认监听 `127.0.0.1:8080`，数据库为 `data/context.db`。修改地址、数据库路径：
+默认监听 `127.0.0.1:8080`。SQLite 身份数据库为 `data/context.db`；event manifest 和原始文件写入 Git 忽略的 `data/`。修改地址、路径：
 
 ```sh
-./bin/edc-server -addr 127.0.0.1:8090 -db data/context.db
+./bin/edc-server -addr 127.0.0.1:8090 -db data/context.db -data data
 ./bin/edc --server http://127.0.0.1:8090 help
 ```
 
@@ -91,7 +91,7 @@ make build
 
 - **共享**：创建者添加成员；所有成员能读取全部历史事件、文件和 metadata，并以自己的身份追加。仅创建者能添加成员；其他项目默认不可访问。第一版不提供成员移除和项目删除。
 - **身份与时间**：`actor_user_id`、`actor_username`、`recorded_at` 是服务端输出，输入这些字段会被拒绝。`occurred_at` 是可选的用户声明时间，服务端保存为 UTC。不能把它当成可信审计时间。
-- **追加**：HTTP/MCP 无编辑、删除操作；SQLite trigger 同时禁止事件、文件、metadata 索引的 UPDATE/DELETE，包括 REPLACE 触发的删除。数据库管理员仍能修改 schema 或删除数据库文件，这不是防篡改账本。
+- **追加**：HTTP/MCP 无编辑、删除操作。每个 event 是项目目录内一个不可覆盖写入的 JSON manifest；原始上传文件使用独立的不可覆盖文件。SQLite 只保存用户、令牌、项目和成员授权，不保存 event、metadata 或文件字节。拥有服务器文件系统写入权限的管理员仍能篡改或删除文件，这不是防篡改账本。
 - **幂等**：`idempotency_key` 按「项目 + 作者」隔离；同键同输入返回原事件，不同输入返回冲突。metadata 对象键顺序和空白不影响比较。CLI 默认生成键；要跨命令重试，请显式传入同一个键。metadata 是识别标签，不承担唯一约束。
 - **文件**：一次 `record_event` 原子写入文件和事件。输入为 `content={kind:"file",file:{filename,media_type,data_base64}}`；输出替换为文件 ID、声明类型、文件名、大小与 SHA256。通过 `get_file` 读取原始字节。第一版接受 `text/*`，UTF-8、无 NUL，最多 1 MiB；非文本 MIME 返回明确错误。未来可在这个字节信封上开放新类型。不会根据扩展名静默决定类型，也不会加载调用者传来的服务器文件路径。
 - **限制**：直接文本最多 1 MiB；metadata 最多 32 KiB、128 个顶层字段，key 为 1–128 字节；HTTP 请求最多 2 MiB。不会静默截断。
@@ -199,11 +199,11 @@ go run ./cmd/edc-server -addr 127.0.0.1:8401 -db /tmp/event-context-dev.db \
 生产发布前先提交一个干净工作树，然后运行：
 
 ```sh
-make deploy-prod       # 编译 linux/amd64、上传 integ-prod、安装 systemd/Caddy
+make deploy-prod       # 编译 linux/amd64、上传 integ-prod、安装 systemd 服务
 make deploy-frontend   # 将 frontend/ 推送到 gh-pages
 ```
 
-服务运行于 integ-prod 的 `127.0.0.1:8401`，数据在 `/var/lib/event-driven-context/context.db`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。当前生产环境不运行 Caddy，因此 API 保持 loopback，不经 `context-api.integ.life` 公开暴露。
+服务运行于 integ-prod 的 `127.0.0.1:8401`。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；event manifest 与原始文件在 `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。当前生产环境不运行 Caddy，因此 API 保持 loopback，不经 `context-api.integ.life` 公开暴露。首次启动新版本会把旧 SQLite event/file 表导出为数据目录中的文件，再移除旧表。
 
 ### integ-prod 运维
 
@@ -227,11 +227,11 @@ make check
 make build
 ```
 
-测试覆盖真实 CLI 子进程与 stdio MCP 子进程、官方 MCP HTTP 客户端、旧协议版本协商、跨用户共享、跨项目访问拒绝、伪造作者拒绝、自由 metadata 及大整数无损、文件字节往返、幂等并发重试、分页快照、SQLite 重开后的持久化、事务失败回滚、数据库追加约束和令牌吊销。
+测试覆盖真实 CLI 子进程与 stdio MCP 子进程、官方 MCP HTTP 客户端、旧协议版本协商、跨用户共享、跨项目访问拒绝、伪造作者拒绝、自由 metadata 及大整数无损、文件字节往返、幂等并发重试、分页快照、文件化 event 重开后的持久化、旧 SQLite event 自动迁移和令牌吊销。
 
-服务默认仅绑定 loopback。公开部署时需配置 HTTPS 入口；浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单。本生产部署允许 `https://context.integ.life` 访问 API。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。应用限制认证并发与全局速率，公网入口仍应按客户端限制滥用。
+服务默认仅绑定 loopback。公开部署时需配置 HTTPS 入口；浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。应用限制认证并发与全局速率，公网入口仍应按客户端限制滥用。
 
-数据库单连接、文件 BLOB 存 SQLite，适合第一版的小团队使用。备份请使用 SQLite 一致性备份方式，或停服务后复制数据库；运行时不要只复制 WAL 模式的主文件。
+SQLite 仅用于身份与授权；event 查询会扫描项目数据目录，适合第一版的小团队使用。备份必须同时包含一致性 SQLite 备份与 `data/` 整个目录；运行时不要只复制 WAL 模式的主文件，也不要只复制 event 文件而遗漏授权数据库。生产部署会在停止服务后，以 SQLite backup API 写入一个迁移前的身份数据库副本到 `/var/lib/event-driven-context/backups/`。
 
 后续只在实际需要时加入独立消费者、解析、摘要和检索。当前写入路径不调用模型，也不会执行事件内容。
 
@@ -240,7 +240,7 @@ make build
 ```text
 cmd/edc-server/       HTTP + MCP 服务入口
 cmd/edc/              CLI 与 stdio MCP 入口
-internal/core/        共享业务规则、SQLite、不可变约束
+internal/core/        共享业务规则、SQLite 授权与文件化 event 存储
 internal/api/         HTTP 服务、客户端和端到端测试
 internal/mcpserver/   标准 MCP 工具与 transport
 docs/mvp.md          已确认的首版范围

@@ -62,6 +62,14 @@ usermod -aG "$shared_group" songyy
 
 systemctl stop "$service.service" || true
 install -d -o "$runtime_user" -g "$shared_group" -m 2770 "$remote_data"
+backup_dir="$remote_data/backups"
+install -d -o "$runtime_user" -g "$shared_group" -m 2770 "$backup_dir"
+if [[ -f "$remote_data/context.db" ]]; then
+  backup_path="$backup_dir/context-${release_id}.db"
+  python3 -c 'import sqlite3, sys; source = sqlite3.connect(sys.argv[1]); target = sqlite3.connect(sys.argv[2]); source.backup(target); target.close(); source.close()' "$remote_data/context.db" "$backup_path"
+  chown "$runtime_user:$shared_group" "$backup_path"
+  chmod 0600 "$backup_path"
+fi
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root"
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root/releases"
 chown -R "$runtime_user:$shared_group" "$remote_data" "$remote_root"

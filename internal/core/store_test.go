@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -84,10 +85,14 @@ func TestSharedProjectAppendOnlyAndIsolation(t *testing.T) {
 	if err != nil || len(projects.Projects) != 0 {
 		t.Fatal("project list leaks membership")
 	}
-	for _, q := range []string{"UPDATE events SET text_content='changed'", "DELETE FROM events", "INSERT OR REPLACE INTO events SELECT * FROM events"} {
-		if _, err = s.db.Exec(q); err == nil {
-			t.Fatalf("immutability bypass: %s", q)
+	for _, table := range []string{"events", "files", "event_metadata"} {
+		var count int
+		if err = s.db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", table).Scan(&count); err != nil || count != 0 {
+			t.Fatalf("event storage table remains in SQLite: %s", table)
 		}
+	}
+	if _, err = os.Stat(s.eventPath(p.ID, e.ID)); err != nil {
+		t.Fatalf("event manifest missing: %v", err)
 	}
 	got, err = s.GetEvent(alice, EventRef{e.ID})
 	if err != nil || *got.Content.Text != "Bob 的记录" {
@@ -219,14 +224,13 @@ func TestFileValidationPersistenceAndAtomicity(t *testing.T) {
 			t.Fatal("invalid file accepted")
 		}
 	}
-	var count int
-	if err = s.db.QueryRow("SELECT count(*) FROM files").Scan(&count); err != nil || count != 1 {
-		t.Fatal("orphan files created", count, err)
+	raw, err := os.ReadDir(s.filesDir(p.ID))
+	if err != nil || len(raw) != 1 || raw[0].Name() != e.Content.File.ID {
+		t.Fatalf("unexpected raw files: %+v %v", raw, err)
 	}
-	for _, q := range []string{"UPDATE files SET filename='tampered'", "DELETE FROM files", "UPDATE event_metadata SET value='0'", "DELETE FROM event_metadata"} {
-		if _, err = s.db.Exec(q); err == nil {
-			t.Fatalf("immutable data modified: %s", q)
-		}
+	manifests, err := os.ReadDir(s.eventsDir(p.ID))
+	if err != nil || len(manifests) != 1 || manifests[0].Name() != e.ID+".json" {
+		t.Fatalf("unexpected event manifests: %+v %v", manifests, err)
 	}
 	if err = s.Close(); err != nil {
 		t.Fatal(err)
@@ -243,17 +247,57 @@ func TestFileValidationPersistenceAndAtomicity(t *testing.T) {
 	if err != nil || file.DataBase64 != in.Content.File.DataBase64 {
 		t.Fatal("file bytes not durable", err)
 	}
-	// Force an insert failure after the file insert; neither side may commit.
-	_, err = s.db.Exec("CREATE TRIGGER reject_event BEFORE INSERT ON events BEGIN SELECT RAISE(ABORT,'test failure'); END")
+}
+
+func TestMigratesLegacySQLiteEventsIntoDataDirectory(t *testing.T) {
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "auth.db")
+	s, err := Open(dbPath, filepath.Join(dir, "data"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	in.IdempotencyKey = "will-fail"
-	if _, err = s.RecordEvent(ctx, in); err == nil {
-		t.Fatal("expected insert failure")
+	ctx := user(t, s, "alice")
+	p, err := s.CreateProject(ctx, ProjectInput{Name: "legacy"})
+	if err != nil {
+		t.Fatal(err)
 	}
-	if err = s.db.QueryRow("SELECT count(*) FROM files").Scan(&count); err != nil || count != 1 {
-		t.Fatal("file survived failed event transaction")
+	bytes := []byte("legacy file")
+	fileID, eventID := "file_legacy", "evt_legacy"
+	for _, statement := range []string{
+		`CREATE TABLE files (id TEXT PRIMARY KEY, project_id TEXT, filename TEXT, media_type TEXT, size_bytes INTEGER, sha256 TEXT, data BLOB)`,
+		`CREATE TABLE events (seq INTEGER, id TEXT, project_id TEXT, actor_user_id TEXT, recorded_at TEXT, occurred_at TEXT, text_content TEXT, file_id TEXT, metadata TEXT, idempotency_key TEXT, request_hash TEXT)`,
+	} {
+		if _, err = s.db.Exec(statement); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err = s.db.Exec(`INSERT INTO files VALUES(?,?,?,?,?,?,?)`, fileID, p.ID, "legacy.txt", "text/plain", len(bytes), digest(bytes), bytes); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.db.Exec(`INSERT INTO events VALUES(?,?,?,?,?,?,?,?,?,?,?)`, 1, eventID, p.ID, UserID(ctx), now(), nil, nil, fileID, `{"source":"legacy"}`, "legacy-key", "legacy-hash"); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	s, err = Open(dbPath, filepath.Join(dir, "data"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { s.Close() })
+	event, err := s.GetEvent(ctx, EventRef{EventID: eventID})
+	if err != nil || event.Content.File == nil || event.Content.File.ID != fileID {
+		t.Fatalf("legacy event migration: %+v %v", event, err)
+	}
+	file, err := s.GetFile(ctx, FileRef{FileID: fileID})
+	if err != nil || file.DataBase64 != base64.StdEncoding.EncodeToString(bytes) {
+		t.Fatalf("legacy file migration: %+v %v", file, err)
+	}
+	for _, table := range []string{"events", "files", "event_metadata"} {
+		var count int
+		if err = s.db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", table).Scan(&count); err != nil || count != 0 {
+			t.Fatalf("legacy table remains: %s", table)
+		}
 	}
 }
 

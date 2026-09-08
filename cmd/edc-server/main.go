@@ -27,12 +27,13 @@ func main() {
 func run() error {
 	addr := flag.String("addr", "127.0.0.1:8080", "HTTP listen address")
 	dbPath := flag.String("db", "data/context.db", "SQLite database path")
+	dataDir := flag.String("data", "data", "directory for immutable event and uploaded-file data")
 	origins := flag.String("allowed-origins", "", "comma-separated browser origins; empty rejects all Origin-bearing requests")
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return fmt.Errorf("unexpected arguments")
 	}
-	store, err := core.Open(*dbPath)
+	store, err := core.Open(*dbPath, *dataDir)
 	if err != nil {
 		return err
 	}

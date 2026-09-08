@@ -4,8 +4,8 @@
 - 任务：可靠追加文本/文本文件，并按时间、metadata 找回。
 - 核心假设：自由 metadata 加时间查询足以支持初步人工/agent 检索。
 - 闭环：注册、登录 → 创建项目 → 添加成员 → 两个用户追加事件 → 查询、读取文件、发现 metadata。
-- 成功证据：真实 CLI、官方 MCP 客户端通过 HTTP 和 stdio 调用；跨项目拒绝访问；重启保留数据；数据库拒绝事件及文件的 UPDATE/DELETE。
-- 范围：Go 单体 + SQLite；项目直接包含事件；创建者管理成员，成员平等读写；事件不可修改和删除；自由 JSON metadata。
+- 成功证据：真实 CLI、官方 MCP 客户端通过 HTTP 和 stdio 调用；跨项目拒绝访问；重启保留数据；event 和原始文件落在 Git 忽略的数据目录，SQLite 不保存事件内容。
+- 范围：Go 单体 + SQLite 身份授权 + 文件化 event 数据；项目直接包含事件；创建者管理成员，成员平等读写；事件不可修改和删除；自由 JSON metadata。
 - 输入：直接文本或显式声明 MIME 的 UTF-8 文本文件，单份最多 1 MiB。文件使用可扩展的 base64 字节信封，未来支持其他 MIME，无需改事件结构。
 - 时间：recorded_at 服务端生成；occurred_at 可选。默认按 recorded_at 查询，时间段为 [from,to)。
 - metadata：支持顶层 key 的 JSON 精确相等、存在，条件 AND；列出字段/类型/事件数，以及单字段的去重值与计数，均限制在项目权限内。
