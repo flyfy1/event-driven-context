@@ -207,7 +207,7 @@ make deploy-frontend   # 将 frontend/ 推送到 gh-pages
 
 ### integ-prod 运维
 
-服务器上的共享 Linux 账户 `yycy` 只能通过以下受限命令管理 Context 服务，不能获得通用 sudo：
+服务进程与数据使用 Linux 账户 `yycy` 和共享组 `context-admins`。`yycy` 与 `songyy` 都在该组中；发布目录和 SQLite 数据目录保持组可读写，后续文件继承该组。systemd unit 仍由 root 管理。`yycy` 只能通过以下受限命令管理 Context 服务，不能获得通用 sudo：
 
 ```sh
 sudo context-service-admin status

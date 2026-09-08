@@ -35,6 +35,8 @@ service="$2"
 remote_root="$3"
 remote_data="$4"
 port="$5"
+runtime_user="yycy"
+shared_group="context-admins"
 stage_dir="/tmp/${service}-${release_id}"
 release_dir="${remote_root}/releases/${release_id}"
 old_target=""
@@ -46,13 +48,27 @@ if [[ ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -x
   exit 1
 fi
 
-if ! id "$service" >/dev/null 2>&1; then
-  useradd --system --home-dir "$remote_data" --shell /usr/sbin/nologin "$service"
+for account in "$runtime_user" songyy; do
+  if ! id "$account" >/dev/null 2>&1; then
+    echo "required account missing: $account" >&2
+    exit 1
+  fi
+done
+if ! getent group "$shared_group" >/dev/null; then
+  groupadd --system "$shared_group"
 fi
-install -d -o "$service" -g "$service" -m 0700 "$remote_data"
-install -d -m 0755 "$remote_root/releases"
-install -d -m 0755 "$release_dir"
-install -m 0755 "$stage_dir/edc-server" "$release_dir/edc-server"
+usermod -aG "$shared_group" "$runtime_user"
+usermod -aG "$shared_group" songyy
+
+systemctl stop "$service.service" || true
+install -d -o "$runtime_user" -g "$shared_group" -m 2770 "$remote_data"
+install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root"
+install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root/releases"
+chown -R "$runtime_user:$shared_group" "$remote_data" "$remote_root"
+chmod -R g+rwX "$remote_data" "$remote_root"
+find "$remote_data" "$remote_root" -type d -exec chmod g+s {} +
+install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$release_dir"
+install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc-server" "$release_dir/edc-server"
 install -m 0644 "$stage_dir/$service.service" "/etc/systemd/system/$service.service"
 install -m 0755 "$stage_dir/context-service-admin" /usr/local/sbin/context-service-admin
 install -m 0440 "$stage_dir/context-service-admin.sudoers" /etc/sudoers.d/context-service-admin

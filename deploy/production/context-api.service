@@ -5,8 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=event-context
-Group=event-context
+User=yycy
+Group=context-admins
+UMask=0007
 WorkingDirectory=/var/lib/event-driven-context
 ExecStart=/opt/event-driven-context/current/edc-server -addr 127.0.0.1:8401 -db /var/lib/event-driven-context/context.db -allowed-origins https://context.integ.life
 Restart=on-failure
