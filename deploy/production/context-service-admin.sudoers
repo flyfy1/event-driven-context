@@ -1,0 +1,2 @@
+# Allow the shared yycy account to operate only Event-driven Context.
+yycy ALL=(root) NOPASSWD: /usr/local/sbin/context-service-admin

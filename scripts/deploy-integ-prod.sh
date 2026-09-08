@@ -20,11 +20,12 @@ fi
 make check
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o "$TEMP_DIR/edc-server" ./cmd/edc-server
 cp deploy/production/context-api.service "$TEMP_DIR/$SERVICE.service"
-cp deploy/production/context-api.caddy "$TEMP_DIR/$SERVICE.caddy"
+cp deploy/production/context-service-admin "$TEMP_DIR/context-service-admin"
+cp deploy/production/context-service-admin.sudoers "$TEMP_DIR/context-service-admin.sudoers"
 
 gcloud compute ssh "$INSTANCE" --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" --command "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
 gcloud compute scp --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" \
-  "$TEMP_DIR/edc-server" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/$SERVICE.caddy" \
+  "$TEMP_DIR/edc-server" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/context-service-admin" "$TEMP_DIR/context-service-admin.sudoers" \
   "$INSTANCE:/tmp/$SERVICE-$RELEASE_ID/"
 
 gcloud compute ssh "$INSTANCE" --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" --command "sudo -n bash -s -- '$RELEASE_ID' '$SERVICE' '$REMOTE_ROOT' '$REMOTE_DATA' '$PORT'" <<'REMOTE_SCRIPT'
@@ -40,7 +41,7 @@ old_target=""
 
 cleanup() { rm -rf "$stage_dir"; }
 trap cleanup EXIT
-if [[ ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/$service.caddy" ]]; then
+if [[ ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -x "$stage_dir/context-service-admin" || ! -f "$stage_dir/context-service-admin.sudoers" ]]; then
   echo "incomplete staged release" >&2
   exit 1
 fi
@@ -53,16 +54,13 @@ install -d -m 0755 "$remote_root/releases"
 install -d -m 0755 "$release_dir"
 install -m 0755 "$stage_dir/edc-server" "$release_dir/edc-server"
 install -m 0644 "$stage_dir/$service.service" "/etc/systemd/system/$service.service"
+install -m 0755 "$stage_dir/context-service-admin" /usr/local/sbin/context-service-admin
+install -m 0440 "$stage_dir/context-service-admin.sudoers" /etc/sudoers.d/context-service-admin
+visudo -cf /etc/sudoers.d/context-service-admin >/dev/null
 
 if [[ -L "$remote_root/current" ]]; then old_target="$(readlink -f "$remote_root/current")"; fi
 ln -sfn "$release_dir" "$remote_root/current"
-install -m 0644 "$stage_dir/$service.caddy" "/etc/caddy/sites-enabled/$service.caddy"
-
-if ! caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile; then
-  rm -f "/etc/caddy/sites-enabled/$service.caddy"
-  if [[ -n "$old_target" ]]; then ln -sfn "$old_target" "$remote_root/current"; else rm -f "$remote_root/current"; fi
-  exit 1
-fi
+rm -f "/etc/caddy/sites-enabled/$service.caddy"
 systemctl daemon-reload
 systemctl enable --now "$service.service"
 healthy=""
@@ -78,7 +76,6 @@ if [[ -z "$healthy" ]]; then
   if [[ -n "$old_target" ]]; then ln -sfn "$old_target" "$remote_root/current"; systemctl restart "$service.service"; else systemctl disable --now "$service.service" || true; fi
   exit 1
 fi
-systemctl reload caddy
 REMOTE_SCRIPT
 
 echo "Deployed $SERVICE release $RELEASE_ID"

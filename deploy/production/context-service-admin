@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly SERVICE="event-context.service"
+readonly HEALTH_URL="http://127.0.0.1:8401/healthz"
+
+case "${1:-}" in
+  status)
+    systemctl status "$SERVICE" --no-pager
+    ;;
+  start|stop|restart)
+    systemctl "$1" "$SERVICE"
+    systemctl is-active "$SERVICE"
+    ;;
+  logs)
+    journalctl -u "$SERVICE" -n 200 --no-pager
+    ;;
+  health)
+    curl --fail --silent --show-error "$HEALTH_URL"
+    ;;
+  *)
+    echo "usage: context-service-admin {status|start|stop|restart|logs|health}" >&2
+    exit 64
+    ;;
+esac

@@ -203,7 +203,22 @@ make deploy-prod       # 编译 linux/amd64、上传 integ-prod、安装 systemd
 make deploy-frontend   # 将 frontend/ 推送到 gh-pages
 ```
 
-服务运行于 integ-prod 的 `127.0.0.1:8401`，数据在 `/var/lib/event-driven-context/context.db`，Caddy 对外提供 `context-api.integ.life`。部署脚本先验证 Caddy 配置和 loopback health；Caddy 重新加载失败会恢复本次新路由和上一版本的可执行文件链接。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。
+服务运行于 integ-prod 的 `127.0.0.1:8401`，数据在 `/var/lib/event-driven-context/context.db`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。当前生产环境不运行 Caddy，因此 API 保持 loopback，不经 `context-api.integ.life` 公开暴露。
+
+### integ-prod 运维
+
+服务器上的共享 Linux 账户 `yycy` 只能通过以下受限命令管理 Context 服务，不能获得通用 sudo：
+
+```sh
+sudo context-service-admin status
+sudo context-service-admin health
+sudo context-service-admin logs
+sudo context-service-admin restart
+sudo context-service-admin start
+sudo context-service-admin stop
+```
+
+部署脚本会安装这个 helper 和 sudo 规则，并且不会启动或重新加载 Caddy。
 
 ## 验证与当前边界
 
