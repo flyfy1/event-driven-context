@@ -2,8 +2,11 @@
 set -euo pipefail
 
 readonly REPOSITORY="flyfy1/event-driven-context"
+readonly PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
+
+cd "$PROJECT_ROOT"
 
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "refusing frontend deploy from a dirty worktree" >&2
