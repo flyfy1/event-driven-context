@@ -65,7 +65,15 @@ if ! caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile; then
 fi
 systemctl daemon-reload
 systemctl enable --now "$service.service"
-if ! systemctl is-active --quiet "$service.service" || ! curl --fail --silent --show-error "http://127.0.0.1:${port}/healthz" >/dev/null; then
+healthy=""
+for _ in $(seq 1 15); do
+  if systemctl is-active --quiet "$service.service" && curl --fail --silent --show-error "http://127.0.0.1:${port}/healthz" >/dev/null; then
+    healthy="yes"
+    break
+  fi
+  sleep 1
+done
+if [[ -z "$healthy" ]]; then
   systemctl status "$service.service" --no-pager >&2 || true
   if [[ -n "$old_target" ]]; then ln -sfn "$old_target" "$remote_root/current"; systemctl restart "$service.service"; else systemctl disable --now "$service.service" || true; fi
   exit 1
