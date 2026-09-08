@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "event-context": {
+      "command": "/absolute/path/to/event-driven-context/bin/edc",
+      "args": ["mcp"]
+    }
+  }
+}

@@ -1,0 +1,21 @@
+[Unit]
+Description=Event-driven Context API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=event-context
+Group=event-context
+WorkingDirectory=/var/lib/event-driven-context
+ExecStart=/opt/event-driven-context/current/edc-server -addr 127.0.0.1:8401 -db /var/lib/event-driven-context/context.db -allowed-origins https://context.integ.life
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/event-driven-context
+
+[Install]
+WantedBy=multi-user.target
