@@ -83,6 +83,9 @@ install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root"
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root/releases"
 chown -R "$runtime_user:$shared_group" "$remote_data" "$remote_root"
 chmod -R g+rwX "$remote_data" "$remote_root"
+# Backups contain password and token hashes; keep them private to the runtime
+# account even though live event data and releases are shared with admins.
+find "$backup_dir" -type f -exec chmod 0600 {} +
 find "$remote_data" "$remote_root" -type d -exec chmod g+s {} +
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$release_dir"
 install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc-server" "$release_dir/edc-server"
