@@ -104,23 +104,38 @@ func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 		logged.Header().Set("X-Content-Type-Options", "nosniff")
 		logged.Header().Set("Cache-Control", "no-store")
 		if origin := r.Header.Get("Origin"); origin != "" {
-			if !allowed[origin] {
+			originAllowed := allowed[origin]
+			// OAuth authorization is a browser navigation flow, not a CORS API.
+			// OpenAI-hosted authorization windows can submit the server-rendered
+			// form with a client or opaque Origin. The handler still requires the
+			// short-lived request-bound CSRF cookie before accepting any decision.
+			if !originAllowed && !isOAuthAuthorizationFormPost(r) {
 				respond(logged, 403, map[string]any{"error": core.Error{Code: "forbidden", Message: "origin not allowed"}})
 				return
 			}
-			logged.Header().Set("Access-Control-Allow-Origin", origin)
-			logged.Header().Set("Vary", "Origin")
-			if r.Method == http.MethodOptions {
-				logged.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-				logged.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-				logged.Header().Set("Access-Control-Max-Age", "600")
-				logged.WriteHeader(http.StatusNoContent)
-				return
+			if originAllowed {
+				logged.Header().Set("Access-Control-Allow-Origin", origin)
+				logged.Header().Set("Vary", "Origin")
+				if r.Method == http.MethodOptions {
+					logged.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+					logged.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+					logged.Header().Set("Access-Control-Max-Age", "600")
+					logged.WriteHeader(http.StatusNoContent)
+					return
+				}
 			}
 		}
 		r.Body = http.MaxBytesReader(logged, r.Body, core.MaxRequestBytes)
 		mux.ServeHTTP(logged, r)
 	})
+}
+
+func isOAuthAuthorizationFormPost(r *http.Request) bool {
+	if r.Method != http.MethodPost || r.URL.Path != "/oauth/authorize" {
+		return false
+	}
+	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	return err == nil && mediaType == "application/x-www-form-urlencoded"
 }
 
 type statusWriter struct {

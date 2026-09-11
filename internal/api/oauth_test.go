@@ -154,6 +154,68 @@ func TestOAuthPageRegistrationContinuesAuthorization(t *testing.T) {
 	}
 }
 
+func TestOAuthPageRegistrationAllowsOpenAIFormOrigin(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	verifier := strings.Repeat("o", 64)
+	sum := sha256.Sum256([]byte(verifier))
+	q := url.Values{
+		"response_type": {"code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"},
+		"state": {"openai-origin-state"}, "code_challenge": {base64.RawURLEncoding.EncodeToString(sum[:])},
+		"code_challenge_method": {"S256"}, "resource": {testOAuthIssuer + "/mcp"}, "scope": {core.ScopeRead},
+	}
+	res := f.do(t, http.MethodGet, "/oauth/authorize?"+q.Encode(), "", "")
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("authorization start: %d", res.StatusCode)
+	}
+	requestLocation, _ := url.Parse(res.Header.Get("Location"))
+	requestID := requestLocation.Query().Get("request_id")
+	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
+	res.Body.Close()
+
+	form := url.Values{"request_id": {requestID}, "decision": {"register"}, "username": {"openai-user"}, "password": {"openai-user-password-123"}}
+	req, err := http.NewRequest(http.MethodPost, f.server.URL+"/oauth/authorize", strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Origin", "https://chatgpt.com")
+	res, err = f.client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("OpenAI-origin registration: got %d want %d", res.StatusCode, http.StatusSeeOther)
+	}
+
+	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
+	page, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Signed in as <strong>openai-user</strong>")) {
+		t.Fatalf("registration did not continue to consent: %d %s", res.StatusCode, page)
+	}
+}
+
+func TestOAuthAuthorizationFormStillRequiresCSRFSession(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	form := url.Values{"request_id": {"oauth_request_missing"}, "decision": {"register"}, "username": {"attacker"}, "password": {"attacker-password-123"}}
+	req, err := http.NewRequest(http.MethodPost, f.server.URL+"/oauth/authorize", strings.NewReader(form.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Origin", "https://evil.example")
+	res, err := f.client.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusBadRequest {
+		t.Fatalf("cross-origin form without CSRF: got %d want %d", res.StatusCode, http.StatusBadRequest)
+	}
+}
+
 func TestOAuthPageLanguageNegotiation(t *testing.T) {
 	f := newOAuthFixture(t, time.Hour)
 	verifier := strings.Repeat("l", 64)
