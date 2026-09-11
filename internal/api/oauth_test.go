@@ -75,7 +75,7 @@ func TestOAuthDynamicRegistrationAllowsOptionalClientName(t *testing.T) {
 
 	h := httptest.NewServer(HandlerWithConfig(store, Config{PublicBaseURL: testOAuthIssuer}))
 	t.Cleanup(h.Close)
-	body := `{"redirect_uris":["https://chatgpt.com/connector/oauth/test"],"grant_types":["authorization_code"],"response_types":["code"],"token_endpoint_auth_method":"none"}`
+	body := `{"redirect_uris":["https://chatgpt.com/connector/oauth/test"],"grant_types":["authorization_code","refresh_token"],"response_types":["code"],"token_endpoint_auth_method":"none"}`
 	res, err := http.Post(h.URL+"/oauth/register", "application/json", strings.NewReader(body))
 	if err != nil {
 		t.Fatal(err)
@@ -86,10 +86,11 @@ func TestOAuthDynamicRegistrationAllowsOptionalClientName(t *testing.T) {
 		t.Fatalf("register without client_name: %d %s", res.StatusCode, b)
 	}
 	var out struct {
-		ClientID   string `json:"client_id"`
-		ClientName string `json:"client_name"`
+		ClientID   string   `json:"client_id"`
+		ClientName string   `json:"client_name"`
+		GrantTypes []string `json:"grant_types"`
 	}
-	if err = json.NewDecoder(res.Body).Decode(&out); err != nil || out.ClientID == "" || out.ClientName != "OAuth client" {
+	if err = json.NewDecoder(res.Body).Decode(&out); err != nil || out.ClientID == "" || out.ClientName != "OAuth client" || len(out.GrantTypes) != 1 || out.GrantTypes[0] != "authorization_code" {
 		t.Fatalf("registration response: %+v %v", out, err)
 	}
 }

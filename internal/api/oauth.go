@@ -96,7 +96,7 @@ func oauthRegister(w http.ResponseWriter, r *http.Request, store *core.Store) {
 		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "invalid JSON client metadata")
 		return
 	}
-	grantTypesSupported := len(in.GrantTypes) == 0 || len(in.GrantTypes) == 1 && in.GrantTypes[0] == "authorization_code"
+	grantTypesSupported := oauthRegistrationGrantTypesSupported(in.GrantTypes)
 	responseTypesSupported := len(in.ResponseTypes) == 0 || len(in.ResponseTypes) == 1 && in.ResponseTypes[0] == "code"
 	tokenAuthSupported := in.TokenEndpointAuthMethod == "" || in.TokenEndpointAuthMethod == "none"
 	if !grantTypesSupported || !responseTypesSupported || !tokenAuthSupported {
@@ -125,6 +125,26 @@ func oauthRegister(w http.ResponseWriter, r *http.Request, store *core.Store) {
 
 func logOAuthRegistrationRejection(reason string) {
 	slog.Warn("OAuth client registration rejected", "reason", reason)
+}
+
+func oauthRegistrationGrantTypesSupported(grantTypes []string) bool {
+	if len(grantTypes) == 0 {
+		return true
+	}
+	hasAuthorizationCode := false
+	for _, grantType := range grantTypes {
+		switch grantType {
+		case "authorization_code":
+			hasAuthorizationCode = true
+		case "refresh_token":
+			// ChatGPT includes refresh_token in DCR even when discovery does not
+			// advertise it. The registration response below narrows the client to
+			// the authorization_code grant that this server actually supports.
+		default:
+			return false
+		}
+	}
+	return hasAuthorizationCode
 }
 
 func oauthAuthorizeGet(w http.ResponseWriter, r *http.Request, store *core.Store, base string) {
