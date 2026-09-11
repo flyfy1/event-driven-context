@@ -19,16 +19,18 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 make check
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o "$TEMP_DIR/edc-server" ./cmd/edc-server
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags='-s -w' -o "$TEMP_DIR/edc-server" ./cmd/edc-server
 cp deploy/production/context-api.service "$TEMP_DIR/$SERVICE.service"
 cp deploy/production/context-api.caddy "$TEMP_DIR/$SERVICE.Caddyfile"
 cp deploy/production/event-context-proxy.service "$TEMP_DIR/$PROXY_SERVICE.service"
 cp deploy/production/context-service-admin "$TEMP_DIR/context-service-admin"
 cp deploy/production/context-service-admin.sudoers "$TEMP_DIR/context-service-admin.sudoers"
+cp -R backend/skills "$TEMP_DIR/skills"
 
 gcloud compute ssh "$INSTANCE" --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" --command "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
-gcloud compute scp --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" \
+gcloud compute scp --recurse --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" \
   "$TEMP_DIR/edc-server" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/$SERVICE.Caddyfile" "$TEMP_DIR/$PROXY_SERVICE.service" "$TEMP_DIR/context-service-admin" "$TEMP_DIR/context-service-admin.sudoers" \
+  "$TEMP_DIR/skills" \
   "$INSTANCE:/tmp/$SERVICE-$RELEASE_ID/"
 
 gcloud compute ssh "$INSTANCE" --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" --command "sudo -n bash -s -- '$RELEASE_ID' '$SERVICE' '$REMOTE_ROOT' '$REMOTE_DATA' '$PORT'" <<'REMOTE_SCRIPT'
@@ -46,7 +48,7 @@ old_target=""
 
 cleanup() { rm -rf "$stage_dir"; }
 trap cleanup EXIT
-if [[ ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/$service.Caddyfile" || ! -f "$stage_dir/event-context-proxy.service" || ! -x "$stage_dir/context-service-admin" || ! -f "$stage_dir/context-service-admin.sudoers" ]]; then
+if [[ ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/$service.Caddyfile" || ! -f "$stage_dir/event-context-proxy.service" || ! -x "$stage_dir/context-service-admin" || ! -f "$stage_dir/context-service-admin.sudoers" || ! -f "$stage_dir/skills/audio-transcribe/SKILL.md" || ! -f "$stage_dir/skills/daily-review/SKILL.md" ]]; then
   echo "incomplete staged release" >&2
   exit 1
 fi
@@ -89,6 +91,9 @@ find "$backup_dir" -type f -exec chmod 0600 {} +
 find "$remote_data" "$remote_root" -type d -exec chmod g+s {} +
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$release_dir"
 install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc-server" "$release_dir/edc-server"
+install -d -o "$runtime_user" -g "$shared_group" -m 0755 "$release_dir/skills/audio-transcribe" "$release_dir/skills/daily-review"
+install -o "$runtime_user" -g "$shared_group" -m 0644 "$stage_dir/skills/audio-transcribe/SKILL.md" "$release_dir/skills/audio-transcribe/SKILL.md"
+install -o "$runtime_user" -g "$shared_group" -m 0644 "$stage_dir/skills/daily-review/SKILL.md" "$release_dir/skills/daily-review/SKILL.md"
 install -m 0644 "$stage_dir/$service.service" "/etc/systemd/system/$service.service"
 install -m 0644 "$stage_dir/$service.Caddyfile" "/etc/caddy/$service.Caddyfile"
 install -m 0644 "$stage_dir/event-context-proxy.service" "/etc/systemd/system/event-context-proxy.service"
