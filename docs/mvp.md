@@ -9,6 +9,6 @@
 - 输入：直接文本或显式声明 MIME 的 UTF-8 文本文件，单份最多 1 MiB。文件使用可扩展的 base64 字节信封，未来支持其他 MIME，无需改事件结构。
 - 时间：recorded_at 服务端生成；occurred_at 可选。默认按 recorded_at 查询，时间段为 [from,to)。
 - metadata：支持顶层 key 的 JSON 精确相等、存在，条件 AND；列出字段/类型/事件数，以及单字段的去重值与计数，均限制在项目权限内。
-- 接入假设：优先 CLI、Codex、OpenAI API、Claude Code/Desktop，通过 Bearer 或 stdio；已询问是否需要网页连接器，未收到进一步要求，暂不实现浏览器 OAuth。
-- 不做：事件编辑/删除、异步消费者、消息队列、自动摘要、向量库、UI、生产部署、浏览器 OAuth。
+- 接入：CLI、Codex、OpenAI API、Claude Code/Desktop 继续通过静态 Bearer 或 stdio；生产 Streamable HTTP 另提供 OAuth 2.1 Authorization Code + PKCE（S256）、discovery、DCR 与 `context:read` / `context:write`，供 ChatGPT 网页自定义连接器使用。所有路径复用同一用户与项目成员权限。
+- 不做：事件编辑/删除、异步消费者、消息队列、自动摘要、向量库；OAuth 暂不提供 refresh token、第三方 IdP 或管理员客户端控制台。
 - 时间边界：先交付和验证上述闭环，再讨论数据处理逻辑。

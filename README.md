@@ -91,7 +91,7 @@ make build
 
 - **共享**：创建者添加成员；所有成员能读取全部历史事件、文件和 metadata，并以自己的身份追加。仅创建者能添加成员；其他项目默认不可访问。第一版不提供成员移除和项目删除。
 - **身份与时间**：`actor_user_id`、`actor_username`、`recorded_at` 是服务端输出，输入这些字段会被拒绝。`occurred_at` 是可选的用户声明时间，服务端保存为 UTC。不能把它当成可信审计时间。
-- **追加**：HTTP/MCP 无编辑、删除操作。每个 event 是项目目录内一个不可覆盖写入的 JSON manifest；原始上传文件使用独立的不可覆盖文件。SQLite 只保存用户、令牌、项目和成员授权，不保存 event、metadata 或文件字节。拥有服务器文件系统写入权限的管理员仍能篡改或删除文件，这不是防篡改账本。
+- **追加**：HTTP/MCP 无编辑、删除操作。每个 event 是项目目录内一个不可覆盖写入的 JSON manifest；原始上传文件使用独立的不可覆盖文件。SQLite 只保存用户、HTTP/OAuth 令牌与授权事务、项目和成员授权，不保存 event、metadata 或文件字节。拥有服务器文件系统写入权限的管理员仍能篡改或删除文件，这不是防篡改账本。
 - **幂等**：`idempotency_key` 按「项目 + 作者」隔离；同键同输入返回原事件，不同输入返回冲突。metadata 对象键顺序和空白不影响比较。CLI 默认生成键；要跨命令重试，请显式传入同一个键。metadata 是识别标签，不承担唯一约束。
 - **文件**：一次 `record_event` 原子写入文件和事件。输入为 `content={kind:"file",file:{filename,media_type,data_base64}}`；输出替换为文件 ID、声明类型、文件名、大小与 SHA256。通过 `get_file` 读取原始字节。第一版接受 `text/*`，UTF-8、无 NUL，最多 1 MiB；非文本 MIME 返回明确错误。未来可在这个字节信封上开放新类型。不会根据扩展名静默决定类型，也不会加载调用者传来的服务器文件路径。
 - **限制**：直接文本最多 1 MiB；metadata 最多 32 KiB、128 个顶层字段，key 为 1–128 字节；HTTP 请求最多 2 MiB。不会静默截断。
@@ -164,7 +164,7 @@ claude mcp add --transport stdio event-context -- /absolute/path/to/event-driven
 
 Codex 使用同一标准 stdio 命令配置。仓库不会自动修改你的个人客户端设置。
 
-### 远程 Streamable HTTP：OpenAI API 和通用 MCP 客户端
+### 远程 Streamable HTTP：ChatGPT OAuth、OpenAI API 和通用 MCP 客户端
 
 服务器地址为 `https://YOUR_HOST/mcp`，客户端发送 Bearer 令牌。`GET` / `DELETE /mcp` 不承载会话，返回 405；服务使用无状态 Streamable HTTP，每个请求独立验证身份。
 
@@ -180,7 +180,27 @@ Codex 使用同一标准 stdio 命令配置。仓库不会自动修改你的个�
 }
 ```
 
-OpenAI 云端需要可访问的 HTTPS 地址，无法直接访问你的 localhost。第一版没有部署公网服务、执行模型请求或实现浏览器 OAuth 授权流程；尚未在 OpenAI / Claude 真实账号中联调。**ChatGPT 网页与 Claude 网页的私有连接器 OAuth 接入不在当前实现内**，不要把令牌认证接口当成完整 OAuth 授权服务器。
+生产 MCP 地址是 `https://context-api.integ.life/mcp`。它同时保留上述静态 Bearer 接入，并提供 OAuth 2.1 Authorization Code + PKCE（只接受 S256）给 ChatGPT 等网页客户端：
+
+- Protected Resource Metadata：`https://context-api.integ.life/.well-known/oauth-protected-resource/mcp`（根路径版本也可用）。未认证 `/mcp` 的 `WWW-Authenticate` 会指向这里。
+- Authorization Server Metadata：`https://context-api.integ.life/.well-known/oauth-authorization-server`。
+- 授权、换 token、动态客户端注册：`/oauth/authorize`、`/oauth/token`、`/oauth/register`。动态注册只接受无 client secret 的 public client、精确 HTTPS 或 loopback callback URL。
+- `resource` 在授权请求和换 token 时都必须精确等于 `https://context-api.integ.life/mcp`；authorization code 5 分钟过期且只能使用一次，OAuth access token 1 小时过期。
+
+最小 scope 模型：
+
+| Scope | MCP 工具 |
+|---|---|
+| `context:read` | `list_projects`、`list_project_members`、`get_event`、`query_events`、`list_metadata`、`get_file` |
+| `context:write` | `create_project`、`add_project_member`、`record_event` |
+
+scope 不替代项目权限：即使有 `context:read` 或 `context:write`，调用者仍只能访问其已有成员身份允许的项目；添加成员仍仅限项目创建者，服务不开放匿名写入。工具的 `readOnlyHint` 与描述分别标明读写性质和所需 scope。
+
+#### ChatGPT 自定义连接器
+
+在 ChatGPT 开发者模式中新建自定义连接器，名称填写 `Event-driven Context`，URL 填写 `https://context-api.integ.life/mcp`，身份验证选择 OAuth，并使用服务器 discovery / Dynamic Client Registration，不填写静态 API token 或 client secret。ChatGPT 当前会在连接草稿中生成或提交一个精确 callback URL（通常是 `https://chatgpt.com/connector/oauth/<callback_id>`；旧连接可能使用 `https://chatgpt.com/connector_platform_oauth_redirect`）；本服务将 DCR 请求里的完整 URL 原样注册，授权请求必须逐字匹配，不支持通配符。
+
+ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 public client、带 `resource`、scope 和 S256 challenge 跳转到登录页。使用已有 Event-driven Context 用户名和密码登录，在授权页核对 client、resource 和 scope 后确认。ChatGPT 页面本身还会显示“未经 OpenAI 审查的自定义 MCP”风险提示；确认意味着允许第三方 MCP 读取或追加你有权访问的项目数据，应只在确认 URL、工具与 scope 后继续。
 
 ## Web 前端与发布
 
@@ -203,7 +223,7 @@ make deploy-prod       # 编译 linux/amd64、上传 integ-prod、安装 systemd
 make deploy-frontend   # 将 frontend/ 推送到 gh-pages
 ```
 
-服务运行于 integ-prod 的 `127.0.0.1:8401`。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；event manifest 与原始文件在 `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。当前生产环境不运行 Caddy，因此 API 保持 loopback，不经 `context-api.integ.life` 公开暴露。首次启动新版本会把旧 SQLite event/file 表导出为数据目录中的文件，再移除旧表。
+服务运行于 integ-prod 的 `127.0.0.1:8401`，由独立的 `event-context-proxy.service`（Caddy）发布为 `https://context-api.integ.life`，不与主机上的全局 Caddy 实例混用。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；event manifest 与原始文件在 `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。首次启动新版本会把旧 SQLite event/file 表导出为数据目录中的文件，再移除旧表。
 
 ### integ-prod 运维
 
@@ -218,7 +238,7 @@ sudo context-service-admin start
 sudo context-service-admin stop
 ```
 
-部署脚本会安装这个 helper 和 sudo 规则，并且不会启动或重新加载 Caddy。
+部署脚本会安装这个 helper 和 sudo 规则，并验证、启动或 reload 专用的 `event-context-proxy.service`；不会接管主机上的全局 `caddy.service`。部署在停止应用后使用 SQLite backup API 备份身份库，同时归档完整 `data/`，保留旧 release symlink 目标用于健康检查失败时回滚。
 
 ## 验证与当前边界
 
@@ -227,11 +247,11 @@ make check
 make build
 ```
 
-测试覆盖真实 CLI 子进程与 stdio MCP 子进程、官方 MCP HTTP 客户端、旧协议版本协商、跨用户共享、跨项目访问拒绝、伪造作者拒绝、自由 metadata 及大整数无损、文件字节往返、幂等并发重试、分页快照、文件化 event 重开后的持久化、旧 SQLite event 自动迁移和令牌吊销。
+测试覆盖真实 CLI 子进程与 stdio MCP 子进程、官方 MCP HTTP 客户端、OAuth discovery/DCR/登录/授权/PKCE/一次性 code/resource/scope/token 过期、MCP initialize 与 tools/list、旧协议版本协商、跨用户共享、跨项目访问拒绝、伪造作者拒绝、自由 metadata 及大整数无损、文件字节往返、幂等并发重试、分页快照、文件化 event 重开后的持久化、旧 SQLite event 自动迁移和令牌吊销。
 
-服务默认仅绑定 loopback。公开部署时需配置 HTTPS 入口；浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。应用限制认证并发与全局速率，公网入口仍应按客户端限制滥用。
+服务默认仅绑定 loopback。`-public-base-url` 只接受不带 path 的 HTTPS origin；留空会关闭 OAuth discovery/endpoint，静态 Bearer MCP 仍可用。浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单；OAuth 自身 public origin 自动加入允许列表。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。应用限制密码认证并发与全局速率；DCR 总量也有限制，公网入口仍应按客户端限制滥用。
 
-SQLite 仅用于身份与授权；event 查询会扫描项目数据目录，适合第一版的小团队使用。备份必须同时包含一致性 SQLite 备份与 `data/` 整个目录；运行时不要只复制 WAL 模式的主文件，也不要只复制 event 文件而遗漏授权数据库。生产部署会在停止服务后，以 SQLite backup API 写入一个迁移前的身份数据库副本到 `/var/lib/event-driven-context/backups/`。
+SQLite 仅用于身份与授权（包括 OAuth client、事务、code 与 token）；event 查询会扫描项目数据目录，适合第一版的小团队使用。备份必须同时包含一致性 SQLite 备份与 `data/` 整个目录；运行时不要只复制 WAL 模式的主文件，也不要只复制 event 文件而遗漏授权数据库。生产部署会在停止服务后，以 SQLite backup API 和 data tar archive 写入 `/var/lib/event-driven-context/backups/`。
 
 后续只在实际需要时加入独立消费者、解析、摘要和检索。当前写入路径不调用模型，也不会执行事件内容。
 

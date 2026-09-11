@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -29,6 +30,7 @@ func run() error {
 	dbPath := flag.String("db", "data/context.db", "SQLite database path")
 	dataDir := flag.String("data", "data", "directory for immutable event and uploaded-file data")
 	origins := flag.String("allowed-origins", "", "comma-separated browser origins; empty rejects all Origin-bearing requests")
+	publicBaseURL := flag.String("public-base-url", "", "public HTTPS origin used for OAuth discovery; empty disables OAuth endpoints")
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return fmt.Errorf("unexpected arguments")
@@ -44,7 +46,13 @@ func run() error {
 			allowed = append(allowed, v)
 		}
 	}
-	httpServer := &http.Server{Addr: *addr, Handler: api.Handler(store, allowed), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 60 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	if *publicBaseURL != "" {
+		u, parseErr := url.Parse(*publicBaseURL)
+		if parseErr != nil || u.Scheme != "https" || u.Host == "" || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || strings.HasSuffix(*publicBaseURL, "/") {
+			return fmt.Errorf("public-base-url must be an HTTPS origin without path or trailing slash")
+		}
+	}
+	httpServer := &http.Server{Addr: *addr, Handler: api.HandlerWithConfig(store, api.Config{AllowedOrigins: allowed, PublicBaseURL: *publicBaseURL}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 60 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {
 		return err
