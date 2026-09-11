@@ -193,6 +193,22 @@ func TestOAuthPageLanguageNegotiation(t *testing.T) {
 	}
 }
 
+func TestOAuthPageUsesSharedLocaleCookieBeforeBrowserLanguage(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/oauth/authorize", nil)
+	req.AddCookie(&http.Cookie{Name: oauthLocaleCookie, Value: "ms"})
+	req.Header.Set("Accept-Language", "zh-CN,zh;q=0.9")
+	if got := oauthLanguage(req); got != "ms" {
+		t.Fatalf("shared locale cookie: got %q want ms", got)
+	}
+
+	recorder := httptest.NewRecorder()
+	setOAuthLanguageCookie(recorder, testOAuthIssuer, "hi")
+	cookies := recorder.Result().Cookies()
+	if len(cookies) != 1 || cookies[0].Name != oauthLocaleCookie || cookies[0].Value != "hi" || cookies[0].MaxAge <= 0 || !cookies[0].Secure {
+		t.Fatalf("shared locale cookie attributes: %+v", cookies)
+	}
+}
+
 func (f *oauthFixture) do(t *testing.T, method, path, contentType, body string) *http.Response {
 	t.Helper()
 	req, err := http.NewRequest(method, f.server.URL+path, strings.NewReader(body))

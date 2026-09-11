@@ -1,0 +1,31 @@
+.language-select {
+  width: auto;
+  max-width: 155px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fbfaf6;
+  color: var(--ink);
+  font: 13px/1.4 ui-sans-serif, system-ui, -apple-system, sans-serif;
+  padding: 6px 28px 6px 8px;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 9px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .status {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    text-align: right;
+  }
+
+  .language-select {
+    max-width: 135px;
+    margin-left: auto;
+  }
+}

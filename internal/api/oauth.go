@@ -18,8 +18,10 @@ import (
 )
 
 const (
-	oauthRequestTTL = 10 * time.Minute
-	oauthCodeTTL    = 5 * time.Minute
+	oauthRequestTTL      = 10 * time.Minute
+	oauthCodeTTL         = 5 * time.Minute
+	oauthLocaleCookieTTL = 365 * 24 * time.Hour
+	oauthLocaleCookie    = "event_context_locale"
 )
 
 var pkcePattern = regexp.MustCompile(`^[A-Za-z0-9._~-]{43,128}$`)
@@ -324,6 +326,7 @@ func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Stor
 		return
 	}
 	language := oauthLanguage(r)
+	setOAuthLanguageCookie(w, base, language)
 	copy := oauthCopies[language]
 	scopes := make([]oauthScopeDisplay, 0, len(strings.Fields(request.Scope)))
 	for _, scope := range strings.Fields(request.Scope) {
@@ -362,12 +365,32 @@ func oauthLanguage(r *http.Request) string {
 	if language := normalizeOAuthLanguage(requested); language != "" {
 		return language
 	}
+	if cookie, err := r.Cookie(oauthLocaleCookie); err == nil {
+		if language := normalizeOAuthLanguage(cookie.Value); language != "" {
+			return language
+		}
+	}
 	for _, preference := range strings.Split(r.Header.Get("Accept-Language"), ",") {
 		if language := normalizeOAuthLanguage(strings.TrimSpace(strings.SplitN(preference, ";", 2)[0])); language != "" {
 			return language
 		}
 	}
 	return "en"
+}
+
+func setOAuthLanguageCookie(w http.ResponseWriter, base, language string) {
+	domain := ""
+	if parsed, err := url.Parse(base); err == nil {
+		host := parsed.Hostname()
+		if host == "integ.life" || strings.HasSuffix(host, ".integ.life") {
+			domain = ".integ.life"
+		}
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name: oauthLocaleCookie, Value: language, Path: "/", Domain: domain,
+		Secure: strings.HasPrefix(base, "https://"), SameSite: http.SameSiteLaxMode,
+		MaxAge: int(oauthLocaleCookieTTL.Seconds()),
+	})
 }
 
 func normalizeOAuthLanguage(raw string) string {
