@@ -6,6 +6,7 @@ import (
 	"errors"
 	"html/template"
 	"io"
+	"log/slog"
 	"mime"
 	"net/http"
 	"net/url"
@@ -67,6 +68,7 @@ func oauthAuthorizationServer(w http.ResponseWriter, base string) {
 
 func oauthRegister(w http.ResponseWriter, r *http.Request, store *core.Store) {
 	if r.Header.Get("Authorization") != "" {
+		logOAuthRegistrationRejection("authorization_header")
 		oauthError(w, http.StatusBadRequest, "invalid_client", "public clients must not send credentials")
 		return
 	}
@@ -78,12 +80,27 @@ func oauthRegister(w http.ResponseWriter, r *http.Request, store *core.Store) {
 		TokenEndpointAuthMethod string   `json:"token_endpoint_auth_method"`
 	}
 	mediaType, _, mediaErr := mime.ParseMediaType(r.Header.Get("Content-Type"))
-	decoder := json.NewDecoder(r.Body)
-	if mediaErr != nil || mediaType != "application/json" || decoder.Decode(&in) != nil || decoder.Decode(new(any)) != io.EOF {
+	if mediaErr != nil || mediaType != "application/json" {
+		logOAuthRegistrationRejection("content_type")
 		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "invalid JSON client metadata")
 		return
 	}
-	if len(in.GrantTypes) > 0 && (len(in.GrantTypes) != 1 || in.GrantTypes[0] != "authorization_code") || len(in.ResponseTypes) > 0 && (len(in.ResponseTypes) != 1 || in.ResponseTypes[0] != "code") || in.TokenEndpointAuthMethod != "" && in.TokenEndpointAuthMethod != "none" {
+	decoder := json.NewDecoder(r.Body)
+	if decoder.Decode(&in) != nil {
+		logOAuthRegistrationRejection("json")
+		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "invalid JSON client metadata")
+		return
+	}
+	if decoder.Decode(new(any)) != io.EOF {
+		logOAuthRegistrationRejection("trailing_json")
+		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "invalid JSON client metadata")
+		return
+	}
+	grantTypesSupported := len(in.GrantTypes) == 0 || len(in.GrantTypes) == 1 && in.GrantTypes[0] == "authorization_code"
+	responseTypesSupported := len(in.ResponseTypes) == 0 || len(in.ResponseTypes) == 1 && in.ResponseTypes[0] == "code"
+	tokenAuthSupported := in.TokenEndpointAuthMethod == "" || in.TokenEndpointAuthMethod == "none"
+	if !grantTypesSupported || !responseTypesSupported || !tokenAuthSupported {
+		slog.Warn("OAuth client registration rejected", "reason", "unsupported_metadata", "grant_types_supported", grantTypesSupported, "response_types_supported", responseTypesSupported, "token_auth_supported", tokenAuthSupported)
 		oauthError(w, http.StatusBadRequest, "invalid_client_metadata", "only authorization_code public clients are supported")
 		return
 	}
@@ -91,8 +108,10 @@ func oauthRegister(w http.ResponseWriter, r *http.Request, store *core.Store) {
 	if err != nil {
 		var appErr *core.Error
 		if errors.As(err, &appErr) && appErr.Code == "rate_limited" {
+			logOAuthRegistrationRejection("capacity")
 			oauthError(w, http.StatusTooManyRequests, "temporarily_unavailable", appErr.Message)
 		} else {
+			logOAuthRegistrationRejection("client_or_redirect")
 			oauthError(w, http.StatusBadRequest, "invalid_redirect_uri", "client metadata was rejected")
 		}
 		return
@@ -102,6 +121,10 @@ func oauthRegister(w http.ResponseWriter, r *http.Request, store *core.Store) {
 		"grant_types": []string{"authorization_code"}, "response_types": []string{"code"},
 		"token_endpoint_auth_method": "none", "client_id_issued_at": time.Now().Unix(),
 	})
+}
+
+func logOAuthRegistrationRejection(reason string) {
+	slog.Warn("OAuth client registration rejected", "reason", reason)
 }
 
 func oauthAuthorizeGet(w http.ResponseWriter, r *http.Request, store *core.Store, base string) {
