@@ -66,6 +66,34 @@ func (f *oauthFixture) registerClient(t *testing.T) string {
 	return out.ClientID
 }
 
+func TestOAuthDynamicRegistrationAllowsOptionalClientName(t *testing.T) {
+	store, err := core.Open(t.TempDir() + "/context.db")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { store.Close() })
+
+	h := httptest.NewServer(HandlerWithConfig(store, Config{PublicBaseURL: testOAuthIssuer}))
+	t.Cleanup(h.Close)
+	body := `{"redirect_uris":["https://chatgpt.com/connector/oauth/test"],"grant_types":["authorization_code"],"response_types":["code"],"token_endpoint_auth_method":"none"}`
+	res, err := http.Post(h.URL+"/oauth/register", "application/json", strings.NewReader(body))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusCreated {
+		b, _ := io.ReadAll(res.Body)
+		t.Fatalf("register without client_name: %d %s", res.StatusCode, b)
+	}
+	var out struct {
+		ClientID   string `json:"client_id"`
+		ClientName string `json:"client_name"`
+	}
+	if err = json.NewDecoder(res.Body).Decode(&out); err != nil || out.ClientID == "" || out.ClientName != "OAuth client" {
+		t.Fatalf("registration response: %+v %v", out, err)
+	}
+}
+
 func (f *oauthFixture) do(t *testing.T, method, path, contentType, body string) *http.Response {
 	t.Helper()
 	req, err := http.NewRequest(method, f.server.URL+path, strings.NewReader(body))

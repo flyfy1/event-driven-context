@@ -79,8 +79,11 @@ func validRedirectURI(raw string) bool {
 
 func (s *Store) RegisterOAuthClient(ctx context.Context, name string, redirects []string) (OAuthClient, error) {
 	name = strings.TrimSpace(name)
-	if name == "" || len(name) > 200 || len(redirects) == 0 || len(redirects) > 10 {
-		return OAuthClient{}, Invalid("client_name and 1-10 redirect_uris are required")
+	if name == "" {
+		name = "OAuth client"
+	}
+	if len(name) > 200 || len(redirects) == 0 || len(redirects) > 10 {
+		return OAuthClient{}, Invalid("client_name must be at most 200 characters and 1-10 redirect_uris are required")
 	}
 	seen := map[string]bool{}
 	for _, redirect := range redirects {
