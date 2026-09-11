@@ -200,7 +200,7 @@ scope 不替代项目权限：即使有 `context:read` 或 `context:write`，调
 
 在 ChatGPT 开发者模式中新建自定义连接器，名称填写 `Event-driven Context`，URL 填写 `https://context-api.integ.life/mcp`，身份验证选择 OAuth，并使用服务器 discovery / Dynamic Client Registration，不填写静态 API token 或 client secret。ChatGPT 当前会在连接草稿中生成或提交一个精确 callback URL（通常是 `https://chatgpt.com/connector/oauth/<callback_id>`；旧连接可能使用 `https://chatgpt.com/connector_platform_oauth_redirect`）；本服务将 DCR 请求里的完整 URL 原样注册，授权请求必须逐字匹配，不支持通配符。
 
-ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 public client、带 `resource`、scope 和 S256 challenge 跳转到登录页。使用已有 Event-driven Context 用户名和密码登录，在授权页核对 client、resource 和 scope 后确认。ChatGPT 页面本身还会显示“未经 OpenAI 审查的自定义 MCP”风险提示；确认意味着允许第三方 MCP 读取或追加你有权访问的项目数据，应只在确认 URL、工具与 scope 后继续。
+ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 public client、带 `resource`、scope 和 S256 challenge 跳转到登录页。可以使用已有 Event-driven Context 用户名和密码登录，也可以在同一 OAuth 页面按现有用户名与密码规则创建账号；新账号只获得用户身份，不自动获得任何既有项目权限。随后在授权页核对 client、resource 和 scope 后确认。ChatGPT 页面本身还会显示“未经 OpenAI 审查的自定义 MCP”风险提示；确认意味着允许第三方 MCP 读取或追加你有权访问的项目数据，应只在确认 URL、工具与 scope 后继续。
 
 ## Web 前端与发布
 

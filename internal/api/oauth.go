@@ -24,7 +24,7 @@ const (
 
 var pkcePattern = regexp.MustCompile(`^[A-Za-z0-9._~-]{43,128}$`)
 
-var oauthPage = template.Must(template.New("oauth").Parse(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Event-driven Context OAuth</title><style>body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}.actions{display:flex;gap:12px;margin-top:24px}button{font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;cursor:pointer}.secondary{background:#6b7169}code{word-break:break-all}</style></head><body><main class="card"><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} is requesting access through OAuth.</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">Sign in with your existing Event-driven Context account. Your password is sent only to this service and is never shared with the client.</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="decision" value="login"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required><div class="actions"><button type="submit">Sign in</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>Cancel</button></div></form>{{else}}<p>Signed in as <strong>{{.Username}}</strong>.</p><p class="notice">Approve access to:</p><ul>{{range .Scopes}}<li><strong>{{.}}</strong> — {{if eq . "context:read"}}read projects, members, events, metadata, and files{{else}}create projects, add members, and append immutable events{{end}}</li>{{end}}</ul><p class="muted">Access is limited to <code>{{.Resource}}</code> and expires after one hour. Project membership rules still apply.</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><div class="actions"><button type="submit" name="decision" value="approve">Authorize</button><button class="secondary" type="submit" name="decision" value="deny">Cancel</button></div></form>{{end}}</main></body></html>`))
+var oauthPage = template.Must(template.New("oauth").Parse(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Event-driven Context OAuth</title><style>body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}button{font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;cursor:pointer}.secondary{background:#6b7169}code{word-break:break-all}</style></head><body><main class="card"><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} is requesting access through OAuth.</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">Sign in with your existing Event-driven Context account. Your password is sent only to this service and is never shared with the client.</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required><p class="muted">New here? A username uses 3–64 lowercase letters, digits, _, . or -, and a password uses 12–72 bytes.</p><div class="actions"><button type="submit" name="decision" value="login">Sign in</button><button class="secondary" type="submit" name="decision" value="register">Create account</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>Cancel</button></div></form>{{else}}<p>Signed in as <strong>{{.Username}}</strong>.</p><p class="notice">Approve access to:</p><ul>{{range .Scopes}}<li><strong>{{.}}</strong> — {{if eq . "context:read"}}read projects, members, events, metadata, and files{{else}}create projects, add members, and append immutable events{{end}}</li>{{end}}</ul><p class="muted">Access is limited to <code>{{.Resource}}</code> and expires after one hour. Project membership rules still apply.</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><div class="actions"><button type="submit" name="decision" value="approve">Authorize</button><button class="secondary" type="submit" name="decision" value="deny">Cancel</button></div></form>{{end}}</main></body></html>`))
 
 type oauthPageData struct {
 	RequestID, ClientName, Username, Resource, Error string
@@ -193,12 +193,26 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 	case "deny":
 		oauthRedirect(w, r, request.RedirectURI, request.State, base, "", "access_denied")
 	case "login":
-		login, loginErr := store.Login(r.Context(), core.Credentials{Username: r.FormValue("username"), Password: r.FormValue("password")})
+		credentials := core.Credentials{Username: r.FormValue("username"), Password: r.FormValue("password")}
+		login, loginErr := store.Login(r.Context(), credentials)
 		if loginErr != nil {
 			renderOAuthRequest(w, r, store, base, requestID, "Invalid username or password.")
 			return
 		}
-		http.SetCookie(w, &http.Cookie{Name: "edc_oauth_session", Value: login.Token, Path: "/oauth", Secure: strings.HasPrefix(base, "https://"), HttpOnly: true, SameSite: http.SameSiteLaxMode, Expires: login.ExpiresAt})
+		setOAuthSessionCookie(w, base, login)
+		http.Redirect(w, r, "/oauth/authorize?request_id="+url.QueryEscape(requestID), http.StatusSeeOther)
+	case "register":
+		credentials := core.Credentials{Username: r.FormValue("username"), Password: r.FormValue("password")}
+		if _, registerErr := store.Register(r.Context(), credentials); registerErr != nil {
+			renderOAuthRequest(w, r, store, base, requestID, oauthRegistrationMessage(registerErr))
+			return
+		}
+		login, loginErr := store.Login(r.Context(), credentials)
+		if loginErr != nil {
+			fail(w, loginErr)
+			return
+		}
+		setOAuthSessionCookie(w, base, login)
 		http.Redirect(w, r, "/oauth/authorize?request_id="+url.QueryEscape(requestID), http.StatusSeeOther)
 	case "approve":
 		session, _ := r.Cookie("edc_oauth_session")
@@ -222,6 +236,23 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 	default:
 		oauthError(w, http.StatusBadRequest, "invalid_request", "missing authorization decision")
 	}
+}
+
+func setOAuthSessionCookie(w http.ResponseWriter, base string, login core.LoginResult) {
+	http.SetCookie(w, &http.Cookie{Name: "edc_oauth_session", Value: login.Token, Path: "/oauth", Secure: strings.HasPrefix(base, "https://"), HttpOnly: true, SameSite: http.SameSiteLaxMode, Expires: login.ExpiresAt})
+}
+
+func oauthRegistrationMessage(err error) string {
+	var appErr *core.Error
+	if errors.As(err, &appErr) {
+		switch appErr.Code {
+		case "invalid_input":
+			return appErr.Message
+		case "conflict":
+			return "Username already exists. Sign in or choose another username."
+		}
+	}
+	return "Could not create account. Please try again."
 }
 
 func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Store, base, requestID, message string) {

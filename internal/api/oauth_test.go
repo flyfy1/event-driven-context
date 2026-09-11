@@ -95,6 +95,61 @@ func TestOAuthDynamicRegistrationAllowsOptionalClientName(t *testing.T) {
 	}
 }
 
+func TestOAuthPageRegistrationContinuesAuthorization(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	verifier := strings.Repeat("r", 64)
+	sum := sha256.Sum256([]byte(verifier))
+	q := url.Values{
+		"response_type": {"code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"},
+		"state": {"registration-state"}, "code_challenge": {base64.RawURLEncoding.EncodeToString(sum[:])},
+		"code_challenge_method": {"S256"}, "resource": {testOAuthIssuer + "/mcp"}, "scope": {core.ScopeRead},
+	}
+	res := f.do(t, http.MethodGet, "/oauth/authorize?"+q.Encode(), "", "")
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("authorization start: %d", res.StatusCode)
+	}
+	requestLocation, _ := url.Parse(res.Header.Get("Location"))
+	requestID := requestLocation.Query().Get("request_id")
+	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
+	page, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Create account")) {
+		t.Fatalf("registration option missing: %d %s", res.StatusCode, page)
+	}
+
+	form := url.Values{"request_id": {requestID}, "decision": {"register"}, "username": {"new-user"}, "password": {"new-user-password-123"}}
+	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("register: %d", res.StatusCode)
+	}
+	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
+	page, _ = io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Signed in as <strong>new-user</strong>")) || !bytes.Contains(page, []byte(core.ScopeRead)) {
+		t.Fatalf("registration did not continue to consent: %d %s", res.StatusCode, page)
+	}
+
+	form = url.Values{"request_id": {requestID}, "decision": {"approve"}}
+	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+	res.Body.Close()
+	if res.StatusCode != http.StatusFound {
+		t.Fatalf("consent: %d", res.StatusCode)
+	}
+	callback, _ := url.Parse(res.Header.Get("Location"))
+	tokenForm := url.Values{
+		"grant_type": {"authorization_code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"},
+		"code": {callback.Query().Get("code")}, "code_verifier": {verifier}, "resource": {testOAuthIssuer + "/mcp"},
+	}
+	res = f.do(t, http.MethodPost, "/oauth/token", "application/x-www-form-urlencoded", tokenForm.Encode())
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		b, _ := io.ReadAll(res.Body)
+		t.Fatalf("token exchange after registration: %d %s", res.StatusCode, b)
+	}
+}
+
 func (f *oauthFixture) do(t *testing.T, method, path, contentType, body string) *http.Response {
 	t.Helper()
 	req, err := http.NewRequest(method, f.server.URL+path, strings.NewReader(body))
