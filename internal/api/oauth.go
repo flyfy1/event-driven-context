@@ -24,12 +24,66 @@ const (
 
 var pkcePattern = regexp.MustCompile(`^[A-Za-z0-9._~-]{43,128}$`)
 
-var oauthPage = template.Must(template.New("oauth").Parse(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Event-driven Context OAuth</title><style>body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}button{font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;cursor:pointer}.secondary{background:#6b7169}code{word-break:break-all}</style></head><body><main class="card"><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} is requesting access through OAuth.</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">Sign in with your existing Event-driven Context account. Your password is sent only to this service and is never shared with the client.</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><label for="username">Username</label><input id="username" name="username" autocomplete="username" required><label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required><p class="muted">New here? A username uses 3–64 lowercase letters, digits, _, . or -, and a password uses 12–72 bytes.</p><div class="actions"><button type="submit" name="decision" value="login">Sign in</button><button class="secondary" type="submit" name="decision" value="register">Create account</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>Cancel</button></div></form>{{else}}<p>Signed in as <strong>{{.Username}}</strong>.</p><p class="notice">Approve access to:</p><ul>{{range .Scopes}}<li><strong>{{.}}</strong> — {{if eq . "context:read"}}read projects, members, events, metadata, and files{{else}}create projects, add members, and append immutable events{{end}}</li>{{end}}</ul><p class="muted">Access is limited to <code>{{.Resource}}</code> and expires after one hour. Project membership rules still apply.</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><div class="actions"><button type="submit" name="decision" value="approve">Authorize</button><button class="secondary" type="submit" name="decision" value="deny">Cancel</button></div></form>{{end}}</main></body></html>`))
+var oauthPage = template.Must(template.New("oauth").Parse(`<!doctype html>
+<html lang="{{.Language}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Event-driven Context OAuth</title><style>
+body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}button{font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;cursor:pointer}.secondary{background:#6b7169}.languages{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;font-size:14px}.languages a{color:#265c3b}code{word-break:break-all}
+</style></head><body><main class="card"><nav class="languages" aria-label="{{.Copy.LanguageLabel}}"><span>{{.Copy.LanguageLabel}}:</span><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=en" hreflang="en">English</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=zh-CN" hreflang="zh-CN">简体中文</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=ms" hreflang="ms">Bahasa Melayu</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=hi" hreflang="hi">हिन्दी</a></nav><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} {{.Copy.ClientRequest}}</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">{{.Copy.SignInNotice}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><label for="username">{{.Copy.UsernameLabel}}</label><input id="username" name="username" autocomplete="username" required><label for="password">{{.Copy.PasswordLabel}}</label><input id="password" name="password" type="password" autocomplete="current-password" required><p class="muted">{{.Copy.NewAccountHint}}</p><div class="actions"><button type="submit" name="decision" value="login">{{.Copy.SignInLabel}}</button><button class="secondary" type="submit" name="decision" value="register">{{.Copy.CreateAccountLabel}}</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>{{.Copy.CancelLabel}}</button></div></form>{{else}}<p>{{.Copy.SignedInAs}} <strong>{{.Username}}</strong>.</p><p class="notice">{{.Copy.ApproveAccess}}</p><ul>{{range .Scopes}}<li><strong>{{.Name}}</strong> — {{.Description}}</li>{{end}}</ul><p class="muted">{{.Copy.AccessPrefix}} <code>{{.Resource}}</code> {{.Copy.AccessSuffix}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><div class="actions"><button type="submit" name="decision" value="approve">{{.Copy.AuthorizeLabel}}</button><button class="secondary" type="submit" name="decision" value="deny">{{.Copy.CancelLabel}}</button></div></form>{{end}}</main></body></html>`))
+
+type oauthCopy struct {
+	LanguageLabel, ClientRequest, SignInNotice, UsernameLabel, PasswordLabel                     string
+	NewAccountHint, SignInLabel, CreateAccountLabel, CancelLabel, SignedInAs                     string
+	ApproveAccess, ReadDescription, WriteDescription, AccessPrefix, AccessSuffix, AuthorizeLabel string
+	Errors                                                                                       map[string]string
+}
+
+type oauthScopeDisplay struct {
+	Name, Description string
+}
+
+var oauthCopies = map[string]oauthCopy{
+	"en": {
+		LanguageLabel: "Language", ClientRequest: "is requesting access through OAuth.",
+		SignInNotice:  "Sign in with your existing Event-driven Context account. Your password is sent only to this service and is never shared with the client.",
+		UsernameLabel: "Username", PasswordLabel: "Password", NewAccountHint: "New here? A username uses 3–64 lowercase letters, digits, _, . or -, and a password uses 12–72 bytes.",
+		SignInLabel: "Sign in", CreateAccountLabel: "Create account", CancelLabel: "Cancel", SignedInAs: "Signed in as", ApproveAccess: "Approve access to:",
+		ReadDescription: "read projects, members, events, metadata, and files", WriteDescription: "create projects, add members, and append immutable events",
+		AccessPrefix: "Access is limited to", AccessSuffix: "and expires after one hour. Project membership rules still apply.", AuthorizeLabel: "Authorize",
+		Errors: map[string]string{"invalid_credentials": "Invalid username or password.", "invalid_username": "Username must be 3–64 lowercase letters, digits, _, . or -.", "invalid_password": "Password must be 12–72 bytes.", "username_exists": "Username already exists. Sign in or choose another username.", "registration_failed": "Could not create account. Please try again."},
+	},
+	"zh-CN": {
+		LanguageLabel: "语言", ClientRequest: "正在通过 OAuth 请求访问。",
+		SignInNotice:  "请使用现有的 Event-driven Context 账号登录。密码只会发送到本服务，不会与客户端共享。",
+		UsernameLabel: "用户名", PasswordLabel: "密码", NewAccountHint: "还没有账号？用户名须为 3–64 位小写字母、数字、_、. 或 -，密码须为 12–72 字节。",
+		SignInLabel: "登录", CreateAccountLabel: "创建账号", CancelLabel: "取消", SignedInAs: "当前登录用户", ApproveAccess: "授权访问以下范围：",
+		ReadDescription: "读取项目、成员、事件、元数据和文件", WriteDescription: "创建项目、添加成员并追加不可变事件",
+		AccessPrefix: "访问权限仅限于", AccessSuffix: "，并在一小时后过期。项目成员权限规则仍然适用。", AuthorizeLabel: "授权",
+		Errors: map[string]string{"invalid_credentials": "用户名或密码错误。", "invalid_username": "用户名须为 3–64 位小写字母、数字、_、. 或 -。", "invalid_password": "密码须为 12–72 字节。", "username_exists": "用户名已存在，请登录或更换用户名。", "registration_failed": "无法创建账号，请重试。"},
+	},
+	"ms": {
+		LanguageLabel: "Bahasa", ClientRequest: "meminta akses melalui OAuth.",
+		SignInNotice:  "Log masuk dengan akaun Event-driven Context sedia ada. Kata laluan hanya dihantar kepada perkhidmatan ini dan tidak dikongsi dengan klien.",
+		UsernameLabel: "Nama pengguna", PasswordLabel: "Kata laluan", NewAccountHint: "Pengguna baharu? Nama pengguna menggunakan 3–64 huruf kecil, nombor, _, . atau -, dan kata laluan menggunakan 12–72 bait.",
+		SignInLabel: "Log masuk", CreateAccountLabel: "Cipta akaun", CancelLabel: "Batal", SignedInAs: "Log masuk sebagai", ApproveAccess: "Benarkan akses kepada:",
+		ReadDescription: "baca projek, ahli, peristiwa, metadata dan fail", WriteDescription: "cipta projek, tambah ahli dan lampirkan peristiwa kekal",
+		AccessPrefix: "Akses terhad kepada", AccessSuffix: "dan tamat selepas satu jam. Peraturan keahlian projek masih terpakai.", AuthorizeLabel: "Benarkan",
+		Errors: map[string]string{"invalid_credentials": "Nama pengguna atau kata laluan tidak sah.", "invalid_username": "Nama pengguna mesti terdiri daripada 3–64 huruf kecil, nombor, _, . atau -.", "invalid_password": "Kata laluan mesti terdiri daripada 12–72 bait.", "username_exists": "Nama pengguna sudah wujud. Log masuk atau pilih nama lain.", "registration_failed": "Akaun tidak dapat dicipta. Sila cuba lagi."},
+	},
+	"hi": {
+		LanguageLabel: "भाषा", ClientRequest: "OAuth के माध्यम से पहुँच का अनुरोध कर रहा है।",
+		SignInNotice:  "अपने मौजूदा Event-driven Context खाते से साइन इन करें। आपका पासवर्ड केवल इस सेवा को भेजा जाता है और क्लाइंट के साथ साझा नहीं किया जाता।",
+		UsernameLabel: "उपयोगकर्ता नाम", PasswordLabel: "पासवर्ड", NewAccountHint: "नए उपयोगकर्ता? नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - और पासवर्ड में 12–72 बाइट होने चाहिए।",
+		SignInLabel: "साइन इन", CreateAccountLabel: "खाता बनाएँ", CancelLabel: "रद्द करें", SignedInAs: "साइन इन उपयोगकर्ता", ApproveAccess: "इन अनुमतियों को स्वीकृत करें:",
+		ReadDescription: "प्रोजेक्ट, सदस्य, इवेंट, मेटाडेटा और फ़ाइलें पढ़ें", WriteDescription: "प्रोजेक्ट बनाएँ, सदस्य जोड़ें और अपरिवर्तनीय इवेंट जोड़ें",
+		AccessPrefix: "पहुँच केवल", AccessSuffix: "तक सीमित है और एक घंटे बाद समाप्त हो जाती है। प्रोजेक्ट सदस्यता नियम लागू रहते हैं।", AuthorizeLabel: "अनुमति दें",
+		Errors: map[string]string{"invalid_credentials": "उपयोगकर्ता नाम या पासवर्ड गलत है।", "invalid_username": "उपयोगकर्ता नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - होने चाहिए।", "invalid_password": "पासवर्ड 12–72 बाइट का होना चाहिए।", "username_exists": "यह उपयोगकर्ता नाम पहले से मौजूद है। साइन इन करें या दूसरा नाम चुनें।", "registration_failed": "खाता नहीं बनाया जा सका। फिर से प्रयास करें।"},
+	},
+}
 
 type oauthPageData struct {
-	RequestID, ClientName, Username, Resource, Error string
-	Scopes                                           []string
-	Login                                            bool
+	RequestID, ClientName, Username, Resource, Error, Language string
+	Copy                                                       oauthCopy
+	Scopes                                                     []oauthScopeDisplay
+	Login                                                      bool
 }
 
 func registerOAuthHandlers(mux *http.ServeMux, store *core.Store, config Config) {
@@ -170,7 +224,7 @@ func oauthAuthorizeGet(w http.ResponseWriter, r *http.Request, store *core.Store
 		return
 	}
 	http.SetCookie(w, &http.Cookie{Name: "edc_oauth_csrf", Value: csrf, Path: "/oauth/authorize", Secure: strings.HasPrefix(base, "https://"), HttpOnly: true, SameSite: http.SameSiteLaxMode, MaxAge: int(oauthRequestTTL.Seconds())})
-	http.Redirect(w, r, "/oauth/authorize?request_id="+url.QueryEscape(requestID), http.StatusSeeOther)
+	http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 }
 
 func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Store, base string) {
@@ -196,15 +250,15 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 		credentials := core.Credentials{Username: r.FormValue("username"), Password: r.FormValue("password")}
 		login, loginErr := store.Login(r.Context(), credentials)
 		if loginErr != nil {
-			renderOAuthRequest(w, r, store, base, requestID, "Invalid username or password.")
+			renderOAuthRequest(w, r, store, base, requestID, "invalid_credentials")
 			return
 		}
 		setOAuthSessionCookie(w, base, login)
-		http.Redirect(w, r, "/oauth/authorize?request_id="+url.QueryEscape(requestID), http.StatusSeeOther)
+		http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 	case "register":
 		credentials := core.Credentials{Username: r.FormValue("username"), Password: r.FormValue("password")}
 		if _, registerErr := store.Register(r.Context(), credentials); registerErr != nil {
-			renderOAuthRequest(w, r, store, base, requestID, oauthRegistrationMessage(registerErr))
+			renderOAuthRequest(w, r, store, base, requestID, oauthRegistrationErrorKey(registerErr))
 			return
 		}
 		login, loginErr := store.Login(r.Context(), credentials)
@@ -213,17 +267,17 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 			return
 		}
 		setOAuthSessionCookie(w, base, login)
-		http.Redirect(w, r, "/oauth/authorize?request_id="+url.QueryEscape(requestID), http.StatusSeeOther)
+		http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 	case "approve":
 		session, _ := r.Cookie("edc_oauth_session")
 		if session == nil {
-			http.Redirect(w, r, "/oauth/authorize?request_id="+url.QueryEscape(requestID), http.StatusSeeOther)
+			http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 			return
 		}
 		userID, _, authErr := store.Authenticate(r.Context(), session.Value)
 		if authErr != nil {
 			http.SetCookie(w, &http.Cookie{Name: "edc_oauth_session", Value: "", Path: "/oauth", MaxAge: -1})
-			http.Redirect(w, r, "/oauth/authorize?request_id="+url.QueryEscape(requestID), http.StatusSeeOther)
+			http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 			return
 		}
 		code := randomSecret("edc_code_")
@@ -242,20 +296,23 @@ func setOAuthSessionCookie(w http.ResponseWriter, base string, login core.LoginR
 	http.SetCookie(w, &http.Cookie{Name: "edc_oauth_session", Value: login.Token, Path: "/oauth", Secure: strings.HasPrefix(base, "https://"), HttpOnly: true, SameSite: http.SameSiteLaxMode, Expires: login.ExpiresAt})
 }
 
-func oauthRegistrationMessage(err error) string {
+func oauthRegistrationErrorKey(err error) string {
 	var appErr *core.Error
 	if errors.As(err, &appErr) {
 		switch appErr.Code {
 		case "invalid_input":
-			return appErr.Message
+			if strings.Contains(appErr.Message, "username") {
+				return "invalid_username"
+			}
+			return "invalid_password"
 		case "conflict":
-			return "Username already exists. Sign in or choose another username."
+			return "username_exists"
 		}
 	}
-	return "Could not create account. Please try again."
+	return "registration_failed"
 }
 
-func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Store, base, requestID, message string) {
+func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Store, base, requestID, errorKey string) {
 	csrf, _ := r.Cookie("edc_oauth_csrf")
 	if csrf == nil {
 		oauthError(w, http.StatusBadRequest, "invalid_request", "authorization request expired")
@@ -266,7 +323,20 @@ func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Stor
 		oauthError(w, http.StatusBadRequest, "invalid_request", "authorization request expired")
 		return
 	}
-	data := oauthPageData{RequestID: requestID, ClientName: request.ClientName, Resource: request.Resource, Scopes: strings.Fields(request.Scope), Login: true, Error: message}
+	language := oauthLanguage(r)
+	copy := oauthCopies[language]
+	scopes := make([]oauthScopeDisplay, 0, len(strings.Fields(request.Scope)))
+	for _, scope := range strings.Fields(request.Scope) {
+		description := copy.WriteDescription
+		if scope == core.ScopeRead {
+			description = copy.ReadDescription
+		}
+		scopes = append(scopes, oauthScopeDisplay{Name: scope, Description: description})
+	}
+	data := oauthPageData{RequestID: requestID, ClientName: request.ClientName, Resource: request.Resource, Scopes: scopes, Login: true, Language: language, Copy: copy}
+	if errorKey != "" {
+		data.Error = copy.Errors[errorKey]
+	}
 	if session, cookieErr := r.Cookie("edc_oauth_session"); cookieErr == nil {
 		if userID, _, authErr := store.Authenticate(r.Context(), session.Value); authErr == nil {
 			if user, meErr := store.Me(core.WithUser(r.Context(), userID)); meErr == nil {
@@ -275,12 +345,49 @@ func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Stor
 		}
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Language", language)
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
 	w.Header().Set("Referrer-Policy", "no-referrer")
-	if message != "" {
+	if errorKey != "" {
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 	_ = oauthPage.Execute(w, data)
+}
+
+func oauthLanguage(r *http.Request) string {
+	requested := r.URL.Query().Get("lang")
+	if r.Method == http.MethodPost {
+		requested = r.FormValue("lang")
+	}
+	if language := normalizeOAuthLanguage(requested); language != "" {
+		return language
+	}
+	for _, preference := range strings.Split(r.Header.Get("Accept-Language"), ",") {
+		if language := normalizeOAuthLanguage(strings.TrimSpace(strings.SplitN(preference, ";", 2)[0])); language != "" {
+			return language
+		}
+	}
+	return "en"
+}
+
+func normalizeOAuthLanguage(raw string) string {
+	raw = strings.ToLower(strings.TrimSpace(raw))
+	switch {
+	case raw == "zh" || strings.HasPrefix(raw, "zh-"):
+		return "zh-CN"
+	case raw == "ms" || strings.HasPrefix(raw, "ms-"):
+		return "ms"
+	case raw == "hi" || strings.HasPrefix(raw, "hi-"):
+		return "hi"
+	case raw == "en" || strings.HasPrefix(raw, "en-"):
+		return "en"
+	default:
+		return ""
+	}
+}
+
+func oauthRequestLocation(requestID, language string) string {
+	return "/oauth/authorize?request_id=" + url.QueryEscape(requestID) + "&lang=" + url.QueryEscape(language)
 }
 
 func oauthToken(w http.ResponseWriter, r *http.Request, store *core.Store, base string, ttl time.Duration) {

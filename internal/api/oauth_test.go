@@ -102,7 +102,7 @@ func TestOAuthPageRegistrationContinuesAuthorization(t *testing.T) {
 	q := url.Values{
 		"response_type": {"code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"},
 		"state": {"registration-state"}, "code_challenge": {base64.RawURLEncoding.EncodeToString(sum[:])},
-		"code_challenge_method": {"S256"}, "resource": {testOAuthIssuer + "/mcp"}, "scope": {core.ScopeRead},
+		"code_challenge_method": {"S256"}, "resource": {testOAuthIssuer + "/mcp"}, "scope": {core.ScopeRead}, "lang": {"zh-CN"},
 	}
 	res := f.do(t, http.MethodGet, "/oauth/authorize?"+q.Encode(), "", "")
 	res.Body.Close()
@@ -114,20 +114,24 @@ func TestOAuthPageRegistrationContinuesAuthorization(t *testing.T) {
 	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
 	page, _ := io.ReadAll(res.Body)
 	res.Body.Close()
-	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Create account")) {
+	if res.StatusCode != http.StatusOK || res.Header.Get("Content-Language") != "zh-CN" || !bytes.Contains(page, []byte("创建账号")) {
 		t.Fatalf("registration option missing: %d %s", res.StatusCode, page)
 	}
 
-	form := url.Values{"request_id": {requestID}, "decision": {"register"}, "username": {"new-user"}, "password": {"new-user-password-123"}}
+	form := url.Values{"request_id": {requestID}, "lang": {"zh-CN"}, "decision": {"register"}, "username": {"new-user"}, "password": {"new-user-password-123"}}
 	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
 	res.Body.Close()
 	if res.StatusCode != http.StatusSeeOther {
 		t.Fatalf("register: %d", res.StatusCode)
 	}
+	registeredLocation, _ := url.Parse(res.Header.Get("Location"))
+	if registeredLocation.Query().Get("lang") != "zh-CN" {
+		t.Fatalf("registration lost language: %s", res.Header.Get("Location"))
+	}
 	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
 	page, _ = io.ReadAll(res.Body)
 	res.Body.Close()
-	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Signed in as <strong>new-user</strong>")) || !bytes.Contains(page, []byte(core.ScopeRead)) {
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("当前登录用户 <strong>new-user</strong>")) || !bytes.Contains(page, []byte(core.ScopeRead)) {
 		t.Fatalf("registration did not continue to consent: %d %s", res.StatusCode, page)
 	}
 
@@ -147,6 +151,45 @@ func TestOAuthPageRegistrationContinuesAuthorization(t *testing.T) {
 	if res.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(res.Body)
 		t.Fatalf("token exchange after registration: %d %s", res.StatusCode, b)
+	}
+}
+
+func TestOAuthPageLanguageNegotiation(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	verifier := strings.Repeat("l", 64)
+	sum := sha256.Sum256([]byte(verifier))
+	base := url.Values{
+		"response_type": {"code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"},
+		"state": {"language-state"}, "code_challenge": {base64.RawURLEncoding.EncodeToString(sum[:])},
+		"code_challenge_method": {"S256"}, "resource": {testOAuthIssuer + "/mcp"}, "scope": {core.ScopeRead},
+	}
+	for _, tc := range []struct {
+		header, language, text string
+	}{
+		{"ms-MY,ms;q=0.9,en;q=0.8", "ms", "Cipta akaun"},
+		{"hi-IN,hi;q=0.9,en;q=0.8", "hi", "खाता बनाएँ"},
+		{"en-US,en;q=0.9", "en", "Create account"},
+	} {
+		req, err := http.NewRequest(http.MethodGet, f.server.URL+"/oauth/authorize?"+base.Encode(), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Accept-Language", tc.header)
+		res, err := f.client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		res.Body.Close()
+		location, _ := url.Parse(res.Header.Get("Location"))
+		if res.StatusCode != http.StatusSeeOther || location.Query().Get("lang") != tc.language {
+			t.Fatalf("language negotiation %q: %d %s", tc.header, res.StatusCode, res.Header.Get("Location"))
+		}
+		res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
+		page, _ := io.ReadAll(res.Body)
+		res.Body.Close()
+		if res.StatusCode != http.StatusOK || res.Header.Get("Content-Language") != tc.language || !bytes.Contains(page, []byte(tc.text)) {
+			t.Fatalf("language page %s: %d %s", tc.language, res.StatusCode, page)
+		}
 	}
 }
 
