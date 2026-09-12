@@ -3,7 +3,7 @@
   if (typeof module === "object" && module.exports) module.exports = api;
   root.ContextNavigation = api;
 })(typeof globalThis === "undefined" ? this : globalThis, function () {
-  const views = new Set(["records", "state", "integration", "plugins"]);
+  const views = new Set(["records", "files", "state", "integration", "plugins"]);
   function workspaceURL(href, locale) {
     const source = new URL(href);
     const target = new URL("./workspace.html", source);

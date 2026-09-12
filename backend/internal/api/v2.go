@@ -620,7 +620,7 @@ func failV2(w http.ResponseWriter, err error) {
 		status = http.StatusForbidden
 	case "not_found":
 		status = http.StatusNotFound
-	case "conflict", "state_version_mismatch":
+	case "conflict", "state_version_mismatch", "notes_revision_mismatch":
 		status = http.StatusConflict
 	case "too_large":
 		status = http.StatusRequestEntityTooLarge

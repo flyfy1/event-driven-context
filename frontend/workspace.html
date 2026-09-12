@@ -69,6 +69,7 @@
           <div class="project-heading"><div><p id="project-owner" class="eyebrow"></p><div class="project-title-row"><h2 id="project-title"></h2><button id="edit-project-name" class="quiet" type="button" data-i18n="renameProject">Rename</button></div><form id="project-name-form" class="project-name-form hidden" novalidate><label><span data-i18n="projectName">Project name</span><input id="project-name-input" required maxlength="200" /></label><div class="actions"><button id="cancel-project-name" class="quiet" type="button" data-i18n="cancel">Cancel</button><button class="primary" type="submit" data-i18n="saveProjectName">Save name</button></div></form><p id="project-name-message" class="message" aria-live="polite"></p><p id="project-description-display" class="muted"></p><div class="project-timezone"><span data-i18n="projectTimezone">Project time zone</span><strong id="project-timezone-display"></strong><button id="edit-project-timezone" class="quiet" type="button" data-i18n="changeTimezone">Change</button></div><form id="project-timezone-form" class="project-timezone-form hidden"><label><span data-i18n="projectTimezone">Project time zone</span><select id="project-timezone-select" required></select></label><div class="actions"><button id="cancel-project-timezone" class="quiet" type="button" data-i18n="cancel">Cancel</button><button class="primary" type="submit" data-i18n="saveTimezone">Save time zone</button></div></form><p id="project-timezone-message" class="message" aria-live="polite"></p></div><button id="refresh-button" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
           <nav class="workspace-nav" aria-label="Project sections" data-i18n-aria-label="projectSections">
             <button class="selected" type="button" data-workspace-view="records" aria-controls="records-panel" aria-selected="true" data-i18n="recordsTab">Records</button>
+            <button type="button" data-workspace-view="files" aria-controls="files-panel" aria-selected="false" data-i18n="filesTab">Files</button>
             <button type="button" data-workspace-view="state" aria-controls="state-panel" aria-selected="false" data-i18n="stateTab">State</button>
             <button type="button" data-workspace-view="integration" aria-controls="integration-panel" aria-selected="false" data-i18n="integrationTab">Connect</button>
             <button type="button" data-workspace-view="plugins" aria-controls="plugins-panel" aria-selected="false" data-i18n="pluginsTab">Plugins</button>
@@ -126,6 +127,23 @@
               <section class="metadata-card"><div class="card-title"><h3 data-i18n="metadataTitle">Available metadata</h3><button id="metadata-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div><div id="metadata-list" class="metadata-list"><p class="muted" data-i18n="metadataNone">No metadata has been recorded yet.</p></div></section>
             </div>
             <section class="events-section"><div class="card-title event-toolbar"><div><p class="eyebrow" data-i18n="eventsEyebrow">EVENTS</p><h3 data-i18n="eventsTitle">Records</h3></div><form id="query-form" class="query-form"><select id="query-type" aria-label="Filter by record type" data-i18n-aria-label="queryTypeAria"><option value="" data-i18n="allTypes">All types</option><option value="log" data-i18n="logType">Log</option><option value="note" data-i18n="noteType">Note</option><option value="derived" data-i18n="derivedType">Derived</option></select><input id="query-source" aria-label="Filter by source channel" data-i18n-aria-label="querySourceAria" placeholder="source channel" data-i18n-placeholder="querySourcePlaceholder" /><input id="query-refs" aria-label="Find records that reference an event" data-i18n-aria-label="queryRefsAria" placeholder="referenced event UUID" data-i18n-placeholder="queryRefsPlaceholder" /><div class="query-metadata-fields" role="group" aria-label="Filter by metadata" data-i18n-aria-label="queryAria"><input id="query-metadata-key" aria-label="Metadata name" data-i18n-aria-label="queryMetadataKeyAria" placeholder="metadata name" data-i18n-placeholder="queryMetadataKeyPlaceholder" /><input id="query-metadata-value" aria-label="Metadata value" data-i18n-aria-label="queryMetadataValueAria" placeholder="value" data-i18n-placeholder="queryMetadataValuePlaceholder" /></div><button class="quiet" type="submit" data-i18n="filter">Filter</button><button id="clear-query" class="quiet" type="button" data-i18n="clear">Clear</button></form></div><p id="events-message" class="message" aria-live="polite"></p><div id="events-list" class="events-list" aria-live="polite"></div><button id="load-more" class="quiet hidden" type="button" data-i18n="loadMore">Load more</button></section>
+          </section>
+
+          <section id="files-panel" class="workspace-panel hidden" data-workspace-panel="files" aria-labelledby="files-title">
+            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="filesEyebrow">PROJECT WORKSPACE</p><h3 id="files-title" data-i18n="filesTitle">Files</h3><p class="muted" data-i18n="filesHint">Browse and edit published Markdown notes. Changes are saved only when you choose Save.</p></div><button id="files-refresh" class="quiet" type="button" data-i18n="filesRefresh">Refresh</button></div>
+            <div class="files-layout">
+              <aside class="files-browser">
+                <label class="files-search"><span data-i18n="filesFilter">Filter files</span><input id="files-filter" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="filesFilterPlaceholder" placeholder="Search by path…" /></label>
+                <div id="files-tree" role="tree" tabindex="0" data-i18n-aria-label="filesTreeLabel" aria-label="Project files"><div id="files-tree-spacer" role="none"></div></div>
+                <p id="files-tree-empty" class="muted"></p>
+              </aside>
+              <div class="files-document">
+                <div class="files-document-toolbar"><strong id="files-path"></strong><div class="files-document-actions"><button id="files-download" type="button" class="quiet" data-i18n="filesDownload">Download</button><button id="files-discard" type="button" class="quiet" data-i18n="filesDiscard">Discard changes</button><button id="files-save" type="button" class="primary" data-i18n="filesSave">Save</button></div></div>
+                <div id="files-placeholder" class="files-placeholder"></div><div id="files-editor" class="hidden"></div>
+                <div id="files-status" role="status" class="files-status"></div>
+              </div>
+            </div>
+            <p id="files-message" class="message" role="status" aria-live="polite"></p>
           </section>
 
           <section id="state-panel" class="workspace-panel hidden" data-workspace-panel="state" aria-labelledby="state-title">
@@ -208,6 +226,9 @@
     <script src="./i18n.js" defer></script>
     <script src="./workspace-utils.js" defer></script>
     <script src="./navigation.js" defer></script>
+    <script src="./vendor/code-editor.js" defer></script>
+    <script src="./file-tree.js" defer></script>
+    <script src="./workspace-files.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>
