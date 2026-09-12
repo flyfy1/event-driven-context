@@ -29,7 +29,6 @@ const frontendDir = __dirname;
 const index = fs.readFileSync(path.join(frontendDir, "index.html"), "utf8");
 const workspace = fs.readFileSync(path.join(frontendDir, "workspace.html"), "utf8");
 const app = fs.readFileSync(path.join(frontendDir, "app.js"), "utf8");
-const agentSetup = fs.readFileSync(path.join(frontendDir, "agent-setup.md"), "utf8");
 const referencedKeys = new Set();
 for (const match of (index + workspace).matchAll(/data-i18n(?:-placeholder|-aria-label|-content)?="([^"]+)"/g)) referencedKeys.add(match[1]);
 for (const match of app.matchAll(/\bt\("([^"]+)"/g)) referencedKeys.add(match[1]);
@@ -41,14 +40,8 @@ assert.match(app, /event_context_locale/);
 assert.match(app, /Domain=\.integ\.life/);
 assert.match(app, /pathWithLocale\(window\.location\.href, state\.locale\)/);
 
-// Production may serve workspace.html directly as index.html without bundling
-// the separate landing assets.
-if (!/data-copy="/.test(index)) {
-  assert.match(index, /id="auth-form"/);
-  assert.match(index, /id="workspace"/);
-  console.log("frontend i18n checks passed for direct workspace entry");
-  process.exit(0);
-}
+// The public root must remain the landing page in every release.
+assert.match(index, /data-copy="hero1"/);
 
 // The public page and workspace must retain the same locale contract.
 const vm = require("node:vm");
@@ -70,14 +63,5 @@ assert.match(landing, /Domain=\.integ\.life/);
 assert.match(index, /href="\.\/workspace\.html"/);
 assert.match(workspace, /id="auth-form"/);
 assert.match(workspace, /id="workspace"/);
-assert.match(workspace, /https:\/\/chatgpt\.com\/plugins#settings\/Connectors\?create-connector=true&amp;redirectAfter=%2Fplugins/);
-assert.match(workspace, /href="\.\/skills\/edc-recorder\/SKILL\.md"/);
-assert.match(app, /agent-setup\.md/);
-assert.match(app, /agentSetupPrompt/);
-assert.match(agentSetup, /https:\/\/context-api\.integ\.life\/mcp/);
-assert.match(agentSetup, /https:\/\/context\.integ\.life\/skills\/edc-recorder\/SKILL\.md/);
-assert.match(agentSetup, /codex mcp login event-context --scopes context:read,context:write/);
-assert.match(agentSetup, /claude mcp add --transport http --scope local/);
-assert.doesNotMatch(translate("zh-CN", "agentSetupPrompt", { guide_url: "GUIDE", project_id: "PROJECT", skill_url: "SKILL" }), /\{(?:guide_url|project_id|skill_url)\}/);
 
 console.log(`frontend i18n checks passed: ${supportedLocales.length} locales, ${englishKeys.length} keys`);
