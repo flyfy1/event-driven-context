@@ -331,6 +331,53 @@ func TestV2HTTPFileMultipartLimitsHashAndDownloadHeaders(t *testing.T) {
 	}
 }
 
+func TestV2HTTPListsAndInstallsSystemPluginsByID(t *testing.T) {
+	f := newV2APIFixture(t)
+
+	w := f.request(t, http.MethodGet, "/v1/plugins", "", "", nil)
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("catalog without authentication: %d %s", w.Code, w.Body.String())
+	}
+	w = f.request(t, http.MethodGet, "/v1/plugins", f.token, "", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("catalog: %d %s", w.Code, w.Body.String())
+	}
+	var catalog struct {
+		Plugins []v2.Manifest `json:"plugins"`
+	}
+	catalog = decodeV2Response[struct {
+		Plugins []v2.Manifest `json:"plugins"`
+	}](t, w)
+	if len(catalog.Plugins) != 5 {
+		t.Fatalf("catalog plugins = %d, want 5", len(catalog.Plugins))
+	}
+	var expected v2.Manifest
+	for _, manifest := range catalog.Plugins {
+		if manifest.ID == "project-brief" {
+			expected = manifest
+		}
+	}
+	if expected.ID == "" {
+		t.Fatal("project-brief missing from catalog")
+	}
+
+	path := "/v1/projects/" + f.project.ID + "/plugins"
+	w = f.request(t, http.MethodPost, path, f.token, "application/json", v2JSONBody(t, map[string]any{"plugin_id": expected.ID}))
+	installed := decodeV2Response[v2.InstallPluginResult](t, w)
+	if w.Code != http.StatusCreated || installed.Token == "" || installed.Installation.Manifest.ID != expected.ID || installed.Installation.PluginVersion != expected.Version || string(installed.Installation.Config) != string(expected.Config) {
+		t.Fatalf("install system plugin: %d %#v", w.Code, installed)
+	}
+
+	w = f.request(t, http.MethodPost, path, f.token, "application/json", v2JSONBody(t, map[string]any{"plugin_id": "unknown"}))
+	if w.Code != http.StatusBadRequest || !strings.Contains(w.Body.String(), "unknown system plugin") {
+		t.Fatalf("unknown system plugin: %d %s", w.Code, w.Body.String())
+	}
+	w = f.request(t, http.MethodPost, path, f.token, "application/json", v2JSONBody(t, map[string]any{"plugin_id": "evidence", "manifest": expected}))
+	if w.Code != http.StatusBadRequest || !strings.Contains(w.Body.String(), "exactly one") {
+		t.Fatalf("ambiguous install source: %d %s", w.Code, w.Body.String())
+	}
+}
+
 type zeroReader struct{}
 
 func (zeroReader) Read(p []byte) (int, error) {

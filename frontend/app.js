@@ -42,7 +42,7 @@ const state = {
   metadataFields: [], metadataStatus: "idle", metadataError: "", metadataRequest: 0,
   states: [], statesStatus: "idle", statesError: "", statesRequest: 0,
   members: [], membersStatus: "idle", membersError: "", membersRequest: 0,
-  plugins: [], pluginsStatus: "idle", pluginsError: "", pluginsRequest: 0,
+  plugins: [], systemPlugins: [], selectedPluginID: "", pluginsStatus: "idle", pluginsError: "", pluginsRequest: 0,
   eventCache: new Map(), pluginToken: ""
 };
 const filesWorkspace = window.createFilesWorkspace({ request, t });
@@ -228,7 +228,7 @@ function clearSession() {
   state.membersRequest += 1;
   state.pluginsRequest += 1;
   state.token = null; state.user = null; state.projects = []; state.project = null;
-  state.events = []; state.states = []; state.members = []; state.plugins = []; state.eventCache.clear();
+  state.events = []; state.states = []; state.members = []; state.plugins = []; state.systemPlugins = []; state.selectedPluginID = ""; state.eventCache.clear();
   state.projectVersion += 1;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
@@ -282,7 +282,7 @@ async function selectProject(id, historyMode = "push") {
   setMessage("#record-message");
   setMessage("#members-message");
   $("#add-member-form").reset();
-  state.pendingEventID = ""; state.cursor = ""; state.events = []; state.states = []; state.members = []; state.plugins = []; state.eventCache.clear();
+  state.pendingEventID = ""; state.cursor = ""; state.events = []; state.states = []; state.members = []; state.plugins = []; state.selectedPluginID = ""; state.eventCache.clear();
   state.eventsStatus = state.metadataStatus = state.statesStatus = state.membersStatus = state.pluginsStatus = "loading";
   renderProjects(); renderProject(); renderEvents(); renderMetadata(); renderStates(); renderMembers(); renderPlugins(); renderIntegration();
   if (!state.project) return;
@@ -760,7 +760,45 @@ function renderMembers() {
     list.append(item);
   }
 }
+function selectedSystemPlugin() {
+  return state.systemPlugins.find((plugin) => plugin.id === state.selectedPluginID) || null;
+}
+function renderPluginCatalog() {
+  const select = $("#plugin-select"), preview = $("#plugin-catalog-preview"), submit = $("#plugin-install-submit");
+  const installed = new Set(state.plugins.map((plugin) => plugin.plugin_id));
+  const selected = selectedSystemPlugin();
+  select.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = t(state.pluginsStatus === "loading" ? "pluginsLoading" : state.systemPlugins.length ? "choosePlugin" : "noSystemPlugins");
+  select.append(placeholder);
+  for (const plugin of state.systemPlugins) {
+    const option = document.createElement("option");
+    option.value = plugin.id;
+    option.disabled = installed.has(plugin.id);
+    option.textContent = option.disabled ? t("pluginInstalledChoice", { name: plugin.name }) : plugin.name;
+    select.append(option);
+  }
+  if (selected && !installed.has(selected.id)) select.value = selected.id;
+  else state.selectedPluginID = "";
+  select.disabled = state.pluginsStatus !== "ready" || !state.systemPlugins.length;
+  submit.disabled = !state.selectedPluginID;
+  const current = selectedSystemPlugin();
+  preview.classList.toggle("hidden", !current);
+  if (!current) return;
+  $("#plugin-catalog-name").textContent = current.name;
+  $("#plugin-catalog-version").textContent = current.id + " · " + current.version;
+  $("#plugin-catalog-description").textContent = current.description || "";
+  $("#plugin-catalog-permissions").textContent = JSON.stringify(current.permissions || {}, null, 2);
+}
+function chooseSystemPlugin(pluginID) {
+  state.selectedPluginID = pluginID;
+  const plugin = selectedSystemPlugin();
+  $("#plugin-config").value = JSON.stringify(plugin && plugin.config || {}, null, 2);
+  renderPluginCatalog();
+}
 function renderPlugins() {
+  renderPluginCatalog();
   const list = $("#plugins-list"); list.replaceChildren();
   setMessage("#plugins-message", state.pluginsStatus === "error" ? state.pluginsError : "");
   if (state.pluginsStatus === "loading") return appendEmpty(list, "pluginsLoading");
@@ -849,9 +887,9 @@ async function loadPlugins() {
   const projectID = state.project.id, version = state.projectVersion, requestVersion = ++state.pluginsRequest;
   state.pluginsStatus = "loading"; state.pluginsError = ""; renderPlugins();
   try {
-    const payload = await request(projectPath("/plugins"));
+    const [payload, catalog] = await Promise.all([request(projectPath("/plugins")), request("/v1/plugins")]);
     if (!activeProject(version, projectID) || requestVersion !== state.pluginsRequest) return;
-    state.plugins = payload.plugins || []; state.pluginsStatus = "ready"; renderPlugins();
+    state.plugins = payload.plugins || []; state.systemPlugins = catalog.plugins || []; state.pluginsStatus = "ready"; renderPlugins();
   } catch (error) {
     if (!activeProject(version, projectID) || requestVersion !== state.pluginsRequest) return;
     state.pluginsStatus = "error"; state.pluginsError = error.message; renderPlugins();
@@ -987,6 +1025,7 @@ $("#add-member-form").addEventListener("submit", async (event) => {
   } finally { setBusy(button, false, "addMember"); }
 });
 $("#plugins-refresh").addEventListener("click", loadPlugins);
+$("#plugin-select").addEventListener("change", (event) => chooseSystemPlugin(event.target.value));
 $("#edit-project-name").addEventListener("click", () => {
   if (!state.project || !currentUserIsOwner()) return;
   $("#project-name-input").value = state.project.name;
@@ -1046,21 +1085,21 @@ $("#project-timezone-form").addEventListener("submit", async (event) => {
 $("#plugin-install-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget, button = $("#plugin-install-submit");
-  let manifest, config;
+  let config;
   try {
-    manifest = jsonLiteral($("#plugin-manifest").value, "pluginManifest", false);
+    if (!state.selectedPluginID) throw new Error(t("pluginSelectionRequired"));
     config = jsonLiteral($("#plugin-config").value || "{}", "pluginConfig", false);
   } catch (error) { setMessage("#plugins-message", error.message); return; }
   setBusy(button, true, "installPluginAction"); setMessage("#plugins-message");
   try {
-    const installed = await request(projectPath("/plugins"), { method: "POST", rawBody: jsonWithRaw({}, { manifest: manifest.raw, config: config.raw }) });
+    const installed = await request(projectPath("/plugins"), { method: "POST", rawBody: jsonWithRaw({ plugin_id: state.selectedPluginID }, { config: config.raw }) });
     state.pluginToken = installed.token || "";
     $("#plugin-token").textContent = state.pluginToken;
     $("#plugin-token-panel").classList.toggle("hidden", !state.pluginToken);
-    form.reset(); $("#plugin-config").value = "{}";
+    form.reset(); state.selectedPluginID = ""; $("#plugin-config").value = "{}";
     await loadPlugins(); setMessage("#plugins-message", t("pluginInstalled"), true);
   } catch (error) { setMessage("#plugins-message", error.message); }
-  finally { setBusy(button, false, "installPluginAction"); }
+  finally { setBusy(button, false, "installPluginAction"); renderPluginCatalog(); }
 });
 $("#copy-plugin-token").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(state.pluginToken); setMessage("#plugins-message", t("tokenCopied"), true); }

@@ -651,8 +651,9 @@ edc host run
 | `GET /v1/projects/{project_id}/state` | 列出 State；`?prefix=` 筛选 | `list_state` |
 | `GET /v1/projects/{project_id}/state/{plugin_id}/{name}` | 读取 State；`?version=` 读取历史版本 | `get_state` |
 | `PUT /v1/projects/{project_id}/state/{plugin_id}/{name}` | 发布 State 新版本 | `put_state` |
+| `GET /v1/plugins` | 列出当前服务编译内置的可信系统插件清单 | — |
 | `GET /v1/projects/{project_id}/plugins` | 列出已安装插件及状态 | — |
-| `POST /v1/projects/{project_id}/plugins` | 安装插件，返回插件令牌 | — |
+| `POST /v1/projects/{project_id}/plugins` | 以系统 `plugin_id` 或完整 manifest 安装插件，返回插件令牌 | — |
 | `PATCH /v1/projects/{project_id}/plugins/{plugin_id}` | 修改配置、暂停或恢复 | — |
 | `POST /v1/projects/{project_id}/plugins/{plugin_id}/runs` | 手动运行或重跑（例如重新转录某条录音） | — |
 | `DELETE /v1/projects/{project_id}/plugins/{plugin_id}` | 卸载插件，保留已发布内容 | — |
