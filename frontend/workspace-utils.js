@@ -5,7 +5,7 @@
 })(typeof globalThis === "undefined" ? this : globalThis, function () {
   const PRODUCTION_API = "https://context-api.integ.life";
   const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "::1"]);
-  const AUDIO_TYPES = new Set(["audio/mp4", "audio/wav", "audio/mpeg"]);
+  const AUDIO_TYPES = new Set(["audio/mp4", "audio/wav", "audio/mpeg", "audio/ogg"]);
   const IMAGE_TYPES = new Set(["image/jpeg", "image/png"]);
   const IMAGE_EXTENSIONS = new Set(["jpeg", "jpg", "png"]);
   const REFERENCE_RELATIONS = new Set(["supersedes", "retracts", "resolves", "derived_from", "replies_to"]);
@@ -38,7 +38,7 @@
     if (declared === "audio/mp3") return "audio/mpeg";
     if (AUDIO_TYPES.has(declared)) return declared;
     const extension = String(filename || "").toLowerCase().split(".").pop();
-    return ({ m4a: "audio/mp4", mp4: "audio/mp4", wav: "audio/wav", mp3: "audio/mpeg" })[extension] || "";
+    return ({ m4a: "audio/mp4", mp4: "audio/mp4", wav: "audio/wav", mp3: "audio/mpeg", ogg: "audio/ogg" })[extension] || "";
   }
 
   function contextFileKind(filename, declaredType) {

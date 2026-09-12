@@ -277,8 +277,8 @@ func v2TranscriptionEndpoint(service v2.ServiceAPI, transcriber transcription.Tr
 		if source.Type != "note" && source.Type != "log" {
 			return v2TranscriptionResult{}, v2Invalid("source event must be a note or log")
 		}
-		if source.Content.Kind != "file" || !map[string]bool{"audio/mp4": true, "audio/mpeg": true, "audio/wav": true}[source.Content.MediaType] {
-			return v2TranscriptionResult{}, &v2.Error{Code: "unsupported_media_type", Message: "source event must contain M4A, MP3, or WAV audio"}
+		if source.Content.Kind != "file" || !map[string]bool{"audio/mp4": true, "audio/mpeg": true, "audio/wav": true, "audio/ogg": true}[source.Content.MediaType] {
+			return v2TranscriptionResult{}, &v2.Error{Code: "unsupported_media_type", Message: "source event must contain M4A, MP3, WAV, or OGG audio"}
 		}
 		if source.Content.SizeBytes > transcription.MaxAudioBytes {
 			return v2TranscriptionResult{}, &v2.Error{Code: "too_large", Message: "OpenAI transcription accepts audio up to 25 MB"}

@@ -21,10 +21,20 @@ type fakeAudioTranscriber struct {
 func (f *fakeAudioTranscriber) Transcribe(_ context.Context, filename, mediaType string, size int64, reader io.Reader, _ transcription.Options) (transcription.Result, error) {
 	f.calls++
 	data, _ := io.ReadAll(reader)
-	if filename != "meeting.wav" || mediaType != "audio/wav" || int64(len(data)) != size {
+	if filename != "meeting.ogg" || mediaType != "audio/ogg" || int64(len(data)) != size {
 		return transcription.Result{}, &v2.Error{Code: "invalid_input", Message: "bad fixture"}
 	}
 	return transcription.Result{Text: "会议预算调整为三万元。", Model: "gpt-transcribe"}, nil
+}
+
+func apiOgg() []byte {
+	payload := []byte("OpusHead\x01\x02\x00\x00\x80\xbb\x00\x00\x00\x00\x00")
+	page := make([]byte, 28, 28+len(payload))
+	copy(page[:4], "OggS")
+	page[5] = 0x02
+	page[26] = 1
+	page[27] = byte(len(payload))
+	return append(page, payload...)
 }
 
 func TestV2AudioUploadTranscribesToSourceLinkedPluginEvent(t *testing.T) {
@@ -32,8 +42,8 @@ func TestV2AudioUploadTranscribesToSourceLinkedPluginEvent(t *testing.T) {
 	transcriber := &fakeAudioTranscriber{}
 	f.handler = V2HandlerWithConfig(f.store, f.service, Config{PublicBaseURL: v2TestIssuer, AudioTranscriber: transcriber})
 	ctx := core.WithUser(context.Background(), f.alice.ID)
-	audio := apiWAV(256)
-	file, err := f.service.PutFile(ctx, f.project.ID, v2.FileUpload{Filename: "meeting.wav", MediaType: "audio/wav", SizeBytes: int64(len(audio)), Reader: bytes.NewReader(audio)})
+	audio := apiOgg()
+	file, err := f.service.PutFile(ctx, f.project.ID, v2.FileUpload{Filename: "meeting.ogg", MediaType: "audio/ogg", SizeBytes: int64(len(audio)), Reader: bytes.NewReader(audio)})
 	if err != nil {
 		t.Fatal(err)
 	}

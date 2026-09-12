@@ -25,7 +25,8 @@ test("a full-size legacy text file encodes without argument overflow", () => {
 test("audio types are restricted and normalized", () => {
   assert.equal(audioMediaType("memo.m4a", ""), "audio/mp4");
   assert.equal(audioMediaType("memo.bin", "audio/x-wav"), "audio/wav");
-  assert.equal(audioMediaType("memo.ogg", "audio/ogg"), "");
+  assert.equal(audioMediaType("memo.ogg", "audio/ogg"), "audio/ogg");
+  assert.equal(audioMediaType("memo.ogg", "application/ogg"), "audio/ogg");
 });
 
 test("context capture accepts images and supported audio", () => {
