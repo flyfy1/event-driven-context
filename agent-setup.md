@@ -1,73 +1,60 @@
-# Connect Claude Code or Codex to Event-driven Context
+# Connect local Codex or Claude Code to Event-driven Context
 
-This page is a setup instruction for a coding agent. The target project ID is the `project` value in this page's URL. If the URL has no `project` value, stop and ask the user which existing project to use. Do not create a project implicitly.
+This static guide is generic. For a guide with the selected project and language embedded, open `https://context-api.integ.life/agent-setup.md?project=YOUR_PROJECT_ID&locale=en`. If no project ID is available, stop and ask the user for it. Do not infer or create a project.
 
 ## Goal
 
-Connect the current working directory to the user's existing Event-driven Context account through remote MCP, install the official recorder Skill, and prove access to the target project with a real read. Configuration files alone are not proof.
+Use the authenticated `edc` CLI directly from local Codex or Claude Code. Do not add an MCP server for a local coding agent. The CLI reads its own private login configuration and calls the Event-driven Context API.
 
-Use these fixed service resources:
-
-- MCP endpoint: `https://context-api.integ.life/mcp`
+- API server: `https://context-api.integ.life`
 - Recorder Skill: `https://context.integ.life/skills/edc-recorder/SKILL.md`
 
-Never ask the user to paste an access token into the conversation. Authentication uses OAuth in the user's browser. Inspect existing configuration before changing it, preserve unrelated entries, and do not enable automatic capture hooks unless the user separately asks for them.
+Never open the private CLI configuration, print its access token, or ask the user to paste a token into chat. If login is required, ask the user to run `edc login` privately in their terminal.
 
-## 1. Configure remote MCP
+## 1. Verify the CLI login
 
-Choose the instructions for the client that is running this task.
-
-### Codex
-
-First inspect any existing entry with `codex mcp get event-context`. If it is missing, add the remote server:
+Use the same `edc` executable and configuration the user logged in with:
 
 ```sh
-codex mcp add event-context \
-  --url https://context-api.integ.life/mcp \
-  --oauth-resource https://context-api.integ.life/mcp
+edc --server https://context-api.integ.life whoami
+edc --server https://context-api.integ.life project list
 ```
 
-Then start OAuth with both project scopes:
+If `whoami` is not authenticated, stop and ask the user to run:
 
 ```sh
-codex mcp login event-context --scopes context:read,context:write
+edc --server https://context-api.integ.life login
 ```
 
-Open the browser authorization page for the user when needed. Do not claim authentication succeeded until the command confirms it.
+Do not inspect the credential file yourself.
 
-### Claude Code
-
-First inspect any existing entry with `claude mcp get event-context`. If it is missing, add the remote server for the current working project:
+## 2. Bind the working directory and install the Skill
 
 ```sh
-claude mcp add --transport http --scope local \
-  event-context https://context-api.integ.life/mcp
+edc --server https://context-api.integ.life link YOUR_PROJECT_ID
 ```
 
-Open `/mcp` inside Claude Code, choose `event-context`, and complete the OAuth flow in the user's browser. The server uses standard protected-resource discovery and dynamic client registration; do not add a static token or client secret.
-
-## 2. Install the recorder Skill
-
-Read the official Skill before installing it:
-
-`https://context.integ.life/skills/edc-recorder/SKILL.md`
-
-Save that exact file in the current project at the client-specific path:
+Install the official Skill after reading and comparing any existing file:
 
 - Codex: `.agents/skills/edc-recorder/SKILL.md`
 - Claude Code: `.claude/skills/edc-recorder/SKILL.md`
 
-If a file already exists at the target path, compare it first. Preserve user changes or ask before replacing a materially different Skill. Do not commit OAuth credentials or other private client state to the repository.
+For Claude Code, `edc setup claude-code` previews the hook and Skill changes. It does not add MCP. Apply only after reviewing the preview:
 
-## 3. Verify the real connection
+```sh
+edc --server https://context-api.integ.life setup claude-code
+edc --server https://context-api.integ.life setup --apply claude-code
+```
 
-Reconnect the MCP server or start a fresh agent session so the new MCP and Skill are loaded. Then:
+The setup command also removes a legacy Event-driven Context entry from `.mcp.json` if one exists, while preserving unrelated MCP entries. Automatic shared-context hooks require separate user confirmation.
 
-1. Call `list_projects` and confirm the project ID from this page's URL is present.
-2. Call `query_events` for that exact project ID with a small limit.
-3. If the project has State, call `list_state` and report any `lag`; State does not replace the source Events.
-4. Report the project name, the newest Event UUID returned, and any access or coverage limitation.
+## 3. Verify real access
 
-If the project is missing, check that OAuth used the same Integ.Life account shown in the web workspace and that the account is a project member. Do not create another project as a workaround.
+```sh
+edc --server https://context-api.integ.life query --project YOUR_PROJECT_ID --limit 5
+edc --server https://context-api.integ.life state list --project YOUR_PROJECT_ID
+```
 
-Setup is complete only after the real MCP read succeeds. Do not write a test Event unless the user explicitly asks for a write test.
+Report the actual project, newest Event UUID, and any State lag or access limitation. Configuration alone is not proof. Do not write a test Event unless the user explicitly asks for one.
+
+Remote ChatGPT remains a separate integration and uses the HTTPS MCP endpoint with OAuth.

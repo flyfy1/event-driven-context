@@ -1,4 +1,4 @@
-const { resolveAPI, sessionStorageKey, audioMediaType, pathWithLocale, uuidV7 } = window.ContextWorkspaceUtils;
+const { resolveAPI, sessionStorageKey, audioMediaType, contextFileKind, fileTitle, buildMetadata, buildMetadataFilter, buildReferences, localDateTimeValue, pathWithLocale, uuidV7 } = window.ContextWorkspaceUtils;
 const { normalizeLocale, resolveLocalePreference, translate } = window.ContextI18n;
 const API = resolveAPI(window.location.hostname, new URLSearchParams(window.location.search).get("api"));
 const TOKEN_KEY = sessionStorageKey("event-context.token", API);
@@ -6,7 +6,6 @@ const USER_KEY = sessionStorageKey("event-context.user", API);
 const LOCALE_KEY = "event-context.locale";
 const SHARED_LOCALE_COOKIE = "event_context_locale";
 const MAX_FILE_BYTES = 50 << 20;
-const MAX_AUDIO_BYTES = 25_000_000;
 const VIEWS = new Set(["records", "state", "integration", "plugins"]);
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -37,15 +36,14 @@ const state = {
   routeProjectID: new URLSearchParams(location.search).get("project") || "", routeError: false,
   projects: [], project: null, projectsStatus: "idle", projectsError: "", projectsRequest: 0,
   sessionEpoch: 0, projectVersion: 0,
-  contentMode: "text", pendingEventID: "",
-  query: { types: [], metadataRaw: "{}", source: {}, refs_to: "" },
+  contentMode: "text", pendingEventID: "", captureFile: null, captureKind: "", capturePreviewURL: "", autoMetadataTitle: "",
+  query: { types: [], metadata: {}, source: {}, refs_to: "" },
   events: [], cursor: "", latestSequence: 0, eventsStatus: "idle", eventsError: "", eventsRequest: 0,
   metadataFields: [], metadataStatus: "idle", metadataError: "", metadataRequest: 0,
   states: [], statesStatus: "idle", statesError: "", statesRequest: 0,
   members: [], membersStatus: "idle", membersError: "", membersRequest: 0,
   plugins: [], pluginsStatus: "idle", pluginsError: "", pluginsRequest: 0,
-  eventCache: new Map(), pluginToken: "",
-  audioStatus: { key: "audioNotSelected", variables: {}, success: false }
+  eventCache: new Map(), pluginToken: ""
 };
 const returnedFromCentralAuth = new URLSearchParams(location.search).get("auth") === "complete";
 if (returnedFromCentralAuth) {
@@ -126,8 +124,7 @@ function apiError(payload, statusCode) {
     conflict: "conflict", invalid_input: "invalidInput", too_large: "fileTooLargeV2",
     invalid_ref: "invalidRef", unsupported_media_type: "unsupportedMediaType",
     state_version_mismatch: "stateVersionMismatch", forbidden_namespace: "forbiddenNamespace",
-    plugin_paused: "pluginPaused", rate_limited: "rateLimited",
-    service_unavailable: "serviceUnavailable", processing_failed: "processingFailed"
+    plugin_paused: "pluginPaused", rate_limited: "rateLimited"
   }[code];
   const error = new Error(key ? t(key) : (serviceMessage || t("requestFailed", { status: statusCode })));
   error.status = statusCode;
@@ -179,7 +176,7 @@ function setLocale(locale, persist) {
   renderMembers();
   renderPlugins();
   renderIntegration();
-  renderAudioStatus();
+  renderCaptureFile();
 }
 function updateHomeLink() {
   const href = window.ContextNavigation.homeURL(location.href, state.locale, true);
@@ -309,6 +306,7 @@ async function loadEvents(options) {
   const projectID = state.project.id, version = state.projectVersion, requestVersion = ++state.eventsRequest;
   const query = {
     types: state.query.types,
+    metadata: state.query.metadata,
     source: state.query.source,
     refs_to: state.query.refs_to,
     limit: 30,
@@ -316,8 +314,7 @@ async function loadEvents(options) {
   };
   state.eventsStatus = "loading"; state.eventsError = ""; renderEvents();
   try {
-    const rawBody = jsonWithRaw(query, { metadata: state.query.metadataRaw });
-    const page = await request(projectPath("/events/query"), { method: "POST", rawBody });
+    const page = await request(projectPath("/events/query"), { method: "POST", body: query });
     if (!activeProject(version, projectID) || requestVersion !== state.eventsRequest) return;
     state.events = more ? state.events.concat(page.events || []) : (page.events || []);
     for (const event of state.events) state.eventCache.set(event.id, event);
@@ -349,12 +346,6 @@ function eventNode(event, compact) {
     const file = document.createElement("button"); file.type = "button"; file.className = "quiet source-download";
     file.textContent = t("downloadFile", { filename: event.content.filename || event.content.file_id, mediaType: event.content.media_type || "" });
     file.addEventListener("click", () => downloadFile(event.content)); article.append(file);
-    if (!compact && ["audio/mp4", "audio/mpeg", "audio/wav"].includes(event.content.media_type)) {
-      const transcribe = document.createElement("button"); transcribe.type = "button"; transcribe.className = "quiet transcribe-audio";
-      transcribe.textContent = t("transcribeAudio");
-      transcribe.addEventListener("click", () => transcribeAudio(event.id, transcribe, "#events-message"));
-      article.append(transcribe);
-    }
   }
   if (event.refs && event.refs.length) {
     const refs = document.createElement("div"); refs.className = "reference-list";
@@ -500,21 +491,94 @@ function appendEmpty(root, key) {
   const message = document.createElement("p"); message.className = "muted empty-events"; message.textContent = t(key); root.append(message);
 }
 
-function renderAudioStatus() {
-  const message = $("#audio-local-status");
-  if (!message) return;
-  message.textContent = t(state.audioStatus.key, state.audioStatus.variables);
-  message.classList.toggle("success", state.audioStatus.success);
-}
-function setAudioStatus(key, variables, success) {
-  state.audioStatus = { key, variables: variables || {}, success: Boolean(success) }; renderAudioStatus();
-}
 function setContentMode() {
-  document.querySelectorAll("[data-content-mode]").forEach((button) => button.classList.toggle("selected", button.dataset.contentMode === state.contentMode));
+  document.querySelectorAll("[data-content-mode]").forEach((button) => {
+    const selected = button.dataset.contentMode === state.contentMode;
+    button.classList.toggle("selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
   $("#text-input-label").classList.toggle("hidden", state.contentMode !== "text");
-  $("#file-input-label").classList.toggle("hidden", state.contentMode !== "file");
-  $("#audio-input-panel").classList.toggle("hidden", state.contentMode !== "audio");
+  $("#media-input-panel").classList.toggle("hidden", state.contentMode !== "media");
 }
+function renderCaptureFile() {
+  const selected = Boolean(state.captureFile);
+  $("#media-dropzone").classList.toggle("hidden", selected);
+  $("#media-selection").classList.toggle("hidden", !selected);
+  const preview = $("#media-preview");
+  preview.replaceChildren();
+  if (!selected) {
+    $("#media-filename").textContent = "";
+    $("#media-summary").textContent = "";
+    return;
+  }
+  const media = document.createElement(state.captureKind === "image" ? "img" : "audio");
+  media.src = state.capturePreviewURL;
+  if (state.captureKind === "image") media.alt = state.captureFile.name;
+  else media.controls = true;
+  preview.append(media);
+  $("#media-filename").textContent = state.captureFile.name;
+  $("#media-summary").textContent = t("selectedMediaSummary", { kind: t(state.captureKind), size: formatNumber(state.captureFile.size) });
+}
+function clearCaptureFile(clearGeneratedTitle) {
+  if (state.capturePreviewURL) URL.revokeObjectURL(state.capturePreviewURL);
+  if (clearGeneratedTitle && state.autoMetadataTitle && $("#metadata-title-input").value === state.autoMetadataTitle) $("#metadata-title-input").value = "";
+  state.captureFile = null; state.captureKind = ""; state.capturePreviewURL = ""; state.autoMetadataTitle = "";
+  $("#media-file").value = "";
+  renderCaptureFile();
+}
+function selectCaptureFile(file) {
+  const kind = contextFileKind(file && file.name, file && file.type);
+  if (!kind) throw new Error(t("unsupportedCaptureType"));
+  if (file.size > MAX_FILE_BYTES) throw new Error(t("fileTooLargeV2"));
+  const titleInput = $("#metadata-title-input"), replaceGeneratedTitle = !titleInput.value.trim() || titleInput.value === state.autoMetadataTitle;
+  clearCaptureFile(false);
+  state.captureFile = file; state.captureKind = kind; state.capturePreviewURL = URL.createObjectURL(file); state.contentMode = "media";
+  const generatedTitle = fileTitle(file.name);
+  if (replaceGeneratedTitle) {
+    titleInput.value = generatedTitle;
+    state.autoMetadataTitle = generatedTitle;
+  }
+  resetRecordID(); setContentMode(); renderCaptureFile(); setMessage("#record-message");
+}
+function addMetadataField(key, value) {
+  const row = document.createElement("div"); row.className = "metadata-field-row";
+  const keyInput = document.createElement("input"); keyInput.className = "metadata-field-key"; keyInput.value = key || ""; keyInput.placeholder = t("metadataKeyPlaceholder"); keyInput.dataset.i18nPlaceholder = "metadataKeyPlaceholder"; keyInput.setAttribute("aria-label", t("metadataKey")); keyInput.dataset.i18nAriaLabel = "metadataKey";
+  const valueInput = document.createElement("input"); valueInput.className = "metadata-field-value"; valueInput.value = value || ""; valueInput.placeholder = t("metadataValuePlaceholder"); valueInput.dataset.i18nPlaceholder = "metadataValuePlaceholder"; valueInput.setAttribute("aria-label", t("metadataValue")); valueInput.dataset.i18nAriaLabel = "metadataValue";
+  const remove = document.createElement("button"); remove.type = "button"; remove.className = "quiet metadata-field-remove"; remove.textContent = t("removeField"); remove.dataset.i18n = "removeField"; remove.setAttribute("aria-label", t("removeField")); remove.dataset.i18nAriaLabel = "removeField"; remove.addEventListener("click", () => { row.remove(); resetRecordID(); });
+  row.append(keyInput, valueInput, remove); $("#metadata-custom-fields").append(row); return row;
+}
+function metadataForRecord() {
+  const fields = Array.from(document.querySelectorAll(".metadata-field-row"), (row) => ({ key: $(".metadata-field-key", row).value, value: $(".metadata-field-value", row).value }));
+  try {
+    return buildMetadata($("#metadata-title-input").value, $("#metadata-description-input").value, $("#metadata-tags-input").value, fields);
+  } catch (error) {
+    if (error.message === "metadata_key_required") throw new Error(t("metadataKeyRequired"));
+    if (error.message === "metadata_key_duplicate") throw new Error(t("metadataKeyDuplicate"));
+    throw error;
+  }
+}
+function addReferenceField(rel, id) {
+  const row = document.createElement("div"); row.className = "event-reference-row";
+  const relation = document.createElement("select"); relation.className = "event-reference-rel"; relation.setAttribute("aria-label", t("referenceRelation")); relation.dataset.i18nAriaLabel = "referenceRelation";
+  for (const [value, key] of [["replies_to", "relationRepliesTo"], ["derived_from", "relationDerivedFrom"], ["supersedes", "relationSupersedes"], ["retracts", "relationRetracts"], ["resolves", "relationResolves"]]) {
+    const option = document.createElement("option"); option.value = value; option.textContent = t(key); option.dataset.i18n = key; relation.append(option);
+  }
+  relation.value = rel || "replies_to";
+  const eventID = document.createElement("input"); eventID.className = "event-reference-id"; eventID.value = id || ""; eventID.placeholder = t("referenceIDPlaceholder"); eventID.dataset.i18nPlaceholder = "referenceIDPlaceholder"; eventID.setAttribute("aria-label", t("referenceEventID")); eventID.dataset.i18nAriaLabel = "referenceEventID";
+  const remove = document.createElement("button"); remove.type = "button"; remove.className = "quiet event-reference-remove"; remove.textContent = t("removeReference"); remove.dataset.i18n = "removeReference"; remove.setAttribute("aria-label", t("removeReference")); remove.dataset.i18nAriaLabel = "removeReference"; remove.addEventListener("click", () => { row.remove(); resetRecordID(); });
+  row.append(relation, eventID, remove); $("#event-reference-fields").append(row); return row;
+}
+function referencesForRecord() {
+  const fields = Array.from(document.querySelectorAll(".event-reference-row"), (row) => ({ rel: $(".event-reference-rel", row).value, id: $(".event-reference-id", row).value }));
+  try { return buildReferences(fields); }
+  catch (error) {
+    if (error.message === "reference_fields_required") throw new Error(t("referenceFieldsRequired"));
+    if (error.message === "reference_relation_invalid") throw new Error(t("referenceRelationInvalid"));
+    if (error.message === "reference_duplicate") throw new Error(t("referenceDuplicate"));
+    throw error;
+  }
+}
+function setOccurredAtNow() { $("#event-occurred-at").value = localDateTimeValue(); }
 async function sha256Hex(file) {
   const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -528,43 +592,18 @@ async function uploadFile(file, projectID) {
   return uploaded;
 }
 
-async function transcribeAudio(sourceEventID, button, messageSelector) {
-  if (!state.project) return null;
-  const projectID = state.project.id, version = state.projectVersion;
-  if (button) setBusy(button, true, "transcribeAudio");
-  if (messageSelector) setMessage(messageSelector, t("audioTranscribing"));
-  try {
-    const result = await request(projectPath("/transcriptions"), { method: "POST", body: { source_event_id: sourceEventID } });
-    if (!activeProject(version, projectID)) return null;
-    const transcript = result && result.transcript_event;
-    if (!transcript) throw new Error(t("audioTranscriptionFailed"));
-    state.eventCache.set(transcript.id, transcript);
-    state.events = [transcript].concat(state.events.filter((item) => item.id !== transcript.id));
-    state.eventsStatus = "ready";
-    renderEvents();
-    if (messageSelector) setMessage(messageSelector, t("audioTranscriptionReady"), true);
-    return transcript;
-  } catch (error) {
-    if (activeProject(version, projectID) && messageSelector) setMessage(messageSelector, t("audioTranscriptionFailedWithReason", { error: error.message }));
-    return null;
-  } finally {
-    if (button && button.isConnected) setBusy(button, false, "transcribeAudio");
-  }
-}
-
 function resetRecordID() { state.pendingEventID = ""; }
-function recordBody(eventBase, metadataRaw, refs) {
-  const event = Object.assign({}, eventBase, { refs });
-  return "{\"events\":[" + jsonWithRaw(event, { metadata: metadataRaw }) + "]}";
+function recordBody(eventBase, metadata, refs) {
+  return JSON.stringify({ events: [Object.assign({}, eventBase, { metadata, refs })] });
 }
 
 async function submitRecord(form) {
   if (!state.project) return;
   const button = form.querySelector("button[type=submit]"), projectID = state.project.id, version = state.projectVersion;
-  setMessage("#record-message"); setBusy(button, true, "appendEvent");
+  setMessage("#record-message"); setBusy(button, true, "addContext");
   try {
-    const metadata = jsonLiteral($("#event-metadata").value, "metadataLabel", false);
-    const refs = jsonLiteral($("#event-refs").value, "referencesLabel", true).parsed;
+    const metadata = metadataForRecord();
+    const refs = referencesForRecord();
     if (!state.pendingEventID) state.pendingEventID = uuidV7();
     const eventID = state.pendingEventID, contentMode = state.contentMode;
     const eventType = $("#event-type").value, occurredAt = $("#event-occurred-at").value;
@@ -575,14 +614,12 @@ async function submitRecord(form) {
       if (!text) throw new Error(t("enterContent"));
       content = { kind: "text", text };
     } else {
-      let file = contentMode === "audio" ? $("#audio-file").files[0] : $("#event-file").files[0];
+      let file = state.captureFile;
       if (!file) throw new Error(t("selectFile"));
-      if (contentMode === "audio") {
+      if (state.captureKind === "audio") {
         const mediaType = audioMediaType(file.name, file.type);
         if (!mediaType) throw new Error(t("invalidAudioType"));
-        if (file.size > MAX_AUDIO_BYTES) throw new Error(t("audioTooLargeV2"));
         if (file.type !== mediaType) file = new File([file], file.name, { type: mediaType, lastModified: file.lastModified });
-        setAudioStatus("audioUploading");
       }
       const uploaded = await uploadFile(file, projectID);
       content = { kind: "file", file_id: uploaded.file_id, media_type: uploaded.media_type, filename: uploaded.filename, size_bytes: uploaded.size_bytes, sha256: uploaded.sha256 };
@@ -594,7 +631,7 @@ async function submitRecord(form) {
       source: { channel: "api", client: "web" }
     };
     if (occurredAt) eventBase.occurred_at = new Date(occurredAt).toISOString();
-    const result = await request(targetPath + "/events", { method: "POST", rawBody: recordBody(eventBase, metadata.raw, refs) });
+    const result = await request(targetPath + "/events", { method: "POST", rawBody: recordBody(eventBase, metadata, refs) });
     const outcome = result && result.results && result.results[0];
     if (!outcome || !["created", "duplicate"].includes(outcome.status)) {
       const error = outcome && outcome.error;
@@ -607,34 +644,23 @@ async function submitRecord(form) {
     state.events = [savedEvent].concat(state.events.filter((item) => item.id !== savedEvent.id));
     state.eventsStatus = "ready";
     if (state.pendingEventID === eventID) {
-      form.reset(); $("#event-metadata").value = "{}"; $("#event-refs").value = "[]"; state.pendingEventID = "";
-      setAudioStatus(contentMode === "audio" ? "audioTranscribing" : "audioNotSelected");
+      form.reset(); $("#metadata-custom-fields").replaceChildren(); $("#event-reference-fields").replaceChildren(); setOccurredAtNow(); state.pendingEventID = "";
+      clearCaptureFile(false);
     }
     setMessage("#record-message", t(outcome.status === "duplicate" ? "eventDuplicate" : "eventAppended") + " · " + outcome.id, true);
     renderEvents();
-    if (contentMode === "audio") {
-      const transcript = await transcribeAudio(savedEvent.id, null, "#record-message");
-      if (!activeProject(version, projectID)) return;
-      if (transcript) {
-        setAudioStatus("audioTranscriptionReady", {}, true);
-        await loadPlugins();
-      } else {
-        setAudioStatus("audioTranscriptionFailed");
-      }
-    }
     await Promise.allSettled([loadMetadata(), loadStates()]);
   } catch (error) {
     if (activeProject(version, projectID)) {
       setMessage("#record-message", error.message);
-      if (state.contentMode === "audio") setAudioStatus("audioUploadFailedRetained");
     }
-  } finally { setBusy(button, false, "appendEvent"); }
+  } finally { setBusy(button, false, "addContext"); }
 }
 
 function renderIntegration() {
   if (!state.project) return;
   const projectID = state.project.id;
-  const guideURL = new URL("./agent-setup.md", window.location.href);
+  const guideURL = new URL(API + "/agent-setup.md");
   guideURL.searchParams.set("project", projectID);
   guideURL.searchParams.set("locale", state.locale);
   const skillURL = new URL("./skills/edc-recorder/SKILL.md", window.location.href).href;
@@ -831,25 +857,47 @@ $("#project-form").addEventListener("submit", async (event) => {
 $("#record-form").addEventListener("submit", (event) => { event.preventDefault(); submitRecord(event.currentTarget); });
 $("#record-form").addEventListener("input", resetRecordID);
 $("#record-form").addEventListener("change", resetRecordID);
-$("#audio-file").addEventListener("change", () => {
-  const file = $("#audio-file").files[0];
-  setAudioStatus(file ? "audioSelectedLocal" : "audioNotSelected", file ? { filename: file.name, size: formatNumber(file.size) } : {});
+$("#metadata-title-input").addEventListener("input", () => {
+  if ($("#metadata-title-input").value !== state.autoMetadataTitle) state.autoMetadataTitle = "";
+});
+$("#add-metadata-field").addEventListener("click", () => { $("#metadata-more").open = true; addMetadataField().querySelector("input").focus(); });
+$("#add-event-reference").addEventListener("click", () => { addReferenceField().querySelector("input").focus(); });
+$("#media-file").addEventListener("change", () => {
+  const file = $("#media-file").files[0];
+  if (!file) return;
+  try { selectCaptureFile(file); } catch (error) { setMessage("#record-message", error.message); }
+});
+$("#remove-media").addEventListener("click", () => { clearCaptureFile(true); resetRecordID(); });
+const recordForm = $("#record-form");
+function draggingFiles(event) { return Array.from(event.dataTransfer && event.dataTransfer.types || []).includes("Files"); }
+for (const eventName of ["dragenter", "dragover"]) recordForm.addEventListener(eventName, (event) => {
+  if (!draggingFiles(event)) return;
+  event.preventDefault(); event.dataTransfer.dropEffect = "copy"; recordForm.classList.add("drag-active");
+  if (state.contentMode !== "media") { state.contentMode = "media"; setContentMode(); }
+});
+recordForm.addEventListener("dragleave", (event) => { if (!recordForm.contains(event.relatedTarget)) recordForm.classList.remove("drag-active"); });
+recordForm.addEventListener("drop", (event) => {
+  if (!draggingFiles(event)) return;
+  event.preventDefault(); recordForm.classList.remove("drag-active");
+  const files = Array.from(event.dataTransfer.files || []);
+  if (files.length !== 1) return setMessage("#record-message", t("singleMediaOnly"));
+  try { selectCaptureFile(files[0]); } catch (error) { setMessage("#record-message", error.message); }
 });
 $("#query-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
-    const metadata = jsonLiteral($("#query-metadata").value || "{}", "filterCriteriaLabel", false);
+    const metadata = buildMetadataFilter($("#query-metadata-key").value, $("#query-metadata-value").value);
     state.query = {
       types: $("#query-type").value ? [$("#query-type").value] : [],
-      metadataRaw: metadata.raw,
+      metadata,
       source: $("#query-source").value.trim() ? { channel: $("#query-source").value.trim() } : {},
       refs_to: $("#query-refs").value.trim()
     };
     state.cursor = ""; await loadEvents();
-  } catch (error) { setMessage("#events-message", error.message); }
+  } catch (error) { setMessage("#events-message", error.message === "metadata_key_required" ? t("queryMetadataKeyRequired") : error.message); }
 });
 $("#clear-query").addEventListener("click", async () => {
-  $("#query-form").reset(); state.query = { types: [], metadataRaw: "{}", source: {}, refs_to: "" }; state.cursor = ""; await loadEvents();
+  $("#query-form").reset(); state.query = { types: [], metadata: {}, source: {}, refs_to: "" }; state.cursor = ""; await loadEvents();
 });
 $("#load-more").addEventListener("click", () => loadEvents({ more: true }));
 $("#metadata-refresh").addEventListener("click", loadMetadata);
@@ -951,7 +999,7 @@ window.addEventListener("hashchange", restoreRoute);
 
 async function boot() {
   populateTimezones($("#project-timezone"), BROWSER_TIMEZONE);
-  setLocale(state.locale, false); setView(state.view); setContentMode(); renderAudioStatus();
+  setLocale(state.locale, false); setView(state.view); setContentMode(); renderCaptureFile(); setOccurredAtNow();
   const expectedSession = Boolean(state.token || state.user || returnedFromCentralAuth);
   const epoch = state.sessionEpoch, token = state.token;
   try {

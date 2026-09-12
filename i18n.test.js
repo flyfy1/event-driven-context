@@ -68,10 +68,40 @@ assert.match(workspace, /https:\/\/chatgpt\.com\/plugins#settings\/Connectors\?c
 assert.match(workspace, /href="\.\/skills\/edc-recorder\/SKILL\.md"/);
 assert.match(app, /agent-setup\.md/);
 assert.match(app, /agentSetupPrompt/);
-assert.match(agentSetup, /https:\/\/context-api\.integ\.life\/mcp/);
+assert.match(agentSetup, /edc --server https:\/\/context-api\.integ\.life whoami/);
 assert.match(agentSetup, /https:\/\/context\.integ\.life\/skills\/edc-recorder\/SKILL\.md/);
-assert.match(agentSetup, /codex mcp login event-context --scopes context:read,context:write/);
-assert.match(agentSetup, /claude mcp add --transport http --scope local/);
+assert.match(agentSetup, /query --project YOUR_PROJECT_ID --limit 5/);
+assert.doesNotMatch(agentSetup, /(?:codex|claude) mcp|mcpServers/);
 assert.doesNotMatch(translate("zh-CN", "agentSetupPrompt", { guide_url: "GUIDE", project_id: "PROJECT", skill_url: "SKILL" }), /\{(?:guide_url|project_id|skill_url)\}/);
+for (const locale of supportedLocales) {
+  const prompt = translate(locale, "agentSetupPrompt", { guide_url: "GUIDE", project_id: "PROJECT", skill_url: "SKILL" });
+  assert.match(prompt, /edc/);
+  assert.doesNotMatch(prompt, /remote MCP|远程 MCP|MCP jauh|remote MCP endpoint/);
+}
+
+// Exercise the actual workspace renderer: both the visible link and copied
+// prompt must use the API, retaining the selected project and locale.
+const integrationRenderer = app.slice(app.indexOf("function renderIntegration()"), app.indexOf("async function loadMembers()"));
+assert.ok(integrationRenderer.length > 0);
+for (const api of ["https://context-api.integ.life", "http://127.0.0.1:8401"]) {
+  for (const locale of supportedLocales) {
+    const elements = new Map();
+    const projectID = "prj_l4wcypqzs2be2pmyza3injqyw7";
+    const scope = {
+      API: api, URL, state: { project: { id: projectID }, locale },
+      window: { location: { href: "https://context.integ.life/workspace.html?project=prj_old&locale=en" } },
+      $: selector => { if (!elements.has(selector)) elements.set(selector, {}); return elements.get(selector); },
+      t: (key, values) => translate(locale, key, values),
+    };
+    vm.runInNewContext(integrationRenderer + "\nrenderIntegration();", scope);
+    const guide = new URL(elements.get("#agent-setup-guide-link").href);
+    assert.equal(guide.origin, api);
+    assert.equal(guide.pathname, "/agent-setup.md");
+    assert.equal(guide.searchParams.get("project"), projectID);
+    assert.equal(guide.searchParams.get("locale"), locale);
+    assert.ok(elements.get("#agent-setup-prompt").textContent.includes(guide.href));
+    assert.ok(elements.get("#agent-setup-prompt").textContent.includes(projectID));
+  }
+}
 
 console.log(`frontend i18n checks passed: ${supportedLocales.length} locales, ${englishKeys.length} keys`);

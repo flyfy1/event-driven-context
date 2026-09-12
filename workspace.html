@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Append and query immutable context with your team." data-i18n-content="metaDescription" />
     <title>Context · Integ.Life</title>
-    <link rel="stylesheet" href="./styles.css?v=506031d5f0df" />
-    <link rel="stylesheet" href="./workspace-features.css?v=506031d5f0df" />
-    <link rel="stylesheet" href="./i18n.css?v=506031d5f0df" />
+    <link rel="stylesheet" href="./styles.css?v=4d25ee674cce" />
+    <link rel="stylesheet" href="./workspace-features.css?v=4d25ee674cce" />
+    <link rel="stylesheet" href="./i18n.css?v=4d25ee674cce" />
   </head>
   <body>
     <header class="topbar">
@@ -80,24 +80,52 @@
               <form id="record-form" class="form-card record-card">
                 <div class="card-title"><h3 data-i18n="recordTitle">Append a record</h3><span class="append-only" data-i18n="appendOnly">APPEND ONLY</span></div>
                 <label><span data-i18n="eventType">Record type</span><select id="event-type"><option value="note" data-i18n="noteType">Note</option><option value="log" data-i18n="logType">Log</option></select></label>
-                <div class="segmented" role="group" aria-label="Content type" data-i18n-aria-label="contentType"><button class="selected" type="button" data-content-mode="text" data-i18n="text">Text</button><button type="button" data-content-mode="file" data-i18n="file">File</button><button type="button" data-content-mode="audio" data-i18n="audio">Audio</button></div>
+                <div class="segmented" role="group" aria-label="Content type" data-i18n-aria-label="contentType"><button class="selected" type="button" data-content-mode="text" data-i18n="text">Text</button><button type="button" data-content-mode="media" data-i18n="imageOrAudio">Image or audio</button></div>
                 <label id="text-input-label"><span data-i18n="content">Content</span><textarea id="event-text" rows="6" maxlength="1048576" placeholder="Record a decision, observation, source material…" data-i18n-placeholder="contentPlaceholder"></textarea></label>
-                <label id="file-input-label" class="hidden"><span data-i18n="file">File</span><input id="event-file" type="file" /></label>
-                <div id="audio-input-panel" class="audio-input-panel hidden">
-                  <label><span data-i18n="recordOrChooseAudio">Record or choose audio</span><input id="audio-file" type="file" accept="audio/mp4,audio/wav,audio/mpeg,.m4a,.wav,.mp3" capture /></label>
-                  <p class="muted" data-i18n="audioLimitsV2">M4A, WAV, or MP3 · up to 25 MB.</p>
-                  <p class="muted" data-i18n="audioPrivacyV2">The original stays in Context. The audio is sent to OpenAI for transcription.</p>
-                  <p id="audio-local-status" class="local-status" aria-live="polite" data-i18n="audioNotSelected">No audio selected on this device.</p>
+                <div id="media-input-panel" class="media-input-panel hidden">
+                  <label id="media-dropzone" class="media-dropzone">
+                    <input id="media-file" class="visually-hidden" type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png,audio/mp4,audio/wav,audio/mpeg,.m4a,.wav,.mp3" aria-label="Choose image or audio" data-i18n-aria-label="chooseMedia" />
+                    <span class="media-drop-icon" aria-hidden="true">＋</span>
+                    <strong data-i18n="dropMediaTitle">Drop an image or audio here</strong>
+                    <span data-i18n="dropMediaHint">or choose one from this device</span>
+                    <span class="media-choose-action" data-i18n="chooseMedia">Choose image or audio</span>
+                    <small data-i18n="supportedMediaHint">JPG, PNG, M4A, WAV, or MP3 · up to 50 MiB</small>
+                  </label>
+                  <div id="media-selection" class="media-selection hidden" aria-live="polite">
+                    <div id="media-preview" class="media-preview"></div>
+                    <div class="media-selection-copy"><strong id="media-filename"></strong><span id="media-summary" class="muted"></span></div>
+                    <button id="remove-media" class="quiet" type="button" data-i18n="removeMedia">Remove</button>
+                  </div>
                 </div>
-                <label><span data-i18n="metadataLabel">Metadata</span> <span class="label-note" data-i18n="metadataNote">JSON object, optional</span><textarea id="event-metadata" rows="3" spellcheck="false" placeholder='{"kind":"decision","topic":"launch"}'>{}</textarea></label>
-                <label><span data-i18n="referencesLabel">References</span> <span class="label-note" data-i18n="referencesHint">JSON array, optional</span><textarea id="event-refs" rows="2" spellcheck="false" placeholder='[{"rel":"supersedes","id":"EVENT_UUID"}]'>[]</textarea></label>
-                <label><span data-i18n="occurredAt">Occurred at</span> <span class="label-note" data-i18n="optional">Optional</span><input id="event-occurred-at" type="datetime-local" /></label>
-                <button class="primary" type="submit" data-i18n="appendEvent">Append event</button>
+                <fieldset class="metadata-editor">
+                  <legend data-i18n="metadataLabel">Metadata</legend>
+                  <p class="muted" data-i18n="metadataEditorHint">Add only what will help you find this context later.</p>
+                  <label><span data-i18n="metadataTitleLabel">Title</span> <span class="label-note" data-i18n="optional">Optional</span><input id="metadata-title-input" maxlength="500" placeholder="A short, recognizable name" data-i18n-placeholder="metadataTitlePlaceholder" /></label>
+                  <label><span data-i18n="metadataDescriptionLabel">Description</span> <span class="label-note" data-i18n="optional">Optional</span><textarea id="metadata-description-input" rows="2" maxlength="4000" placeholder="What should someone know about this context?" data-i18n-placeholder="metadataDescriptionPlaceholder"></textarea></label>
+                  <label><span data-i18n="metadataTagsLabel">Tags</span> <span class="label-note" data-i18n="metadataTagsHint">Separate with commas</span><input id="metadata-tags-input" placeholder="research, customer, idea" data-i18n-placeholder="metadataTagsPlaceholder" /></label>
+                  <details id="metadata-more" class="metadata-more">
+                    <summary data-i18n="moreMetadata">More metadata</summary>
+                    <p class="muted" data-i18n="customMetadataHint">Add simple key and value fields only when you need them.</p>
+                    <div id="metadata-custom-fields" class="metadata-custom-fields"></div>
+                    <button id="add-metadata-field" class="quiet" type="button" data-i18n="addMetadataField">Add field</button>
+                  </details>
+                </fieldset>
+                <details class="record-advanced">
+                  <summary data-i18n="advancedRecordOptions">References and time</summary>
+                  <fieldset class="reference-editor">
+                    <legend><span data-i18n="referencesLabel">References</span> <span class="label-note" data-i18n="referencesHint">Optional</span></legend>
+                    <p class="muted" data-i18n="referencesEditorHint">Link this context to an existing event when the relationship matters.</p>
+                    <div id="event-reference-fields" class="event-reference-fields"></div>
+                    <button id="add-event-reference" class="quiet" type="button" data-i18n="addReference">Add reference</button>
+                  </fieldset>
+                  <label><span data-i18n="occurredAt">Occurred at</span> <span class="label-note" data-i18n="occurredAtHint">Defaults to now</span><input id="event-occurred-at" type="datetime-local" /></label>
+                </details>
+                <button class="primary" type="submit" data-i18n="addContext">Add context</button>
                 <p id="record-message" class="message" aria-live="polite"></p>
               </form>
               <section class="metadata-card"><div class="card-title"><h3 data-i18n="metadataTitle">Available metadata</h3><button id="metadata-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div><div id="metadata-list" class="metadata-list"><p class="muted" data-i18n="metadataNone">No metadata has been recorded yet.</p></div></section>
             </div>
-            <section class="events-section"><div class="card-title event-toolbar"><div><p class="eyebrow" data-i18n="eventsEyebrow">EVENTS</p><h3 data-i18n="eventsTitle">Records</h3></div><form id="query-form" class="query-form"><select id="query-type" aria-label="Filter by record type" data-i18n-aria-label="queryTypeAria"><option value="" data-i18n="allTypes">All types</option><option value="log" data-i18n="logType">Log</option><option value="note" data-i18n="noteType">Note</option><option value="derived" data-i18n="derivedType">Derived</option></select><input id="query-source" aria-label="Filter by source channel" data-i18n-aria-label="querySourceAria" placeholder="source channel" data-i18n-placeholder="querySourcePlaceholder" /><input id="query-refs" aria-label="Find records that reference an event" data-i18n-aria-label="queryRefsAria" placeholder="referenced event UUID" data-i18n-placeholder="queryRefsPlaceholder" /><input id="query-metadata" aria-label="Filter by metadata" data-i18n-aria-label="queryAria" spellcheck="false" placeholder='metadata, for example {"kind":"decision"}' data-i18n-placeholder="queryPlaceholder" /><button class="quiet" type="submit" data-i18n="filter">Filter</button><button id="clear-query" class="quiet" type="button" data-i18n="clear">Clear</button></form></div><p id="events-message" class="message" aria-live="polite"></p><div id="events-list" class="events-list" aria-live="polite"></div><button id="load-more" class="quiet hidden" type="button" data-i18n="loadMore">Load more</button></section>
+            <section class="events-section"><div class="card-title event-toolbar"><div><p class="eyebrow" data-i18n="eventsEyebrow">EVENTS</p><h3 data-i18n="eventsTitle">Records</h3></div><form id="query-form" class="query-form"><select id="query-type" aria-label="Filter by record type" data-i18n-aria-label="queryTypeAria"><option value="" data-i18n="allTypes">All types</option><option value="log" data-i18n="logType">Log</option><option value="note" data-i18n="noteType">Note</option><option value="derived" data-i18n="derivedType">Derived</option></select><input id="query-source" aria-label="Filter by source channel" data-i18n-aria-label="querySourceAria" placeholder="source channel" data-i18n-placeholder="querySourcePlaceholder" /><input id="query-refs" aria-label="Find records that reference an event" data-i18n-aria-label="queryRefsAria" placeholder="referenced event UUID" data-i18n-placeholder="queryRefsPlaceholder" /><div class="query-metadata-fields" role="group" aria-label="Filter by metadata" data-i18n-aria-label="queryAria"><input id="query-metadata-key" aria-label="Metadata name" data-i18n-aria-label="queryMetadataKeyAria" placeholder="metadata name" data-i18n-placeholder="queryMetadataKeyPlaceholder" /><input id="query-metadata-value" aria-label="Metadata value" data-i18n-aria-label="queryMetadataValueAria" placeholder="value" data-i18n-placeholder="queryMetadataValuePlaceholder" /></div><button class="quiet" type="submit" data-i18n="filter">Filter</button><button id="clear-query" class="quiet" type="button" data-i18n="clear">Clear</button></form></div><p id="events-message" class="message" aria-live="polite"></p><div id="events-list" class="events-list" aria-live="polite"></div><button id="load-more" class="quiet hidden" type="button" data-i18n="loadMore">Load more</button></section>
           </section>
 
           <section id="state-panel" class="workspace-panel hidden" data-workspace-panel="state" aria-labelledby="state-title">
@@ -107,20 +135,20 @@
           </section>
 
           <section id="integration-panel" class="workspace-panel hidden" data-workspace-panel="integration" aria-labelledby="integration-title">
-            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Choose your AI, authorize it with OAuth, and verify that it can read this exact project.</p></div></div>
+            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Local Codex and Claude use the authenticated edc CLI; ChatGPT connects separately through MCP and OAuth.</p></div></div>
             <div class="integration-context-bar" aria-label="Connection details" data-i18n-aria-label="connectionDetails">
               <div><strong data-i18n="selectedProject">Selected project</strong><code id="integration-project-id"></code></div>
-              <div><strong data-i18n="mcpEndpoint">MCP endpoint</strong><code id="integration-mcp-url">https://context-api.integ.life/mcp</code><button class="quiet" type="button" data-copy-command="integration-mcp-url" data-i18n="copyCommand">Copy</button></div>
+              <div><strong data-i18n="mcpEndpoint">ChatGPT MCP endpoint</strong><code id="integration-mcp-url">https://context-api.integ.life/mcp</code><button class="quiet" type="button" data-copy-command="integration-mcp-url" data-i18n="copyCommand">Copy</button></div>
             </div>
             <div class="connect-methods">
               <article class="connect-card agent-connect-card">
                 <div class="connect-card-meta"><span>Claude Code · Codex</span><span class="status-badge ready" data-i18n="recommended">Recommended</span></div>
-                <h4 data-i18n="agentSetupTitle">Let your agent set it up</h4>
-                <p class="muted" data-i18n="agentSetupBody">Open Claude Code or Codex in the working directory, then paste the instruction below. The agent will read the setup guide, add the remote MCP server, and install the recorder Skill.</p>
+                <h4 data-i18n="agentSetupTitle">Set up the local CLI</h4>
+                <p class="muted" data-i18n="agentSetupBody">Open Claude Code or Codex in the working directory, then paste the instruction below. The agent will use your authenticated edc CLI directly and install the recorder Skill; it will not add MCP.</p>
                 <ol class="connect-checklist">
-                  <li data-i18n="agentSetupStepOne">Paste the project-specific instruction into your coding agent.</li>
-                  <li data-i18n="agentSetupStepTwo">Complete the Integ.Life OAuth page when the agent opens it.</li>
-                  <li data-i18n="agentSetupStepThree">Do not stop at “configured”: let the agent call Context and verify this project.</li>
+                  <li data-i18n="agentSetupStepOne">Paste the project-specific instruction into your local coding agent.</li>
+                  <li data-i18n="agentSetupStepTwo">Let the agent run edc whoami. If login is needed, complete edc login privately in your terminal.</li>
+                  <li data-i18n="agentSetupStepThree">Do not stop at configuration: let the agent run edc query and verify this project.</li>
                 </ol>
                 <div class="prompt-label" data-i18n="pasteIntoAgent">Paste into your agent</div>
                 <div class="command-row prompt-row"><code id="agent-setup-prompt"></code><button class="quiet" type="button" data-copy-command="agent-setup-prompt" data-i18n="copyInstruction">Copy instruction</button></div>
@@ -177,9 +205,9 @@
       </section>
     </main>
     <template id="event-template"><article class="event"><div class="event-meta"><strong class="event-author"></strong><time class="event-time"></time><span class="event-kind"></span></div><p class="event-text"></p><a class="event-file hidden" target="_blank" rel="noopener" data-i18n="downloadOriginalFile">Download original file</a><pre class="event-json"></pre></article></template>
-    <script src="./i18n.js?v=506031d5f0df" defer></script>
-    <script src="./workspace-utils.js?v=506031d5f0df" defer></script>
-    <script src="./navigation.js?v=506031d5f0df" defer></script>
-    <script src="./app.js?v=506031d5f0df" defer></script>
+    <script src="./i18n.js?v=4d25ee674cce" defer></script>
+    <script src="./workspace-utils.js?v=4d25ee674cce" defer></script>
+    <script src="./navigation.js?v=4d25ee674cce" defer></script>
+    <script src="./app.js?v=4d25ee674cce" defer></script>
   </body>
 </html>
