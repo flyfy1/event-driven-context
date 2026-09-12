@@ -30,11 +30,12 @@ var pkcePattern = regexp.MustCompile(`^[A-Za-z0-9._~-]{43,128}$`)
 
 var oauthPage = template.Must(template.New("oauth").Parse(`<!doctype html>
 <html lang="{{.Language}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Event-driven Context OAuth</title><style>
-body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}button{font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;cursor:pointer}.secondary{background:#6b7169}.languages{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;font-size:14px}.languages a{color:#265c3b}code{word-break:break-all}
-</style></head><body><main class="card">{{if .Expired}}<h1>{{.Copy.ExpiredTitle}}</h1><p class="notice">{{.Copy.ExpiredMessage}}</p>{{else}}<nav class="languages" aria-label="{{.Copy.LanguageLabel}}"><span>{{.Copy.LanguageLabel}}:</span><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=en" hreflang="en">English</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=zh-CN" hreflang="zh-CN">简体中文</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=ms" hreflang="ms">Bahasa Melayu</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=hi" hreflang="hi">हिन्दी</a></nav><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} {{.Copy.ClientRequest}}</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">{{.Copy.SignInNotice}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><label for="username">{{.Copy.UsernameLabel}}</label><input id="username" name="username" autocomplete="username" required><label for="password">{{.Copy.PasswordLabel}}</label><input id="password" name="password" type="password" autocomplete="current-password" required><p class="muted">{{.Copy.NewAccountHint}}</p><div class="actions"><button type="submit" name="decision" value="login">{{.Copy.SignInLabel}}</button><button class="secondary" type="submit" name="decision" value="register">{{.Copy.CreateAccountLabel}}</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>{{.Copy.CancelLabel}}</button></div></form>{{else}}<p>{{.Copy.SignedInAs}} <strong>{{.Username}}</strong>.</p><p class="notice">{{.Copy.ApproveAccess}}</p><ul>{{range .Scopes}}<li><strong>{{.Name}}</strong> — {{.Description}}</li>{{end}}</ul><p class="muted">{{.Copy.AccessPrefix}} <code>{{.Resource}}</code> {{.Copy.AccessSuffix}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><div class="actions"><button type="submit" name="decision" value="approve">{{.Copy.AuthorizeLabel}}</button><button class="secondary" type="submit" name="decision" value="deny">{{.Copy.CancelLabel}}</button></div></form>{{end}}{{end}}</main></body></html>`))
+body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}button,.button{display:inline-block;font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;text-decoration:none;cursor:pointer}.secondary{background:#6b7169}.languages{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;font-size:14px}.languages a{color:#265c3b}code{word-break:break-all}
+</style></head><body><main class="card">{{if .Expired}}<h1>{{.Copy.ExpiredTitle}}</h1><p class="notice">{{.Copy.ExpiredMessage}}</p>{{else}}<nav class="languages" aria-label="{{.Copy.LanguageLabel}}"><span>{{.Copy.LanguageLabel}}:</span><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=en" hreflang="en">English</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=zh-CN" hreflang="zh-CN">简体中文</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=ms" hreflang="ms">Bahasa Melayu</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=hi" hreflang="hi">हिन्दी</a></nav><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} {{.Copy.ClientRequest}}</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">{{.Copy.SignInNotice}}</p><p><a class="button" href="{{.IntegLoginURL}}">{{.Copy.IntegLoginLabel}}</a></p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><label for="username">{{.Copy.UsernameLabel}}</label><input id="username" name="username" autocomplete="username" required><label for="email">{{.Copy.EmailLabel}}</label><input id="email" name="email" type="email" autocomplete="email"><label for="password">{{.Copy.PasswordLabel}}</label><input id="password" name="password" type="password" autocomplete="current-password" required><p class="muted">{{.Copy.NewAccountHint}}</p><div class="actions"><button type="submit" name="decision" value="login">{{.Copy.SignInLabel}}</button><button class="secondary" type="submit" name="decision" value="register">{{.Copy.CreateAccountLabel}}</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>{{.Copy.CancelLabel}}</button></div></form>{{else}}<p>{{.Copy.SignedInAs}} <strong>{{.Username}}</strong>.</p><p class="notice">{{.Copy.ApproveAccess}}</p><ul>{{range .Scopes}}<li><strong>{{.Name}}</strong> — {{.Description}}</li>{{end}}</ul><p class="muted">{{.Copy.AccessPrefix}} <code>{{.Resource}}</code> {{.Copy.AccessSuffix}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><div class="actions"><button type="submit" name="decision" value="approve">{{.Copy.AuthorizeLabel}}</button><button class="secondary" type="submit" name="decision" value="deny">{{.Copy.CancelLabel}}</button></div></form>{{end}}{{end}}</main></body></html>`))
 
 type oauthCopy struct {
-	LanguageLabel, ClientRequest, SignInNotice, UsernameLabel, PasswordLabel                     string
+	LanguageLabel, ClientRequest, SignInNotice, IntegLoginLabel, UsernameLabel, EmailLabel       string
+	PasswordLabel                                                                                string
 	NewAccountHint, SignInLabel, CreateAccountLabel, CancelLabel, SignedInAs                     string
 	ApproveAccess, ReadDescription, WriteDescription, AccessPrefix, AccessSuffix, AuthorizeLabel string
 	ExpiredTitle, ExpiredMessage                                                                 string
@@ -48,52 +49,56 @@ type oauthScopeDisplay struct {
 var oauthCopies = map[string]oauthCopy{
 	"en": {
 		LanguageLabel: "Language", ClientRequest: "is requesting access through OAuth.",
-		SignInNotice:  "Sign in with your existing Event-driven Context account. Your password is sent only to this service and is never shared with the client.",
-		UsernameLabel: "Username", PasswordLabel: "Password", NewAccountHint: "New here? A username uses 3–64 lowercase letters, digits, _, . or -, and a password uses 12–72 bytes.",
+		SignInNotice:    "Sign in with your existing Event-driven Context account. Your password is sent only to this service and is never shared with the client.",
+		IntegLoginLabel: "Continue with Integ.Life",
+		UsernameLabel:   "Username", EmailLabel: "Email (required to create an account)", PasswordLabel: "Password", NewAccountHint: "New here? A username uses 3–64 lowercase letters, digits, _, . or -, and a password uses 12–72 bytes.",
 		SignInLabel: "Sign in", CreateAccountLabel: "Create account", CancelLabel: "Cancel", SignedInAs: "Signed in as", ApproveAccess: "Approve access to:",
 		ReadDescription: "read projects, members, events, metadata, and files", WriteDescription: "create projects, add members, and append immutable events",
 		AccessPrefix: "Access is limited to", AccessSuffix: "and expires after one hour. Project membership rules still apply.", AuthorizeLabel: "Authorize",
 		ExpiredTitle: "Authorization request expired", ExpiredMessage: "Return to the app that opened this page and start the connection again. Refreshing this page will not work.",
-		Errors: map[string]string{"invalid_credentials": "Invalid username or password.", "invalid_username": "Username must be 3–64 lowercase letters, digits, _, . or -.", "invalid_password": "Password must be 12–72 bytes.", "username_exists": "Username already exists. Sign in or choose another username.", "registration_failed": "Could not create account. Please try again."},
+		Errors: map[string]string{"invalid_credentials": "Invalid username or password.", "invalid_username": "Username must be 3–64 lowercase letters, digits, _, . or -.", "invalid_email": "Enter a valid email address to create an account.", "invalid_password": "Password must be 12–72 bytes.", "username_exists": "Username or email already exists. Sign in or choose another one.", "registration_failed": "Could not create account. Please try again."},
 	},
 	"zh-CN": {
 		LanguageLabel: "语言", ClientRequest: "正在通过 OAuth 请求访问。",
-		SignInNotice:  "请使用现有的 Event-driven Context 账号登录。密码只会发送到本服务，不会与客户端共享。",
-		UsernameLabel: "用户名", PasswordLabel: "密码", NewAccountHint: "还没有账号？用户名须为 3–64 位小写字母、数字、_、. 或 -，密码须为 12–72 字节。",
+		SignInNotice:    "请使用现有的 Event-driven Context 账号登录。密码只会发送到本服务，不会与客户端共享。",
+		IntegLoginLabel: "使用 Integ.Life 继续",
+		UsernameLabel:   "用户名", EmailLabel: "邮箱（创建账号时必填）", PasswordLabel: "密码", NewAccountHint: "还没有账号？用户名须为 3–64 位小写字母、数字、_、. 或 -，密码须为 12–72 字节。",
 		SignInLabel: "登录", CreateAccountLabel: "创建账号", CancelLabel: "取消", SignedInAs: "当前登录用户", ApproveAccess: "授权访问以下范围：",
 		ReadDescription: "读取项目、成员、事件、元数据和文件", WriteDescription: "创建项目、添加成员并追加不可变事件",
 		AccessPrefix: "访问权限仅限于", AccessSuffix: "，并在一小时后过期。项目成员权限规则仍然适用。", AuthorizeLabel: "授权",
 		ExpiredTitle: "授权请求已过期", ExpiredMessage: "请返回打开此页面的应用，重新发起连接。刷新此页面无法继续。",
-		Errors: map[string]string{"invalid_credentials": "用户名或密码错误。", "invalid_username": "用户名须为 3–64 位小写字母、数字、_、. 或 -。", "invalid_password": "密码须为 12–72 字节。", "username_exists": "用户名已存在，请登录或更换用户名。", "registration_failed": "无法创建账号，请重试。"},
+		Errors: map[string]string{"invalid_credentials": "用户名或密码错误。", "invalid_username": "用户名须为 3–64 位小写字母、数字、_、. 或 -。", "invalid_email": "请输入有效邮箱以创建账号。", "invalid_password": "密码须为 12–72 字节。", "username_exists": "用户名或邮箱已存在，请登录或更换。", "registration_failed": "无法创建账号，请重试。"},
 	},
 	"ms": {
 		LanguageLabel: "Bahasa", ClientRequest: "meminta akses melalui OAuth.",
-		SignInNotice:  "Log masuk dengan akaun Event-driven Context sedia ada. Kata laluan hanya dihantar kepada perkhidmatan ini dan tidak dikongsi dengan klien.",
-		UsernameLabel: "Nama pengguna", PasswordLabel: "Kata laluan", NewAccountHint: "Pengguna baharu? Nama pengguna menggunakan 3–64 huruf kecil, nombor, _, . atau -, dan kata laluan menggunakan 12–72 bait.",
+		SignInNotice:    "Log masuk dengan akaun Event-driven Context sedia ada. Kata laluan hanya dihantar kepada perkhidmatan ini dan tidak dikongsi dengan klien.",
+		IntegLoginLabel: "Teruskan dengan Integ.Life",
+		UsernameLabel:   "Nama pengguna", EmailLabel: "E-mel (diperlukan untuk mencipta akaun)", PasswordLabel: "Kata laluan", NewAccountHint: "Pengguna baharu? Nama pengguna menggunakan 3–64 huruf kecil, nombor, _, . atau -, dan kata laluan menggunakan 12–72 bait.",
 		SignInLabel: "Log masuk", CreateAccountLabel: "Cipta akaun", CancelLabel: "Batal", SignedInAs: "Log masuk sebagai", ApproveAccess: "Benarkan akses kepada:",
 		ReadDescription: "baca projek, ahli, peristiwa, metadata dan fail", WriteDescription: "cipta projek, tambah ahli dan lampirkan peristiwa kekal",
 		AccessPrefix: "Akses terhad kepada", AccessSuffix: "dan tamat selepas satu jam. Peraturan keahlian projek masih terpakai.", AuthorizeLabel: "Benarkan",
 		ExpiredTitle: "Permintaan kebenaran telah tamat", ExpiredMessage: "Kembali ke aplikasi yang membuka halaman ini dan mulakan sambungan semula. Memuat semula halaman ini tidak akan berjaya.",
-		Errors: map[string]string{"invalid_credentials": "Nama pengguna atau kata laluan tidak sah.", "invalid_username": "Nama pengguna mesti terdiri daripada 3–64 huruf kecil, nombor, _, . atau -.", "invalid_password": "Kata laluan mesti terdiri daripada 12–72 bait.", "username_exists": "Nama pengguna sudah wujud. Log masuk atau pilih nama lain.", "registration_failed": "Akaun tidak dapat dicipta. Sila cuba lagi."},
+		Errors: map[string]string{"invalid_credentials": "Nama pengguna atau kata laluan tidak sah.", "invalid_username": "Nama pengguna mesti terdiri daripada 3–64 huruf kecil, nombor, _, . atau -.", "invalid_email": "Masukkan alamat e-mel yang sah untuk mencipta akaun.", "invalid_password": "Kata laluan mesti terdiri daripada 12–72 bait.", "username_exists": "Nama pengguna atau e-mel sudah wujud. Log masuk atau pilih yang lain.", "registration_failed": "Akaun tidak dapat dicipta. Sila cuba lagi."},
 	},
 	"hi": {
 		LanguageLabel: "भाषा", ClientRequest: "OAuth के माध्यम से पहुँच का अनुरोध कर रहा है।",
-		SignInNotice:  "अपने मौजूदा Event-driven Context खाते से साइन इन करें। आपका पासवर्ड केवल इस सेवा को भेजा जाता है और क्लाइंट के साथ साझा नहीं किया जाता।",
-		UsernameLabel: "उपयोगकर्ता नाम", PasswordLabel: "पासवर्ड", NewAccountHint: "नए उपयोगकर्ता? नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - और पासवर्ड में 12–72 बाइट होने चाहिए।",
+		SignInNotice:    "अपने मौजूदा Event-driven Context खाते से साइन इन करें। आपका पासवर्ड केवल इस सेवा को भेजा जाता है और क्लाइंट के साथ साझा नहीं किया जाता।",
+		IntegLoginLabel: "Integ.Life के साथ जारी रखें",
+		UsernameLabel:   "उपयोगकर्ता नाम", EmailLabel: "ईमेल (खाता बनाने के लिए आवश्यक)", PasswordLabel: "पासवर्ड", NewAccountHint: "नए उपयोगकर्ता? नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - और पासवर्ड में 12–72 बाइट होने चाहिए।",
 		SignInLabel: "साइन इन", CreateAccountLabel: "खाता बनाएँ", CancelLabel: "रद्द करें", SignedInAs: "साइन इन उपयोगकर्ता", ApproveAccess: "इन अनुमतियों को स्वीकृत करें:",
 		ReadDescription: "प्रोजेक्ट, सदस्य, इवेंट, मेटाडेटा और फ़ाइलें पढ़ें", WriteDescription: "प्रोजेक्ट बनाएँ, सदस्य जोड़ें और अपरिवर्तनीय इवेंट जोड़ें",
 		AccessPrefix: "पहुँच केवल", AccessSuffix: "तक सीमित है और एक घंटे बाद समाप्त हो जाती है। प्रोजेक्ट सदस्यता नियम लागू रहते हैं।", AuthorizeLabel: "अनुमति दें",
 		ExpiredTitle: "अनुमति अनुरोध की समय सीमा समाप्त हो गई", ExpiredMessage: "उस ऐप पर वापस जाएँ जिसने यह पेज खोला था और कनेक्शन फिर से शुरू करें। इस पेज को रीफ़्रेश करने से अनुरोध जारी नहीं होगा।",
-		Errors: map[string]string{"invalid_credentials": "उपयोगकर्ता नाम या पासवर्ड गलत है।", "invalid_username": "उपयोगकर्ता नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - होने चाहिए।", "invalid_password": "पासवर्ड 12–72 बाइट का होना चाहिए।", "username_exists": "यह उपयोगकर्ता नाम पहले से मौजूद है। साइन इन करें या दूसरा नाम चुनें।", "registration_failed": "खाता नहीं बनाया जा सका। फिर से प्रयास करें।"},
+		Errors: map[string]string{"invalid_credentials": "उपयोगकर्ता नाम या पासवर्ड गलत है।", "invalid_username": "उपयोगकर्ता नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - होने चाहिए।", "invalid_email": "खाता बनाने के लिए एक मान्य ईमेल पता दर्ज करें।", "invalid_password": "पासवर्ड 12–72 बाइट का होना चाहिए।", "username_exists": "यह उपयोगकर्ता नाम या ईमेल पहले से मौजूद है। साइन इन करें या दूसरा चुनें।", "registration_failed": "खाता नहीं बनाया जा सका। फिर से प्रयास करें।"},
 	},
 }
 
 type oauthPageData struct {
-	RequestID, ClientName, Username, Resource, Error, Language string
-	Copy                                                       oauthCopy
-	Scopes                                                     []oauthScopeDisplay
-	Login                                                      bool
-	Expired                                                    bool
+	RequestID, ClientName, Username, Resource, Error, Language, IntegLoginURL string
+	Copy                                                                      oauthCopy
+	Scopes                                                                    []oauthScopeDisplay
+	Login                                                                     bool
+	Expired                                                                   bool
 }
 
 func registerOAuthHandlers(mux *http.ServeMux, store *core.Store, config Config) {
@@ -267,7 +272,7 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 		setOAuthSessionCookie(w, base, login)
 		http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 	case "register":
-		credentials := core.Credentials{Username: r.FormValue("username"), Password: r.FormValue("password")}
+		credentials := core.Credentials{Username: r.FormValue("username"), Email: r.FormValue("email"), Password: r.FormValue("password")}
 		if _, registerErr := store.Register(r.Context(), credentials); registerErr != nil {
 			renderOAuthRequest(w, r, store, base, requestID, oauthRegistrationErrorKey(registerErr))
 			return
@@ -280,14 +285,13 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 		setOAuthSessionCookie(w, base, login)
 		http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 	case "approve":
-		session, _ := r.Cookie("edc_oauth_session")
-		if session == nil {
+		userID, hasSession, authenticated := authenticateOAuthBrowserSession(r, store)
+		if !hasSession {
 			http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 			return
 		}
-		userID, _, authErr := store.Authenticate(r.Context(), session.Value)
-		if authErr != nil {
-			http.SetCookie(w, &http.Cookie{Name: "edc_oauth_session", Value: "", Path: "/oauth", MaxAge: -1})
+		if !authenticated {
+			clearOAuthBrowserSessionCookies(w)
 			http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 			return
 		}
@@ -308,6 +312,33 @@ func setOAuthSessionCookie(w http.ResponseWriter, base string, login core.LoginR
 	http.SetCookie(w, &http.Cookie{Name: "edc_oauth_session", Value: login.Token, Path: "/oauth", Secure: strings.HasPrefix(base, "https://"), HttpOnly: true, SameSite: http.SameSiteLaxMode, Expires: login.ExpiresAt})
 }
 
+func oauthBrowserSessionTokens(r *http.Request) []string {
+	var tokens []string
+	if token := requestSessionToken(r); token != "" {
+		tokens = append(tokens, token)
+	}
+	if cookie, err := r.Cookie("edc_oauth_session"); err == nil && cookie.Value != "" && (len(tokens) == 0 || tokens[0] != cookie.Value) {
+		tokens = append(tokens, cookie.Value)
+	}
+	return tokens
+}
+
+func authenticateOAuthBrowserSession(r *http.Request, store *core.Store) (userID string, hasSession, authenticated bool) {
+	tokens := oauthBrowserSessionTokens(r)
+	for _, token := range tokens {
+		userID, _, err := store.Authenticate(r.Context(), token)
+		if err == nil {
+			return userID, true, true
+		}
+	}
+	return "", len(tokens) > 0, false
+}
+
+func clearOAuthBrowserSessionCookies(w http.ResponseWriter) {
+	clearSessionCookies(w)
+	http.SetCookie(w, &http.Cookie{Name: "edc_oauth_session", Value: "", Path: "/oauth", MaxAge: -1})
+}
+
 func oauthRegistrationErrorKey(err error) string {
 	var appErr *core.Error
 	if errors.As(err, &appErr) {
@@ -315,6 +346,9 @@ func oauthRegistrationErrorKey(err error) string {
 		case "invalid_input":
 			if strings.Contains(appErr.Message, "username") {
 				return "invalid_username"
+			}
+			if strings.Contains(appErr.Message, "email") {
+				return "invalid_email"
 			}
 			return "invalid_password"
 		case "conflict":
@@ -346,16 +380,19 @@ func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Stor
 		}
 		scopes = append(scopes, oauthScopeDisplay{Name: scope, Description: description})
 	}
-	data := oauthPageData{RequestID: requestID, ClientName: request.ClientName, Resource: request.Resource, Scopes: scopes, Login: true, Language: language, Copy: copy}
+	data := oauthPageData{
+		RequestID: requestID, ClientName: request.ClientName, Resource: request.Resource, Scopes: scopes,
+		Login: true, Language: language, Copy: copy, IntegLoginURL: integAuthOAuthStartLocation(requestID, language),
+	}
 	if errorKey != "" {
 		data.Error = copy.Errors[errorKey]
 	}
-	if session, cookieErr := r.Cookie("edc_oauth_session"); cookieErr == nil {
-		if userID, _, authErr := store.Authenticate(r.Context(), session.Value); authErr == nil {
-			if user, meErr := store.Me(core.WithUser(r.Context(), userID)); meErr == nil {
-				data.Login, data.Username = false, user.Username
-			}
+	if userID, hasSession, authenticated := authenticateOAuthBrowserSession(r, store); authenticated {
+		if user, meErr := store.Me(core.WithUser(r.Context(), userID)); meErr == nil {
+			data.Login, data.Username = false, user.Username
 		}
+	} else if hasSession {
+		clearOAuthBrowserSessionCookies(w)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Language", language)
@@ -441,6 +478,13 @@ func normalizeOAuthLanguage(raw string) string {
 
 func oauthRequestLocation(requestID, language string) string {
 	return "/oauth/authorize?request_id=" + url.QueryEscape(requestID) + "&lang=" + url.QueryEscape(language)
+}
+
+func integAuthOAuthStartLocation(requestID, language string) string {
+	return "/v1/auth/integ/start?" + url.Values{
+		"ui_locales": {language},
+		"return_to":  {oauthRequestLocation(requestID, language)},
+	}.Encode()
 }
 
 func oauthToken(w http.ResponseWriter, r *http.Request, store *core.Store, base string, ttl time.Duration) {

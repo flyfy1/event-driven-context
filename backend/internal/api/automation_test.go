@@ -39,11 +39,11 @@ func newAutomationHTTPFixture(t *testing.T) *automationHTTPFixture {
 	}
 	t.Cleanup(func() { _ = store.Close() })
 	password := "test-password-long-enough"
-	alice, err := store.Register(context.Background(), core.Credentials{Username: "alice", Password: password})
+	alice, err := store.Register(context.Background(), core.Credentials{Username: "alice", Email: "api-automation-alice@example.invalid", Password: password})
 	if err != nil {
 		t.Fatal(err)
 	}
-	bob, err := store.Register(context.Background(), core.Credentials{Username: "bob", Password: password})
+	bob, err := store.Register(context.Background(), core.Credentials{Username: "bob", Email: "api-automation-bob@example.invalid", Password: password})
 	if err != nil {
 		t.Fatal(err)
 	}

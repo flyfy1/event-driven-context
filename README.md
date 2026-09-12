@@ -24,10 +24,10 @@ make build
 
 ## CLI：跑通共同记录
 
-注册和登录会在终端无回显地读取密码；用户名为 3–64 个小写字母、数字、`_ . -`，密码为 12–72 字节。不提供命令行密码参数，自动化可通过 `--password-stdin` 输入。
+注册和登录会在终端无回显地读取密码；注册还需要唯一邮箱。用户名为 3–64 个小写字母、数字、`_ . -`，密码为 12–72 字节。不提供命令行密码参数，自动化可通过 `--password-stdin` 输入。
 
 ```sh
-./bin/edc register --username alice
+./bin/edc register --username alice --email alice@example.invalid
 ./bin/edc login --username alice
 ./bin/edc project create --name "后端研发" --description "团队共享的原始记录"
 ```
@@ -36,7 +36,7 @@ make build
 
 ```sh
 # 第二个用户使用独立配置文件；也可以在另一台电脑上注册、登录。
-./bin/edc --config "$HOME/.config/event-driven-context/bob.json" register --username bob
+./bin/edc --config "$HOME/.config/event-driven-context/bob.json" register --username bob --email bob@example.invalid
 ./bin/edc --config "$HOME/.config/event-driven-context/bob.json" login --username bob
 
 # 创建者添加已注册成员。

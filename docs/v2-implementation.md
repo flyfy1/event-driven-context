@@ -12,7 +12,15 @@
 
 生产 dogfood 项目已有 owner 与 `songyy` 两个真实成员。`songyy` 从 Chrome 写入 Event `01a09371-27f0-7008-8fe8-9f3a79987ae1`（sequence 148），网页显示作者 `songyy`；另一个已登录 owner 用 CLI 读取同一 Event，仍得到 `actor={type:user,id:usr_zhf5geavmwa4gv6xv6gh3b2pmj,username:songyy}`、`source={channel:api,client:web}` 和服务端 `recorded_at=2026-09-12T02:27:41.83258778Z`。这证明成员共享读写与作者绑定的 API/CLI/网页记录主链。
 
-网页 Event 列表已显示 actor、记录时间和 source channel；成员列表和 owner 按注册用户名添加的控件已在 `da19592` 实现并由 Pages 提交 `ff3ab80` 发布，完成真实双身份浏览器验收前不标为完成。Android 能选择成员可见项目并读写 app Event，但当前记录模型未保留或展示 actor，因此 Android 的团队作者展示仍是明确缺口。
+网页 Event 列表已显示 actor、记录时间和 source channel；成员列表和 owner 按注册用户名添加已完成生产双身份验收：owner Web 写入可由成员 CLI 读取，成员 CLI 写入也由 owner Web 看到，并保留真实 actor。`cwhy` 已加入 `Event-driven Context · Session Dogfood`，390px 成员列表可见 username、稳定 ID 和 owner。聚焦证据见 [Web sharing acceptance](../.codex-artifacts/dogfood-session-import/web-sharing-acceptance.md)。Android 已补 actor/source 展示并通过目标 dogfood 测试，物理设备验收仍后置保留。
+
+生产 Web 路由源码 `84067c5` 已通过 `?project=<id>#<view>` 深链、A→B、Back/Forward 和 390px 四分区验证；显式项目不再静默切到另一个项目。证据见 [routing browser acceptance](../.codex-artifacts/dogfood-session-import/team-sharing/routing-browser-acceptance.md)。
+
+## 当前切片：Web 中心登录
+
+当前优先 Web，Android 后续继续。前端已移除用户可见的本地密码注册/登录，改为 Integ.Life 中心 Google 登录；请求使用 credentialed Context Session，并保留 project、view 与 locale。该前端代码尚未部署，不能列为生产完成。后端 PKCE、中心 userinfo、Session 与邮箱绑定正在集成；MCP OAuth 并发修复也仍在进行。
+
+新中心用户必须提供已确认 email。绑定顺序为 `(issuer, sub)`，首次迁移才允许用人工确认的 email 命中旧本地用户并固定原 ID。`songyy` 与 `cwhy` 的迁移都必须保留既有 Project、成员关系和 Event actor；实际邮箱只保存在受控迁移证据和工作日志中。CLI Bearer 继续兼容，Web 中心登录不得让旧浏览器 Bearer 覆盖新 cookie 身份。
 
 真实 `project-brief/current` 已更新到 v2、`based_on_sequence=148`、lag 0；摘要把 sequence 148 的团队共享和作者归属要求列为约束，并保留该 Event ref。这是 Agent 整理输出保留新要求与来源的生产证据。
 
@@ -119,12 +127,12 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 
 | V2 步骤 | 完成所需证据 | 当前状态 |
 |---|---|---|
-| ① 数据与公开接口 | 上表的真实存储、HTTP、MCP 与 CLI 测试及独立复核 | 基础服务已发布；真实双成员网页写入与另一身份 CLI 读取保留 actor 已通过；网页成员管理 UI 待当前切片验收，Android actor 展示未完成 |
+| ① 数据与公开接口 | 上表的真实存储、HTTP、MCP 与 CLI 测试及独立复核 | 基础服务已发布；真实双成员 Web/CLI 共享、成员管理和 actor 保留已通过；Android actor 展示已实现并通过目标测试，物理设备后置 |
 | ② 自动写入接入 | link/setup 预览确认，Claude Code 真实 hook 日志，脱敏、去重、outbox 恢复，recorder skill note 质量 | 真实 Claude hook 注入/日志与 outbox 通过；Codex recorder 创建、完成引用和闲聊不写入通过；Claude 完整 Stop 模型会话仍缺证据 |
 | ③ 概况与跨工具 | project-brief State 正确及来源可读；第二客户端无手动交代取得背景；evidence skill 正确查询 | 真实 brief v2/v3、网页来源和 Claude 注入通过；全新 Codex evidence 检索与模型答复通过，持续真实使用待验证 |
 | ④ 处理器与转录 | 独立 host 用插件令牌读写、游标恢复；真实无人值守转录与失败重试 | once/watch 已实现；生产 ASR、失败后恢复、derived 与 brief 写回通过；手动请求消费和重转录仍未实现 |
 | ⑤ Android 采集 | 真机录音、先 File 后 Event、离线重启恢复、哈希一致与账户隔离；第 9.1 节拍照/选文件共用队列 | 生产模拟器录音、断网队列自动恢复、文件选择与下载哈希通过；物理设备仍待验收 |
 | ⑥ 日期回顾 | 实际定时发布 daily-review State；Android 查看来源及待整理记录 | 实际 watch 定时、重复 tick 不改写、网页与 Android 模拟器来源通过；待整理/迟到转录为已实现分支，尚无独立生产场景证据 |
-| ⑦ 网页与语言 | 记录/状态/接入/插件全流程；四语言真实桌面、窄屏、手机、OAuth 验证 | V2 中文窄屏记录、State 历史/来源、插件暂停恢复、项目时区与日期回顾通过；其余语言/设备/OAuth 场景待验收 |
+| ⑦ 网页与语言 | 记录/状态/接入/插件全流程；四语言真实桌面、窄屏、手机、OAuth 验证 | 共享成员、作者、`?project=<id>#<view>` 路由及中文窄屏四分区已生产通过；中心登录前端代码未部署，后端与 MCP OAuth 并发修复进行中；其余语言与设备场景待验收 |
 
 真实跨工具项目需经历预算修改、待办完成、agent 推断、成员冲突、闲聊和语音记录，并记录漏记、误记及用户补充背景的次数。测试夹具不能代替若干天真实使用或用户反馈。没有这些证据时，完整目标保持未完成。

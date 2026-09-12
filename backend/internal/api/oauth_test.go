@@ -34,7 +34,7 @@ func newOAuthFixture(t *testing.T, ttl time.Duration) *oauthFixture {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = store.Register(context.Background(), core.Credentials{Username: "alice", Password: "integration-password-123"}); err != nil {
+	if _, err = store.Register(context.Background(), core.Credentials{Username: "alice", Email: "alice@example.com", Password: "integration-password-123"}); err != nil {
 		t.Fatal(err)
 	}
 	h := httptest.NewTLSServer(HandlerWithConfig(store, Config{PublicBaseURL: testOAuthIssuer, OAuthAccessTokenTTL: ttl}))
@@ -118,7 +118,7 @@ func TestOAuthPageRegistrationContinuesAuthorization(t *testing.T) {
 		t.Fatalf("registration option missing: %d %s", res.StatusCode, page)
 	}
 
-	form := url.Values{"request_id": {requestID}, "lang": {"zh-CN"}, "decision": {"register"}, "username": {"new-user"}, "password": {"new-user-password-123"}}
+	form := url.Values{"request_id": {requestID}, "lang": {"zh-CN"}, "decision": {"register"}, "username": {"new-user"}, "email": {"new-user@example.com"}, "password": {"new-user-password-123"}}
 	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
 	res.Body.Close()
 	if res.StatusCode != http.StatusSeeOther {
@@ -173,7 +173,7 @@ func TestOAuthPageRegistrationAllowsOpenAIFormOrigin(t *testing.T) {
 	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
 	res.Body.Close()
 
-	form := url.Values{"request_id": {requestID}, "decision": {"register"}, "username": {"openai-user"}, "password": {"openai-user-password-123"}}
+	form := url.Values{"request_id": {requestID}, "decision": {"register"}, "username": {"openai-user"}, "email": {"openai-user@example.com"}, "password": {"openai-user-password-123"}}
 	req, err := http.NewRequest(http.MethodPost, f.server.URL+"/oauth/authorize", strings.NewReader(form.Encode()))
 	if err != nil {
 		t.Fatal(err)
@@ -242,6 +242,72 @@ func TestOAuthConcurrentAuthorizationRequestsRemainBrowserBound(t *testing.T) {
 	codeB := f.approveAuthorization(t, requestB, "state-b")
 	f.exchangeAuthorizationCode(t, codeA, strings.Repeat("a", 64))
 	f.exchangeAuthorizationCode(t, codeB, strings.Repeat("b", 64))
+}
+
+func TestOAuthConsentAcceptsProductSessionCookies(t *testing.T) {
+	for _, cookieName := range []string{sessionCookieName, localSessionCookieName} {
+		t.Run(cookieName, func(t *testing.T) {
+			f := newOAuthFixture(t, time.Hour)
+			login, err := f.store.LoginInteg(context.Background(), "https://auth.integ.life", "subject-"+cookieName, cookieName+"@example.com")
+			if err != nil {
+				t.Fatal(err)
+			}
+			cookieURL, _ := url.Parse(f.server.URL)
+			f.client.Jar.SetCookies(cookieURL, []*http.Cookie{{Name: cookieName, Value: login.Token, Path: "/", Secure: cookieName == sessionCookieName}})
+
+			requestID, _ := f.startAuthorization(t, "product-session", strings.Repeat("p", 64))
+			res := f.do(t, http.MethodGet, oauthRequestLocation(requestID, "en"), "", "")
+			page, _ := io.ReadAll(res.Body)
+			res.Body.Close()
+			if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Signed in as <strong>"+login.User.Username+"</strong>")) {
+				t.Fatalf("product session did not reach consent: %d %s", res.StatusCode, page)
+			}
+			f.approveAuthorization(t, requestID, "product-session")
+		})
+	}
+}
+
+func TestOAuthExpiredProductSessionDoesNotShadowPasswordLogin(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	requestID, _ := f.startAuthorization(t, "stale-product-session", strings.Repeat("s", 64))
+	cookieURL, _ := url.Parse(f.server.URL)
+	f.client.Jar.SetCookies(cookieURL, []*http.Cookie{{Name: sessionCookieName, Value: "expired-product-session", Path: "/", Secure: true}})
+
+	res := f.do(t, http.MethodGet, oauthRequestLocation(requestID, "en"), "", "")
+	page, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Sign in")) {
+		t.Fatalf("stale product session did not show login: %d %s", res.StatusCode, page)
+	}
+
+	form := url.Values{"request_id": {requestID}, "decision": {"login"}, "username": {"alice"}, "password": {"integration-password-123"}}
+	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("password login after stale product session: %d", res.StatusCode)
+	}
+	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
+	page, _ = io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Signed in as <strong>alice</strong>")) {
+		t.Fatalf("stale product session shadowed new login: %d %s", res.StatusCode, page)
+	}
+}
+
+func TestOAuthLoginPageLinksCentralAuthBackToRequest(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	requestID, _ := f.startAuthorization(t, "central-login", strings.Repeat("c", 64))
+	res := f.do(t, http.MethodGet, oauthRequestLocation(requestID, "zh-CN"), "", "")
+	page, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	location := integAuthOAuthStartLocation(requestID, "zh-CN")
+	parsed, err := url.Parse(location)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("使用 Integ.Life 继续")) || !bytes.Contains(page, []byte("/v1/auth/integ/start?")) || parsed.Path != "/v1/auth/integ/start" || parsed.Query().Get("return_to") != oauthRequestLocation(requestID, "zh-CN") || parsed.Query().Get("ui_locales") != "zh-CN" {
+		t.Fatalf("central login did not preserve authorization request: %d %s %s", res.StatusCode, location, page)
+	}
 }
 
 func TestOAuthDuplicateAuthorizationSubmissionShowsRestartGuidance(t *testing.T) {

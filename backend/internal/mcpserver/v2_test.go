@@ -39,7 +39,7 @@ func newV2MCPSession(t *testing.T) (context.Context, *mcp.ClientSession, *core.S
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = store.Close() })
-	user, err := store.Register(context.Background(), core.Credentials{Username: "mcp-v2-user", Password: "password-123"})
+	user, err := store.Register(context.Background(), core.Credentials{Username: "mcp-v2-user", Email: "mcp-v2-user@example.invalid", Password: "password-123"})
 	if err != nil {
 		t.Fatal(err)
 	}

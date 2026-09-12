@@ -274,7 +274,7 @@ func v2SubjectAuthenticated(store *core.Store, service v2.ServiceAPI, config Con
 }
 
 func v2AuthenticateUser(r *http.Request, store *core.Store, config Config, requiredScope string) (string, error) {
-	token := bearer(r)
+	token := requestSessionToken(r)
 	if strings.HasPrefix(token, "edco_") {
 		if config.PublicBaseURL == "" {
 			return "", core.ErrUnauthenticated

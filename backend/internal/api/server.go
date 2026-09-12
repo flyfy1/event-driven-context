@@ -30,6 +30,7 @@ type Config struct {
 	PublicBaseURL       string
 	OAuthAccessTokenTTL time.Duration
 	Automation          *automation.Coordinator
+	IntegAuth           IntegAuthConfig
 }
 
 func HandlerWithConfig(store *core.Store, config Config) http.Handler {
@@ -39,12 +40,16 @@ func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 	mux.Handle("POST /v1/auth/register", gate.wrap(jsonEndpoint(201, store.Register)))
 	mux.Handle("POST /v1/auth/login", gate.wrap(jsonEndpoint(200, store.Login)))
 	mux.Handle("POST /v1/auth/logout", authenticated(store, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := store.Logout(r.Context(), bearer(r)); err != nil {
+		if err := store.Logout(r.Context(), requestSessionToken(r)); err != nil {
 			fail(w, err)
 			return
 		}
+		clearSessionCookies(w)
 		respond(w, 200, core.Empty{})
 	})))
+	if config.IntegAuth.ClientID != "" {
+		registerIntegAuthHandlers(mux, store, config.IntegAuth, config.PublicBaseURL)
+	}
 	mux.Handle("GET /v1/me", authenticated(store, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		out, err := store.Me(r.Context())
 		if err != nil {
@@ -139,6 +144,7 @@ func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 			}
 			if originAllowed {
 				logged.Header().Set("Access-Control-Allow-Origin", origin)
+				logged.Header().Set("Access-Control-Allow-Credentials", "true")
 				logged.Header().Set("Vary", "Origin")
 				if r.Method == http.MethodOptions {
 					logged.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -300,7 +306,7 @@ func bearer(r *http.Request) string {
 }
 func authenticated(s *core.Store, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id, _, err := s.Authenticate(r.Context(), bearer(r))
+		id, _, err := s.Authenticate(r.Context(), requestSessionToken(r))
 		if err != nil {
 			w.Header().Set("WWW-Authenticate", "Bearer")
 			fail(w, err)

@@ -2,7 +2,7 @@
 
 版本：V2 · 日期：2026-09-12 · 状态：用户已指定为当前实现依据，取代 [product.md](product.md) 的本轮实施范围。本文不考虑与已有实现的兼容，接口按 MVP 重新定义。
 
-平台与协作决定：App 当前只开发和交付 Android，独立目录为 `app/android/`；已经完成的 iOS 原型保留。开发任务由多个 Sol / high 子代理并行承担，主代理负责拆分、接口协调、review 与集成验收。按第 10.2 节逐步验证，同一步内互不冲突的任务并行进行。
+平台与协作决定：当前先交付并验证 Web 的项目记录、共享、路由和中心登录；Android 独立保留在 `app/android/`，在 Web 主链稳定后继续，已经完成的 iOS 原型保留。开发任务由多个 Sol / high 子代理并行承担，主代理负责拆分、接口协调、review 与集成验收。按第 10.2 节逐步验证，同一步内互不冲突的任务并行进行。
 
 第 7 节是基础数据结构与对外接口（MCP、CLI、HTTP API），第 10 节是 P1 范围与验收。
 
@@ -622,16 +622,18 @@ edc host run
 
 ### 7.7 HTTP API
 
-- 认证：`Authorization: Bearer <token>`；网页客户端使用 OAuth 2.1 Authorization Code + PKCE。
+- 认证：CLI、hook 和 MCP 客户端继续使用 `Authorization: Bearer <token>`；网页经 Integ.Life 中心登录完成 OAuth 2.1 Authorization Code + PKCE，并使用 Context 自己的 HttpOnly Session cookie。
 - 请求与响应：JSON；文件上传使用 `multipart/form-data`，文件下载返回原始字节。
 - 错误格式：`{"error":{"code":"...","message":"..."}}`。
 
 | 方法与路径 | 用途 | 对应 MCP 工具 |
 |---|---|---|
-| `POST /v1/auth/register` | 注册 | — |
-| `POST /v1/auth/login` | 登录，返回令牌 | — |
-| `POST /v1/auth/logout` | 吊销当前令牌 | — |
-| `GET /v1/me` | 当前身份 | — |
+| `POST /v1/auth/register` | CLI 兼容注册；不作为网页入口 | — |
+| `POST /v1/auth/login` | CLI 兼容登录，返回 Bearer 令牌 | — |
+| `GET /v1/auth/integ/start` | 网页进入 Integ.Life 中心登录，保留 locale 与同源 `return_to` | — |
+| `GET /v1/auth/integ/callback` | 服务端校验 PKCE/state、绑定身份并签发 Context Session | — |
+| `POST /v1/auth/logout` | 清除网页 Session 或吊销当前令牌 | — |
+| `GET /v1/me` | 当前身份，包含 username 与已验证 email | — |
 | `GET /v1/projects` | 列出项目 | `list_projects` |
 | `POST /v1/projects` | 创建项目，可传 IANA `timezone` | `create_project` |
 | `PATCH /v1/projects/{project_id}` | 项目创建者修改 `timezone` | — |
@@ -654,6 +656,8 @@ edc host run
 | `/mcp` | MCP Streamable HTTP | — |
 
 项目响应包含 `timezone`；省略时区或既有项目使用 `UTC`，App/网页新建项目时默认发送当前设备时区。项目插件列表的 Installation 包含即时读取的 `project_timezone`，处理器使用它计算项目本地计划时刻；插件配置不能覆盖项目时区。
+
+中心身份以 `(issuer, sub)` 作为稳定绑定；新用户必须有中心认证确认的 email。旧用户首次中心登录只允许按人工确认的 email 完成一次绑定并保留原本地用户 ID、Project、成员关系和 Event actor。`songyy` 与 `cwhy` 的迁移均不得创建替代本地身份；实际邮箱只保存在受控迁移证据和工作日志中。
 
 ### 7.8 身份、限制与错误码
 
@@ -706,6 +710,8 @@ edc host run
 
 ### 9.1 手机 App
 
+Android 能力保留为正式交付范围，但当前排在 Web 共享、路由与中心登录之后继续验收；已有实现和模拟器证据不回退。
+
 | 页面 | 核心操作 |
 |---|---|
 | 记录 | 录音（主操作）、拍照、选文件；选择本人有成员资格的项目；每条记录显示写入者、记录时间、同步和整理状态；查看原始媒体与转录 |
@@ -713,6 +719,8 @@ edc host run
 | 我的 | 账号、默认项目、已安装插件与状态、提示词配置、语言 |
 
 ### 9.2 网页
+
+Web 是当前优先交付入口。项目与当前分区进入 URL：`?project=<project_id>#records`、`#state`、`#integration` 或 `#plugins`。切换、刷新、深链和浏览器前进后退必须恢复同一项目与分区；显式无权或不存在的 project ID 显示不可用，不能静默切到其他项目。该 URL 也作为团队共享链接，但收到链接的用户仍须先登录并已有项目成员资格。
 
 | 页面 | 核心操作 |
 |---|---|
@@ -728,7 +736,7 @@ edc host run
 
 一种语言只有覆盖用户完成任务所经过的全部界面和反馈后，才能列为“已支持”。单个页面或接口实现了某种语言，不构成产品支持该语言。
 
-- **覆盖范围**：公开首页、注册、登录、退出、网页的项目记录、项目状态、接入、插件、手机 App 全部页面、OAuth 登录与授权确认，以及这些流程中的输入说明、校验、成功、空状态、加载、失败和权限提示。
+- **覆盖范围**：公开首页、中心登录、退出、网页的项目记录、项目状态、接入、插件、手机 App 全部页面、OAuth 登录与授权确认，以及这些流程中的输入说明、校验、成功、空状态、加载、失败和权限提示。
 - **同步交付**：新增用户可见能力必须在同一交付中补齐所有已支持语言，不能长期依赖默认语言文案兜底。
 - **语言状态连续**：首次访问按浏览器或系统语言选择；页面提供可发现的手动切换；用户的选择在刷新、登录和跨子域后保留；进入 OAuth 时保留 locale；切换语言不丢失授权事务或回跳目标；系统语言不受支持时统一回退 English。
 - **统一资源**：所有用户可见文字进入统一的 locale 资源，包括动态状态、表单约束、错误码映射、日期时间和数量表达。
@@ -764,6 +772,8 @@ edc host run
 ### 10.2 投入顺序
 
 每一步有独立的验证点，未通过时先解决，不进入下一步。
+
+当前执行优先级由用户调整为先完成步骤⑦中的 Web 共享、路由和中心登录，再继续步骤⑤的 Android 物理设备验收；Android 已有实现与模拟器证据继续保留。
 
 | 步骤 | 内容 | 验证点 |
 |---|---|---|
