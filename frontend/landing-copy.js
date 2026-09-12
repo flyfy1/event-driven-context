@@ -1,6 +1,6 @@
 window.ContextLandingCopy = {
   "en": {
-    "title": "Context — Pick up where you left off.",
+    "title": "Event Driven Context",
     "description": "Keep your project records together. Bring the right background into your next AI conversation, with sources you can check.",
     "skip": "Skip to content",
     "navHow": "How it works",
@@ -132,7 +132,7 @@ window.ContextLandingCopy = {
     "sessionUnavailable": "Session could not be checked. You can still read this page or open the workspace to retry."
   },
   "zh-CN": {
-    "title": "Context — 换一个对话，接着往前走。",
+    "title": "Event Driven Context",
     "description": "留下项目中的原始记录，为下一次 AI 对话带去有依据的背景，让工作持续推进。",
     "skip": "跳至正文",
     "navHow": "如何使用",
@@ -264,7 +264,7 @@ window.ContextLandingCopy = {
     "sessionUnavailable": "暂时无法确认登录状态。你仍可阅读介绍，或进入工作区重试。"
   },
   "ms": {
-    "title": "Context — Sambung dari tempat anda berhenti.",
+    "title": "Event Driven Context",
     "description": "Simpan rekod projek dan bawa latar belakang yang relevan ke perbualan AI seterusnya, dengan sumber yang boleh disemak.",
     "skip": "Langkau ke kandungan",
     "navHow": "Cara berfungsi",
@@ -396,7 +396,7 @@ window.ContextLandingCopy = {
     "sessionUnavailable": "Sesi tidak dapat disemak. Anda masih boleh membaca halaman ini atau membuka ruang kerja untuk mencuba lagi."
   },
   "hi": {
-    "title": "Context — जहाँ रुके थे, वहीं से आगे बढ़ें।",
+    "title": "Event Driven Context",
     "description": "अपने प्रोजेक्ट के रिकॉर्ड सहेजें और जाँचे जा सकने वाले स्रोतों के साथ अगली AI बातचीत में सही संदर्भ लाएँ।",
     "skip": "मुख्य सामग्री पर जाएँ",
     "navHow": "कैसे काम करता है",

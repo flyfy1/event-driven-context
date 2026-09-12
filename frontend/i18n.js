@@ -7,10 +7,10 @@
 
   const translations = {
     en: {
-      documentTitle: "Context · Integ.Life",
+      documentTitle: "Event Driven Context",
       metaDescription: "Append and query immutable context with your team.",
       aboutProduct: "About Context",
-      brandHome: "Context home",
+      brandHome: "Event Driven Context home",
       languageLabel: "Language",
       signedOut: "Signed out",
       signedInAs: "Signed in: {username}",
@@ -96,10 +96,10 @@
       contentKindFile: "file"
     },
     "zh-CN": {
-      documentTitle: "Context · Integ.Life",
+      documentTitle: "Event Driven Context",
       metaDescription: "为团队追加、查询不可修改的原始 context。",
       aboutProduct: "产品介绍",
-      brandHome: "Context 首页",
+      brandHome: "Event Driven Context 首页",
       languageLabel: "语言",
       signedOut: "未登录",
       signedInAs: "已登录：{username}",
@@ -185,10 +185,10 @@
       contentKindFile: "文件"
     },
     ms: {
-      documentTitle: "Context · Integ.Life",
+      documentTitle: "Event Driven Context",
       metaDescription: "Tambah dan cari konteks kekal bersama pasukan anda.",
       aboutProduct: "Tentang Context",
-      brandHome: "Laman utama Context",
+      brandHome: "Laman utama Event Driven Context",
       languageLabel: "Bahasa",
       signedOut: "Belum log masuk",
       signedInAs: "Log masuk: {username}",
@@ -274,10 +274,10 @@
       contentKindFile: "fail"
     },
     hi: {
-      documentTitle: "Context · Integ.Life",
+      documentTitle: "Event Driven Context",
       metaDescription: "अपनी टीम के साथ अपरिवर्तनीय context जोड़ें और खोजें।",
       aboutProduct: "Context के बारे में",
-      brandHome: "Context मुखपृष्ठ",
+      brandHome: "Event Driven Context मुखपृष्ठ",
       languageLabel: "भाषा",
       signedOut: "साइन इन नहीं किया गया",
       signedInAs: "साइन इन: {username}",

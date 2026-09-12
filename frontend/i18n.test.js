@@ -28,6 +28,7 @@ assert.equal(translate("hi", "signedInAs", { username: "alice" }).includes("alic
 const frontendDir = __dirname;
 const index = fs.readFileSync(path.join(frontendDir, "index.html"), "utf8");
 const workspace = fs.readFileSync(path.join(frontendDir, "workspace.html"), "utf8");
+const admin = fs.readFileSync(path.join(frontendDir, "admin", "index.html"), "utf8");
 const app = fs.readFileSync(path.join(frontendDir, "app.js"), "utf8");
 const agentSetup = fs.readFileSync(path.join(frontendDir, "agent-setup.md"), "utf8");
 const referencedKeys = new Set();
@@ -53,6 +54,8 @@ const landingKeys = Object.keys(landingCopy.en).sort();
 for (const locale of supportedLocales) {
   assert.deepEqual(Object.keys(landingCopy[locale]).sort(), landingKeys, `${locale} landing keys must match`);
   for (const key of landingKeys) assert.ok(landingCopy[locale][key], `${locale}.${key} must not be empty`);
+  assert.equal(landingCopy[locale].title, "Event Driven Context");
+  assert.equal(translations[locale].documentTitle, "Event Driven Context");
 }
 for (const match of index.matchAll(/data-copy="([^"]+)"/g)) {
   assert.ok(landingKeys.includes(match[1]), `landing translation key must exist: ${match[1]}`);
@@ -62,6 +65,13 @@ assert.match(landing, /resolveLocalePreference\(params\.get\('locale'\), sharedL
 assert.match(landing, /event_context_locale/);
 assert.match(landing, /Domain=\.integ\.life/);
 assert.match(index, /href="\.\/workspace\.html"/);
+assert.match(index, /<title>Event Driven Context/);
+assert.match(index, /aria-label="Event Driven Context">Event Driven Context<\/a>/);
+assert.match(workspace, /<title>Event Driven Context<\/title>/);
+assert.match(workspace, />Event Driven Context<\/a>/);
+assert.match(admin, /<title>Event Driven Context 管理后台<\/title>/);
+assert.match(admin, />Event Driven Context<\/a>/);
+assert.doesNotMatch(index + workspace + admin, /Context<span>·<\/span>Integ\.Life|context<span class="brand-by">\/ Integ\.Life/);
 assert.match(workspace, /id="auth-form"/);
 assert.match(workspace, /id="workspace"/);
 assert.match(workspace, /https:\/\/chatgpt\.com\/plugins#settings\/Connectors\?create-connector=true&amp;redirectAfter=%2Fplugins/);
