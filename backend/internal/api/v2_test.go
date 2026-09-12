@@ -144,8 +144,16 @@ func TestV2AdminOverviewAndMembershipBoundary(t *testing.T) {
 	}
 
 	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.alice.ID, f.token, v2JSONBody(t, map[string]string{"access": "none"}))
-	if w.Code != http.StatusBadRequest {
+	if w.Code != http.StatusConflict {
 		t.Fatalf("owner removal: %d %s", w.Code, w.Body.String())
+	}
+	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.bob.ID, f.token, v2JSONBody(t, map[string]string{"access": "owner"}))
+	if w.Code != http.StatusOK {
+		t.Fatalf("admin promote: %d %s", w.Code, w.Body.String())
+	}
+	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.bob.ID, f.token, v2JSONBody(t, map[string]string{"access": "member"}))
+	if w.Code != http.StatusOK {
+		t.Fatalf("admin demote: %d %s", w.Code, w.Body.String())
 	}
 	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.bob.ID, f.token, v2JSONBody(t, map[string]string{"access": "none"}))
 	if w.Code != http.StatusOK {

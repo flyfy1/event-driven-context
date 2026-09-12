@@ -70,10 +70,10 @@ func RegisterAdminHandlers(mux *http.ServeMux, store *core.Store, service v2.Ser
 	mux.Handle("PATCH /v1/admin/projects/{project_id}/members/{user_id}", admin(jsonEndpointV2(http.StatusOK, func(ctx context.Context, in struct {
 		Access string `json:"access"`
 	}) (core.AdminProjectMember, error) {
-		if in.Access != "member" && in.Access != "none" {
-			return core.AdminProjectMember{}, core.Invalid("access must be member or none")
+		if in.Access != "owner" && in.Access != "member" && in.Access != "none" {
+			return core.AdminProjectMember{}, core.Invalid("access must be owner, member, or none")
 		}
-		return store.SetAdminProjectMember(ctx, config.AdminUsers, v2ProjectID(ctx), v2AdminUserID(ctx), in.Access == "member")
+		return store.SetAdminProjectAccess(ctx, config.AdminUsers, v2ProjectID(ctx), v2AdminUserID(ctx), in.Access)
 	})))
 }
 

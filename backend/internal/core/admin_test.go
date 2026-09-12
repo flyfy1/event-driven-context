@@ -33,8 +33,14 @@ func TestAdminIdentitySnapshotAndProjectMembership(t *testing.T) {
 	if err = store.RequireAdmin(WithUser(context.Background(), bob.ID), []string{alice.Username}); errorCode(err) != "forbidden" {
 		t.Fatalf("non-admin error = %v", err)
 	}
-	if _, err = store.SetAdminProjectMember(adminContext, []string{alice.ID}, project.ID, bob.ID, true); err != nil {
+	if _, err = store.SetAdminProjectAccess(adminContext, []string{alice.ID}, project.ID, alice.ID, "member"); errorCode(err) != "conflict" {
+		t.Fatalf("demote last owner error = %v", err)
+	}
+	if _, err = store.SetAdminProjectAccess(adminContext, []string{alice.ID}, project.ID, bob.ID, "member"); err != nil {
 		t.Fatalf("grant membership: %v", err)
+	}
+	if _, err = store.SetAdminProjectAccess(adminContext, []string{alice.ID}, project.ID, bob.ID, "owner"); err != nil {
+		t.Fatalf("promote owner: %v", err)
 	}
 	snapshot, err := store.AdminIdentitySnapshot(adminContext, []string{alice.Username})
 	if err != nil {
@@ -43,16 +49,16 @@ func TestAdminIdentitySnapshotAndProjectMembership(t *testing.T) {
 	if len(snapshot.Users) != 2 || len(snapshot.Projects) != 1 || len(snapshot.Projects[0].Members) != 2 {
 		t.Fatalf("snapshot = %#v", snapshot)
 	}
-	if snapshot.Users[0].OwnedProjectCount != 1 || snapshot.Users[0].ProjectCount != 1 || snapshot.Users[1].ProjectCount != 1 {
+	if snapshot.Users[0].OwnedProjectCount != 1 || snapshot.Users[0].ProjectCount != 1 || snapshot.Users[1].OwnedProjectCount != 1 || snapshot.Users[1].ProjectCount != 1 {
 		t.Fatalf("user counts = %#v", snapshot.Users)
 	}
-	if snapshot.Projects[0].Owner.ID != alice.ID || !snapshot.Projects[0].Members[0].Owner {
+	if len(snapshot.Projects[0].OwnerUserIDs) != 2 || snapshot.Projects[0].Members[0].Role != "owner" || snapshot.Projects[0].Members[1].Role != "owner" {
 		t.Fatalf("owner summary = %#v", snapshot.Projects[0])
 	}
-	if _, err = store.SetAdminProjectMember(adminContext, []string{alice.Username}, project.ID, alice.ID, false); errorCode(err) != "invalid_input" {
-		t.Fatalf("remove owner error = %v", err)
+	if _, err = store.SetAdminProjectAccess(adminContext, []string{alice.Username}, project.ID, bob.ID, "member"); err != nil {
+		t.Fatalf("demote owner: %v", err)
 	}
-	if _, err = store.SetAdminProjectMember(adminContext, []string{alice.Username}, project.ID, bob.ID, false); err != nil {
+	if _, err = store.SetAdminProjectAccess(adminContext, []string{alice.Username}, project.ID, bob.ID, "none"); err != nil {
 		t.Fatalf("remove member: %v", err)
 	}
 	members, err := store.ListMembers(adminContext, ProjectRef{ProjectID: project.ID})

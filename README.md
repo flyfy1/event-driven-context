@@ -74,7 +74,7 @@ make build
 
 网页可通过任意静态文件服务器托管 `frontend/`。当前前端保留维护者的默认 API 地址，自部署时应修改 `frontend/app.js` 中的默认地址，或使用 `https://context.example.com/workspace.html?api=https%3A%2F%2Fcontext-api.example.com` 显式指定自己的 API。工作区使用的网页 origin 必须包含在后端 `-allowed-origins` 中。使用自己的域名发布时，也应替换或移除 `frontend/CNAME` 中维护者的域名。
 
-管理后台位于 `/admin/`。设置 `EDC_ADMIN_USERS` 为逗号分隔的用户 ID、用户名或已验证邮箱后，对应用户可通过第一方网站会话查看注册用户、全部项目、项目统计、分享关系和已安装插件，并授予或移除非 owner 的项目成员权限。留空会关闭所有管理访问；OAuth / MCP access token 不继承后台权限。示例：
+管理后台位于 `/admin/`。设置 `EDC_ADMIN_USERS` 为逗号分隔的用户 ID、用户名或已验证邮箱后，对应用户可通过第一方网站会话查看注册用户、全部项目、项目统计、分享关系和已安装插件，并授予、移除项目权限或调整 owner / member 角色。每个项目必须保留至少一位 owner。留空会关闭所有管理访问；OAuth / MCP access token 不继承后台权限。示例：
 
 ```sh
 EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
