@@ -14,6 +14,8 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 readonly SOURCE_REVISION="$(git rev-parse --short=12 HEAD)"
 git clone --quiet --branch gh-pages "git@github.com:${REPOSITORY}.git" "$TEMP_DIR/site"
+# frontend/.nojekyll disables Markdown rendering so SKILL.md and agent-setup.md
+# remain downloadable source files with their original YAML front matter.
 # Skill pages are published independently on gh-pages. All application assets,
 # including the admin dashboard and agent guide, live in frontend/ and are
 # released together.
