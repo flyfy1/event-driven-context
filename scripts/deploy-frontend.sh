@@ -24,7 +24,7 @@ rsync -a --delete --exclude '.git' --exclude '.DS_Store' --exclude 'admin/' fron
 export FRONTEND_RELEASE="$SOURCE_REVISION"
 while IFS= read -r -d '' html_file; do
   perl -0pi -e 's{((?:src|href)="\./[^"?]+\.(?:css|js))(?:\?v=[^"]*)?(")}{$1 . "?v=" . $ENV{FRONTEND_RELEASE} . $2}ge' "$html_file"
-done < <(find "$TEMP_DIR/site" -type f -name '*.html' -print0)
+done < <(find "$TEMP_DIR/site" -path "$TEMP_DIR/site/admin" -prune -o -type f -name '*.html' -print0)
 
 git -C "$TEMP_DIR/site" add --all
 if git -C "$TEMP_DIR/site" diff --cached --quiet; then
