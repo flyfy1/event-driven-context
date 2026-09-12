@@ -315,6 +315,7 @@ async function loadEvents(options) {
     metadata: state.query.metadata,
     source: state.query.source,
     refs_to: state.query.refs_to,
+    order: "desc",
     limit: 30,
     cursor: more ? state.cursor : ""
   };

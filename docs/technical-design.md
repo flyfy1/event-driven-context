@@ -105,7 +105,7 @@ State 是插件发布的可重建项目视图，不是原始记录。key 使用 
 
 项目、事件、文件、State 和插件的标识必须同时出现在路径或认证边界内。适配器不得仅相信请求体中的项目、actor、producer 或 plugin ID；响应也要防止把另一个项目的数据当成成功结果。
 
-查询条件全部按 AND 组合，结果按 sequence 升序。分页 cursor 固定第一页快照，`after_sequence` 用于 pull 与处理器增量读取。HTTP、MCP 和 CLI 对相同输入必须观察到相同的事件内容与顺序。
+查询条件全部按 AND 组合，默认结果按 sequence 升序；调用方可显式请求降序，网页记录列表用降序展示最新内容。分页 cursor 固定第一页快照与顺序，`after_sequence` 用于 pull 与处理器增量读取。HTTP、MCP 和 CLI 对相同输入必须观察到相同的事件内容与顺序。
 
 ## 5. 关键端到端流程
 

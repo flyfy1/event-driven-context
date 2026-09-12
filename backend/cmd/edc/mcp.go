@@ -86,7 +86,7 @@ func (b remoteMCPBackend) RecordEvents(ctx context.Context, in mcpserver.V2Recor
 	return remoteResult(out, err)
 }
 func (b remoteMCPBackend) QueryEvents(ctx context.Context, in mcpserver.V2QueryEventsInput) (v2.EventsPage, error) {
-	return remoteResult(b.client.QueryEvents(ctx, in.ProjectID, v2.QueryEventsInput{Types: in.Types, Metadata: in.Metadata, Source: in.Source, RefsTo: in.RefsTo, AfterSequence: in.AfterSequence, From: in.From, To: in.To, TimeField: in.TimeField, Limit: in.Limit, Cursor: in.Cursor}))
+	return remoteResult(b.client.QueryEvents(ctx, in.ProjectID, v2.QueryEventsInput{Types: in.Types, Metadata: in.Metadata, Source: in.Source, RefsTo: in.RefsTo, AfterSequence: in.AfterSequence, Order: in.Order, From: in.From, To: in.To, TimeField: in.TimeField, Limit: in.Limit, Cursor: in.Cursor}))
 }
 func (b remoteMCPBackend) GetEvent(ctx context.Context, in mcpserver.V2GetEventInput) (v2.Event, error) {
 	return remoteResult(b.client.GetEvent(ctx, in.ProjectID, in.EventID))

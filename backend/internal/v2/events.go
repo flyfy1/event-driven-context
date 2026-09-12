@@ -264,6 +264,10 @@ func (s *Service) queryLocked(projectID string, in QueryEventsInput, plugin *Ins
 	if in.AfterSequence < 0 || len(in.Cursor) > 2048 {
 		return EventsPage{}, v2err("invalid_input", "invalid sequence or cursor")
 	}
+	if in.Order != "" && in.Order != "asc" && in.Order != "desc" {
+		return EventsPage{}, v2err("invalid_input", "order must be asc or desc")
+	}
+	descending := in.Order == "desc"
 	for _, typ := range in.Types {
 		if typ != "log" && typ != "note" && typ != "derived" {
 			return EventsPage{}, v2err("invalid_input", "invalid event type filter")
@@ -312,21 +316,40 @@ func (s *Service) queryLocked(projectID string, in QueryEventsInput, plugin *Ins
 	}{queryCopy, pluginScope})
 	sum := sha256.Sum256(qraw)
 	qhash := hex.EncodeToString(sum[:])
-	snapshotSeq, after := p.LatestSequence, in.AfterSequence
+	snapshotSeq, boundary := p.LatestSequence, in.AfterSequence
+	if descending {
+		boundary = snapshotSeq + 1
+	}
 	if in.Cursor != "" {
 		raw, e := base64.RawURLEncoding.DecodeString(in.Cursor)
 		if e != nil {
 			return EventsPage{}, v2err("invalid_input", "invalid cursor")
 		}
 		var c eventCursor
-		if json.Unmarshal(raw, &c) != nil || c.ProjectID != projectID || c.QueryHash != qhash || c.Snapshot < 0 || c.Snapshot > p.LatestSequence || c.After < in.AfterSequence || c.After > c.Snapshot || !s.validCursor(c) {
+		if json.Unmarshal(raw, &c) != nil {
 			return EventsPage{}, v2err("invalid_input", "invalid cursor")
 		}
-		snapshotSeq, after = c.Snapshot, c.After
+		invalidBoundary := c.After < in.AfterSequence || c.After > c.Snapshot
+		if descending {
+			invalidBoundary = c.After <= in.AfterSequence || c.After > c.Snapshot+1
+		}
+		if c.ProjectID != projectID || c.QueryHash != qhash || c.Snapshot < 0 || c.Snapshot > p.LatestSequence || invalidBoundary || !s.validCursor(c) {
+			return EventsPage{}, v2err("invalid_input", "invalid cursor")
+		}
+		snapshotSeq, boundary = c.Snapshot, c.After
 	}
 	out := EventsPage{Events: []Event{}, LatestSequence: snapshotSeq}
-	for _, e := range p.Events {
-		if e.Sequence <= after || e.Sequence > snapshotSeq {
+	start, end, step := 0, len(p.Events), 1
+	if descending {
+		start, end, step = len(p.Events)-1, -1, -1
+	}
+	for index := start; index != end; index += step {
+		e := p.Events[index]
+		outsideWindow := e.Sequence <= boundary || e.Sequence > snapshotSeq
+		if descending {
+			outsideWindow = e.Sequence <= in.AfterSequence || e.Sequence >= boundary || e.Sequence > snapshotSeq
+		}
+		if outsideWindow {
 			continue
 		}
 		if plugin != nil && !contains(plugin.Permissions.ReadEvents, e.Type) {

@@ -500,6 +500,7 @@ MCP 面向对话 agent。插件安装、暂停等管理操作在 App、网页和
   "source": {"channel": "skill"},
   "refs_to": "0192f2b0-1d3e-7a4b-8c5d-6e7f8a9b0c1d",
   "after_sequence": 120,
+  "order": "asc",
   "from": "2026-09-01T00:00:00+08:00",
   "to": null,
   "time_field": "recorded_at",
@@ -512,7 +513,8 @@ MCP 面向对话 agent。插件安装、暂停等管理操作在 App、网页和
 - `refs_to` 返回引用了指定事件的事件，用于找到“谁取代、撤回、完成或转录了它”。
 - `after_sequence` 只返回序号更大的事件，供处理器增量读取。
 - `time_field` 为 `recorded_at` 或 `occurred_at`；`from` 包含、`to` 不包含。
-- 结果按序号升序。返回 `{events, next_cursor, latest_sequence}`；带 `cursor` 翻页时读取第一页固定的快照。
+- `order` 可为 `asc` 或 `desc`，默认按序号升序；网页记录列表使用降序，让最新记录优先展示。
+- 返回 `{events, next_cursor, latest_sequence}`；带 `cursor` 翻页时保持第一页的顺序与固定快照。
 
 #### `get_state`
 

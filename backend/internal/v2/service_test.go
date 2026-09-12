@@ -216,6 +216,24 @@ func TestCursorSnapshotAndTamper(t *testing.T) {
 	if err != nil || second.LatestSequence != first.LatestSequence || len(second.Events) != 1 || second.Events[0].Sequence != 2 {
 		t.Fatalf("second %#v err=%v", second, err)
 	}
+	descending, err := f.service.QueryEvents(f.aliceCtx, f.project.ID, QueryEventsInput{AfterSequence: 1, Order: "desc", Limit: 1})
+	if err != nil || descending.LatestSequence != 4 || len(descending.Events) != 1 || descending.Events[0].Sequence != 4 || descending.NextCursor == "" {
+		t.Fatalf("descending first %#v err=%v", descending, err)
+	}
+	descendingNext, err := f.service.QueryEvents(f.aliceCtx, f.project.ID, QueryEventsInput{AfterSequence: 1, Order: "desc", Limit: 1, Cursor: descending.NextCursor})
+	if err != nil || descendingNext.LatestSequence != 4 || len(descendingNext.Events) != 1 || descendingNext.Events[0].Sequence != 3 || descendingNext.NextCursor == "" {
+		t.Fatalf("descending second %#v err=%v", descendingNext, err)
+	}
+	descendingLast, err := f.service.QueryEvents(f.aliceCtx, f.project.ID, QueryEventsInput{AfterSequence: 1, Order: "desc", Limit: 1, Cursor: descendingNext.NextCursor})
+	if err != nil || descendingLast.LatestSequence != 4 || len(descendingLast.Events) != 1 || descendingLast.Events[0].Sequence != 2 || descendingLast.NextCursor != "" {
+		t.Fatalf("descending last %#v err=%v", descendingLast, err)
+	}
+	if _, err = f.service.QueryEvents(f.aliceCtx, f.project.ID, QueryEventsInput{Order: "newest"}); errorCode(err) != "invalid_input" {
+		t.Fatalf("invalid order error=%v", err)
+	}
+	if _, err = f.service.QueryEvents(f.aliceCtx, f.project.ID, QueryEventsInput{Order: "asc", Cursor: descending.NextCursor}); errorCode(err) != "invalid_input" {
+		t.Fatalf("descending cursor reused for ascending query error=%v", err)
+	}
 }
 
 func TestFilesDedupeReferenceAuthorizationAndCleanup(t *testing.T) {

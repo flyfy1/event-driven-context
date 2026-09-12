@@ -88,6 +88,7 @@ type QueryEventsInput struct {
 	Source        map[string]json.RawMessage `json:"source,omitempty"`
 	RefsTo        string                     `json:"refs_to,omitempty"`
 	AfterSequence int64                      `json:"after_sequence,omitempty"`
+	Order         string                     `json:"order,omitempty"`
 	From          string                     `json:"from,omitempty"`
 	To            string                     `json:"to,omitempty"`
 	TimeField     string                     `json:"time_field,omitempty"`

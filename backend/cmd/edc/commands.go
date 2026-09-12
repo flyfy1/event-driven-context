@@ -369,6 +369,7 @@ func (a *app) query(args []string) error {
 	source := f.String("source", "{}", "source filter JSON")
 	refsTo := f.String("refs-to", "", "referenced event UUID")
 	after := f.Int64("after", 0, "after sequence")
+	order := f.String("order", "asc", "sequence order: asc or desc")
 	from := f.String("from", "", "inclusive RFC3339")
 	to := f.String("to", "", "exclusive RFC3339")
 	timeField := f.String("time-field", "recorded_at", "recorded_at or occurred_at")
@@ -392,7 +393,7 @@ func (a *app) query(args []string) error {
 	if *types != "" {
 		typeList = strings.Split(*types, ",")
 	}
-	out, err := a.client.QueryEvents(a.ctx, *projectID, v2.QueryEventsInput{Types: typeList, Metadata: meta, Source: src, RefsTo: *refsTo, AfterSequence: *after, From: *from, To: *to, TimeField: *timeField, Limit: *limit, Cursor: *cursor})
+	out, err := a.client.QueryEvents(a.ctx, *projectID, v2.QueryEventsInput{Types: typeList, Metadata: meta, Source: src, RefsTo: *refsTo, AfterSequence: *after, Order: *order, From: *from, To: *to, TimeField: *timeField, Limit: *limit, Cursor: *cursor})
 	return a.result(out, err)
 }
 

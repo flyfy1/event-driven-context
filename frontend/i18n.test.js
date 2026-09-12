@@ -81,6 +81,7 @@ assert.match(app, /agentSetupPrompt/);
 assert.match(app, /async function transcribeAudio/);
 assert.match(app, /projectPath\("\/transcriptions"\)/);
 assert.match(app, /if \(captureKind === "audio"\)/);
+assert.match(app, /order: "desc"/);
 assert.match(agentSetup, /edc --server https:\/\/context-api\.integ\.life whoami/);
 assert.match(agentSetup, /https:\/\/context\.integ\.life\/skills\/edc-recorder\/SKILL\.md/);
 assert.match(agentSetup, /query --project YOUR_PROJECT_ID --limit 5/);
