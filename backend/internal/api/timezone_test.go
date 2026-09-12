@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/v2"
 )
 
-func TestV2HTTPProjectTimezoneLifecycleAndPluginSelfView(t *testing.T) {
+func TestV2HTTPProjectNameAndTimezoneLifecycleAndPluginSelfView(t *testing.T) {
 	f := newV2APIFixture(t)
 	if f.project.Timezone != "UTC" {
 		t.Fatalf("default timezone = %q", f.project.Timezone)
@@ -23,6 +24,12 @@ func TestV2HTTPProjectTimezoneLifecycleAndPluginSelfView(t *testing.T) {
 	}
 
 	path := "/v1/projects/" + f.project.ID
+	w = f.request(t, http.MethodPatch, path, f.token, "application/json", v2JSONBody(t, map[string]string{"name": "  Renamed project  "}))
+	renamed := decodeV2Response[core.Project](t, w)
+	if w.Code != http.StatusOK || renamed.ID != f.project.ID || renamed.Name != "Renamed project" {
+		t.Fatalf("owner name update: %d %#v", w.Code, renamed)
+	}
+
 	w = f.request(t, http.MethodPatch, path, f.token, "application/json", v2JSONBody(t, map[string]string{"timezone": "not/a-zone"}))
 	if w.Code != http.StatusBadRequest || v2ErrorCode(decodeV2APIError(t, w)) != "invalid_input" {
 		t.Fatalf("invalid timezone: %d %s", w.Code, w.Body.String())
@@ -31,9 +38,30 @@ func TestV2HTTPProjectTimezoneLifecycleAndPluginSelfView(t *testing.T) {
 	if _, err := f.store.AddMember(core.WithUser(context.Background(), f.alice.ID), core.MemberInput{ProjectID: f.project.ID, Username: f.bob.Username}); err != nil {
 		t.Fatal(err)
 	}
-	w = f.request(t, http.MethodPatch, path, f.bobToken, "application/json", v2JSONBody(t, map[string]string{"timezone": "Asia/Singapore"}))
+	w = f.request(t, http.MethodPatch, path, f.bobToken, "application/json", v2JSONBody(t, map[string]string{"name": "Member rename"}))
 	if w.Code != http.StatusForbidden || v2ErrorCode(decodeV2APIError(t, w)) != "forbidden" {
-		t.Fatalf("member timezone update: %d %s", w.Code, w.Body.String())
+		t.Fatalf("member name update: %d %s", w.Code, w.Body.String())
+	}
+	if _, err := f.store.SetMemberRole(core.WithUser(context.Background(), f.alice.ID), core.MemberRoleInput{ProjectID: f.project.ID, UserID: f.bob.ID, Role: "owner"}); err != nil {
+		t.Fatal(err)
+	}
+	w = f.request(t, http.MethodPatch, path, f.bobToken, "application/json", v2JSONBody(t, map[string]string{"name": "Co-owner rename"}))
+	if updated := decodeV2Response[core.Project](t, w); w.Code != http.StatusOK || updated.Name != "Co-owner rename" {
+		t.Fatalf("additional owner name update: %d %#v", w.Code, updated)
+	}
+	for label, body := range map[string]any{
+		"empty":     map[string]string{"name": "  "},
+		"oversize":  map[string]string{"name": strings.Repeat("界", 67)},
+		"no fields": map[string]string{},
+	} {
+		w = f.request(t, http.MethodPatch, path, f.token, "application/json", v2JSONBody(t, body))
+		if w.Code != http.StatusBadRequest || v2ErrorCode(decodeV2APIError(t, w)) != "invalid_input" {
+			t.Fatalf("%s project update: %d %s", label, w.Code, w.Body.String())
+		}
+	}
+	w = f.request(t, http.MethodPatch, path, f.bobToken, "application/json", v2JSONBody(t, map[string]string{"timezone": "Asia/Singapore"}))
+	if w.Code != http.StatusOK {
+		t.Fatalf("additional owner timezone update: %d %s", w.Code, w.Body.String())
 	}
 
 	w = f.request(t, http.MethodPatch, path, f.token, "application/json", v2JSONBody(t, map[string]string{"timezone": "Asia/Singapore"}))
@@ -43,7 +71,8 @@ func TestV2HTTPProjectTimezoneLifecycleAndPluginSelfView(t *testing.T) {
 	}
 	w = f.request(t, http.MethodGet, "/v1/projects", f.token, "", nil)
 	projects := decodeV2Response[core.Projects](t, w)
-	if w.Code != http.StatusOK || projectTimezone(projects.Projects, f.project.ID) != "Asia/Singapore" {
+	listed := projectByID(projects.Projects, f.project.ID)
+	if w.Code != http.StatusOK || listed.Name != "Co-owner rename" || listed.Timezone != "Asia/Singapore" {
 		t.Fatalf("timezone list: %d %#v", w.Code, projects)
 	}
 
@@ -63,6 +92,15 @@ func TestV2HTTPProjectTimezoneLifecycleAndPluginSelfView(t *testing.T) {
 	if w.Code != http.StatusOK || len(self.Plugins) != 1 || self.Plugins[0].ProjectTimezone != "Asia/Singapore" {
 		t.Fatalf("plugin timezone: %d %#v", w.Code, self)
 	}
+}
+
+func projectByID(projects []core.Project, projectID string) core.Project {
+	for _, project := range projects {
+		if project.ID == projectID {
+			return project
+		}
+	}
+	return core.Project{}
 }
 
 func projectTimezone(projects []core.Project, projectID string) string {
