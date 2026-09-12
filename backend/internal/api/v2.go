@@ -16,7 +16,9 @@ import (
 	"unicode/utf8"
 
 	"event-driven-context/internal/core"
+	"event-driven-context/internal/transcription"
 	"event-driven-context/internal/v2"
+	"github.com/google/uuid"
 )
 
 const v2MultipartOverhead = 1 << 20
@@ -123,6 +125,7 @@ func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.Servic
 
 	mux.Handle("POST /v1/projects/{project_id}/files", writeUser(v2FileUploadEndpoint(service)))
 	mux.Handle("GET /v1/projects/{project_id}/files/{file_id}", readSubject(v2FileDownloadEndpoint(service)))
+	mux.Handle("POST /v1/projects/{project_id}/transcriptions", writeUser(v2TranscriptionEndpoint(service, config.AudioTranscriber)))
 
 	mux.Handle("GET /v1/projects/{project_id}/state", readSubject(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prefix, err := v2SingleQuery(r, "prefix")
@@ -238,6 +241,114 @@ func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.Servic
 		out, err := service.RemovePlugin(r.Context(), r.PathValue("project_id"), r.PathValue("plugin_id"))
 		v2RespondResult(w, http.StatusOK, out, err)
 	})))
+}
+
+var builtinAudioTranscriptionManifest = v2.Manifest{
+	ID:          "audio-transcribe",
+	Version:     "1.1.0",
+	Name:        "Audio transcription",
+	Description: "Transcribes an uploaded audio record with OpenAI and appends source-linked text.",
+	Processor:   json.RawMessage(`{"kind":"audio_transcription","provider":"openai","runs_in":"server"}`),
+	Config:      json.RawMessage(`{"language":"","prompt":""}`),
+	Permissions: v2.Permissions{ReadEvents: []string{"log", "note", "derived"}, WriteEvents: []string{"derived"}, WriteState: []string{}},
+}
+
+type v2TranscriptionRequest struct {
+	SourceEventID string `json:"source_event_id"`
+}
+
+type v2TranscriptionResult struct {
+	Status          string   `json:"status"`
+	SourceEventID   string   `json:"source_event_id"`
+	TranscriptEvent v2.Event `json:"transcript_event"`
+}
+
+func v2TranscriptionEndpoint(service v2.ServiceAPI, transcriber transcription.Transcriber) http.Handler {
+	return jsonEndpointV2(http.StatusOK, func(ctx context.Context, in v2TranscriptionRequest) (v2TranscriptionResult, error) {
+		projectID := v2ProjectID(ctx)
+		sourceID := strings.ToLower(strings.TrimSpace(in.SourceEventID))
+		if sourceID == "" {
+			return v2TranscriptionResult{}, v2Invalid("source_event_id is required")
+		}
+		source, err := service.GetEvent(ctx, projectID, sourceID)
+		if err != nil {
+			return v2TranscriptionResult{}, err
+		}
+		if source.Type != "note" && source.Type != "log" {
+			return v2TranscriptionResult{}, v2Invalid("source event must be a note or log")
+		}
+		if source.Content.Kind != "file" || !map[string]bool{"audio/mp4": true, "audio/mpeg": true, "audio/wav": true}[source.Content.MediaType] {
+			return v2TranscriptionResult{}, &v2.Error{Code: "unsupported_media_type", Message: "source event must contain M4A, MP3, or WAV audio"}
+		}
+		if source.Content.SizeBytes > transcription.MaxAudioBytes {
+			return v2TranscriptionResult{}, &v2.Error{Code: "too_large", Message: "OpenAI transcription accepts audio up to 25 MB"}
+		}
+		if existing, ok := existingTranscript(ctx, service, projectID, sourceID); ok {
+			return v2TranscriptionResult{Status: "ready", SourceEventID: sourceID, TranscriptEvent: existing}, nil
+		}
+		if transcriber == nil {
+			return v2TranscriptionResult{}, &v2.Error{Code: "service_unavailable", Message: "audio transcription is not configured on this server"}
+		}
+		principal, installation, err := service.EnsureBuiltinPlugin(ctx, projectID, builtinAudioTranscriptionManifest, nil)
+		if err != nil {
+			return v2TranscriptionResult{}, err
+		}
+		var pluginConfig struct {
+			Language string `json:"language"`
+			Prompt   string `json:"prompt"`
+		}
+		if err = json.Unmarshal(installation.Config, &pluginConfig); err != nil {
+			return v2TranscriptionResult{}, &v2.Error{Code: "conflict", Message: "audio transcription plugin configuration is invalid"}
+		}
+		if len(pluginConfig.Language) > 20 || len(pluginConfig.Prompt) > 4000 {
+			return v2TranscriptionResult{}, &v2.Error{Code: "conflict", Message: "audio transcription plugin configuration is too large"}
+		}
+		info, audio, err := service.OpenFileAsPlugin(ctx, principal, source.Content.FileID)
+		if err != nil {
+			return v2TranscriptionResult{}, err
+		}
+		defer audio.Close()
+		result, err := transcriber.Transcribe(ctx, info.Filename, info.MediaType, info.SizeBytes, audio, transcription.Options{Language: pluginConfig.Language, Prompt: pluginConfig.Prompt})
+		if err != nil {
+			slog.Warn("audio transcription failed", "project_id", projectID, "event_id", sourceID, "error", err)
+			return v2TranscriptionResult{}, &v2.Error{Code: "processing_failed", Message: "OpenAI could not transcribe this audio; the original recording is still saved"}
+		}
+		eventID := uuid.NewSHA1(uuid.NameSpaceURL, []byte("event-context:audio-transcribe:"+projectID+":"+sourceID)).String()
+		modelJSON, _ := json.Marshal(result.Model)
+		written, err := service.RecordEventsAsPlugin(ctx, principal, v2.RecordEventsInput{Events: []v2.EventInput{{
+			ID: eventID, Type: "derived", Content: v2.EventContent{Kind: "text", Text: result.Text},
+			Metadata: map[string]json.RawMessage{"provider": json.RawMessage(`"openai"`), "model": modelJSON},
+			Source:   map[string]json.RawMessage{"channel": json.RawMessage(`"plugin"`), "processor": json.RawMessage(`"audio-transcribe"`)},
+			Refs:     []v2.Ref{{Rel: "derived_from", ID: sourceID}}, OccurredAt: source.OccurredAt,
+		}}})
+		if err != nil {
+			return v2TranscriptionResult{}, err
+		}
+		if len(written.Results) != 1 || (written.Results[0].Status != "created" && written.Results[0].Status != "duplicate") {
+			if existing, ok := existingTranscript(ctx, service, projectID, sourceID); ok {
+				return v2TranscriptionResult{Status: "ready", SourceEventID: sourceID, TranscriptEvent: existing}, nil
+			}
+			return v2TranscriptionResult{}, &v2.Error{Code: "processing_failed", Message: "transcript could not be saved; the original recording is still saved"}
+		}
+		transcript, err := service.GetEventAsPlugin(ctx, principal, eventID)
+		if err != nil {
+			return v2TranscriptionResult{}, err
+		}
+		return v2TranscriptionResult{Status: "ready", SourceEventID: sourceID, TranscriptEvent: transcript}, nil
+	})
+}
+
+func existingTranscript(ctx context.Context, service v2.ServiceAPI, projectID, sourceID string) (v2.Event, bool) {
+	page, err := service.QueryEvents(ctx, projectID, v2.QueryEventsInput{Types: []string{"derived"}, RefsTo: sourceID, Limit: 100})
+	if err != nil {
+		return v2.Event{}, false
+	}
+	for _, event := range page.Events {
+		if event.Actor.Type == "plugin" && event.Actor.ID == builtinAudioTranscriptionManifest.ID && event.Content.Kind == "text" {
+			return event, true
+		}
+	}
+	return v2.Event{}, false
 }
 
 type v2PluginPatch struct {
@@ -514,6 +625,10 @@ func failV2(w http.ResponseWriter, err error) {
 		status = http.StatusUnsupportedMediaType
 	case "rate_limited":
 		status = http.StatusTooManyRequests
+	case "service_unavailable":
+		status = http.StatusServiceUnavailable
+	case "processing_failed":
+		status = http.StatusBadGateway
 	}
 	respond(w, status, map[string]any{"error": appErr})
 }

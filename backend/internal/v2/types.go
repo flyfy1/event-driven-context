@@ -269,6 +269,7 @@ type ServiceAPI interface {
 	GetState(context.Context, string, GetStateInput) (StatesResult, error)
 	PutState(context.Context, string, PutStateInput) (State, error)
 	InstallPlugin(context.Context, string, InstallPluginInput) (InstallPluginResult, error)
+	EnsureBuiltinPlugin(context.Context, string, Manifest, json.RawMessage) (PluginPrincipal, Installation, error)
 	ListPlugins(context.Context, string) ([]Installation, error)
 	RevisePlugin(context.Context, string, string, RevisePluginInput) (Installation, error)
 	SetPluginStatus(context.Context, string, string, string) (Installation, error)
