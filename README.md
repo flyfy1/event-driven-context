@@ -1,47 +1,49 @@
 # Event-driven Context
 
-**Local first：数据与积累属于你，模型由你选择。**
+[English](README.md) | [简体中文](README.cn.md)
 
-Event-driven Context 是一个本地优先、支持自行部署的开源项目。任何人都可以把服务部署在自己选择的平台上，包括自己的电脑、NAS、自有服务器或云主机，由自己掌控记录、原始文件和访问权限，无需使用项目维护者的托管实例。
+**Local first: your data and accumulated knowledge belong to you; you choose the models.**
 
-我们希望用户在不同工具和 AI 对话中积累的信息，能够长期保存在自己控制的环境中。模型提供计算能力，原始记录和上下文的积累独立保存；更换 agent 或停止使用某个模型服务后，已有记录仍然可读、可备份，并可继续交给其他工具使用。
+Event-driven Context is a local-first, self-hostable open-source project. Anyone can deploy it on a platform they choose—including a personal computer, NAS, self-managed server, or cloud host—and retain control of records, original files, and access permissions without relying on the maintainers' hosted instance.
 
-当前提供 Go 实现的项目事件存储后端、CLI、MCP 与受控 runner。项目成员共同读写，事件、原始文件和 metadata **只能追加，不允许修改或删除**；媒体上传、确定性 context 查询、受控转录与回顾结果都保留来源关系。
+Information accumulated across tools and AI conversations should remain available for the long term in an environment the user controls. Models provide compute, while original records and accumulated context are stored independently. If you switch agents or stop using a model provider, existing records remain readable, backupable, and available to other tools.
 
-第一版直接使用 `User → Project → Event`，不额外引入 Context 实体。范围与验收见 [MVP 文档](docs/mvp.md)。
+The project currently provides a Go project-event storage backend, CLI, MCP interface, and controlled runner. Project members can jointly read and write data. Events, original files, and metadata are **append-only and cannot be modified or deleted**; media uploads, deterministic context queries, controlled transcription, and review results all retain their provenance relationships.
 
-## 给开发 Agent 的指令
+The first version directly uses `User → Project → Event` without introducing a separate Context entity. See the [MVP document](docs/mvp.md) for scope and acceptance criteria.
 
-本项目当前处于 **MCVP 阶段**。参与本仓库开发的 Agent 请遵循以下原则：
+## Instructions for Development Agents
 
-- **无需考虑向前兼容**：不要为了兼容已有版本而保留旧接口、兼容层或过渡实现。
-- **根据当前条件做出最佳选择**：结合当前需求、实际运行环境和验证目标，自主选择你认为最合适的设计与实现方案。
-- **允许调整已有设计**：在用户授权的任务范围内，可以按需重构架构、接口、数据格式和配置方式，不要把已有实现视为不可改变的约束。
-- **直接推进合理决策**：不要仅因方案涉及不兼容变更就反复请求确认；完成变更时，同步更新相关文档与验证。
+This project is currently in the **MCVP stage**. Agents working in this repository should follow these principles:
 
-## Local first 与数据控制
+- **Do not preserve backward compatibility by default**: do not retain old APIs, compatibility layers, or transitional implementations solely to support existing versions.
+- **Choose the best option for current conditions**: use the present requirements, actual runtime environment, and verification goals to select the most appropriate design and implementation.
+- **Existing designs may change**: within the user-authorized task scope, refactor architecture, APIs, data formats, and configuration as needed. Do not treat the current implementation as immutable.
+- **Advance sound decisions directly**: do not repeatedly request confirmation merely because a change is incompatible. Update the relevant documentation and verification together with the change.
 
-- **原始数据保存在部署者的文件系统中**：每条事件是独立 JSON 文件，上传的原始文件独立保存。SQLite 仅承担身份与授权，数据路径由部署者指定。
-- **基础能力不依赖云端模型**：当前服务的记录、读取和条件查询不调用模型。完成构建并在本机启动后，可以通过本地 CLI / HTTP 使用这些能力，无需模型账号或外部托管服务。
-- **工具通过接口访问同一份记录**：CLI、HTTP 和 MCP 共用项目权限与存储。用户可以连接不同的 agent，已有数据不绑定某个对话客户端。
-- **备份和迁移由部署者掌握**：保留身份库与完整数据目录的一致性备份，即可将数据迁移到自己控制的其他部署环境。具体一致性要求见下文“验证与当前边界”。
-- **固定 Skill 与 runner 分离**：P1 已实现两份仓库内固定 Skill、服务端调度状态与独立 runner。runner 只接收某次 run 已授权的输入，不持有用户全权限令牌；处理结果带平台控制的 provenance。开放式第三方插件安装仍属后续范围。
+## Local First and Data Control
 
-这里的“本地”指部署者控制的数据存放与运行环境；自行选择云主机也是一种自部署方式。Local first 不代表调用云端模型时数据绝不离开设备：通过 MCP 或其他工具提供给外部 agent 的内容，可能进入其模型服务。数据持久化位置与模型调用时的数据流向需要分别管理。
+- **Original data stays on the deployer's filesystem**: every event is an independent JSON file, and uploaded originals are stored separately. SQLite handles identity and authorization only; the deployer chooses the data path.
+- **Core capabilities do not depend on a cloud model**: recording, reading, and conditional querying do not call a model. Once built and started locally, these capabilities are available through the local CLI or HTTP API without a model account or externally hosted service.
+- **Tools access the same records through shared interfaces**: CLI, HTTP, and MCP use the same project permissions and storage. Users can connect different agents without binding existing data to one conversation client.
+- **Backup and migration stay under deployer control**: a consistent backup of the identity database and complete data directory can be moved to another environment under the deployer's control. See "Verification and Current Boundaries" below for consistency requirements.
+- **Fixed Skills and the runner are separated**: P1 includes two repository-pinned Skills, server-side scheduling state, and an independent runner. The runner receives only the inputs authorized for one run and does not hold a full-access user token. Results carry platform-controlled provenance. Open third-party plugin installation remains future work.
 
-## 产品与设计文档
+Here, "local" means that data storage and execution run in an environment controlled by the deployer; a cloud host selected and controlled by the deployer also counts as self-hosting. Local first does not mean data can never leave the device when a cloud model is invoked: content supplied to an external agent through MCP or another tool may enter that provider's model service. Manage persistence location and model-call data flow as separate concerns.
 
-- [Memory Recall 用户指南](docs/memory-recall.md)：安装检索 Skill，让 Agent 按需读取本地 Notes 并获取来源 Events。
-- [完整产品设计](docs/product.md)：持续记录、按需提取 context、基于 skill 的输入处理与定时服务。
-- [技术设计](docs/technical-design.md)：数据契约、规则、runner、检索、权限和故障恢复。
-- [用户旅程与页面流程](docs/ux-flows.md)：六条用户旅程、信息架构、页面操作与异常反馈。
-- [手机 App 采集流程](docs/mobile-capture-ux.md)：录音后自动保存、上传、整理及离线恢复，是修订后的日常主入口。
-- [Agent 整理的 Notes 设计](docs/notes-design.md)：同一批 Event 的 daily、persons、topics 与 goals 文档视图、组织规则和本地同步契约。
-- [既有第一版范围](docs/mvp.md)：存储、授权和条件查询基线；当前实现已在此基础上加入媒体、context 与固定自动处理链路。
+## Product and Design Documents
 
-## 启动
+- [Memory Recall user guide](docs/memory-recall.md): install the retrieval Skill so an Agent can read local Notes on demand and retrieve their source Events.
+- [Complete product design](docs/product.md): continuous capture, on-demand context extraction, Skill-based input processing, and scheduled services.
+- [Technical design](docs/technical-design.md): data contracts, rules, runner behavior, retrieval, permissions, and failure recovery.
+- [User journeys and page flows](docs/ux-flows.md): six user journeys, information architecture, page actions, and error feedback.
+- [Mobile app capture flow](docs/mobile-capture-ux.md): automatic save, upload, organization, and offline recovery after recording—the revised primary daily entry point.
+- [Agent-organized Notes design](docs/notes-design.md): daily, persons, topics, and goals document views for the same Events, plus organization rules and the local sync contract.
+- [Original first-version scope](docs/mvp.md): the storage, authorization, and conditional-query baseline; the current implementation additionally includes media, context, and fixed automated processing flows.
 
-需要 Go 1.26.5 或更新版本；SQLite 使用纯 Go 驱动，不依赖外部数据库或 CGO。`make check` 还会使用 Node.js 的内置运行时检查前端 locale 资源，不需要安装 npm 依赖。
+## Getting Started
+
+Requires Go 1.26.5 or later. SQLite uses a pure-Go driver and does not depend on an external database or CGO. `make check` also uses Node.js's built-in runtime to validate frontend locale resources; no npm dependencies need to be installed.
 
 ```sh
 make build
@@ -49,20 +51,20 @@ make build
 ./bin/edc-runner help
 ```
 
-默认监听 `127.0.0.1:8080`。SQLite 身份数据库为 `data/context.db`；event manifest、原始文件和 automation journal 写入 Git 忽略的 `data/`。`-skill-root` 必须明确指向仓库提供的固定 Skill 目录才会启用 automation API；留空会关闭这些路由。修改地址、路径：
+By default, the server listens on `127.0.0.1:8080`. The SQLite identity database is stored at `data/context.db`; event manifests, original files, and the automation journal are written under the Git-ignored `data/` directory. `-skill-root` must explicitly point to the repository's fixed Skill directory to enable the automation API; leaving it empty disables those routes. To change the address or paths:
 
 ```sh
 ./bin/edc-server -addr 127.0.0.1:8090 -db data/context.db -data data -skill-root backend/skills
 ./bin/edc --server http://127.0.0.1:8090 help
 ```
 
-`GET /healthz` 用于存活检查。`SIGINT` / `SIGTERM` 会停止接收请求并等待在途请求结束。
+`GET /healthz` is used for liveness checks. `SIGINT` / `SIGTERM` stop accepting new requests and wait for in-flight requests to complete.
 
-### 部署到自己的平台
+### Deploy on Your Own Platform
 
-自行部署不依赖 `integ.life` 域名或维护者的生产主机。在目标环境构建并运行 `edc-server`，使用 `-db` 和 `-data` 指定自己管理的持久化位置；CLI 通过 `--server` 或 `EDC_SERVER` 连接自己的实例。当前采用单服务进程写入，不应让多个服务进程同时写入同一数据目录。
+Self-hosting does not depend on an `integ.life` domain or the maintainers' production host. Build and run `edc-server` in the target environment, use `-db` and `-data` to select persistence locations you manage, and connect the CLI to your instance through `--server` or `EDC_SERVER`. The current storage model assumes a single writing service process; do not run multiple service processes against the same data directory.
 
-本机使用可直接采用上面的启动命令。需要远程访问时，在服务前配置 HTTPS 反向代理；需要浏览器访问或 OAuth 时，再明确配置网页来源和自己的 API 公网地址，例如：
+For local use, the startup commands above are sufficient. For remote access, place an HTTPS reverse proxy in front of the service. For browser access or OAuth, also configure the permitted web origin and your public API address explicitly:
 
 ```sh
 ./bin/edc-server -addr 127.0.0.1:8090 \
@@ -72,51 +74,51 @@ make build
   -public-base-url https://context-api.example.com
 ```
 
-示例域名需替换为自己的域名。反向代理连接本例上游时，将上游 Host 设为 `127.0.0.1:8090`；客户端连接 `https://context-api.example.com`，MCP 地址为该实例的 `/mcp`。纯本地使用无需配置 OAuth 公网地址。
+Replace the example domains with your own. When the reverse proxy connects to the example upstream, set the upstream Host to `127.0.0.1:8090`. Clients connect to `https://context-api.example.com`, and that instance's MCP endpoint is `/mcp`. Purely local use does not require a public OAuth address.
 
-网页可通过任意静态文件服务器托管 `frontend/`。当前前端保留维护者的默认 API 地址，自部署时应修改 `frontend/app.js` 中的默认地址，或使用 `https://context.example.com/workspace.html?api=https%3A%2F%2Fcontext-api.example.com` 显式指定自己的 API。工作区使用的网页 origin 必须包含在后端 `-allowed-origins` 中。使用自己的域名发布时，也应替换或移除 `frontend/CNAME` 中维护者的域名。
+Serve `frontend/` with any static file server. The frontend currently retains the maintainers' default API address; for self-hosting, either change the default in `frontend/app.js` or explicitly select your API with `https://context.example.com/workspace.html?api=https%3A%2F%2Fcontext-api.example.com`. The workspace's web origin must appear in the backend's `-allowed-origins`. When publishing under your own domain, also replace or remove the maintainers' domain in `frontend/CNAME`.
 
-管理后台位于 `/admin/`。设置 `EDC_ADMIN_USERS` 为逗号分隔的用户 ID、用户名或已验证邮箱后，对应用户可通过第一方网站会话查看注册用户、全部项目、项目统计、分享关系和已安装插件，并授予、移除项目权限或调整 owner / member 角色。每个项目必须保留至少一位 owner。留空会关闭所有管理访问；OAuth / MCP access token 不继承后台权限。示例：
+The administration dashboard is available at `/admin/`. Set `EDC_ADMIN_USERS` to a comma-separated list of user IDs, usernames, or verified email addresses. Those users can then use a first-party website session to view registered users, all projects, project statistics, sharing relationships, and installed plugins, and can grant or remove project access or change owner/member roles. Every project must retain at least one owner. Leaving the variable empty disables all administrative access; OAuth and MCP access tokens do not inherit administrator privileges. Example:
 
 ```sh
 EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 ```
 
-下文的 `integ-prod`、`integ.life` 域名及 `make deploy-prod` / `make deploy-frontend` 描述维护者当前的部署流程，脚本包含该环境的专用配置，不是自部署的前提或通用部署命令。
+The `integ-prod` host, `integ.life` domains, and `make deploy-prod` / `make deploy-frontend` commands below describe the maintainers' current deployment workflow. Those scripts contain environment-specific configuration and are neither prerequisites nor general-purpose self-hosting commands.
 
-## CLI：跑通共同记录
+## CLI: Shared Recording Workflow
 
-注册和登录会在终端无回显地读取密码；注册还需要唯一邮箱。用户名为 3–64 个小写字母、数字、`_ . -`，密码为 12–72 字节。不提供命令行密码参数，自动化可通过 `--password-stdin` 输入。
+Registration and login read the password from the terminal without echoing it; registration also requires a unique email address. Usernames must contain 3–64 lowercase letters, numbers, `_ . -`; passwords must be 12–72 bytes. Passwords cannot be supplied as command-line arguments. Automation can provide passwords through `--password-stdin`.
 
 ```sh
 ./bin/edc register --username alice --email alice@example.invalid
 ./bin/edc login --username alice
-./bin/edc project create --name "后端研发" --description "团队共享的原始记录"
+./bin/edc project create --name "Backend Development" --description "Team-shared raw records"
 ```
 
-复制返回的项目 `id`，用于以下命令的 `PROJECT_ID`。
+Copy the returned project `id` and use it as `PROJECT_ID` in the following commands.
 
 ```sh
-# 第二个用户使用独立配置文件；也可以在另一台电脑上注册、登录。
+# A second user uses a separate config file; they can also register and log in from another computer.
 ./bin/edc --config "$HOME/.config/event-driven-context/bob.json" register --username bob --email bob@example.invalid
 ./bin/edc --config "$HOME/.config/event-driven-context/bob.json" login --username bob
 
-# 任一 owner 可按已注册 username 或 email 添加成员；网页可继续把成员提升为 owner。
+# Any owner can add a registered member by username or email; the web UI can promote members to owners.
 ./bin/edc project add-member --project PROJECT_ID --username bob
 ./bin/edc project add-member --project PROJECT_ID --email bob@example.invalid
 ./bin/edc project members --project PROJECT_ID
 
-# Bob 追加文本；作者从 Bob 的登录身份取得。
+# Bob appends text; the author identity is taken from Bob's authenticated session.
 ./bin/edc --config "$HOME/.config/event-driven-context/bob.json" record \
-  --project PROJECT_ID --text '事件不允许修改和删除' \
+  --project PROJECT_ID --text 'Events cannot be modified or deleted' \
   --metadata '{"source":"discussion","tags":["backend","decision"]}' \
   --idempotency-key decision-001
 
-# 原始文本文件：必须主动声明类型。
+# Raw text file: the type must be declared explicitly.
 ./bin/edc record --project PROJECT_ID --file ./notes.txt --type text/plain \
-  --metadata '{"description":"会议记录","document_type":"meeting-notes"}'
+  --metadata '{"description":"Meeting notes","document_type":"meeting-notes"}'
 
-# 按半开时间区间和 metadata 查询。
+# Query by half-open time interval and metadata.
 ./bin/edc query --project PROJECT_ID \
   --from 2026-09-08T00:00:00+08:00 --to 2026-09-09T00:00:00+08:00 \
   --metadata '{"source":"discussion"}' --exists tags
@@ -129,15 +131,15 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 ./bin/edc logout
 ```
 
-全局 `--server`、`--config` 必须放在命令之前。命令结果写到 stdout，错误和密码提示写到 stderr。文件下载默认输出 JSON/base64；`--output -` 输出原始字节，指定路径时拒绝覆盖已有文件。
+Global `--server` and `--config` options must appear before the command. Command results are written to stdout; errors and password prompts are written to stderr. File downloads output JSON/base64 by default; `--output -` writes raw bytes to stdout. When a file path is specified, the CLI refuses to overwrite an existing file.
 
-登录把有效期 30 天的令牌保存在系统用户配置目录下的 `event-driven-context/config.json`，权限 `0600`，不保存密码或打印令牌。服务器只保存令牌的 SHA256。`logout` 会立即吊销当前令牌；stdio 进程也不能继续使用它。
+Login stores a token valid for 30 days in `event-driven-context/config.json` under the system user configuration directory, with permissions `0600`. Passwords are not stored and tokens are not printed. The server stores only the SHA256 hash of the token. `logout` immediately revokes the current token; a running stdio process can no longer use it either.
 
-可设置 `EDC_SERVER`、`EDC_CONFIG`、`EDC_TOKEN`。配置中的令牌只用于其绑定的服务器，切换 `--server` 不会把旧服务器令牌发过去。CLI 只允许 loopback 使用明文 HTTP，远程地址要求 HTTPS，并拒绝自动重定向。
+`EDC_SERVER`, `EDC_CONFIG`, and `EDC_TOKEN` can be set. A token stored in a config file is only used for the server it is bound to; switching `--server` will not send the old server's token to the new server. The CLI only permits plaintext HTTP for loopback addresses. Remote addresses require HTTPS, and automatic redirects are rejected.
 
-## 数据契约
+## Data Contract
 
-事件示例：
+Example event:
 
 ```json
 {
@@ -147,27 +149,32 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
   "actor_username": "bob",
   "recorded_at": "2026-09-08T14:00:00.000000000Z",
   "occurred_at": "2026-09-07T09:00:00.000000000Z",
-  "content": {"kind": "text", "text": "原始信息"},
+  "content": {"kind": "text", "text": "Original information"},
   "metadata": {"source": "meeting", "tags": ["decision"]},
   "provenance": {"kind": "original"},
   "relations": {}
 }
 ```
 
-- **共享**：创建者添加成员；所有成员能读取全部历史事件、文件和 metadata，并以自己的身份追加。仅创建者能添加成员；其他项目默认不可访问。第一版不提供成员移除和项目删除。
-- **身份与时间**：`actor_user_id`、`actor_username`、`recorded_at` 是服务端输出，输入这些字段会被拒绝。`occurred_at` 是可选的用户声明时间，服务端保存为 UTC。不能把它当成可信审计时间。
-- **追加**：HTTP/MCP 无编辑、删除操作。每个 event 是项目目录内一个不可覆盖写入的 JSON manifest；原始上传文件使用独立的不可覆盖文件。SQLite 只保存用户、HTTP/OAuth 令牌与授权事务、项目和成员授权，不保存 event、metadata 或文件字节。拥有服务器文件系统写入权限的管理员仍能篡改或删除文件，这不是防篡改账本。
-- **幂等**：`idempotency_key` 按「项目 + 作者」隔离；同键同输入返回原事件，不同输入返回冲突。metadata 对象键顺序和空白不影响比较。CLI 默认生成键；要跨命令重试，请显式传入同一个键。metadata 是识别标签，不承担唯一约束。
-- **文件**：`record_event` 接受 UTF-8、无 NUL 的 `text/*` base64 文件，最多 1 MiB；`POST /v1/media-events` 接受最多 20 MiB 的 AAC M4A、MP3 或 WAV multipart 文件。两条路径都先保存不可覆盖的原始字节，再发布引用其 ID、类型、文件名、大小与 SHA256 的 event。小文件可用 `get_file` 取 base64；所有文件可通过认证的 `/v1/files/{id}/content` 流式读取并再次校验。不会根据扩展名静默决定类型，也不会加载调用者传来的服务器文件路径。
-- **限制**：直接文本最多 1 MiB；metadata 最多 32 KiB、128 个顶层字段，key 为 1–128 字节；普通 HTTP 请求最多 2 MiB，媒体请求最多 21 MiB。不会静默截断。
+- **Sharing**: The creator adds members. All members can read the complete event, file, and metadata history and append data under their own identity. Only the creator can add members. Other projects are inaccessible by default. The first version does not support member removal or project deletion.
 
-### 查询语义
+- **Identity and time**: `actor_user_id`, `actor_username`, and `recorded_at` are server-generated fields; supplying them in input is rejected. `occurred_at` is an optional user-declared timestamp and is stored by the server in UTC. It must not be treated as a trusted audit timestamp.
 
-`query_events` 必须指定 `project_id`。默认按服务端 `recorded_at` 过滤，也可指定 `time_field="occurred_at"`；`from` 包含、`to` 不包含，要求 RFC3339 时区。不带 `occurred_at` 的事件不匹配发生时间边界。
+- **Append-only**: HTTP/MCP exposes no edit or delete operations. Each event is stored as a non-overwritable JSON manifest inside the project directory; uploaded source files are stored separately and are also non-overwritable. SQLite stores only users, HTTP/OAuth tokens and authorization transactions, projects, and membership authorization. It does not store events, metadata, or file bytes. An administrator with filesystem write access can still modify or delete files; this is not a tamper-proof ledger.
 
-结果按追加序号升序排列。`limit` 默认 50、最大 100；每页事件 JSON 另有 4 MiB 预算（至少返回一条完整事件），因此实际条数可能小于 limit。第一页固定当前项目的最大序号；用返回的 `next_cursor` 作为 `cursor`，并保留其他参数，即可读取同一快照，不混入后续追加的事件。重新开始查询可看到新事件。
+- **Idempotency**: `idempotency_key` is isolated by `project + author`. Reusing the same key with identical input returns the original event; using the same key with different input returns a conflict. Metadata object key order and whitespace do not affect comparison. The CLI generates a key by default; for retries across separate commands, explicitly pass the same key. Metadata serves as identifying labels and does not enforce uniqueness.
 
-`metadata` 是顶层 key 的精确 JSON 匹配，条件 AND：
+- **Files**: `record_event` accepts base64-encoded `text/*` files up to 1 MiB that are valid UTF-8 and contain no NUL bytes. `POST /v1/media-events` accepts multipart AAC M4A, MP3, or WAV files up to 20 MiB. Both paths first save non-overwritable original bytes, then publish an event that references their ID, type, filename, size, and SHA256. Small files can be retrieved as base64 through `get_file`; every file can be streamed and verified again through the authenticated `/v1/files/{id}/content` endpoint. File type is never silently inferred from the extension, and server-side file paths supplied by callers are never loaded.
+
+- **Limits**: Direct text is limited to 1 MiB; metadata is limited to 32 KiB and 128 top-level fields, with keys of 1–128 bytes. Ordinary HTTP requests are limited to 2 MiB and media requests to 21 MiB. Data is never silently truncated.
+
+### Query Semantics
+
+`query_events` requires `project_id`. By default, filtering uses the server-generated `recorded_at`; `time_field="occurred_at"` may be specified instead. `from` is inclusive and `to` is exclusive. RFC3339 timestamps with timezone information are required. Events without `occurred_at` do not match occurrence-time boundaries.
+
+Results are ordered by append sequence in ascending order. `limit` defaults to 50 and has a maximum of 100. Each page also has a 4 MiB JSON budget for events, while guaranteeing at least one complete event, so the actual number of results may be lower than `limit`. The first page pins the project's current maximum sequence number. Use the returned `next_cursor` as `cursor`, while retaining all other parameters, to read the same snapshot without mixing in subsequently appended events. Starting a new query will include new events.
+
+`metadata` performs exact JSON matching on top-level keys, with conditions combined using AND:
 
 ```json
 {
@@ -178,54 +185,60 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 }
 ```
 
-字符串 `"1"` 与数字 `1` 不同，`null` 与不存在不同；对象忽略 key 顺序，数组顺序有意义。JSON 数字保留原始表示与精度，`1` 与 `1.0` 在第一版属于不同值。支持任意 JSON metadata 存储，但第一版不支持嵌套路径、数组包含、模糊匹配或数值范围过滤。
+The string `"1"` differs from the number `1`; `null` differs from a missing value. Object key order is ignored, while array order is significant. JSON numbers preserve their original representation and precision; in the first version, `1` and `1.0` are treated as different values. Arbitrary JSON metadata can be stored, but the first version does not support nested paths, array containment, fuzzy matching, or numeric range filters.
 
-`list_metadata` 不带 `key` 时列出实际出现过的顶层字段、类型和事件数；带 `key` 时列出该字段实际出现过的 JSON 值和计数。支持 `limit` / `offset`，通过 `has_more` 判断下一页。没有独立的 metadata 注册流程，推荐使用 `description`、`source`、`tags`、`document_type`。项目正式归属始终由 `project_id` 决定。
+`list_metadata` without a `key` lists top-level fields that have actually appeared, together with their types and event counts. With a `key`, it lists actual JSON values observed for that field and their counts. `limit` / `offset` are supported, and `has_more` indicates whether another page exists. There is no separate metadata registration process. Recommended fields include `description`, `source`, `tags`, and `document_type`. Formal project ownership is always determined by `project_id`.
 
-`query_context` / `POST /v1/context/query` 从一个不可变项目快照检索关键字命中的文本，再沿服务端控制的来源和 supersedes 关系补齐相关记录。响应分开 evidence、suggestions 与显式更新分叉，提供序号覆盖、待处理音频计数和稳定 warning code；`max_output_bytes` 上限为 24000，并保持 UTF-8 完整。它不会写回事件，也不会把自由 metadata 当作 provenance。
+`query_context` / `POST /v1/context/query` retrieves text that matches keywords from an immutable project snapshot, then follows server-controlled source and supersedes relationships to include related records. The response separates evidence, suggestions, and explicit update forks, and provides sequence coverage, pending-audio counts, and stable warning codes. `max_output_bytes` is capped at 24000 while preserving valid UTF-8. The query does not write events and does not treat arbitrary metadata as provenance.
 
 ## HTTP API
 
-除注册、登录和 healthz 外，均要求 `Authorization: Bearer <token>`。JSON 请求使用 `Content-Type: application/json`。
+Except for registration, login, and healthz, all endpoints require `Authorization: Bearer <token>`. JSON requests use `Content-Type: application/json`.
 
-| 方法与路径 | 输入 / 用途 |
+| Method and Path | Input / Purpose |
 |---|---|
-| `POST /v1/auth/register` | `{username,password}`，返回用户 |
-| `POST /v1/auth/login` | `{username,password}`，返回用户、令牌和到期时间 |
-| `POST /v1/auth/logout` | 吊销当前令牌 |
-| `GET /v1/me` | 当前身份 |
-| `POST /v1/projects` | `{name,description?}`，创建项目 |
-| `GET /v1/projects` | 当前用户的项目 |
-| `GET /v1/projects/{project_id}/members` | 列出成员及其 `member` / `owner` 角色 |
-| `POST /v1/projects/{project_id}/members` | owner 以 `{username}` 或 `{email}` 精确添加已注册成员；两者必须且只能提供一个 |
-| `PATCH /v1/projects/{project_id}/members/{user_id}` | owner 以 `{role:"owner"}` 或 `{role:"member"}` 管理其他成员角色；至少保留一位 owner |
-| `POST /v1/members` | `{project_id,username}` 或 `{project_id,email}`，精确添加成员 |
-| `POST /v1/members/query` | `{project_id}`，列出成员 |
+| `POST /v1/auth/register` | `{username,password}`, returns the user |
+| `POST /v1/auth/login` | `{username,password}`, returns the user, token, and expiration time |
+| `POST /v1/auth/logout` | Revokes the current token |
+| `GET /v1/me` | Current identity |
+| `POST /v1/projects` | `{name,description?}`, creates a project |
+| `GET /v1/projects` | Projects belonging to the current user |
+| `GET /v1/projects/{project_id}/members` | Lists members and their `member` / `owner` roles |
+| `POST /v1/projects/{project_id}/members` | An owner adds exactly one registered member by `{username}` or `{email}` |
+| `PATCH /v1/projects/{project_id}/members/{user_id}` | An owner changes another member to `{role:"owner"}` or `{role:"member"}`; at least one owner must remain |
+| `POST /v1/members` | Adds an exact member by `{project_id,username}` or `{project_id,email}` |
+| `POST /v1/members/query` | `{project_id}`, lists members |
 | `POST /v1/events` | `{project_id,content,metadata?,occurred_at?,idempotency_key?}` |
-| `POST /v1/media-events` | 20 MiB 内 M4A/MP3/WAV 的 multipart 原子上传 |
-| `GET /v1/events/{id}` | 完整事件 |
+| `POST /v1/media-events` | Atomically uploads multipart M4A/MP3/WAV media up to 20 MiB |
+| `GET /v1/events/{id}` | Full event |
 | `POST /v1/events/query` | `{project_id,from?,to?,time_field?,metadata?,metadata_exists?,limit?,cursor?}` |
-| `POST /v1/context/query` | 只读关键字检索、显式关系闭包、来源与覆盖范围 |
+| `POST /v1/context/query` | Read-only keyword retrieval, explicit relationship closure, provenance, and coverage |
 | `POST /v1/metadata/query` | `{project_id,key?,limit?,offset?}` |
-| `GET /v1/files/{id}` | 文件信息与 `data_base64` |
-| `GET /v1/files/{id}/content` | 认证读取并校验原始文件字节 |
-| `GET /v1/inbox`、`POST /v1/inbox/{id}/read` | 当前用户的处理结果与已读状态 |
-| `/v1/automation/*`、`/v1/runner/*` | 安装、run 状态及受 fencing token 约束的 runner 协议 |
-| `/mcp` | 标准 MCP Streamable HTTP，Bearer 认证 |
+| `GET /v1/files/{id}` | File information and `data_base64` |
+| `GET /v1/files/{id}/content` | Authenticated streaming and verification of original file bytes |
+| `GET /v1/inbox`, `POST /v1/inbox/{id}/read` | Current user's processing results and read state |
+| `/v1/automation/*`, `/v1/runner/*` | Installation and run state plus the fencing-token-protected runner protocol |
+| `/mcp` | Standard MCP Streamable HTTP with Bearer authentication |
 
-业务错误格式为 `{"error":{"code":"...","message":"..."}}`，状态码包括 400（输入错误）、401（未认证）、403（权限）、404（不存在或无权读取）、409（冲突）、413（过大）、429（认证限流）。错误不会包含密码、令牌或数据库内部信息。
+Business errors use:
 
-## MCP 接入
+```json
+{"error":{"code":"...","message":"..."}}
+```
 
-工作区的本地 Agent 接入说明由 V2 API 动态提供：`GET /agent-setup.md?project=prj_...&locale=zh-CN`。返回 `text/markdown`，将项目 ID、API 地址和官方 Skill 地址直接写入正文，支持 `en`、`zh-CN`、`ms`、`hi`。本地 Codex / Claude Code 直接调用已登录的 `edc` CLI；CLI 从自己的私密配置读取 access token，Agent 不读取或输出 token。这个公开接口只使用传入的项目 ID，不查询项目名称、成员或内容，实际访问仍需 CLI 登录和成员权限。省略项目时返回要求先选择项目的通用说明；非法或重复参数返回 400。生成地址使用 `-public-base-url` 与 `EDC_WEB_BASE_URL`（未设置时使用首个 allowed origin），不采用请求 Host。静态站点的 `/agent-setup.md` 仅保留通用说明。
+Status codes include 400 (invalid input), 401 (unauthenticated), 403 (permission denied), 404 (not found or no read access), 409 (conflict), 413 (too large), and 429 (authentication rate limiting). Errors never expose passwords, tokens, or internal database information.
 
-使用 [官方 Go SDK](https://github.com/modelcontextprotocol/go-sdk) v1.7.0。支持标准初始化、工具发现、工具调用、JSON Schema 和读写注解；业务错误以 `isError` 返回。所有工具返回结构化 JSON，同时提供 JSON 文本内容。
+## MCP Integration
 
-工具：`create_project`、`list_projects`、`add_project_member`、`list_project_members`、`record_event`、`get_event`、`query_events`、`query_context`、`list_metadata`、`get_file`。
+The V2 API dynamically provides local Agent setup instructions for the workspace at `GET /agent-setup.md?project=prj_...&locale=en`. It returns `text/markdown` with the project ID, API address, and official Skill address embedded in the document, and supports `en`, `zh-CN`, `ms`, and `hi`. Local Codex and Claude Code agents invoke an authenticated `edc` CLI directly; the CLI reads its access token from private configuration, while the Agent neither reads nor prints the token. This public endpoint uses only the supplied project ID and does not query the project name, membership, or content; actual access still requires CLI login and project membership. Omitting the project returns general instructions to select one first; invalid or duplicate parameters return 400. Generated addresses use `-public-base-url` and `EDC_WEB_BASE_URL`—or the first allowed origin when unset—not the request Host. The static site's `/agent-setup.md` remains a general guide only.
 
-### 本地 Codex / Claude Code：直接使用 CLI
+Uses the [official Go SDK](https://github.com/modelcontextprotocol/go-sdk) v1.7.0. Supports standard initialization, tool discovery, tool invocation, JSON Schema, and read/write annotations. Business errors are returned through `isError`. All tools return structured JSON and also include JSON-formatted text content.
 
-先在终端私密执行 `edc login`。之后本地 Agent 直接运行 `edc` 命令，不注册 MCP，也不打开 CLI 凭据文件：
+Tools: `create_project`, `list_projects`, `add_project_member`, `list_project_members`, `record_event`, `get_event`, `query_events`, `query_context`, `list_metadata`, `get_file`.
+
+### Local Codex / Claude Code: Use the CLI Directly
+
+Run `edc login` privately in a terminal. A local Agent then runs `edc` commands directly without registering MCP or opening the CLI credentials file:
 
 ```sh
 /absolute/path/to/event-driven-context/bin/edc whoami
@@ -234,22 +247,28 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 /absolute/path/to/event-driven-context/bin/edc state list --project PROJECT_ID
 ```
 
-需要固定配置路径时，在这些命令上加 `--config /absolute/path/to/config.json`。access token 由 CLI 加载并作为 HTTP Bearer 凭据发送；不应复制到 prompt、仓库或 Agent 配置。
+Add `--config /absolute/path/to/config.json` to these commands when a fixed configuration path is needed. The CLI loads the access token and sends it as an HTTP Bearer credential; do not copy it into prompts, repositories, or Agent configuration.
 
-记录 Skill 分别放在 `.agents/skills/edc-recorder/SKILL.md`（Codex）或 `.claude/skills/edc-recorder/SKILL.md`（Claude Code）。Claude Code 可先预览、再应用 hook 与 Skill：
+Recording Skills live at `.agents/skills/edc-recorder/SKILL.md` for Codex and `.claude/skills/edc-recorder/SKILL.md` for Claude Code. Claude Code can preview and then apply the hook and Skill:
 
 ```sh
 edc setup claude-code
 edc setup --apply claude-code
 ```
 
-setup 不会添加 MCP；如果项目 `.mcp.json` 中存在旧的 `event-driven-context` 或 `event-context` 条目，会在保留其他 MCP 服务的前提下删除该旧条目。
+Setup does not add MCP. If the project's `.mcp.json` contains a legacy `event-driven-context` or `event-context` entry, setup removes that entry while preserving other MCP services.
 
-### 远程 Streamable HTTP：ChatGPT OAuth、OpenAI API 和通用 MCP 客户端
+### Remote Streamable HTTP: ChatGPT OAuth, OpenAI API, and Generic MCP Clients
 
-服务器地址为 `https://YOUR_HOST/mcp`，客户端发送 Bearer 令牌。`GET` / `DELETE /mcp` 不承载会话，返回 405；服务使用无状态 Streamable HTTP，每个请求独立验证身份。
+The server URL is:
 
-[OpenAI Responses API 官方文档](https://developers.openai.com/api/docs/guides/tools-connectors-mcp)支持远程 Streamable HTTP，并提供 `authorization` 字段用于发送访问令牌。请求中的 MCP 工具配置可写为：
+```text
+https://YOUR_HOST/mcp
+```
+
+The client sends a Bearer token. `GET` / `DELETE /mcp` do not carry sessions and return 405. The service uses stateless Streamable HTTP, with identity independently verified on every request.
+
+The [official OpenAI Responses API documentation](https://developers.openai.com/api/docs/guides/tools-connectors-mcp) supports remote Streamable HTTP and provides an `authorization` field for sending an access token. The MCP tool configuration in a request can be written as:
 
 ```json
 {
@@ -261,37 +280,71 @@ setup 不会添加 MCP；如果项目 `.mcp.json` 中存在旧的 `event-driven-
 }
 ```
 
-生产 MCP 地址是 `https://context-api.integ.life/mcp`。它同时保留上述静态 Bearer 接入，并提供 OAuth 2.1 Authorization Code + PKCE（只接受 S256）给 ChatGPT 等网页客户端：
+The production MCP endpoint is:
 
-- Protected Resource Metadata：`https://context-api.integ.life/.well-known/oauth-protected-resource/mcp`（根路径版本也可用）。未认证 `/mcp` 的 `WWW-Authenticate` 会指向这里。
-- Authorization Server Metadata：`https://context-api.integ.life/.well-known/oauth-authorization-server`。
-- 授权、换 token、动态客户端注册：`/oauth/authorize`、`/oauth/token`、`/oauth/register`。动态注册只接受无 client secret 的 public client、精确 HTTPS 或 loopback callback URL。
-- `resource` 在授权请求和换 token 时都必须精确等于 `https://context-api.integ.life/mcp`；authorization code 5 分钟过期且只能使用一次，OAuth access token 1 小时过期。
+```text
+https://context-api.integ.life/mcp
+```
 
-最小 scope 模型：
+It continues to support the static Bearer-token access described above and also provides OAuth 2.1 Authorization Code + PKCE, accepting only S256, for browser-based clients such as ChatGPT:
 
-| Scope | MCP 工具 |
+- Protected Resource Metadata: `https://context-api.integ.life/.well-known/oauth-protected-resource/mcp` (the root-path version is also supported). The `WWW-Authenticate` header returned by unauthenticated `/mcp` requests points here.
+- Authorization Server Metadata: `https://context-api.integ.life/.well-known/oauth-authorization-server`.
+- Authorization, token exchange, and dynamic client registration: `/oauth/authorize`, `/oauth/token`, and `/oauth/register`. Dynamic registration accepts only public clients without a client secret and only exact HTTPS or loopback callback URLs.
+- `resource` must exactly equal `https://context-api.integ.life/mcp` in both the authorization request and token exchange. Authorization codes expire after 5 minutes and are single-use. OAuth access tokens expire after 1 hour.
+
+Minimal scope model:
+
+| Scope | MCP Tools |
 |---|---|
-| `context:read` | `list_projects`、`list_project_members`、`get_event`、`query_events`、`query_context`、`list_metadata`、`get_file` |
-| `context:write` | `create_project`、`add_project_member`、`record_event` |
+| `context:read` | `list_projects`, `list_project_members`, `get_event`, `query_events`, `query_context`, `list_metadata`, `get_file` |
+| `context:write` | `create_project`, `add_project_member`, `record_event` |
 
-scope 不替代项目权限：即使有 `context:read` 或 `context:write`，调用者仍只能访问其已有成员身份允许的项目；添加成员仍仅限项目创建者，服务不开放匿名写入。工具的 `readOnlyHint` 与描述分别标明读写性质和所需 scope。
+Scopes do not replace project permissions. Even with `context:read` or `context:write`, callers can access only projects permitted by their existing membership. Adding members remains restricted to the project creator. The service does not allow anonymous writes. Tool `readOnlyHint` annotations and descriptions identify read/write behavior and required scopes.
 
-#### ChatGPT 自定义连接器
+#### ChatGPT Custom Connector
 
-在 ChatGPT 开发者模式中新建自定义连接器，名称填写 `Event-driven Context`，URL 填写 `https://context-api.integ.life/mcp`，身份验证选择 OAuth，并使用服务器 discovery / Dynamic Client Registration，不填写静态 API token 或 client secret。ChatGPT 当前会在连接草稿中生成或提交一个精确 callback URL（通常是 `https://chatgpt.com/connector/oauth/<callback_id>`；旧连接可能使用 `https://chatgpt.com/connector_platform_oauth_redirect`）；本服务将 DCR 请求里的完整 URL 原样注册，授权请求必须逐字匹配，不支持通配符。
+In ChatGPT Developer Mode, create a new custom connector named `Event-driven Context`. Set the URL to:
 
-ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 public client、带 `resource`、scope 和 S256 challenge 跳转到登录页。可以使用已有 Event-driven Context 用户名和密码登录，也可以在同一 OAuth 页面按现有用户名与密码规则创建账号；新账号只获得用户身份，不自动获得任何既有项目权限。OAuth 登录、注册、错误提示与授权确认页会按浏览器语言自动选择 English、简体中文、Bahasa Melayu 或 हिन्दी，并提供不丢失授权事务的手动切换。主站与 OAuth 通过只含 locale 的 `.integ.life` Cookie 保持用户选择一致；Cookie 不包含账号、令牌或其他身份信息。随后在授权页核对 client、resource 和 scope 后确认。ChatGPT 页面本身还会显示“未经 OpenAI 审查的自定义 MCP”风险提示；确认意味着允许第三方 MCP 读取或追加你有权访问的项目数据，应只在确认 URL、工具与 scope 后继续。
+```text
+https://context-api.integ.life/mcp
+```
 
-## Web 前端与发布
+Choose OAuth authentication and use server discovery / Dynamic Client Registration. Do not provide a static API token or client secret.
 
-`frontend/` 是没有构建依赖的静态网站，生产域名为 `https://context.integ.life`，默认调用 `https://context-api.integ.life`。公开首页介绍 V2 产品；工作区提供中心登录、项目记录、共享成员、文件与引用、版本化 State、接入和插件配置。
+ChatGPT currently generates or submits an exact callback URL in the connector draft, typically:
 
-公开入口 `frontend/index.html` 在未登录时显示 landing page；中心 Session 或兼容令牌验证成功后进入 `frontend/workspace.html`。工作区的“产品介绍”链接打开 `?page=about`，登录用户仍可查看并返回原项目与分区。退出成功后回到首页。项目深链、中心登录回跳和语言选择沿用当前路由。首页的交互示例不执行推理或写入数据。V2 对照和验证边界见 [Landing page](docs/landing-page.md)。发布时保留首页，不再以工作区覆盖 index.html。
+```text
+https://chatgpt.com/connector/oauth/<callback_id>
+```
 
-主站和 OAuth 的完整当前界面均支持 English、简体中文、Bahasa Melayu 与 हिन्दी，包括动态状态、表单校验和错误提示。没有手动选择时使用浏览器报告的系统语言；无法读取或不支持该语言时回退 English。手动选择会在刷新、登录和两个子域之间保留。
+Older connectors may use:
 
-开发预览：
+```text
+https://chatgpt.com/connector_platform_oauth_redirect
+```
+
+The service registers the complete URL from the DCR request exactly as provided. The authorization request must match it character-for-character. Wildcards are not supported.
+
+ChatGPT first receives a 401 challenge, then discovers the two well-known JSON documents, registers a public client, and redirects to the login page with the `resource`, scope, and S256 challenge.
+
+Users can log in using an existing Event-driven Context username and password, or create an account from the same OAuth page according to the existing username and password rules. A new account receives only a user identity and is not automatically granted access to any existing project.
+
+OAuth login, registration, error messages, and authorization confirmation pages automatically use English, Simplified Chinese, Bahasa Melayu, or हिन्दी according to the browser language, with manual language switching that does not lose the authorization transaction. The main site and OAuth preserve the user's selection through a locale-only `.integ.life` cookie; it contains no account information, token, or other identity data.
+
+The user then verifies the client, resource, and scopes on the authorization page and confirms authorization.
+
+ChatGPT itself also displays a warning indicating that the custom MCP has not been reviewed by OpenAI. Confirming authorization allows the third-party MCP to read from or append to projects that the user is authorized to access. Proceed only after verifying the URL, tools, and scopes.
+
+## Web Frontend and Deployment
+
+`frontend/` is a static website with no build dependencies. Its production domain is `https://context.integ.life`, and it calls `https://context-api.integ.life` by default. The public home page introduces the V2 product; the workspace provides central sign-in, project recording, member sharing, files and citations, versioned State, integrations, and plugin configuration.
+
+The public entry point at `frontend/index.html` shows the landing page when signed out. A valid central session or compatible token enters `frontend/workspace.html`. The workspace's "About" link opens `?page=about`; signed-in users can still view it and return to their original project and section. Successful sign-out returns to the home page. Project deep links, central-login returns, and language selection preserve the current route. The landing page's interactive example performs no inference and writes no data. See [Landing page](docs/landing-page.md) for the V2 comparison and verification boundary. Deployment preserves the home page and no longer overwrites `index.html` with the workspace.
+
+The complete current UI for both the main site and OAuth supports English, Simplified Chinese, Bahasa Melayu, and हिन्दी, including dynamic status, form validation, and error messages. Without a manual selection, it uses the system language reported by the browser; if that language is unavailable or unsupported, it falls back to English. A manual selection persists across refreshes, login, and both subdomains.
+
+Development preview:
 
 ```sh
 python3 -m http.server 4173 --directory frontend
@@ -299,22 +352,26 @@ go -C backend run ./cmd/edc-server -addr 127.0.0.1:8401 -db /tmp/event-context-d
   -allowed-origins http://127.0.0.1:4173
 ```
 
-访问 `http://127.0.0.1:4173` 时页面会自动指向本机 API；生产页面只指向 `context-api.integ.life`。前端把短期访问令牌保存在此浏览器的 localStorage，退出会立即吊销它；不要在共享浏览器 profile 中保持登录。
+When visiting `http://127.0.0.1:4173`, the page automatically points to the local API. The production page points only to `context-api.integ.life`. The frontend stores the short-lived access token in the browser's localStorage. Logging out immediately revokes it. Do not remain logged in using a shared browser profile.
 
-生产发布前先提交一个干净工作树，然后运行：
+Before production deployment, first commit a clean working tree, then run:
 
 ```sh
-make deploy-prod       # 编译 linux/amd64、上传 integ-prod、安装 systemd 服务
-make deploy-frontend   # 将 frontend/ 推送到 gh-pages
+make deploy-prod       # Build linux/amd64, upload to integ-prod, install systemd service
+make deploy-frontend   # Push frontend/ to gh-pages
 ```
 
-服务运行于 integ-prod 的 `127.0.0.1:8401`，由独立的 `event-context-proxy.service`（Caddy）发布为 `https://context-api.integ.life`，不与主机上的全局 Caddy 实例混用。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；event manifest 与原始文件在 `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。首次启动新版本会把旧 SQLite event/file 表导出为数据目录中的文件，再移除旧表。
+The service runs on `integ-prod` at `127.0.0.1:8401` and is exposed as `https://context-api.integ.life` through a dedicated Caddy `event-context-proxy.service`. It does not share the machine's global Caddy instance. The identity and authorization database is stored at `/var/lib/event-driven-context/context.db`; event manifests and original files are stored under `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`. Static deployment uses `frontend/CNAME` to specify `context.integ.life`. When a new version starts for the first time, it exports legacy SQLite event/file tables into files under the data directory and then removes the old tables.
 
-### integ-prod 运维
+### integ-prod Operations
 
-已有生产 SSH 登录时，可使用 `EDC_DEPLOY_SSH_TARGET=user@host make deploy-prod`；未设置时仍使用 gcloud/IAP。两种连接方式执行相同的校验、备份、发布与回滚流程。
+When production SSH access is available, use `EDC_DEPLOY_SSH_TARGET=user@host make deploy-prod`; if it is unset, deployment continues to use gcloud/IAP. Both connection methods run the same validation, backup, release, and rollback flow.
 
-服务进程和 SQLite 数据使用 Linux 账户 `yycy`，共享组为 `context-admins`。`yycy` 与 `songyy` 都在该组中；发布目录保持组可读写，后续发布目录继承该组。SQLite 驱动将数据库文件收紧为运行账户私有，协作者通过服务接口访问数据。systemd unit 仍由 root 管理。`yycy` 只能通过以下受限命令管理 Context 服务，不能获得通用 sudo：
+The service process and SQLite data use the Linux account `yycy`. The shared group is `context-admins`. Both `yycy` and `songyy` belong to this group. Deployment directories remain group-readable and group-writable, and subsequent deployment directories inherit this group.
+
+The SQLite driver tightens the database file so that it is private to the runtime account. Collaborators access data through the service interface.
+
+The systemd unit remains root-managed. `yycy` can manage the Context service only through the following restricted commands and is not granted general-purpose sudo:
 
 ```sh
 sudo context-service-admin status
@@ -325,37 +382,70 @@ sudo context-service-admin start
 sudo context-service-admin stop
 ```
 
-部署脚本会安装这个 helper 和 sudo 规则，并验证、启动或 reload 专用的 `event-context-proxy.service`；不会接管主机上的全局 `caddy.service`。部署在停止应用后使用 SQLite backup API 备份身份库，同时归档完整 `data/`，保留旧 release symlink 目标用于健康检查失败时回滚。公网 API 的独立 HTTPS 代理配置与首次安装检查见 [proxy-setup.md](deploy/production/proxy-setup.md)。
+The deployment script installs this helper and its sudo rules. It also validates, starts, or reloads the dedicated `event-context-proxy.service`; it does not take control of the machine's global `caddy.service`.
 
-## 验证与当前边界
+After stopping the application, the deployment process backs up the identity database using the SQLite backup API and archives the complete `data/` directory. It retains the previous release symlink target for rollback if health checks fail.
+
+See [proxy-setup.md](deploy/production/proxy-setup.md) for the independent HTTPS proxy configuration and first-installation checks for the public API.
+
+## Verification and Current Boundaries
 
 ```sh
 make check
 make build
 ```
 
-测试覆盖真实 CLI 与 stdio MCP 子进程、官方 MCP HTTP 客户端、OAuth、跨项目隔离、媒体幂等与原始字节、UTF-8 context 预算和显式关系、automation fencing/recovery，以及固定 runner 的输入与输出校验。
+Tests cover real CLI and stdio MCP subprocesses, the official MCP HTTP client, OAuth, cross-project isolation, media idempotency and original bytes, UTF-8 context budgets and explicit relationships, automation fencing/recovery, and validation of the fixed runner's inputs and outputs.
 
-服务默认仅绑定 loopback。`-public-base-url` 只接受不带 path 的 HTTPS origin；留空会关闭 OAuth discovery/endpoint，静态 Bearer MCP 仍可用。浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单；OAuth 自身 public origin 自动加入允许列表。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。应用限制密码认证并发与全局速率；DCR 总量也有限制，公网入口仍应按客户端限制滥用。
+By default, the service binds only to loopback.
 
-SQLite 仅用于身份与授权（包括 OAuth client、事务、code 与 token）；event 查询会扫描项目数据目录，适合第一版的小团队使用。备份必须同时包含一致性 SQLite 备份与 `data/` 整个目录；运行时不要只复制 WAL 模式的主文件，也不要只复制 event 文件而遗漏授权数据库。生产部署会在停止服务后，以 SQLite backup API 和 data tar archive 写入 `/var/lib/event-driven-context/backups/`。
+`-public-base-url` accepts only an HTTPS origin without a path. If left empty, OAuth discovery and endpoints are disabled, while static Bearer MCP access remains available.
 
-普通写入与 context 查询不会调用模型，也不会执行事件内容。只有显式安装并运行的固定 Skill 会把该 run 已授权的输入交给独立 runner；当前检索是确定性关键字与显式关系，不声称完成语义冲突检测或向量召回。
-
-## 目录
+Browser origins are rejected by default. An explicit allowlist can be configured using:
 
 ```text
-app/                         原生手机采集端与本机上传队列
-frontend/                    静态网站、工作区和多语言界面
-backend/cmd/edc-server/       HTTP + MCP 服务入口
-backend/cmd/edc/              CLI 与 stdio MCP 入口
-backend/cmd/edc-runner/       固定 Skill 的独立执行器 CLI
-backend/internal/core/        共享业务规则、SQLite 授权与文件化 event 存储
-backend/internal/api/         HTTP 服务、客户端和端到端测试
-backend/internal/mcpserver/   标准 MCP 工具与 transport
-backend/internal/automation/  installation、run、lease、inbox 与恢复状态机
-backend/internal/runner/      固定输入执行、媒体转录和结构化回顾适配器
-backend/skills/               版本固定且启动时校验摘要的 Skill 快照
-docs/                        产品、技术与交互设计文档
-scripts/                     构建与发布辅助脚本
+-allowed-origins https://YOUR_HOST
+```
+
+The OAuth public origin is automatically added to the allowed list.
+
+The MCP SDK enables loopback Host validation by default. If a reverse proxy connects to a loopback upstream, the proxy must set the upstream Host header to that upstream address.
+
+The application rate-limits concurrent password authentication and global authentication attempts. DCR volume is also limited. The public entry point should still apply per-client abuse controls.
+
+SQLite is used only for identity and authorization, including OAuth clients, transactions, codes, and tokens.
+
+Event queries scan the project's data directory, which is appropriate for the first version's small-team use case.
+
+Backups must contain both:
+
+1. A consistent SQLite backup.
+2. The complete `data/` directory.
+
+At runtime, do not copy only the main SQLite file when using WAL mode. Likewise, do not back up only event files while omitting the authorization database.
+
+Production deployment stops the service and writes both the SQLite backup API output and a tar archive of `data/` under:
+
+```text
+/var/lib/event-driven-context/backups/
+```
+
+Ordinary writes and context queries do not call a model or execute event contents. Only a fixed Skill that has been explicitly installed and run sends that run's authorized inputs to the independent runner. Current retrieval is based on deterministic keywords and explicit relationships; it does not claim semantic conflict detection or vector retrieval.
+
+## Directory Structure
+
+```text
+app/                         Native mobile capture client and local upload queue
+frontend/                    Static website, workspace, and multilingual UI
+backend/cmd/edc-server/       HTTP + MCP service entry point
+backend/cmd/edc/              CLI and stdio MCP entry point
+backend/cmd/edc-runner/       Independent executor CLI for fixed Skills
+backend/internal/core/        Shared business rules, SQLite authorization, and file-based event storage
+backend/internal/api/         HTTP service, client, and end-to-end tests
+backend/internal/mcpserver/   Standard MCP tools and transports
+backend/internal/automation/  Installation, run, lease, inbox, and recovery state machine
+backend/internal/runner/      Fixed-input execution, media transcription, and structured-review adapters
+backend/skills/               Version-pinned Skill snapshots whose digests are checked at startup
+docs/                        Product, technical, and interaction design documents
+scripts/                     Build and deployment helpers
 ```
