@@ -169,7 +169,7 @@ App 底部导航为“记录、回顾、我的”：录音是“记录”页的�
 
 所有 hook 调用同一个命令 `edc hook <client>`。它从标准输入读取客户端提供的 hook 数据，按会话工作目录找到绑定项目（未绑定时不推送），转换成 `log` 推送。
 
-首个适配客户端为 Claude Code。其他客户端按其 hook 能力适配；没有 hook 的客户端只使用 skill 和 MCP。
+首个适配客户端为 Claude Code。其他客户端按其 hook 能力适配；本地 Codex / Claude Code 均由 skill 直接调用已登录的 CLI，不配置 MCP。
 
 Claude Code 的默认映射如下，具体字段以客户端当前 hook 文档为准：
 
@@ -192,7 +192,7 @@ Claude Code 的默认映射如下，具体字段以客户端当前 hook 文档�
 ### 5.5 接入流程（agent 客户端）
 
 1. 用户在工作目录执行 `edc link`，把目录绑定到项目。
-2. 执行 `edc setup <client>`：安装 `edc-recorder` skill，生成该客户端的 hook 与 MCP 配置。写入客户端配置前展示将要修改的内容，用户确认后才写入。
+2. 执行 `edc setup <client>`：安装 `edc-recorder` skill，并按客户端能力生成 hook。写入前展示将要修改的内容；旧版留下的 EDC MCP 条目会被清理，其他 MCP 配置保留，用户确认后才写入。
 3. 自动日志按“客户端 + 项目”开启，可以随时关闭；关闭只停止后续推送。
 4. `edc status` 和网页的“接入”页显示：绑定项目、hook 是否生效、最近一次推送时间、待发队列长度。
 
@@ -572,13 +572,13 @@ MCP 面向对话 agent。插件安装、暂停等管理操作在 App、网页和
 | `edc query` / `edc get EVENT_ID` / `edc metadata` | 查询与读取事件 |
 | `edc file get FILE_ID [-o PATH]` | 下载文件原始字节 |
 | `edc hook <client>` | 供客户端 hook 调用：读取 hook 输入并推送 log；SessionStart 时输出会话背景 |
-| `edc setup <client>` | 安装记录 skill，生成 hook 和 MCP 配置；写入前展示变更并确认；`--disable-hooks` 关闭自动日志 |
+| `edc setup <client>` | 安装记录 skill，生成 hook，并清理旧 EDC MCP 条目；写入前展示变更并确认；`--disable-hooks` 关闭自动日志 |
 | `edc outbox [list\|flush]` | 查看或补发本地待发队列 |
 | `edc state list` / `get` / `put` | 读取和发布 State |
 | `edc pull --after N [--follow]` | 以 JSONL 输出增量事件，供处理器使用 |
 | `edc plugin install` / `list` / `config` / `pause` / `resume` / `rerun` / `remove` | 管理项目插件 |
 | `edc host run` | 启动 processor host，运行当前用户可管理的插件处理器 |
-| `edc mcp` | 以 stdio 方式提供 MCP 服务 |
+| `edc mcp` | 为非本地编程 Agent 的兼容场景保留 stdio MCP 服务；本地 Codex / Claude Code 不使用 |
 
 示例：
 
@@ -767,7 +767,7 @@ Web 是当前优先交付入口。项目与当前分区进入 URL：`?project=<p
 | 用户任务 | 对话和录音中产生的信息被自动记录与整理；换工具开新对话时直接获得项目状态；每天看到回顾 |
 | 最危险假设 | ① hook、skill 和一键录音能在不打扰用户的情况下写入足够且不过量的信息；② 基于这些记录的项目概况和回顾正确、有用 |
 | P1 闭环 | 对话 hook 推送 log、skill 写 note；App 录音自动上传 → 转录插件生成转录 → 项目概况插件更新 State → 另一客户端开新对话读取概况，需要时用证据检索查原文 → 新决定写回 → 每日回顾插件发布当天回顾，在 App 中查看 |
-| 必须包含 | Project 成员共享与 Event actor；Event、File、State、插件清单与插件令牌；第 7 节的 MCP、CLI、HTTP 接口；`edc-recorder` skill；Claude Code hook 适配；第二个客户端的 MCP + skill 接入；Android App（录音、离线队列、记录、回顾、我的）；processor host；`audio-transcribe`、`project-brief`、`daily-review`、`evidence` 四个插件；网页的项目记录、成员、项目状态、接入和插件页 |
+| 必须包含 | Project 成员共享与 Event actor；Event、File、State、插件清单与插件令牌；第 7 节的 MCP、CLI、HTTP 接口；`edc-recorder` skill；Claude Code hook 适配；本地 Codex 与 Claude Code 的 CLI + skill 接入；Android App（录音、离线队列、记录、回顾、我的）；processor host；`audio-transcribe`、`project-brief`、`daily-review`、`evidence` 四个插件；网页的项目记录、成员、项目状态、接入和插件页 |
 | 不包含 | 核心语义检索、向量库、图片分析执行、外部发布、提醒与推荐、跨项目、插件市场、多 host 并行 |
 
 ### 10.2 投入顺序

@@ -12,7 +12,7 @@
 
 P1 必须形成一条完整路径：
 
-1. App、CLI、hook、MCP 或 HTTP 向同一项目追加 Event；文件先作为 File 上传。
+1. App、CLI、hook、远程 MCP 或 HTTP 向同一项目追加 Event；文件先作为 File 上传。
 2. 插件处理器按 sequence 增量读取，在自己的权限内追加 derived Event 或发布 State。
 3. 新会话读取项目概况，需要时查询原始证据，并把新决定作为 Event 写回。
 4. Web 先完成共享项目、可恢复路由和中心登录主链；Android 随后展示同步状态、转录和按日期发布的回顾 State。
@@ -24,7 +24,9 @@ P1 必须形成一条完整路径：
 ```mermaid
 flowchart LR
     Clients[Android / Web / CLI / hooks] --> API[HTTP API]
-    Agents[Conversation agents] --> MCP[MCP]
+    LocalAgents[Local Codex / Claude] --> CLI[Authenticated edc CLI]
+    CLI --> API
+    RemoteAgents[Remote agents / ChatGPT] --> MCP[HTTPS MCP]
     API --> Core[Core service]
     MCP --> Core
     Core --> Events[Event log]
@@ -38,7 +40,7 @@ flowchart LR
 ```
 
 - **Core service**：认证项目身份，追加与查询 Event，保存 File 和 State，管理插件安装与最小权限。它不运行模型或插件业务逻辑。
-- **HTTP 与 MCP**：是同一服务能力的传输适配器，必须返回相同的 UUID、sequence、版本、权限结果和错误含义。
+- **HTTP 与 MCP**：是同一服务能力的传输适配器，必须返回相同的 UUID、sequence、版本、权限结果和错误含义。本地 Codex / Claude Code 经 `edc` CLI 使用 HTTP；HTTPS MCP 只用于 ChatGPT 等远程客户端。
 - **CLI、网页与 Android**：只通过公开接口工作，不读取服务端数据目录；客户端可声明 source，actor、producer 和插件权限由服务端认证确定。
 - **Hook**：捕获客户端会话事件并调用 CLI；共享项目启用前必须明确确认。
 - **Processor host**：持插件令牌运行处理器。失败时不推进游标，不把请求受理当作处理成功。
@@ -92,14 +94,14 @@ State 是插件发布的可重建项目视图，不是原始记录。key 使用 
 
 | 功能 | HTTP | MCP | CLI / App 使用方式 |
 |---|---|---|---|
-| 身份 | Integ.Life start/callback、logout、me；CLI 兼容 register/login | 不暴露 | Web 使用 Context HttpOnly Session；CLI、hook 与 MCP 保存私有 Bearer token |
+| 身份 | Integ.Life start/callback、logout、me；CLI 兼容 register/login | 不暴露 | Web 使用 Context HttpOnly Session；CLI 与 hook 使用 CLI 私有 Bearer token；远程 MCP 使用 OAuth 或私有 Bearer token |
 | 项目与成员 | projects、project timezone、project members | list/create projects，list/add members | owner 以 username 或 email 精确添加注册成员；成员在各入口看到并读写同一项目；Project 响应始终带 timezone |
 | 追加记录 | project events 批量写入 | `record_events` | `edc push`、hook、App 共享 UUID 与逐项结果规则 |
 | 查询与原文 | events query、event get、metadata | `query_events`、`get_event`、`list_metadata` | 网页、skill、`edc query/get/pull` 使用同一筛选和游标 |
 | 文件 | multipart upload、认证原始下载 | `upload_file`、`get_file` | Android 与 `edc push --file` 先传 File 再写 Event |
 | State | list、按 key/version get、put | `list_state`、`get_state`、`put_state` | App 回顾、会话背景、网页状态与 CLI 使用同一版本和 lag |
 | 插件管理 | install、list、patch、run、delete | 不暴露 | 网页、App 与 CLI 管理安装；处理器只持插件令牌 |
-| 对话接入 | `/mcp` | 标准工具集 | `edc mcp` 提供同一工具实现的 stdio 入口 |
+| 对话接入 | 本地 Agent 经 CLI 调用 HTTP；远程 Agent 使用 `/mcp` | 远程标准工具集 | 本地 Codex / Claude Code 直接执行 `edc`；不注册 MCP；`edc mcp` 仅保留兼容能力 |
 
 项目、事件、文件、State 和插件的标识必须同时出现在路径或认证边界内。适配器不得仅相信请求体中的项目、actor、producer 或 plugin ID；响应也要防止把另一个项目的数据当成成功结果。
 

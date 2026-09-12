@@ -51,16 +51,22 @@ func (m *Manager) SetupPreview(options SetupOptions) (SetupPreview, error) {
 	}
 	preview.Changes = append(preview.Changes, fileChange(directory, settingsPath, settingsBefore, settingsAfter, 0o600))
 
+	// Local Codex and Claude Code integrations use the authenticated edc CLI
+	// directly. Remove the MCP entry written by older versions of this setup,
+	// while preserving every unrelated project MCP server.
 	mcpPath := filepath.Join(directory, ".mcp.json")
 	mcpBefore, err := readOptionalProjectFile(directory, mcpPath)
 	if err != nil {
 		return SetupPreview{}, err
 	}
-	mcpAfter, err := mergeMCPConfig(mcpBefore, edcPath, configPath)
+	mcpAfter, removed, err := removeEDCMCPConfig(mcpBefore)
 	if err != nil {
 		return SetupPreview{}, err
 	}
-	preview.Changes = append(preview.Changes, fileChange(directory, mcpPath, mcpBefore, mcpAfter, 0o600))
+	if removed {
+		preview.Changes = append(preview.Changes, fileChange(directory, mcpPath, mcpBefore, mcpAfter, 0o600))
+		preview.Warnings = append(preview.Warnings, "the legacy Event-driven Context MCP entry will be removed; local agents use the authenticated edc CLI")
+	}
 
 	skillPath := filepath.Join(directory, ".claude", "skills", "edc-recorder", "SKILL.md")
 	skillBefore, err := readOptionalProjectFile(directory, skillPath)
@@ -83,7 +89,7 @@ func (m *Manager) SetupPreview(options SetupOptions) (SetupPreview, error) {
 		preview.Changes = append(preview.Changes, scopeChange)
 	}
 	if options.DisableHooks {
-		preview.Warnings = append(preview.Warnings, "automatic log hooks will be removed; MCP and the recorder skill remain configured")
+		preview.Warnings = append(preview.Warnings, "automatic log hooks will be removed; the recorder skill remains configured for direct edc CLI use")
 	}
 	return preview, nil
 }
@@ -168,20 +174,32 @@ func mergeClaudeSettings(before []byte, command string, disable bool) ([]byte, e
 	return marshalObject(root)
 }
 
-func mergeMCPConfig(before []byte, edcPath, configPath string) ([]byte, error) {
+func removeEDCMCPConfig(before []byte) ([]byte, bool, error) {
 	root, err := decodeJSONObject(before)
 	if err != nil {
-		return nil, fmt.Errorf("read Claude Code MCP config: %w", err)
+		return nil, false, fmt.Errorf("read Claude Code MCP config: %w", err)
 	}
 	servers, _ := root["mcpServers"].(map[string]any)
 	if servers == nil {
-		servers = map[string]any{}
+		return before, false, nil
 	}
-	servers["event-driven-context"] = map[string]any{
-		"type": "stdio", "command": edcPath, "args": []any{"--config", configPath, "mcp"},
+	removed := false
+	for _, name := range []string{"event-driven-context", "event-context"} {
+		if _, ok := servers[name]; ok {
+			delete(servers, name)
+			removed = true
+		}
 	}
-	root["mcpServers"] = servers
-	return marshalObject(root)
+	if !removed {
+		return before, false, nil
+	}
+	if len(servers) == 0 {
+		delete(root, "mcpServers")
+	} else {
+		root["mcpServers"] = servers
+	}
+	after, err := marshalObject(root)
+	return after, true, err
 }
 
 func decodeJSONObject(data []byte) (map[string]any, error) {

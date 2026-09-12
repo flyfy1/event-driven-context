@@ -217,29 +217,33 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 
 ## MCP 接入
 
-工作区的 Agent 接入说明由 V2 API 动态提供：`GET /agent-setup.md?project=prj_...&locale=zh-CN`。返回 `text/markdown`，将项目 ID、MCP 地址和官方 Skill 地址直接写入正文，支持 `en`、`zh-CN`、`ms`、`hi`；下载后也保留项目信息。这个公开接口只使用传入的项目 ID，不查询项目名称、成员或内容，实际访问仍需 OAuth 和成员权限。省略项目时返回要求先选择项目的通用说明；非法或重复参数返回 400。生成地址使用 `-public-base-url` 与 `EDC_WEB_BASE_URL`（未设置时使用首个 allowed origin），不采用请求 Host。静态站点的 `/agent-setup.md` 仅保留通用说明。
+工作区的本地 Agent 接入说明由 V2 API 动态提供：`GET /agent-setup.md?project=prj_...&locale=zh-CN`。返回 `text/markdown`，将项目 ID、API 地址和官方 Skill 地址直接写入正文，支持 `en`、`zh-CN`、`ms`、`hi`。本地 Codex / Claude Code 直接调用已登录的 `edc` CLI；CLI 从自己的私密配置读取 access token，Agent 不读取或输出 token。这个公开接口只使用传入的项目 ID，不查询项目名称、成员或内容，实际访问仍需 CLI 登录和成员权限。省略项目时返回要求先选择项目的通用说明；非法或重复参数返回 400。生成地址使用 `-public-base-url` 与 `EDC_WEB_BASE_URL`（未设置时使用首个 allowed origin），不采用请求 Host。静态站点的 `/agent-setup.md` 仅保留通用说明。
 
 使用 [官方 Go SDK](https://github.com/modelcontextprotocol/go-sdk) v1.7.0。支持标准初始化、工具发现、工具调用、JSON Schema 和读写注解；业务错误以 `isError` 返回。所有工具返回结构化 JSON，同时提供 JSON 文本内容。
 
 工具：`create_project`、`list_projects`、`add_project_member`、`list_project_members`、`record_event`、`get_event`、`query_events`、`query_context`、`list_metadata`、`get_file`。
 
-### 本地 stdio：CLI、Codex、Claude Desktop / Claude Code
+### 本地 Codex / Claude Code：直接使用 CLI
 
-先执行 `edc login`。标准 MCP 客户端启动以下命令即可：
-
-```sh
-/absolute/path/to/event-driven-context/bin/edc mcp
-```
-
-它是一个连接 HTTP 后端的 stdio 代理，不会直接打开 SQLite；每次工具调用都重新走后端身份和项目权限检查。stdout 只输出 MCP 协议内容。
-
-通用客户端配置示例见 [examples/mcp-stdio.json](examples/mcp-stdio.json)，替换绝对路径。根据 [Claude Code 官方文档](https://code.claude.com/docs/en/mcp)，可以这样注册：
+先在终端私密执行 `edc login`。之后本地 Agent 直接运行 `edc` 命令，不注册 MCP，也不打开 CLI 凭据文件：
 
 ```sh
-claude mcp add --transport stdio event-context -- /absolute/path/to/event-driven-context/bin/edc mcp
+/absolute/path/to/event-driven-context/bin/edc whoami
+/absolute/path/to/event-driven-context/bin/edc project list
+/absolute/path/to/event-driven-context/bin/edc query --project PROJECT_ID --limit 5
+/absolute/path/to/event-driven-context/bin/edc state list --project PROJECT_ID
 ```
 
-Codex 使用同一标准 stdio 命令配置。仓库不会自动修改你的个人客户端设置。
+需要固定配置路径时，在这些命令上加 `--config /absolute/path/to/config.json`。access token 由 CLI 加载并作为 HTTP Bearer 凭据发送；不应复制到 prompt、仓库或 Agent 配置。
+
+记录 Skill 分别放在 `.agents/skills/edc-recorder/SKILL.md`（Codex）或 `.claude/skills/edc-recorder/SKILL.md`（Claude Code）。Claude Code 可先预览、再应用 hook 与 Skill：
+
+```sh
+edc setup claude-code
+edc setup --apply claude-code
+```
+
+setup 不会添加 MCP；如果项目 `.mcp.json` 中存在旧的 `event-driven-context` 或 `event-context` 条目，会在保留其他 MCP 服务的前提下删除该旧条目。
 
 ### 远程 Streamable HTTP：ChatGPT OAuth、OpenAI API 和通用 MCP 客户端
 

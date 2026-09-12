@@ -5,7 +5,7 @@ This directory is the Go module for the Event-driven Context V2 API, CLI, MCP se
 ## Layout
 
 - `cmd/edc-server`: V2 HTTP API and Streamable HTTP MCP at `/mcp`.
-- `cmd/edc`: V2 CLI, Claude Code capture entry point, and stdio MCP proxy.
+- `cmd/edc`: V2 CLI and Claude Code capture entry point; it also retains a compatibility stdio MCP proxy for non-local-agent consumers.
 - `internal/v2`: append-only Event, File, versioned State, and plugin authorization rules.
 - `internal/v2client`: typed client for the public V2 HTTP routes.
 - `internal/capture`: directory bindings, setup previews, hook normalization, and the durable outbox.
@@ -36,7 +36,7 @@ go run ./cmd/edc --server http://127.0.0.1:8080 --config /private/path/edc.json 
 
 File pushes upload the bytes first and append the referencing Event only after the server confirms the digest. `file get` verifies size and SHA-256 in a temporary file before publishing a new destination atomically.
 
-`edc setup claude-code` prints the proposed project-local hook, MCP, and recorder-skill changes without writing. Apply the exact preview explicitly:
+`edc setup claude-code` prints the proposed project-local hook and recorder-Skill changes without writing. It also previews removal of a legacy Event-driven Context entry from `.mcp.json`, preserving unrelated servers. Apply the exact preview explicitly:
 
 ```sh
 edc --config /private/path/edc.json setup --apply claude-code
@@ -44,7 +44,7 @@ edc --config /private/path/edc.json setup --apply claude-code
 
 Shared projects also require `--enable-shared-hooks`. `edc status` reports the binding, hook state, and pending outbox count; `edc outbox list` and `edc outbox flush` inspect or retry queued Events. Hook network failures leave the Event queued and return promptly.
 
-`edc mcp` exposes the same V2 data through stdio. It preserves per-item batch results and public error codes from the HTTP service. Plugin install output reports whether a token was returned but never prints the token.
+Local Codex and Claude Code integrations call the authenticated `edc` CLI directly; setup does not register MCP. The compatibility `edc mcp` command remains available for other stdio MCP consumers and preserves per-item batch results and public error codes from the HTTP service. Plugin install output reports whether a token was returned but never prints the token.
 
 Save the one-time plugin credential directly to a new private file, then run one local processor pass with the project binding or an explicit project ID:
 

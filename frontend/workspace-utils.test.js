@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { PRODUCTION_API, resolveAPI, sessionStorageKey, bytesToBase64, audioMediaType, contextFileKind, fileTitle, buildMetadata, pathWithLocale, uuidV7 } = require("./workspace-utils.js");
+const { PRODUCTION_API, resolveAPI, sessionStorageKey, bytesToBase64, audioMediaType, contextFileKind, fileTitle, buildMetadata, buildMetadataFilter, buildReferences, localDateTimeValue, pathWithLocale, uuidV7 } = require("./workspace-utils.js");
 
 test("production pages ignore API overrides", () => {
   assert.equal(resolveAPI("context.integ.life", "https://example.com"), PRODUCTION_API);
@@ -49,6 +49,30 @@ test("friendly metadata keeps useful values without JSON editing", () => {
   });
   assert.throws(() => buildMetadata("Title", "", "", [{ key: "title", value: "Other" }]), /metadata_key_duplicate/);
   assert.throws(() => buildMetadata("", "", "", [{ key: "", value: "missing key" }]), /metadata_key_required/);
+});
+
+test("friendly metadata filters use a plain key and value", () => {
+  assert.deepEqual(buildMetadataFilter(" kind ", " decision "), { kind: "decision" });
+  assert.deepEqual(buildMetadataFilter("", ""), {});
+  assert.throws(() => buildMetadataFilter("", "decision"), /metadata_key_required/);
+});
+
+test("friendly reference rows build supported unique references", () => {
+  assert.deepEqual(buildReferences([
+    { rel: "replies_to", id: " AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA " },
+    { rel: "", id: "" }
+  ]), [{ rel: "replies_to", id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" }]);
+  assert.throws(() => buildReferences([{ rel: "replies_to", id: "" }]), /reference_fields_required/);
+  assert.throws(() => buildReferences([{ rel: "unknown", id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" }]), /reference_relation_invalid/);
+  assert.throws(() => buildReferences([
+    { rel: "resolves", id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" },
+    { rel: "resolves", id: "AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA" }
+  ]), /reference_duplicate/);
+});
+
+test("occurred-at defaults to a local datetime without a timezone suffix", () => {
+  const localDate = new Date(2026, 8, 12, 9, 7, 45);
+  assert.equal(localDateTimeValue(localDate), "2026-09-12T09:07");
 });
 
 test("changing the workspace locale preserves other URL state", () => {

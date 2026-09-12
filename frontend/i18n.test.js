@@ -68,11 +68,16 @@ assert.match(workspace, /https:\/\/chatgpt\.com\/plugins#settings\/Connectors\?c
 assert.match(workspace, /href="\.\/skills\/edc-recorder\/SKILL\.md"/);
 assert.match(app, /agent-setup\.md/);
 assert.match(app, /agentSetupPrompt/);
-assert.match(agentSetup, /https:\/\/context-api\.integ\.life\/mcp/);
+assert.match(agentSetup, /edc --server https:\/\/context-api\.integ\.life whoami/);
 assert.match(agentSetup, /https:\/\/context\.integ\.life\/skills\/edc-recorder\/SKILL\.md/);
-assert.match(agentSetup, /codex mcp login event-context --scopes context:read,context:write/);
-assert.match(agentSetup, /claude mcp add --transport http --scope local/);
+assert.match(agentSetup, /query --project YOUR_PROJECT_ID --limit 5/);
+assert.doesNotMatch(agentSetup, /(?:codex|claude) mcp|mcpServers/);
 assert.doesNotMatch(translate("zh-CN", "agentSetupPrompt", { guide_url: "GUIDE", project_id: "PROJECT", skill_url: "SKILL" }), /\{(?:guide_url|project_id|skill_url)\}/);
+for (const locale of supportedLocales) {
+  const prompt = translate(locale, "agentSetupPrompt", { guide_url: "GUIDE", project_id: "PROJECT", skill_url: "SKILL" });
+  assert.match(prompt, /edc/);
+  assert.doesNotMatch(prompt, /remote MCP|远程 MCP|MCP jauh|remote MCP endpoint/);
+}
 
 // Exercise the actual workspace renderer: both the visible link and copied
 // prompt must use the API, retaining the selected project and locale.

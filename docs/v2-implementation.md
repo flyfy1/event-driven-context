@@ -44,7 +44,7 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 |---|---|---|
 | A：核心数据与权限 | `backend/internal/v2/`；必要的旧 identity 窄接口 | UUID 事件、文件、查询、State、插件授权、持久化与重启测试 |
 | B：服务适配 | `backend/internal/api/v2*.go`、MCP V2、服务入口 wiring | HTTP / MCP 真实路由、认证 scope、大小约束、核心集成测试 |
-| C：客户端工具与处理器 | `backend/internal/v2client/`、`backend/cmd/edc/`、`backend/internal/processorhost/` | CLI、stdio MCP、hook 接线、once/watch host 与日期回顾；真实 Codex、ASR 和定时写回 |
+| C：客户端工具与处理器 | `backend/internal/v2client/`、`backend/cmd/edc/`、`backend/internal/processorhost/` | 本地 Codex / Claude 的直接 CLI 接入、hook 接线、once/watch host 与日期回顾；stdio MCP 只作为兼容能力保留；真实 Codex、ASR 和定时写回 |
 | D：自动写入 | `backend/internal/capture/`、`backend/skills/edc-recorder/` | hook、稳定 UUID、outbox、目录绑定与安装预览；CLI 入口与 C 协作 |
 | E：Android | `app/android/` | 录音、持久队列、File → Event、记录与 State 回顾；保留现有 iOS |
 | F：网站 | `frontend/` 中 workspace 相关文件 | 记录、State、接入和插件流程迁移到 V2；保留无关 landing 修改 |
