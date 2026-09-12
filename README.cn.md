@@ -2,13 +2,16 @@
 
 [English](README.md) | [简体中文](README.cn.md)
 
-**Local first：数据与积累属于你，模型由你选择。**
+> [!IMPORTANT]
+> **Local-first · 开源 · 可自行部署**
+>
+> 数据与积累属于你，模型由你选择。Event-driven Context 可以运行在个人电脑、NAS、自有服务器或你控制的云主机上；核心能力不依赖维护者的托管服务，也不要求云端模型账号。
 
-Event-driven Context 是一个本地优先、支持自行部署的开源项目。任何人都可以把服务部署在自己选择的平台上，包括自己的电脑、NAS、自有服务器或云主机，由自己掌控记录、原始文件和访问权限，无需使用项目维护者的托管实例。
+[五分钟本机启动](#五分钟本机启动) · [部署到 Linux](#linux-生产部署) · [配置 HTTPS](#为远程访问配置-https) · [备份与升级](#备份与升级)
 
 我们希望用户在不同工具和 AI 对话中积累的信息，能够长期保存在自己控制的环境中。模型提供计算能力，原始记录和上下文的积累独立保存；更换 agent 或停止使用某个模型服务后，已有记录仍然可读、可备份，并可继续交给其他工具使用。
 
-当前提供 Go 实现的项目事件存储后端、CLI、MCP 与受控 runner。项目成员共同读写，事件、原始文件和 metadata **只能追加，不允许修改或删除**；媒体上传、确定性 context 查询、受控转录与回顾结果都保留来源关系。
+当前提供 Go 实现的项目事件存储后端、CLI、MCP 与受控 processor host。项目成员共同读写，事件、原始文件和 metadata **通过产品接口只能追加**；媒体上传、确定性 context 查询、受控转录与回顾结果都保留来源关系。
 
 第一版直接使用 `User → Project → Event`，不额外引入 Context 实体。范围与验收见 [MVP 文档](docs/mvp.md)。
 
@@ -23,11 +26,11 @@ Event-driven Context 是一个本地优先、支持自行部署的开源项目�
 
 ## Local first 与数据控制
 
-- **原始数据保存在部署者的文件系统中**：每条事件是独立 JSON 文件，上传的原始文件独立保存。SQLite 仅承担身份与授权，数据路径由部署者指定。
+- **持久化数据保存在部署者的文件系统中**：SQLite 承担身份与授权；Event、File、版本化 State、插件安装和 run 状态都写入部署者指定的数据目录。
 - **基础能力不依赖云端模型**：当前服务的记录、读取和条件查询不调用模型。完成构建并在本机启动后，可以通过本地 CLI / HTTP 使用这些能力，无需模型账号或外部托管服务。
 - **工具通过接口访问同一份记录**：CLI、HTTP 和 MCP 共用项目权限与存储。用户可以连接不同的 agent，已有数据不绑定某个对话客户端。
 - **备份和迁移由部署者掌握**：保留身份库与完整数据目录的一致性备份，即可将数据迁移到自己控制的其他部署环境。具体一致性要求见下文“验证与当前边界”。
-- **固定 Skill 与 runner 分离**：P1 已实现两份仓库内固定 Skill、服务端调度状态与独立 runner。runner 只接收某次 run 已授权的输入，不持有用户全权限令牌；处理结果带平台控制的 provenance。开放式第三方插件安装仍属后续范围。
+- **插件和 processor host 与存储分离**：processor 只接收该插件安装被授权的输入，输出保留平台控制的 provenance。处理过程可以使用本地命令，也可以显式配置外部模型；核心记录和检索不依赖它。
 
 这里的“本地”指部署者控制的数据存放与运行环境；自行选择云主机也是一种自部署方式。Local first 不代表调用云端模型时数据绝不离开设备：通过 MCP 或其他工具提供给外部 agent 的内容，可能进入其模型服务。数据持久化位置与模型调用时的数据流向需要分别管理。
 
@@ -41,50 +44,146 @@ Event-driven Context 是一个本地优先、支持自行部署的开源项目�
 - [Agent 整理的 Notes 设计](docs/notes-design.md)：同一批 Event 的 daily、persons、topics 与 goals 文档视图、组织规则和本地同步契约。
 - [既有第一版范围](docs/mvp.cn.md)：存储、授权和条件查询基线；当前实现已在此基础上加入媒体、context 与固定自动处理链路。
 
-## 启动
+## 自行部署
 
-需要 Go 1.26.5 或更新版本；SQLite 使用纯 Go 驱动，不依赖外部数据库或 CGO。`make check` 还会使用 Node.js 的内置运行时检查前端 locale 资源，不需要安装 npm 依赖。
+部署的基本单元是一个 `edc-server` 进程，加上两个由你控制的持久化路径：`-db` 指定 SQLite 身份库，`-data` 指定持久化数据目录。SQLite 使用纯 Go 驱动，不需要额外的数据库服务或 CGO。数据目录带独占 writer lock，同一目录只能由一个服务进程写入。
+
+从源码构建需要 Go 1.26.5 或更新版本。`make check` 还会使用 Node.js 运行前端测试，但服务端运行时不依赖 Node.js。
+
+### 五分钟本机启动
+
+```sh
+git clone https://github.com/flyfy1/event-driven-context.git
+cd event-driven-context
+make build
+mkdir -p data
+./bin/edc-server \
+  -addr 127.0.0.1:8080 \
+  -db "$PWD/data/context.db" \
+  -data "$PWD/data" \
+  -automatic-notes=false
+```
+
+在另一个终端验证服务并创建第一个账号：
+
+```sh
+curl --fail http://127.0.0.1:8080/healthz
+export EDC_SERVER=http://127.0.0.1:8080
+./bin/edc register --username alice --email alice@example.com
+./bin/edc login --username alice
+./bin/edc project create --name "My Context"
+```
+
+密码会在终端中无回显输入。这个私有部署不需要域名、TLS 证书、OAuth provider、模型密钥或外部数据库。`-automatic-notes=false` 明确禁止服务启动可选的 Codex Notes indexer。`SIGINT` / `SIGTERM` 会优雅停止服务。
+
+### Linux 生产部署
+
+下面的例子安装已经构建好的二进制，并让 API 使用独立、无特权的 `edc` 用户运行。在 Linux 服务器的仓库 checkout 中执行：
 
 ```sh
 make build
-./bin/edc-server -skill-root backend/skills
-./bin/edc-runner help
+sudo groupadd --system edc
+sudo useradd --system --gid edc --home /var/lib/event-driven-context --shell /usr/sbin/nologin edc
+sudo install -d -o edc -g edc -m 0700 /var/lib/event-driven-context/data
+sudo install -d -m 0755 /opt/event-driven-context/bin
+sudo install -m 0755 bin/edc-server bin/edc /opt/event-driven-context/bin/
 ```
 
-默认监听 `127.0.0.1:8080`。SQLite 身份数据库为 `data/context.db`；event manifest、原始文件和 automation journal 写入 Git 忽略的 `data/`。`-skill-root` 必须明确指向仓库提供的固定 Skill 目录才会启用 automation API；留空会关闭这些路由。修改地址、路径：
+如果 `edc` 账号和用户组已经存在，跳过 `groupadd` 与 `useradd`。创建 `/etc/systemd/system/event-driven-context.service`：
+
+```ini
+[Unit]
+Description=Event-driven Context
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=edc
+Group=edc
+WorkingDirectory=/var/lib/event-driven-context
+ExecStart=/opt/event-driven-context/bin/edc-server -addr 127.0.0.1:8080 -db /var/lib/event-driven-context/context.db -data /var/lib/event-driven-context/data -automatic-notes=false
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/event-driven-context
+
+[Install]
+WantedBy=multi-user.target
+```
+
+启动并验证：
 
 ```sh
-./bin/edc-server -addr 127.0.0.1:8090 -db data/context.db -data data -skill-root backend/skills
-./bin/edc --server http://127.0.0.1:8090 help
+sudo systemctl daemon-reload
+sudo systemctl enable --now event-driven-context
+sudo systemctl status event-driven-context --no-pager
+curl --fail http://127.0.0.1:8080/healthz
 ```
 
-`GET /healthz` 用于存活检查。`SIGINT` / `SIGTERM` 会停止接收请求并等待在途请求结束。
+除非你明确把服务放在经过认证的私有网络或 HTTPS 反向代理后面，否则请保持 loopback 监听。
 
-### 部署到自己的平台
+### 为远程访问配置 HTTPS
 
-自行部署不依赖 `integ.life` 域名或维护者的生产主机。在目标环境构建并运行 `edc-server`，使用 `-db` 和 `-data` 指定自己管理的持久化位置；CLI 通过 `--server` 或 `EDC_SERVER` 连接自己的实例。当前采用单服务进程写入，不应让多个服务进程同时写入同一数据目录。
+远程 CLI 强制使用 HTTPS；需要远程 MCP 的 Authorization Code + PKCE 时，还必须配置 `-public-base-url`。把 systemd unit 的 `ExecStart` 改为包含自己的 API 和网页 origin：
 
-本机使用可直接采用上面的启动命令。需要远程访问时，在服务前配置 HTTPS 反向代理；需要浏览器访问或 OAuth 时，再明确配置网页来源和自己的 API 公网地址，例如：
+```text
+-allowed-origins https://context.example.com -public-base-url https://context-api.example.com
+```
+
+`-public-base-url` 必须是不带 path 和末尾 `/` 的 HTTPS origin。如果不提供浏览器前端，可以省略 `-allowed-origins`。Caddy 配置示例：
+
+```caddyfile
+context-api.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8080 {
+        header_up Host 127.0.0.1:8080
+    }
+}
+```
+
+显式设置上游 `Host` 是为了保留 MCP 服务的 loopback host 校验。重载服务和代理，然后验证公网路由与 OAuth discovery：
 
 ```sh
-./bin/edc-server -addr 127.0.0.1:8090 \
-  -db data/context.db -data data \
-  -skill-root backend/skills \
-  -allowed-origins https://context.example.com \
-  -public-base-url https://context-api.example.com
+sudo systemctl daemon-reload
+sudo systemctl restart event-driven-context
+sudo systemctl reload caddy
+curl --fail https://context-api.example.com/healthz
+curl --fail https://context-api.example.com/.well-known/oauth-protected-resource/mcp
+EDC_SERVER=https://context-api.example.com /opt/event-driven-context/bin/edc status
 ```
 
-示例域名需替换为自己的域名。反向代理连接本例上游时，将上游 Host 设为 `127.0.0.1:8090`；客户端连接 `https://context-api.example.com`，MCP 地址为该实例的 `/mcp`。纯本地使用无需配置 OAuth 公网地址。
+MCP 地址为 `https://context-api.example.com/mcp`。执行前需要替换全部示例域名，并为公网登录入口配置合适的防火墙与代理层限流。
 
-网页可通过任意静态文件服务器托管 `frontend/`。当前前端保留维护者的默认 API 地址，自部署时应修改 `frontend/app.js` 中的默认地址，或使用 `https://context.example.com/workspace.html?api=https%3A%2F%2Fcontext-api.example.com` 显式指定自己的 API。工作区使用的网页 origin 必须包含在后端 `-allowed-origins` 中。使用自己的域名发布时，也应替换或移除 `frontend/CNAME` 中维护者的域名。
+### 可选网页前端
 
-管理后台位于 `/admin/`。设置 `EDC_ADMIN_USERS` 为逗号分隔的用户 ID、用户名或已验证邮箱后，对应用户可通过第一方网站会话查看注册用户、全部项目、项目统计、分享关系和已安装插件，并授予、移除项目权限或调整 owner / member 角色。每个项目必须保留至少一位 owner。留空会关闭所有管理访问；OAuth / MCP access token 不继承后台权限。示例：
+核心服务、CLI 与 MCP 可以独立自行部署。`frontend/` 是无需构建的静态站点，但当前第一方网页登录不是通用密码表单，而是依赖兼容 Integ.Auth 的 OAuth provider。要在自己的域名部署这套前端：
+
+1. 把 `frontend/workspace-utils.js` 中的 `PRODUCTION_API` 改成自己的 API origin，并替换或移除 `frontend/CNAME`。`?api=` override 出于安全原因只接受 loopback 页面，不能把已部署网页指向任意远程 API。
+2. 在身份服务中注册 OAuth client，准确使用 `https://context-api.example.com/v1/auth/integ/callback` 作为 redirect URI。
+3. 一次性配置全部五个服务端变量：`EDC_INTEG_AUTH_ISSUER`、`EDC_INTEG_AUTH_CLIENT_ID`、`EDC_INTEG_AUTH_CLIENT_SECRET`、`EDC_INTEG_AUTH_REDIRECT_URI`、`EDC_WEB_BASE_URL`；HTTPS 环境还要设置 `EDC_SECURE_COOKIES=1`。
+4. 从 `https://context.example.com` 托管 `frontend/`，将这个准确 origin 保留在 `-allowed-origins` 中，并实测一次真实登录和项目读取。
+
+没有这组 OAuth 配置时，请使用可完整自行部署的 CLI 与 MCP 流程；网页上的登录按钮不会工作。`frontend/admin/` 管理后台共用同一网页 session。可以通过 `EDC_ADMIN_USERS` 指定逗号分隔的 user ID、username 或已验证 email 来授权管理员。
+
+### 备份与升级
+
+完整备份必须同时包含 SQLite 身份库和整个数据目录。复制前先停止唯一 writer，确保两部分来自同一时间点：
 
 ```sh
-EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
+sudo systemctl stop event-driven-context
+sudo install -d -m 0700 /var/backups/event-driven-context
+sudo cp -a /var/lib/event-driven-context/context.db /var/backups/event-driven-context/
+sudo tar -C /var/lib/event-driven-context -czf /var/backups/event-driven-context/data.tar.gz data
+sudo systemctl start event-driven-context
 ```
 
-下文的 `integ-prod`、`integ.life` 域名及 `make deploy-prod` / `make deploy-frontend` 描述维护者当前的部署流程，脚本包含该环境的专用配置，不是自部署的前提或通用部署命令。
+升级时，先构建新 revision，再停止服务并执行上述备份，替换 `/opt/event-driven-context/bin/edc-server` 与 `/opt/event-driven-context/bin/edc`，然后重启并重复本机和公网健康检查。在真实 CLI / MCP 流程通过前保留旧二进制与备份。
+
+仓库中的 `make deploy-prod`、`make deploy-frontend`、`deploy/production/` 与 `integ.life` 名称描述维护者自己的环境。它们可作为实现参考，但不是自行部署的前提或通用部署命令。
 
 ## CLI：跑通共同记录
 
@@ -170,7 +269,7 @@ V2 服务通过无需认证的 `GET /.well-known/edc-cli` 公布当前推荐版�
 
 - **共享**：创建者添加成员；所有成员能读取全部历史事件、文件和 metadata，并以自己的身份追加。仅创建者能添加成员；其他项目默认不可访问。第一版不提供成员移除和项目删除。
 - **身份与时间**：`actor_user_id`、`actor_username`、`recorded_at` 是服务端输出，输入这些字段会被拒绝。`occurred_at` 是可选的用户声明时间，服务端保存为 UTC。不能把它当成可信审计时间。
-- **追加**：HTTP/MCP 无编辑、删除操作。每个 event 是项目目录内一个不可覆盖写入的 JSON manifest；原始上传文件使用独立的不可覆盖文件。SQLite 只保存用户、HTTP/OAuth 令牌与授权事务、项目和成员授权，不保存 event、metadata 或文件字节。拥有服务器文件系统写入权限的管理员仍能篡改或删除文件，这不是防篡改账本。
+- **追加**：V2 HTTP/MCP 不提供 Event、File 或 State 历史的编辑、删除操作。服务将 V2 持久化快照写入 `<data>/v2/index.json`，原始文件字节写入 `<data>/v2/files/`；服务持有独占 writer lock，并原子替换 index。SQLite 只保存用户、HTTP/OAuth credential 与事务、项目和成员授权，不保存 Event、State、插件、run 或文件内容。追加是产品接口保证，并非防篡改账本；拥有服务器文件系统写权限的管理员仍能修改或删除持久化数据。
 - **幂等**：`idempotency_key` 按「项目 + 作者」隔离；同键同输入返回原事件，不同输入返回冲突。metadata 对象键顺序和空白不影响比较。CLI 默认生成键；要跨命令重试，请显式传入同一个键。metadata 是识别标签，不承担唯一约束。
 - **文件**：`record_event` 接受 UTF-8、无 NUL 的 `text/*` base64 文件，最多 1 MiB；`POST /v1/media-events` 接受最多 20 MiB 的 AAC M4A、MP3 或 WAV multipart 文件。两条路径都先保存不可覆盖的原始字节，再发布引用其 ID、类型、文件名、大小与 SHA256 的 event。小文件可用 `get_file` 取 base64；所有文件可通过认证的 `/v1/files/{id}/content` 流式读取并再次校验。不会根据扩展名静默决定类型，也不会加载调用者传来的服务器文件路径。
 - **限制**：直接文本最多 1 MiB；metadata 最多 32 KiB、128 个顶层字段，key 为 1–128 字节；普通 HTTP 请求最多 2 MiB，媒体请求最多 21 MiB。不会静默截断。
@@ -309,8 +408,9 @@ ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 pu
 
 ```sh
 python3 -m http.server 4173 --directory frontend
-go -C backend run ./cmd/edc-server -addr 127.0.0.1:8401 -db /tmp/event-context-dev.db -skill-root skills \
-  -allowed-origins http://127.0.0.1:4173
+go -C backend run ./cmd/edc-server -addr 127.0.0.1:8401 \
+  -db /tmp/event-context-dev.db -data /tmp/event-context-dev-data \
+  -automatic-notes=false -allowed-origins http://127.0.0.1:4173
 ```
 
 访问 `http://127.0.0.1:4173` 时页面会自动指向本机 API；生产页面只指向 `context-api.integ.life`。前端把短期访问令牌保存在此浏览器的 localStorage，退出会立即吊销它；不要在共享浏览器 profile 中保持登录。
@@ -322,7 +422,7 @@ make deploy-prod       # 编译 linux/amd64、上传 integ-prod、安装 systemd
 make deploy-frontend   # 将 frontend/ 推送到 gh-pages
 ```
 
-服务运行于 integ-prod 的 `127.0.0.1:8401`，由独立的 `event-context-proxy.service`（Caddy）发布为 `https://context-api.integ.life`，不与主机上的全局 Caddy 实例混用。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；event manifest 与原始文件在 `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。首次启动新版本会把旧 SQLite event/file 表导出为数据目录中的文件，再移除旧表。
+服务运行于 integ-prod 的 `127.0.0.1:8401`，由独立的 `event-context-proxy.service`（Caddy）发布为 `https://context-api.integ.life`，不与主机上的全局 Caddy 实例混用。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；V2 index 与原始文件字节保存在 `/var/lib/event-driven-context/data/v2/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。
 
 ### integ-prod 运维
 
@@ -352,9 +452,9 @@ make build
 
 服务默认仅绑定 loopback。`-public-base-url` 只接受不带 path 的 HTTPS origin；留空会关闭 OAuth discovery/endpoint，静态 Bearer MCP 仍可用。浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单；OAuth 自身 public origin 自动加入允许列表。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。应用限制密码认证并发与全局速率；DCR 总量也有限制，公网入口仍应按客户端限制滥用。
 
-SQLite 仅用于身份与授权（包括 OAuth client、事务、code 与 token）；event 查询会扫描项目数据目录，适合第一版的小团队使用。备份必须同时包含一致性 SQLite 备份与 `data/` 整个目录；运行时不要只复制 WAL 模式的主文件，也不要只复制 event 文件而遗漏授权数据库。生产部署会在停止服务后，以 SQLite backup API 和 data tar archive 写入 `/var/lib/event-driven-context/backups/`。
+SQLite 仅用于身份与授权，包括 OAuth client、事务、code 与 token；Event 与 State 查询使用数据目录中由服务持有的 V2 snapshot，适合当前的小团队阶段。备份必须同时包含一致性 SQLite 备份与 `data/` 整个目录；运行时不要只复制 WAL 模式的主文件，也不要只复制 event 文件而遗漏授权数据库。生产部署会在停止服务后，以 SQLite backup API 和 data tar archive 写入 `/var/lib/event-driven-context/backups/`。
 
-普通写入与 context 查询不会调用模型，也不会执行事件内容。只有显式安装并运行的固定 Skill 会把该 run 已授权的输入交给独立 runner；当前检索是确定性关键字与显式关系，不声称完成语义冲突检测或向量召回。
+普通写入与确定性 context 查询不会调用模型，也不会执行事件内容。可选的 automatic Notes、显式请求的转录或已安装 processor 可能调用配置好的本地或外部模型。需要无模型 core 时，使用 `-automatic-notes=false`、不要设置 `OPENAI_API_KEY`，也不要运行 processor host。当前检索是确定性关键字与显式关系，不声称完成语义冲突检测或向量召回。
 
 ## 目录
 

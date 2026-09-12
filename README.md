@@ -2,13 +2,16 @@
 
 [English](README.md) | [简体中文](README.cn.md)
 
-**Local first: your data and accumulated knowledge belong to you; you choose the models.**
+> [!IMPORTANT]
+> **Local-first · Open source · Self-hostable**
+>
+> Your data and accumulated knowledge belong to you; you choose the models. Run Event-driven Context on a personal computer, NAS, self-managed server, or your own cloud host. The core does not require the maintainers' hosted service or a cloud-model account.
 
-Event-driven Context is a local-first, self-hostable open-source project. Anyone can deploy it on a platform they choose—including a personal computer, NAS, self-managed server, or cloud host—and retain control of records, original files, and access permissions without relying on the maintainers' hosted instance.
+[Run locally](#run-locally-in-five-minutes) · [Deploy on Linux](#production-linux-deployment) · [Expose HTTPS](#add-https-for-remote-access) · [Back up and upgrade](#back-up-and-upgrade)
 
 Information accumulated across tools and AI conversations should remain available for the long term in an environment the user controls. Models provide compute, while original records and accumulated context are stored independently. If you switch agents or stop using a model provider, existing records remain readable, backupable, and available to other tools.
 
-The project currently provides a Go project-event storage backend, CLI, MCP interface, and controlled runner. Project members can jointly read and write data. Events, original files, and metadata are **append-only and cannot be modified or deleted**; media uploads, deterministic context queries, controlled transcription, and review results all retain their provenance relationships.
+The project currently provides a Go project-event storage backend, CLI, MCP interface, and controlled processor host. Project members can jointly read and write data. Events, original files, and metadata are **append-only through product interfaces**; media uploads, deterministic context queries, controlled transcription, and review results all retain their provenance relationships.
 
 The first version directly uses `User → Project → Event` without introducing a separate Context entity. See the [MVP document](docs/mvp.md) for scope and acceptance criteria.
 
@@ -23,11 +26,11 @@ This project is currently in the **MCVP stage**. Agents working in this reposito
 
 ## Local First and Data Control
 
-- **Original data stays on the deployer's filesystem**: every event is an independent JSON file, and uploaded originals are stored separately. SQLite handles identity and authorization only; the deployer chooses the data path.
+- **Persistent data stays on the deployer's filesystem**: SQLite handles identity and authorization. Events, files, versioned State, plugin installations, and run state live under the deployer-selected data directory.
 - **Core capabilities do not depend on a cloud model**: recording, reading, and conditional querying do not call a model. Once built and started locally, these capabilities are available through the local CLI or HTTP API without a model account or externally hosted service.
 - **Tools access the same records through shared interfaces**: CLI, HTTP, and MCP use the same project permissions and storage. Users can connect different agents without binding existing data to one conversation client.
 - **Backup and migration stay under deployer control**: a consistent backup of the identity database and complete data directory can be moved to another environment under the deployer's control. See "Verification and Current Boundaries" below for consistency requirements.
-- **Fixed Skills and the runner are separated**: P1 includes two repository-pinned Skills, server-side scheduling state, and an independent runner. The runner receives only the inputs authorized for one run and does not hold a full-access user token. Results carry platform-controlled provenance. Open third-party plugin installation remains future work.
+- **Plugins and processor hosts are separated from storage**: a processor receives only the inputs authorized for its installation, and its output retains platform-controlled provenance. Processing can use a local command or an explicitly configured external model; it is not required for core recording and retrieval.
 
 Here, "local" means that data storage and execution run in an environment controlled by the deployer; a cloud host selected and controlled by the deployer also counts as self-hosting. Local first does not mean data can never leave the device when a cloud model is invoked: content supplied to an external agent through MCP or another tool may enter that provider's model service. Manage persistence location and model-call data flow as separate concerns.
 
@@ -41,50 +44,146 @@ Here, "local" means that data storage and execution run in an environment contro
 - [Agent-organized Notes design](docs/notes-design.md): daily, persons, topics, and goals document views for the same Events, plus organization rules and the local sync contract.
 - [Original first-version scope](docs/mvp.md): the storage, authorization, and conditional-query baseline; the current implementation additionally includes media, context, and fixed automated processing flows.
 
-## Getting Started
+## Self-hosting and Deployment
 
-Requires Go 1.26.5 or later. SQLite uses a pure-Go driver and does not depend on an external database or CGO. `make check` also uses Node.js's built-in runtime to validate frontend locale resources; no npm dependencies need to be installed.
+The deployment unit is one `edc-server` process plus two paths you control: the SQLite identity database selected by `-db`, and the durable data directory selected by `-data`. SQLite uses a pure-Go driver, so there is no separate database server or CGO dependency. The data directory has an exclusive writer lock; run only one server process against it.
+
+Building from source requires Go 1.26.5 or later. `make check` also uses the Node.js runtime for frontend tests, but the server itself does not require Node.js.
+
+### Run Locally in Five Minutes
+
+```sh
+git clone https://github.com/flyfy1/event-driven-context.git
+cd event-driven-context
+make build
+mkdir -p data
+./bin/edc-server \
+  -addr 127.0.0.1:8080 \
+  -db "$PWD/data/context.db" \
+  -data "$PWD/data" \
+  -automatic-notes=false
+```
+
+In another terminal, verify the server and create the first account:
+
+```sh
+curl --fail http://127.0.0.1:8080/healthz
+export EDC_SERVER=http://127.0.0.1:8080
+./bin/edc register --username alice --email alice@example.com
+./bin/edc login --username alice
+./bin/edc project create --name "My Context"
+```
+
+Passwords are prompted for without echo. This private deployment needs no domain, TLS certificate, OAuth provider, model key, or external database. `-automatic-notes=false` makes the boundary explicit: the server will not start the optional Codex-backed Notes indexer. `SIGINT` or `SIGTERM` shuts the server down gracefully.
+
+### Production Linux Deployment
+
+The following example installs the already-built binaries and runs the API as a dedicated unprivileged `edc` user. Run these commands on a Linux server from the repository checkout:
 
 ```sh
 make build
-./bin/edc-server -skill-root backend/skills
-./bin/edc-runner help
+sudo groupadd --system edc
+sudo useradd --system --gid edc --home /var/lib/event-driven-context --shell /usr/sbin/nologin edc
+sudo install -d -o edc -g edc -m 0700 /var/lib/event-driven-context/data
+sudo install -d -m 0755 /opt/event-driven-context/bin
+sudo install -m 0755 bin/edc-server bin/edc /opt/event-driven-context/bin/
 ```
 
-By default, the server listens on `127.0.0.1:8080`. The SQLite identity database is stored at `data/context.db`; event manifests, original files, and the automation journal are written under the Git-ignored `data/` directory. `-skill-root` must explicitly point to the repository's fixed Skill directory to enable the automation API; leaving it empty disables those routes. To change the address or paths:
+If the `edc` account and group already exist, skip `groupadd` and `useradd`. Create `/etc/systemd/system/event-driven-context.service`:
+
+```ini
+[Unit]
+Description=Event-driven Context
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=edc
+Group=edc
+WorkingDirectory=/var/lib/event-driven-context
+ExecStart=/opt/event-driven-context/bin/edc-server -addr 127.0.0.1:8080 -db /var/lib/event-driven-context/context.db -data /var/lib/event-driven-context/data -automatic-notes=false
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/event-driven-context
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then start and verify it:
 
 ```sh
-./bin/edc-server -addr 127.0.0.1:8090 -db data/context.db -data data -skill-root backend/skills
-./bin/edc --server http://127.0.0.1:8090 help
+sudo systemctl daemon-reload
+sudo systemctl enable --now event-driven-context
+sudo systemctl status event-driven-context --no-pager
+curl --fail http://127.0.0.1:8080/healthz
 ```
 
-`GET /healthz` is used for liveness checks. `SIGINT` / `SIGTERM` stop accepting new requests and wait for in-flight requests to complete.
+Keep the service bound to loopback unless you deliberately place it behind an authenticated private network or HTTPS reverse proxy.
 
-### Deploy on Your Own Platform
+### Add HTTPS for Remote Access
 
-Self-hosting does not depend on an `integ.life` domain or the maintainers' production host. Build and run `edc-server` in the target environment, use `-db` and `-data` to select persistence locations you manage, and connect the CLI to your instance through `--server` or `EDC_SERVER`. The current storage model assumes a single writing service process; do not run multiple service processes against the same data directory.
+Remote CLI connections require HTTPS. Remote MCP with Authorization Code + PKCE also requires `-public-base-url`. Change the unit's `ExecStart` to include your actual API and web origins:
 
-For local use, the startup commands above are sufficient. For remote access, place an HTTPS reverse proxy in front of the service. For browser access or OAuth, also configure the permitted web origin and your public API address explicitly:
+```text
+-allowed-origins https://context.example.com -public-base-url https://context-api.example.com
+```
+
+`-public-base-url` must be an HTTPS origin with no path or trailing slash. If you do not serve the browser frontend, omit `-allowed-origins`. For Caddy, use:
+
+```caddyfile
+context-api.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8080 {
+        header_up Host 127.0.0.1:8080
+    }
+}
+```
+
+The explicit upstream `Host` preserves the MCP server's loopback host validation. Reload the service and proxy, then verify the public route and OAuth discovery:
 
 ```sh
-./bin/edc-server -addr 127.0.0.1:8090 \
-  -db data/context.db -data data \
-  -skill-root backend/skills \
-  -allowed-origins https://context.example.com \
-  -public-base-url https://context-api.example.com
+sudo systemctl daemon-reload
+sudo systemctl restart event-driven-context
+sudo systemctl reload caddy
+curl --fail https://context-api.example.com/healthz
+curl --fail https://context-api.example.com/.well-known/oauth-protected-resource/mcp
+EDC_SERVER=https://context-api.example.com /opt/event-driven-context/bin/edc status
 ```
 
-Replace the example domains with your own. When the reverse proxy connects to the example upstream, set the upstream Host to `127.0.0.1:8090`. Clients connect to `https://context-api.example.com`, and that instance's MCP endpoint is `/mcp`. Purely local use does not require a public OAuth address.
+The MCP URL is `https://context-api.example.com/mcp`. Replace every example domain before running the commands. Apply firewall and proxy rate limits appropriate to an Internet-facing login service.
 
-Serve `frontend/` with any static file server. The frontend currently retains the maintainers' default API address; for self-hosting, either change the default in `frontend/app.js` or explicitly select your API with `https://context.example.com/workspace.html?api=https%3A%2F%2Fcontext-api.example.com`. The workspace's web origin must appear in the backend's `-allowed-origins`. When publishing under your own domain, also replace or remove the maintainers' domain in `frontend/CNAME`.
+### Optional Web Frontend
 
-The administration dashboard is available at `/admin/`. Set `EDC_ADMIN_USERS` to a comma-separated list of user IDs, usernames, or verified email addresses. Those users can then use a first-party website session to view registered users, all projects, project statistics, sharing relationships, and installed plugins, and can grant or remove project access or change owner/member roles. Every project must retain at least one owner. Leaving the variable empty disables all administrative access; OAuth and MCP access tokens do not inherit administrator privileges. Example:
+The core server, CLI, and MCP are independently self-hostable. `frontend/` is a no-build static site, but the current first-party browser sign-in is not a generic password form: it expects an Integ.Auth-compatible OAuth provider. To host this frontend under your own domains:
+
+1. Change `PRODUCTION_API` in `frontend/workspace-utils.js` to your API origin, and replace or remove `frontend/CNAME`. The `?api=` override is intentionally accepted only on loopback pages; it cannot redirect a deployed page to an arbitrary remote API.
+2. Register an OAuth client with your identity provider, using `https://context-api.example.com/v1/auth/integ/callback` as the exact redirect URI.
+3. Configure all five server variables together: `EDC_INTEG_AUTH_ISSUER`, `EDC_INTEG_AUTH_CLIENT_ID`, `EDC_INTEG_AUTH_CLIENT_SECRET`, `EDC_INTEG_AUTH_REDIRECT_URI`, and `EDC_WEB_BASE_URL`. Set `EDC_SECURE_COOKIES=1` for HTTPS.
+4. Serve `frontend/` from `https://context.example.com`, keep that exact origin in `-allowed-origins`, and test a real sign-in and project read.
+
+Without that OAuth configuration, use the fully self-hosted CLI and MCP flows; the browser sign-in button will not work. The administration dashboard at `frontend/admin/` uses the same browser session. `EDC_ADMIN_USERS` optionally names comma-separated user IDs, usernames, or verified emails that may access it.
+
+### Back Up and Upgrade
+
+A complete backup contains both the SQLite identity database and the entire data directory. Stop the single writer before copying so both are from the same point in time:
 
 ```sh
-EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
+sudo systemctl stop event-driven-context
+sudo install -d -m 0700 /var/backups/event-driven-context
+sudo cp -a /var/lib/event-driven-context/context.db /var/backups/event-driven-context/
+sudo tar -C /var/lib/event-driven-context -czf /var/backups/event-driven-context/data.tar.gz data
+sudo systemctl start event-driven-context
 ```
 
-The `integ-prod` host, `integ.life` domains, and `make deploy-prod` / `make deploy-frontend` commands below describe the maintainers' current deployment workflow. Those scripts contain environment-specific configuration and are neither prerequisites nor general-purpose self-hosting commands.
+To upgrade, build the new revision, stop the service, take the backup above, replace `/opt/event-driven-context/bin/edc-server` and `/opt/event-driven-context/bin/edc`, restart, and repeat the local and public health checks. Retain the previous binaries and backup until the real CLI/MCP flow has passed.
+
+The repository's `make deploy-prod`, `make deploy-frontend`, `deploy/production/`, and `integ.life` names describe the maintainers' environment. They are useful implementation references, not prerequisites or general-purpose self-hosting commands.
 
 ## CLI: Shared Recording Workflow
 
@@ -172,7 +271,7 @@ Example event:
 
 - **Identity and time**: `actor_user_id`, `actor_username`, and `recorded_at` are server-generated fields; supplying them in input is rejected. `occurred_at` is an optional user-declared timestamp and is stored by the server in UTC. It must not be treated as a trusted audit timestamp.
 
-- **Append-only**: HTTP/MCP exposes no edit or delete operations. Each event is stored as a non-overwritable JSON manifest inside the project directory; uploaded source files are stored separately and are also non-overwritable. SQLite stores only users, HTTP/OAuth tokens and authorization transactions, projects, and membership authorization. It does not store events, metadata, or file bytes. An administrator with filesystem write access can still modify or delete files; this is not a tamper-proof ledger.
+- **Append-only**: V2 HTTP/MCP exposes no event, file, or State-history edit or delete operations. The server stores its durable V2 snapshot at `<data>/v2/index.json` and original file bytes under `<data>/v2/files/`; it holds an exclusive writer lock and replaces the index atomically. SQLite stores users, HTTP/OAuth credentials and transactions, projects, and membership authorization—not Event, State, plugin, run, or file content. Append-only is a product-interface guarantee, not a tamper-proof ledger: a server administrator with filesystem write access can still alter or remove persisted data.
 
 - **Idempotency**: `idempotency_key` is isolated by `project + author`. Reusing the same key with identical input returns the original event; using the same key with different input returns a conflict. Metadata object key order and whitespace do not affect comparison. The CLI generates a key by default; for retries across separate commands, explicitly pass the same key. Metadata serves as identifying labels and does not enforce uniqueness.
 
@@ -360,8 +459,9 @@ Development preview:
 
 ```sh
 python3 -m http.server 4173 --directory frontend
-go -C backend run ./cmd/edc-server -addr 127.0.0.1:8401 -db /tmp/event-context-dev.db -skill-root skills \
-  -allowed-origins http://127.0.0.1:4173
+go -C backend run ./cmd/edc-server -addr 127.0.0.1:8401 \
+  -db /tmp/event-context-dev.db -data /tmp/event-context-dev-data \
+  -automatic-notes=false -allowed-origins http://127.0.0.1:4173
 ```
 
 When visiting `http://127.0.0.1:4173`, the page automatically points to the local API. The production page points only to `context-api.integ.life`. The frontend stores the short-lived access token in the browser's localStorage. Logging out immediately revokes it. Do not remain logged in using a shared browser profile.
@@ -373,7 +473,7 @@ make deploy-prod       # Build linux/amd64, upload to integ-prod, install system
 make deploy-frontend   # Push frontend/ to gh-pages
 ```
 
-The service runs on `integ-prod` at `127.0.0.1:8401` and is exposed as `https://context-api.integ.life` through a dedicated Caddy `event-context-proxy.service`. It does not share the machine's global Caddy instance. The identity and authorization database is stored at `/var/lib/event-driven-context/context.db`; event manifests and original files are stored under `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`. Static deployment uses `frontend/CNAME` to specify `context.integ.life`. When a new version starts for the first time, it exports legacy SQLite event/file tables into files under the data directory and then removes the old tables.
+The service runs on `integ-prod` at `127.0.0.1:8401` and is exposed as `https://context-api.integ.life` through a dedicated Caddy `event-context-proxy.service`. It does not share the machine's global Caddy instance. The identity and authorization database is stored at `/var/lib/event-driven-context/context.db`; the V2 index and original file bytes are stored under `/var/lib/event-driven-context/data/v2/`. Static deployment uses `frontend/CNAME` to specify `context.integ.life`.
 
 ### integ-prod Operations
 
@@ -425,9 +525,7 @@ The MCP SDK enables loopback Host validation by default. If a reverse proxy conn
 
 The application rate-limits concurrent password authentication and global authentication attempts. DCR volume is also limited. The public entry point should still apply per-client abuse controls.
 
-SQLite is used only for identity and authorization, including OAuth clients, transactions, codes, and tokens.
-
-Event queries scan the project's data directory, which is appropriate for the first version's small-team use case.
+SQLite is used only for identity and authorization, including OAuth clients, transactions, codes, and tokens. Event and State queries use the server-owned V2 snapshot in the data directory, which is appropriate for the current small-team stage.
 
 Backups must contain both:
 
@@ -442,7 +540,7 @@ Production deployment stops the service and writes both the SQLite backup API ou
 /var/lib/event-driven-context/backups/
 ```
 
-Ordinary writes and context queries do not call a model or execute event contents. Only a fixed Skill that has been explicitly installed and run sends that run's authorized inputs to the independent runner. Current retrieval is based on deterministic keywords and explicit relationships; it does not claim semantic conflict detection or vector retrieval.
+Ordinary writes and deterministic context queries do not call a model or execute event contents. Optional automatic Notes, explicitly requested transcription, or an installed processor may call a configured local or external model. Use `-automatic-notes=false`, leave `OPENAI_API_KEY` unset, and do not run a processor host when a model-free core is required. Current retrieval is based on deterministic keywords and explicit relationships; it does not claim semantic conflict detection or vector retrieval.
 
 ## Directory Structure
 
