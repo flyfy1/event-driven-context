@@ -61,8 +61,6 @@ const landing = fs.readFileSync(path.join(frontendDir, "landing.js"), "utf8");
 assert.match(landing, /resolveLocalePreference\(params\.get\('locale'\), sharedLocale\(\), saved,/);
 assert.match(landing, /event_context_locale/);
 assert.match(landing, /Domain=\.integ\.life/);
-assert.match(landing, /params\.has\('project'\).*workspaceViews\.has\(location\.hash\.slice\(1\)\)/s);
-assert.match(landing, /location\.replace\(target\.pathname \+ target\.search \+ target\.hash\)/);
 assert.match(index, /href="\.\/workspace\.html"/);
 assert.match(workspace, /id="auth-form"/);
 assert.match(workspace, /id="workspace"/);

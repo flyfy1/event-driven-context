@@ -9,14 +9,6 @@
   const localeKey = 'event-context.locale';
   const localeCookie = 'event_context_locale';
   const params = new URLSearchParams(location.search);
-  const workspaceViews = new Set(['records', 'state', 'integration', 'plugins']);
-  if (params.has('project') && workspaceViews.has(location.hash.slice(1))) {
-    const target = new URL('./workspace.html', location.href);
-    target.search = location.search;
-    target.hash = location.hash;
-    location.replace(target.pathname + target.search + target.hash);
-    return;
-  }
   let saved;
   try { saved = localStorage.getItem(localeKey); } catch { /* Storage may be unavailable. */ }
   function sharedLocale() {
