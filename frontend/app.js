@@ -727,6 +727,58 @@ $("#auth-submit").addEventListener("click", () => {
   start.searchParams.set("return_to", returnTo);
   location.assign(start.toString());
 });
+
+$("#local-login-button")?.addEventListener("click", async () => {
+  setMessage("#auth-message", "");
+  const username = $("#local-username")?.value.trim();
+  const password = $("#local-password")?.value;
+  if (!username || !password) {
+    setMessage("#auth-message", t("invalidInput"));
+    return;
+  }
+  const button = $("#local-login-button");
+  setBusy(button, true, "login");
+  try {
+    const res = await request("/v1/auth/login", { method: "POST", auth: false, body: { username, password } });
+    state.token = res.token;
+    state.user = res.user;
+    localStorage.setItem(TOKEN_KEY, res.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+    updateIdentity();
+    await loadProjects();
+  } catch (err) {
+    setMessage("#auth-message", err.message);
+  } finally {
+    setBusy(button, false, "login");
+  }
+});
+
+$("#local-register-button")?.addEventListener("click", async () => {
+  setMessage("#auth-message", "");
+  const username = $("#local-username")?.value.trim();
+  const email = $("#local-email")?.value.trim();
+  const password = $("#local-password")?.value;
+  if (!username || !password || !email) {
+    setMessage("#auth-message", t("invalidInput"));
+    return;
+  }
+  const button = $("#local-register-button");
+  setBusy(button, true, "register");
+  try {
+    await request("/v1/auth/register", { method: "POST", auth: false, body: { username, email, password } });
+    const res = await request("/v1/auth/login", { method: "POST", auth: false, body: { username, password } });
+    state.token = res.token;
+    state.user = res.user;
+    localStorage.setItem(TOKEN_KEY, res.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(res.user));
+    updateIdentity();
+    await loadProjects();
+  } catch (err) {
+    setMessage("#auth-message", err.message);
+  } finally {
+    setBusy(button, false, "register");
+  }
+});
 $("#logout-button").addEventListener("click", async () => {
   try { await request("/v1/auth/logout", { method: "POST" }); } finally { clearSession(); updateIdentity(); renderProjects(); renderProject(); }
 });

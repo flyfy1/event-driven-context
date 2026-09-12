@@ -38,6 +38,19 @@
         <div id="auth-form" class="form-card central-auth-card">
           <p data-i18n="centralAuthNote">Google is the default sign-in option. The central Integ.Life page also supports verified email.</p>
           <button id="auth-submit" class="primary central-auth-button" type="button" data-i18n="continueWithGoogle">Continue with Google</button>
+          
+          <div class="local-auth-divider" style="margin: 1.25rem 0 1rem 0; text-align: center; border-bottom: 1px solid #e2e8f0; line-height: 0.1em;"><span style="background: #ffffff; padding: 0 10px; color: #64748b; font-size: 0.825rem;" data-i18n="orLocalAuth">or Sign in / Register locally</span></div>
+
+          <form id="local-auth-form" style="display: flex; flex-direction: column; gap: 0.65rem;" novalidate>
+            <label><span data-i18n="username">Username</span><input id="local-username" minlength="3" maxlength="64" placeholder="e.g. alice" required /></label>
+            <label><span data-i18n="email">Email</span><input id="local-email" type="email" placeholder="e.g. alice@example.com (for register)" /></label>
+            <label><span data-i18n="password">Password</span><input id="local-password" type="password" minlength="12" placeholder="At least 12 characters" data-i18n-placeholder="passwordPlaceholder" required /></label>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+              <button id="local-login-button" class="primary" type="button" style="flex: 1;" data-i18n="login">Sign in</button>
+              <button id="local-register-button" type="button" style="flex: 1;" data-i18n="register">Register</button>
+            </div>
+          </form>
+
           <p id="auth-message" class="message" aria-live="polite"></p>
         </div>
       </section>
