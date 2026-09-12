@@ -216,6 +216,77 @@ func TestOAuthAuthorizationFormStillRequiresCSRFSession(t *testing.T) {
 	}
 }
 
+func TestOAuthConcurrentAuthorizationRequestsRemainBrowserBound(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	requestA, cookieA := f.startAuthorization(t, "state-a", strings.Repeat("a", 64))
+	requestB, cookieB := f.startAuthorization(t, "state-b", strings.Repeat("b", 64))
+	if cookieA == cookieB || !strings.HasPrefix(cookieA, "edc_oauth_csrf_") || !strings.HasPrefix(cookieB, "edc_oauth_csrf_") {
+		t.Fatalf("authorization requests did not receive distinct transaction cookies: %q %q", cookieA, cookieB)
+	}
+
+	res := f.do(t, http.MethodGet, oauthRequestLocation(requestA, "en"), "", "")
+	page, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("Sign in")) {
+		t.Fatalf("older authorization request lost after newer start: %d %s", res.StatusCode, page)
+	}
+
+	form := url.Values{"request_id": {requestA}, "decision": {"login"}, "username": {"alice"}, "password": {"integration-password-123"}}
+	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("login on older request: %d", res.StatusCode)
+	}
+
+	codeA := f.approveAuthorization(t, requestA, "state-a")
+	codeB := f.approveAuthorization(t, requestB, "state-b")
+	f.exchangeAuthorizationCode(t, codeA, strings.Repeat("a", 64))
+	f.exchangeAuthorizationCode(t, codeB, strings.Repeat("b", 64))
+}
+
+func TestOAuthDuplicateAuthorizationSubmissionShowsRestartGuidance(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	requestID, _ := f.startAuthorization(t, "duplicate-state", strings.Repeat("d", 64))
+	form := url.Values{"request_id": {requestID}, "decision": {"login"}, "username": {"alice"}, "password": {"integration-password-123"}}
+	res := f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("login: %d", res.StatusCode)
+	}
+	f.approveAuthorization(t, requestID, "duplicate-state")
+
+	form = url.Values{"request_id": {requestID}, "decision": {"approve"}}
+	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+	page, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusBadRequest || !strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") || !bytes.Contains(page, []byte("start the connection again")) || bytes.Contains(page, []byte(`"error":"invalid_request"`)) {
+		t.Fatalf("duplicate submission response: %d %q %s", res.StatusCode, res.Header.Get("Content-Type"), page)
+	}
+}
+
+func TestOAuthExpiredAuthorizationRequestShowsRestartGuidance(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	requestID, csrf := "oauth_request_expired", "oauth_csrf_expired"
+	verifier := strings.Repeat("e", 64)
+	sum := sha256.Sum256([]byte(verifier))
+	request := core.OAuthRequest{
+		ClientID: f.clientID, RedirectURI: "https://client.example/callback", State: "expired-state",
+		CodeChallenge: base64.RawURLEncoding.EncodeToString(sum[:]), Scope: core.ScopeRead, Resource: testOAuthIssuer + "/mcp",
+	}
+	if err := f.store.CreateOAuthRequest(context.Background(), requestID, csrf, request, time.Now().Add(-time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+	cookieURL, _ := url.Parse(f.server.URL + "/oauth/authorize")
+	f.client.Jar.SetCookies(cookieURL, []*http.Cookie{{Name: oauthCSRFCookieName(requestID), Value: csrf, Path: "/oauth/authorize", Secure: true}})
+
+	res := f.do(t, http.MethodGet, oauthRequestLocation(requestID, "en"), "", "")
+	page, _ := io.ReadAll(res.Body)
+	res.Body.Close()
+	if res.StatusCode != http.StatusBadRequest || !strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") || !bytes.Contains(page, []byte("Authorization request expired")) || !bytes.Contains(page, []byte("start the connection again")) || bytes.Contains(page, []byte(`"error":"invalid_request"`)) {
+		t.Fatalf("expired request response: %d %q %s", res.StatusCode, res.Header.Get("Content-Type"), page)
+	}
+}
+
 func TestOAuthPageLanguageNegotiation(t *testing.T) {
 	f := newOAuthFixture(t, time.Hour)
 	verifier := strings.Repeat("l", 64)
@@ -288,6 +359,65 @@ func (f *oauthFixture) do(t *testing.T, method, path, contentType, body string) 
 		t.Fatal(err)
 	}
 	return res
+}
+
+func (f *oauthFixture) startAuthorization(t *testing.T, state, verifier string) (requestID, csrfCookieName string) {
+	t.Helper()
+	sum := sha256.Sum256([]byte(verifier))
+	q := url.Values{
+		"response_type": {"code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"},
+		"state": {state}, "code_challenge": {base64.RawURLEncoding.EncodeToString(sum[:])},
+		"code_challenge_method": {"S256"}, "resource": {testOAuthIssuer + "/mcp"}, "scope": {core.ScopeRead},
+	}
+	res := f.do(t, http.MethodGet, "/oauth/authorize?"+q.Encode(), "", "")
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("authorization start: %d", res.StatusCode)
+	}
+	location, _ := url.Parse(res.Header.Get("Location"))
+	requestID = location.Query().Get("request_id")
+	if requestID == "" {
+		t.Fatal("authorization request id missing")
+	}
+	for _, cookie := range res.Cookies() {
+		if strings.HasPrefix(cookie.Name, "edc_oauth_csrf_") {
+			csrfCookieName = cookie.Name
+			break
+		}
+	}
+	if csrfCookieName == "" {
+		t.Fatal("authorization transaction cookie missing")
+	}
+	return requestID, csrfCookieName
+}
+
+func (f *oauthFixture) approveAuthorization(t *testing.T, requestID, state string) string {
+	t.Helper()
+	form := url.Values{"request_id": {requestID}, "decision": {"approve"}}
+	res := f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+	res.Body.Close()
+	if res.StatusCode != http.StatusFound {
+		t.Fatalf("approve %s: %d", state, res.StatusCode)
+	}
+	callback, _ := url.Parse(res.Header.Get("Location"))
+	if callback.Query().Get("state") != state || callback.Query().Get("iss") != testOAuthIssuer || callback.Query().Get("code") == "" {
+		t.Fatalf("callback binding for %s: %s", state, callback)
+	}
+	return callback.Query().Get("code")
+}
+
+func (f *oauthFixture) exchangeAuthorizationCode(t *testing.T, code, verifier string) {
+	t.Helper()
+	form := url.Values{
+		"grant_type": {"authorization_code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"},
+		"code": {code}, "code_verifier": {verifier}, "resource": {testOAuthIssuer + "/mcp"},
+	}
+	res := f.do(t, http.MethodPost, "/oauth/token", "application/x-www-form-urlencoded", form.Encode())
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(res.Body)
+		t.Fatalf("token exchange: %d %s", res.StatusCode, body)
+	}
 }
 
 func (f *oauthFixture) authorize(t *testing.T, scope string) (accessToken string) {
