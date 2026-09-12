@@ -353,6 +353,33 @@ func TestOAuthExpiredAuthorizationRequestShowsRestartGuidance(t *testing.T) {
 	}
 }
 
+func TestOAuthAuthorizationCSPAllowsOnlyValidatedCallbackOrigin(t *testing.T) {
+	f := newOAuthFixture(t, time.Hour)
+	requestID, _ := f.startAuthorization(t, "callback-csp", strings.Repeat("k", 64))
+	res := f.do(t, http.MethodGet, oauthRequestLocation(requestID, "en"), "", "")
+	res.Body.Close()
+	if got, want := res.Header.Get("Content-Security-Policy"), "default-src 'none'; style-src 'unsafe-inline'; form-action 'self' https://client.example; frame-ancestors 'none'; base-uri 'none'"; got != want {
+		t.Fatalf("authorization CSP: got %q want %q", got, want)
+	}
+
+	for _, tc := range []struct {
+		redirectURI, want string
+	}{
+		{"https://client.example:8443/callback?fixed=1", "https://client.example:8443"},
+		{"http://127.0.0.1:60474/oauth/callback", "http://127.0.0.1:60474"},
+		{"http://[::1]:60474/oauth/callback", "http://[::1]:60474"},
+		{"https://*.example/callback", ""},
+		{"https://client.example/%25/callback", "https://client.example"},
+		{"https://client.example/callback with space", "https://client.example"},
+		{"https://client.example;evil/callback", ""},
+		{"https://client.example,evil/callback", ""},
+	} {
+		if got := oauthRedirectCSPSource(tc.redirectURI); got != tc.want {
+			t.Errorf("CSP source for %q: got %q want %q", tc.redirectURI, got, tc.want)
+		}
+	}
+}
+
 func TestOAuthPageLanguageNegotiation(t *testing.T) {
 	f := newOAuthFixture(t, time.Hour)
 	verifier := strings.Repeat("l", 64)
