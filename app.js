@@ -124,7 +124,9 @@ function apiError(payload, statusCode) {
     conflict: "conflict", invalid_input: "invalidInput", too_large: "fileTooLargeV2",
     invalid_ref: "invalidRef", unsupported_media_type: "unsupportedMediaType",
     state_version_mismatch: "stateVersionMismatch", forbidden_namespace: "forbiddenNamespace",
-    plugin_paused: "pluginPaused", rate_limited: "rateLimited"
+    plugin_paused: "pluginPaused", rate_limited: "rateLimited",
+    service_unavailable: "serviceUnavailable", processing_failed: "processingFailed",
+    storage_unavailable: "storageUnavailable"
   }[code];
   const error = new Error(key ? t(key) : (serviceMessage || t("requestFailed", { status: statusCode })));
   error.status = statusCode;
@@ -346,6 +348,12 @@ function eventNode(event, compact) {
     const file = document.createElement("button"); file.type = "button"; file.className = "quiet source-download";
     file.textContent = t("downloadFile", { filename: event.content.filename || event.content.file_id, mediaType: event.content.media_type || "" });
     file.addEventListener("click", () => downloadFile(event.content)); article.append(file);
+    if (!compact && ["audio/mp4", "audio/mpeg", "audio/wav", "audio/ogg"].includes(event.content.media_type)) {
+      const transcribe = document.createElement("button"); transcribe.type = "button"; transcribe.className = "quiet transcribe-audio";
+      transcribe.textContent = t("transcribeAudio");
+      transcribe.addEventListener("click", () => transcribeAudio(event.id, transcribe, "#events-message"));
+      article.append(transcribe);
+    }
   }
   if (event.refs && event.refs.length) {
     const refs = document.createElement("div"); refs.className = "reference-list";
@@ -592,6 +600,30 @@ async function uploadFile(file, projectID) {
   return uploaded;
 }
 
+async function transcribeAudio(sourceEventID, button, messageSelector) {
+  if (!state.project) return null;
+  const projectID = state.project.id, version = state.projectVersion;
+  if (button) setBusy(button, true, "transcribeAudio");
+  if (messageSelector) setMessage(messageSelector, t("audioTranscribing"));
+  try {
+    const result = await request(projectPath("/transcriptions"), { method: "POST", body: { source_event_id: sourceEventID } });
+    if (!activeProject(version, projectID)) return null;
+    const transcript = result && result.transcript_event;
+    if (!transcript) throw new Error(t("audioTranscriptionFailed"));
+    state.eventCache.set(transcript.id, transcript);
+    state.events = [transcript].concat(state.events.filter((item) => item.id !== transcript.id));
+    state.eventsStatus = "ready";
+    renderEvents();
+    if (messageSelector) setMessage(messageSelector, t("audioTranscriptionReady"), true);
+    return transcript;
+  } catch (error) {
+    if (activeProject(version, projectID) && messageSelector) setMessage(messageSelector, t("audioTranscriptionFailedWithReason", { error: error.message }));
+    return null;
+  } finally {
+    if (button && button.isConnected) setBusy(button, false, "transcribeAudio");
+  }
+}
+
 function resetRecordID() { state.pendingEventID = ""; }
 function recordBody(eventBase, metadata, refs) {
   return JSON.stringify({ events: [Object.assign({}, eventBase, { metadata, refs })] });
@@ -605,7 +637,7 @@ async function submitRecord(form) {
     const metadata = metadataForRecord();
     const refs = referencesForRecord();
     if (!state.pendingEventID) state.pendingEventID = uuidV7();
-    const eventID = state.pendingEventID, contentMode = state.contentMode;
+    const eventID = state.pendingEventID, contentMode = state.contentMode, captureKind = state.captureKind;
     const eventType = $("#event-type").value, occurredAt = $("#event-occurred-at").value;
     const targetPath = "/v1/projects/" + encodeURIComponent(projectID);
     let content;
@@ -649,6 +681,11 @@ async function submitRecord(form) {
     }
     setMessage("#record-message", t(outcome.status === "duplicate" ? "eventDuplicate" : "eventAppended") + " · " + outcome.id, true);
     renderEvents();
+    if (captureKind === "audio") {
+      const transcript = await transcribeAudio(savedEvent.id, null, "#record-message");
+      if (!activeProject(version, projectID)) return;
+      if (transcript) await loadPlugins();
+    }
     await Promise.allSettled([loadMetadata(), loadStates()]);
   } catch (error) {
     if (activeProject(version, projectID)) {
