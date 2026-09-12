@@ -1,0 +1,1010 @@
+[
+  {
+    "benchmark": "locomo",
+    "method": "A",
+    "group_by": "category",
+    "group": "1",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "A",
+    "group_by": "category",
+    "group": "2",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "A",
+    "group_by": "category",
+    "group": "4",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "A",
+    "group_by": "category",
+    "group": "5",
+    "n": 4,
+    "rule_pass": 1.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "B",
+    "group_by": "category",
+    "group": "1",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.125
+  },
+  {
+    "benchmark": "locomo",
+    "method": "B",
+    "group_by": "category",
+    "group": "2",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.25
+  },
+  {
+    "benchmark": "locomo",
+    "method": "B",
+    "group_by": "category",
+    "group": "4",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.125
+  },
+  {
+    "benchmark": "locomo",
+    "method": "B",
+    "group_by": "category",
+    "group": "5",
+    "n": 4,
+    "rule_pass": 0.75,
+    "source_recall": 0.25
+  },
+  {
+    "benchmark": "locomo",
+    "method": "C",
+    "group_by": "category",
+    "group": "1",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.25
+  },
+  {
+    "benchmark": "locomo",
+    "method": "C",
+    "group_by": "category",
+    "group": "2",
+    "n": 4,
+    "rule_pass": 0.25,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "C",
+    "group_by": "category",
+    "group": "4",
+    "n": 4,
+    "rule_pass": 0.25,
+    "source_recall": 0.5
+  },
+  {
+    "benchmark": "locomo",
+    "method": "C",
+    "group_by": "category",
+    "group": "5",
+    "n": 4,
+    "rule_pass": 0.75,
+    "source_recall": 0.75
+  },
+  {
+    "benchmark": "locomo",
+    "method": "D",
+    "group_by": "category",
+    "group": "1",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.25
+  },
+  {
+    "benchmark": "locomo",
+    "method": "D",
+    "group_by": "category",
+    "group": "2",
+    "n": 4,
+    "rule_pass": 0.5,
+    "source_recall": 0.75
+  },
+  {
+    "benchmark": "locomo",
+    "method": "D",
+    "group_by": "category",
+    "group": "4",
+    "n": 4,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "D",
+    "group_by": "category",
+    "group": "5",
+    "n": 4,
+    "rule_pass": 0.75,
+    "source_recall": 0.5
+  },
+  {
+    "benchmark": "mab",
+    "method": "A",
+    "group_by": "category",
+    "group": "multi-hop",
+    "n": 12,
+    "rule_pass": 0.0,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "A",
+    "group_by": "category",
+    "group": "single-hop",
+    "n": 12,
+    "rule_pass": 0.08333333333333333,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "B",
+    "group_by": "category",
+    "group": "multi-hop",
+    "n": 12,
+    "rule_pass": 0.16666666666666666,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "B",
+    "group_by": "category",
+    "group": "single-hop",
+    "n": 12,
+    "rule_pass": 0.08333333333333333,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "C",
+    "group_by": "category",
+    "group": "multi-hop",
+    "n": 12,
+    "rule_pass": 0.0,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "C",
+    "group_by": "category",
+    "group": "single-hop",
+    "n": 12,
+    "rule_pass": 0.6666666666666666,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "D",
+    "group_by": "category",
+    "group": "multi-hop",
+    "n": 12,
+    "rule_pass": 0.08333333333333333,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "D",
+    "group_by": "category",
+    "group": "single-hop",
+    "n": 12,
+    "rule_pass": 0.75,
+    "source_recall": null
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "audio",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "budget",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 0.5
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "conflict",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "constraint",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "duplicate",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "historical",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "inference",
+    "n": 6,
+    "rule_pass": 0.5,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "isolation",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "lag",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "preference",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "question",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "retention",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "time",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "todo",
+    "n": 12,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "category",
+    "group": "unknown",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "audio",
+    "n": 6,
+    "rule_pass": 0.3333333333333333,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "budget",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 0.8333333333333334
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "conflict",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "constraint",
+    "n": 3,
+    "rule_pass": 0.6666666666666666,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "duplicate",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "historical",
+    "n": 3,
+    "rule_pass": 0.3333333333333333,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "inference",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 0.8333333333333334
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "isolation",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "lag",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "preference",
+    "n": 3,
+    "rule_pass": 0.6666666666666666,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "question",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "retention",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "time",
+    "n": 3,
+    "rule_pass": 0.3333333333333333,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "todo",
+    "n": 12,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "category",
+    "group": "unknown",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "audio",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "budget",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "conflict",
+    "n": 3,
+    "rule_pass": 0.3333333333333333,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "constraint",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "duplicate",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "historical",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "inference",
+    "n": 6,
+    "rule_pass": 0.5,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "isolation",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "lag",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "preference",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "question",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "retention",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "time",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "todo",
+    "n": 12,
+    "rule_pass": 1.0,
+    "source_recall": 0.25
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "category",
+    "group": "unknown",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "audio",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "budget",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "conflict",
+    "n": 3,
+    "rule_pass": 0.3333333333333333,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "constraint",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "duplicate",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "historical",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "inference",
+    "n": 6,
+    "rule_pass": 1.0,
+    "source_recall": 0.16666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "isolation",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "lag",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "preference",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "question",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "retention",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "time",
+    "n": 3,
+    "rule_pass": 1.0,
+    "source_recall": 1.0
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "todo",
+    "n": 12,
+    "rule_pass": 1.0,
+    "source_recall": 0.3333333333333333
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "category",
+    "group": "unknown",
+    "n": 3,
+    "rule_pass": 0.0,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "locomo",
+    "method": "A",
+    "group_by": "history",
+    "group": "locomo-0",
+    "n": 8,
+    "rule_pass": 0.25,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "A",
+    "group_by": "history",
+    "group": "locomo-1",
+    "n": 8,
+    "rule_pass": 0.25,
+    "source_recall": 0.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "B",
+    "group_by": "history",
+    "group": "locomo-0",
+    "n": 8,
+    "rule_pass": 0.125,
+    "source_recall": 0.25
+  },
+  {
+    "benchmark": "locomo",
+    "method": "B",
+    "group_by": "history",
+    "group": "locomo-1",
+    "n": 8,
+    "rule_pass": 0.25,
+    "source_recall": 0.125
+  },
+  {
+    "benchmark": "locomo",
+    "method": "C",
+    "group_by": "history",
+    "group": "locomo-0",
+    "n": 8,
+    "rule_pass": 0.25,
+    "source_recall": 0.75
+  },
+  {
+    "benchmark": "locomo",
+    "method": "C",
+    "group_by": "history",
+    "group": "locomo-1",
+    "n": 8,
+    "rule_pass": 0.375,
+    "source_recall": 0.5
+  },
+  {
+    "benchmark": "locomo",
+    "method": "D",
+    "group_by": "history",
+    "group": "locomo-0",
+    "n": 8,
+    "rule_pass": 0.125,
+    "source_recall": 0.5
+  },
+  {
+    "benchmark": "locomo",
+    "method": "D",
+    "group_by": "history",
+    "group": "locomo-1",
+    "n": 8,
+    "rule_pass": 0.5,
+    "source_recall": 0.25
+  },
+  {
+    "benchmark": "mab",
+    "method": "A",
+    "group_by": "history",
+    "group": "mab-0",
+    "n": 12,
+    "rule_pass": 0.08333333333333333,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "A",
+    "group_by": "history",
+    "group": "mab-1",
+    "n": 12,
+    "rule_pass": 0.0,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "B",
+    "group_by": "history",
+    "group": "mab-0",
+    "n": 12,
+    "rule_pass": 0.25,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "B",
+    "group_by": "history",
+    "group": "mab-1",
+    "n": 12,
+    "rule_pass": 0.0,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "C",
+    "group_by": "history",
+    "group": "mab-0",
+    "n": 12,
+    "rule_pass": 0.16666666666666666,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "C",
+    "group_by": "history",
+    "group": "mab-1",
+    "n": 12,
+    "rule_pass": 0.5,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "D",
+    "group_by": "history",
+    "group": "mab-0",
+    "n": 12,
+    "rule_pass": 0.4166666666666667,
+    "source_recall": null
+  },
+  {
+    "benchmark": "mab",
+    "method": "D",
+    "group_by": "history",
+    "group": "mab-1",
+    "n": 12,
+    "rule_pass": 0.4166666666666667,
+    "source_recall": null
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "history",
+    "group": "product-0",
+    "n": 21,
+    "rule_pass": 0.6190476190476191,
+    "source_recall": 0.19047619047619047
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "history",
+    "group": "product-1",
+    "n": 21,
+    "rule_pass": 0.6190476190476191,
+    "source_recall": 0.42857142857142855
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "group_by": "history",
+    "group": "product-2",
+    "n": 21,
+    "rule_pass": 0.6190476190476191,
+    "source_recall": 0.5238095238095238
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "history",
+    "group": "product-0",
+    "n": 21,
+    "rule_pass": 0.6190476190476191,
+    "source_recall": 0.5238095238095238
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "history",
+    "group": "product-1",
+    "n": 21,
+    "rule_pass": 0.6666666666666666,
+    "source_recall": 0.7619047619047619
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "group_by": "history",
+    "group": "product-2",
+    "n": 21,
+    "rule_pass": 0.8095238095238095,
+    "source_recall": 0.6666666666666666
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "history",
+    "group": "product-0",
+    "n": 21,
+    "rule_pass": 0.9047619047619048,
+    "source_recall": 0.6190476190476191
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "history",
+    "group": "product-1",
+    "n": 21,
+    "rule_pass": 0.8571428571428571,
+    "source_recall": 0.5238095238095238
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "group_by": "history",
+    "group": "product-2",
+    "n": 21,
+    "rule_pass": 0.8571428571428571,
+    "source_recall": 0.42857142857142855
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "history",
+    "group": "product-0",
+    "n": 21,
+    "rule_pass": 0.9523809523809523,
+    "source_recall": 0.6190476190476191
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "history",
+    "group": "product-1",
+    "n": 21,
+    "rule_pass": 0.9047619047619048,
+    "source_recall": 0.5714285714285714
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "group_by": "history",
+    "group": "product-2",
+    "n": 21,
+    "rule_pass": 0.9047619047619048,
+    "source_recall": 0.6666666666666666
+  }
+]

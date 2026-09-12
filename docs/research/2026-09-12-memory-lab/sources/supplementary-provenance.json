@@ -1,0 +1,15 @@
+{
+  "recorded_at": "2026-09-12T02:39:05.376941+00:00",
+  "note": "Retrospective hashes of delivered supplemental sources, not runtime commit attestations. Main/smoke/empty/compact run.json record their launch commit; exact executed model requests remain in call records.",
+  "files": {
+    "core.py": "d6a8344d89128966cc51d0ace14c1f95c096256635c1b6270a8ccbc8bf6a334e",
+    "run.py": "a77a19e472852985ba7eb00a95be01ca78be09ae7c8f92d96b92a01f2a217848",
+    "stress.py": "0ee47223e990baeb64ddb28c51a54ee2af55c534b8fc57f45b971fc95910934d",
+    "action_probe.py": "22b7dbf309c96ae4595384f3372ec7c16196e6e5ebe838e207e038ab94b37c98",
+    "lineage_probe.py": "f571ce1f37c69d2d6341a01883a9fc784a4f7f1e5c727a4e55e0479fd35947ad",
+    "scale_probe.py": "1e8da1c84cbf9fe5a7b7a890743e718c7ec3b27d8bf063f5b843d58793c5550e",
+    "compact_summary.py": "ed053266f7e3b0ec54f31797ae07877f76d94d416e4f1d7cc7969f7fe465745a",
+    "latency_probe.py": "eb6ab10a27c8449352718a73e2badf48c03fa8924e480afa5013cba97fc7e473",
+    "manual_audit.py": "60a1a24d0d010e91c854a63ec78ded8206d4dd5c679f29e6c716357199d74578"
+  }
+}

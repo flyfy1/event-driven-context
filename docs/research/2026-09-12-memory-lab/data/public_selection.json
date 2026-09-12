@@ -1,0 +1,86 @@
+[
+  {
+    "history": "locomo-0",
+    "upstream_sample_id": "conv-26",
+    "questions": [
+      24,
+      25,
+      73,
+      76,
+      88,
+      103,
+      157,
+      187
+    ],
+    "events": 419,
+    "raw_tokens": 15252
+  },
+  {
+    "history": "locomo-1",
+    "upstream_sample_id": "conv-30",
+    "questions": [
+      2,
+      17,
+      24,
+      28,
+      34,
+      63,
+      84,
+      89
+    ],
+    "events": 369,
+    "raw_tokens": 11530
+  },
+  {
+    "history": "mab-0",
+    "source_rows": [
+      0,
+      4
+    ],
+    "questions": [
+      96,
+      45,
+      98,
+      30,
+      17,
+      41
+    ],
+    "events": 456,
+    "raw_tokens": 6084,
+    "warning": "No official evidence IDs. Citation entailment requires manual audit."
+  },
+  {
+    "history": "mab-1",
+    "source_rows": [
+      1,
+      5
+    ],
+    "questions": [
+      93,
+      83,
+      16,
+      14,
+      7,
+      10
+    ],
+    "events": 2311,
+    "raw_tokens": 32912,
+    "warning": "No official evidence IDs. Citation entailment requires manual audit."
+  },
+  {
+    "history": "longmemeval-432",
+    "upstream_row": 432,
+    "question_id": "5c40ec5b",
+    "events": 479,
+    "raw_tokens": 102808,
+    "question_date": "2023/10/30 (Mon) 13:39"
+  },
+  {
+    "history": "longmemeval-440",
+    "upstream_row": 440,
+    "question_id": "0ddfec37_abs",
+    "events": 447,
+    "raw_tokens": 103132,
+    "question_date": "2023/06/07 (Wed) 08:31"
+  }
+]

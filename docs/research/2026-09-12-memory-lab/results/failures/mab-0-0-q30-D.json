@@ -1,0 +1,161 @@
+{
+  "answer": {
+    "answer": "New York City",
+    "citations": [
+      "[e00054]",
+      "[e00103]"
+    ],
+    "status": "known"
+  },
+  "answer_completion_tokens": 41,
+  "answer_prompt_tokens": 2036,
+  "answer_s": 1.4921275419910671,
+  "benchmark": "mab",
+  "cache_hit": false,
+  "call_key": "5da64c05484eed00502379e685a5b47d2a33ce91918a63faa12444363d7f8ec5",
+  "category": "multi-hop",
+  "context": "[e00183] time=ordered fact 183 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n181. Blood on the Tracks was performed by Lou Reed.\n\n[e00054] time=ordered fact 54 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n52. Blood on the Tracks was performed by Bob Dylan.\n\n[e00316] time=ordered fact 316 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n314. The headquarters of Ilyushin is located in the city of Moscow.\n\n[e00103] time=ordered fact 103 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n101. The headquarters of Fordham University is located in the city of New York City.\n\n[e00132] time=ordered fact 132 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n130. The headquarters of Bowdoin College is located in the city of Brunswick.\n\n[e00004] time=ordered fact 4 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n2. Amy Winehouse died in the city of Camden Town.\n\n[e00411] time=ordered fact 411 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n409. The headquarters of University of Bucharest is located in the city of Ankara.\n\n[e00175] time=ordered fact 175 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n173. The headquarters of University of Bucharest is located in the city of Bucharest.\n\n[e00011] time=ordered fact 11 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n9. The headquarters of University of Minnesota is located in the city of Minneapolis.\n\n[e00382] time=ordered fact 382 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n380. The headquarters of Berklee College of Music is located in the city of Boston.\n\n[e00116] time=ordered fact 116 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n114. The headquarters of University of California, Berkeley is located in the city of Botevgrad.\n\n[e00014] time=ordered fact 14 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n12. The headquarters of University of California, Berkeley is located in the city of Berkeley.\n\n[e00389] time=ordered fact 389 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n387. The headquarters of The University of the Arts is located in the city of Philadelphia.\n\n[e00444] time=ordered fact 444 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n442. Malaysia is located in the continent of Antarctica.\n\n[e00442] time=ordered fact 442 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n440. Canada is located in the continent of Asia.\n\n[e00437] time=ordered fact 437 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n435. Germany is located in the continent of Africa.\n\n[e00431] time=ordered fact 431 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n429. France is located in the continent of Europe.\n\n[e00375] time=ordered fact 375 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n373. Malaysia is located in the continent of Asia.\n\n[e00282] time=ordered fact 282 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n280. India is located in the continent of Africa.\n\n[e00236] time=ordered fact 236 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n234. Bengaluru is located in the continent of Oceania.\n\n[e00230] time=ordered fact 230 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n228. India is located in the continent of Asia.\n\n[e00213] time=ordered fact 213 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n211. England is located in the continent of Europe.\n\n[e00189] time=ordered fact 189 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n187. Hyderabad is located in the continent of Asia.\n\n[e00115] time=ordered fact 115 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n113. London is located in the continent of Europe.\n\n[e00100] time=ordered fact 100 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n98. Israel is located in the continent of Asia.\n\n[e00077] time=ordered fact 77 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n75. Australia is located in the continent of Oceania.\n\n[e00043] time=ordered fact 43 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n41. Germany is located in the continent of Europe.\n\n[e00006] time=ordered fact 6 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n4. Bengaluru is located in the continent of Asia.\n\n[e00222] time=ordered fact 222 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n220. Australia is located in the continent of South America.",
+  "context_tokens": 1500,
+  "cutoff": 456,
+  "done_reason": "stop",
+  "gold": {
+    "answers": [
+      "New York City"
+    ],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "cutoff": 456,
+    "evidence": [],
+    "forbidden": [],
+    "group": "mab-0",
+    "history": "mab-0",
+    "id": "mab-0/0/q30",
+    "question": "What city or town is the headquarters of the educational institution, where the performer of the album \"Blood on the Tracks\" received education, located in?",
+    "status": "known",
+    "upstream_question_index": 30
+  },
+  "history": "mab-0",
+  "id": "mab-0/0/q30",
+  "method": "D",
+  "question": "What city or town is the headquarters of the educational institution, where the performer of the album \"Blood on the Tracks\" received education, located in?",
+  "retrieval_s": 0.09395458400831558,
+  "scores": {
+    "answer_match": 1,
+    "citation_complete": null,
+    "citation_id_exists": 0.0,
+    "citation_precision_gold": null,
+    "citation_recall_gold": null,
+    "citation_source_visible": 0.0,
+    "conflict_question": false,
+    "f1": 1.0,
+    "forbidden_hit": 0,
+    "retrieval_recall_gold": null,
+    "retrieval_session_recall": null,
+    "status_correct": 1,
+    "strict_answer": 1,
+    "unanswerable": false
+  },
+  "selected_ids": [
+    "e00183",
+    "e00054",
+    "e00316",
+    "e00103",
+    "e00132",
+    "e00004",
+    "e00411",
+    "e00175",
+    "e00011",
+    "e00382",
+    "e00116",
+    "e00014",
+    "e00389",
+    "e00444",
+    "e00442",
+    "e00437",
+    "e00431",
+    "e00375",
+    "e00282",
+    "e00236",
+    "e00230",
+    "e00213",
+    "e00189",
+    "e00115",
+    "e00100",
+    "e00077",
+    "e00043",
+    "e00006",
+    "e00222"
+  ],
+  "source_events": [
+    {
+      "id": "e00054",
+      "sequence": 54,
+      "project": "mab-0",
+      "time": "ordered fact 54",
+      "text": "52. Blood on the Tracks was performed by Bob Dylan.",
+      "type": "log",
+      "speaker": "benchmark",
+      "session": null,
+      "source": {
+        "channel": "hook",
+        "message_role": "user"
+      },
+      "metadata": {},
+      "refs": []
+    },
+    {
+      "id": "e00103",
+      "sequence": 103,
+      "project": "mab-0",
+      "time": "ordered fact 103",
+      "text": "101. The headquarters of Fordham University is located in the city of New York City.",
+      "type": "log",
+      "speaker": "benchmark",
+      "session": null,
+      "source": {
+        "channel": "hook",
+        "message_role": "user"
+      },
+      "metadata": {},
+      "refs": []
+    },
+    {
+      "id": "e00183",
+      "sequence": 183,
+      "project": "mab-0",
+      "time": "ordered fact 183",
+      "text": "181. Blood on the Tracks was performed by Lou Reed.",
+      "type": "log",
+      "speaker": "benchmark",
+      "session": null,
+      "source": {
+        "channel": "hook",
+        "message_role": "user"
+      },
+      "metadata": {},
+      "refs": []
+    },
+    {
+      "id": "e00401",
+      "sequence": 401,
+      "project": "mab-0",
+      "time": "ordered fact 401",
+      "text": "399. The univeristy where Lou Reed was educated is Fordham University.",
+      "type": "log",
+      "speaker": "benchmark",
+      "session": null,
+      "source": {
+        "channel": "hook",
+        "message_role": "user"
+      },
+      "metadata": {},
+      "refs": []
+    }
+  ],
+  "selection": "Diagnostic case chosen after results; not a random accuracy sample",
+  "posthoc_manual_evidence": [
+    "e00183",
+    "e00401",
+    "e00103"
+  ]
+}

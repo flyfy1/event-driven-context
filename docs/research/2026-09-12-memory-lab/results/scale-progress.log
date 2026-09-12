@@ -1,0 +1,40 @@
+longmemeval-432/5c40ec5b A {
+"answer": "Twice",
+"status": "known",
+"citations": ["[e00478]"]
+}
+longmemeval-432/5c40ec5b C {
+"answer": "Twice",
+"status": "known",
+"citations": ["e00470", "e00478"]
+}
+longmemeval-432/5c40ec5b D {
+"answer": "Twice",
+"status": "known",
+"citations": ["[e00470]", "[e00478]"]
+}
+longmemeval-432/5c40ec5b E {
+"answer": "I don't know",
+"status": "unknown",
+"citations": []
+}
+longmemeval-440/0ddfec37_abs A {
+"answer": "I don't know",
+"status": "unknown",
+"citations": []
+}
+longmemeval-440/0ddfec37_abs C {
+"answer": "I don't know",
+"status": "unknown",
+"citations": []
+}
+longmemeval-440/0ddfec37_abs D {
+"answer": "The evidence mentions adding 15 autographed baseballs (e00203) and later 20 autographed baseballs (e00285), but does not mention any autographed footballs.",
+"status": "unknown",
+"citations": ["e00203", "e00285"]
+}
+longmemeval-440/0ddfec37_abs E {
+"answer": "I don't know",
+"status": "unknown",
+"citations": []
+}

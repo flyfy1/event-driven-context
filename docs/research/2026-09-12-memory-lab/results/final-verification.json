@@ -1,0 +1,37 @@
+{
+  "checked_at": "2026-09-12T02:39:05.823327+00:00",
+  "checks": [
+    {
+      "command": [
+        ".venv/bin/python",
+        "src/verify.py"
+      ],
+      "returncode": 0,
+      "stdout": "PASS: UUID idempotency/conflict, project scope, future refs, unconfirmed update, unresolved conflict, budget and deterministic replay\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "src/verify_examples.py"
+      ],
+      "returncode": 0,
+      "stdout": "{'versions': 10, 'exact_spans_checked': 81, 'max_refs': 13, 'speaker_labels_preserved': True, 'status': 'passed', 'scope': 'Offline shape/span validation; no product API/authentication/runtime test'}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        ".venv/bin/python",
+        "src/audit_integrity.py"
+      ],
+      "returncode": 0,
+      "stdout": "{\n  \"answers\": 412,\n  \"budget_violations\": 0,\n  \"future_or_cross_project\": 0,\n  \"missing_call_records\": 0,\n  \"build_future_input\": 0,\n  \"benchmark_annotations_exposed\": 0,\n  \"snapshot_hashes_verified\": 52\n}\n",
+      "stderr": ""
+    }
+  ],
+  "local_markdown_links_missing": [],
+  "main_answers": 412,
+  "manual_reviewed_answers": 53,
+  "empty_answers": 40,
+  "latency_requests": 16
+}

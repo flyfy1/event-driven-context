@@ -1,0 +1,36 @@
+product-0/query_only {
+"answer": "是",
+"status": "known",
+"citations": ["a44ec320-ce82-53c6-8435-c193fa5695ac"]
+}
+product-0/pinned_constraints {
+"answer": "不能",
+"status": "conflict",
+"citations": [
+"a44ec320-ce82-53c6-8435-c193fa5695ac",
+"93457c14-bc05-57cf-b2f5-dd592e4e8cd3"
+]
+}
+product-1/query_only {
+"answer": "是",
+"status": "known",
+"citations": ["86e5d10f-0d73-55f2-b29e-8df0b0aae321"]
+}
+product-1/pinned_constraints {
+"answer": "不能。虽然已具备试验条件，但供应商默认流程要求上传原始录音至云端，这违反了项目约束（所有录音只保存在本地设备）。",
+"status": "conflict",
+"citations": ["86e5d10f-0d73-55f2-b29e-8df0b0aae321", "ccecded6-07e3-5422-b664-4908768fb1c1"]
+}
+product-2/query_only {
+"answer": "是",
+"status": "known",
+"citations": ["7d3824a5-72e6-5f39-9c56-13ef08892170"]
+}
+product-2/pinned_constraints {
+"answer": "不可以。虽然已具备试验条件，但供应商默认流程要求上传原始录音至云端，这违反了项目约束（所有录音只保存在本地设备）。",
+"status": "conflict",
+"citations": [
+"7d3824a5-72e6-5f39-9c56-13ef08892170",
+"c95cfc69-236f-54cf-8ec3-bc745ddf2e53"
+]
+}

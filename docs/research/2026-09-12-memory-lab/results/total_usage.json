@@ -1,0 +1,20 @@
+{
+  "cached_unique_successful_requests": 682,
+  "fresh_latency_requests": 16,
+  "known_successful_requests": 698,
+  "native_input_tokens": 1385181,
+  "native_output_tokens": 232688,
+  "request_elapsed_sum_s": 6673.746080877871,
+  "extra_runner_paid_api_cost_usd": 0,
+  "coordinator_and_research_agent_tokens": "not included; this ledger covers experiment runner model requests only",
+  "interrupted_in_flight_tokens": "unknown; see stopped-stage markers",
+  "electricity_and_opportunity_cost": "not measured",
+  "first_recorded_request_at": "2026-09-12T00:35:10.027096+00:00",
+  "last_phase_completed_at": "2026-09-12T02:33:46.380125+00:00",
+  "main_builder_native_window_observation": {
+    "configured_num_ctx": 8192,
+    "max_reported_prompt_plus_output": 9188,
+    "calls_reported_prompt_plus_output_above_num_ctx": 36,
+    "interpretation": "Reported counts only; backend window shifting/truncation semantics were not independently instrumented."
+  }
+}

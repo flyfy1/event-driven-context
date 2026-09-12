@@ -1,0 +1,739 @@
+[
+  {
+    "id": "locomo-0/q24",
+    "history": "locomo-0",
+    "cutoff": 419,
+    "question": "What does Melanie do to destress?",
+    "answers": [
+      "Running, pottery"
+    ],
+    "evidence": [
+      "e00130",
+      "e00080"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "1",
+    "group": "locomo-0",
+    "upstream_question_index": 24
+  },
+  {
+    "id": "locomo-0/q25",
+    "history": "locomo-0",
+    "cutoff": 419,
+    "question": "When did Caroline go to the LGBTQ conference?",
+    "answers": [
+      "10 July 2023"
+    ],
+    "evidence": [
+      "e00109"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "2",
+    "group": "locomo-0",
+    "upstream_question_index": 25
+  },
+  {
+    "id": "locomo-0/q73",
+    "history": "locomo-0",
+    "cutoff": 419,
+    "question": "When did Melanie get hurt?",
+    "answers": [
+      "September 2023"
+    ],
+    "evidence": [
+      "e00362"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "2",
+    "group": "locomo-0",
+    "upstream_question_index": 73
+  },
+  {
+    "id": "locomo-0/q76",
+    "history": "locomo-0",
+    "cutoff": 419,
+    "question": "When did Melanie go on a hike after the roadtrip?",
+    "answers": [
+      "19 October 2023"
+    ],
+    "evidence": [
+      "e00397"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "1",
+    "group": "locomo-0",
+    "upstream_question_index": 76
+  },
+  {
+    "id": "locomo-0/q88",
+    "history": "locomo-0",
+    "cutoff": 419,
+    "question": "What is Caroline excited about in the adoption process?",
+    "answers": [
+      "creating a family for kids who need one"
+    ],
+    "evidence": [
+      "e00032"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "4",
+    "group": "locomo-0",
+    "upstream_question_index": 88
+  },
+  {
+    "id": "locomo-0/q103",
+    "history": "locomo-0",
+    "cutoff": 419,
+    "question": "What was Melanie's favorite book from her childhood?",
+    "answers": [
+      "\"Charlotte's Web\""
+    ],
+    "evidence": [
+      "e00102"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "4",
+    "group": "locomo-0",
+    "upstream_question_index": 103
+  },
+  {
+    "id": "locomo-0/q157",
+    "history": "locomo-0",
+    "cutoff": 419,
+    "question": "What does Melanie's necklace symbolize?",
+    "answers": [
+      "I don't know"
+    ],
+    "evidence": [
+      "e00061"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "5",
+    "group": "locomo-0",
+    "upstream_question_index": 157
+  },
+  {
+    "id": "locomo-0/q187",
+    "history": "locomo-0",
+    "cutoff": 419,
+    "question": "What precautionary sign did Caroline see at the café?",
+    "answers": [
+      "I don't know"
+    ],
+    "evidence": [
+      "e00350"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "5",
+    "group": "locomo-0",
+    "upstream_question_index": 187
+  },
+  {
+    "id": "locomo-1/q2",
+    "history": "locomo-1",
+    "cutoff": 369,
+    "question": "How do Jon and Gina both like to destress?",
+    "answers": [
+      "by dancing"
+    ],
+    "evidence": [
+      "e00007",
+      "e00006"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "4",
+    "group": "locomo-1",
+    "upstream_question_index": 2
+  },
+  {
+    "id": "locomo-1/q17",
+    "history": "locomo-1",
+    "cutoff": 369,
+    "question": "Why did Gina decide to start her own clothing store?",
+    "answers": [
+      "She always loved fashion trends and finding unique pieces and she lost her job so decided it was time to start her own business."
+    ],
+    "evidence": [
+      "e00108",
+      "e00003"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "1",
+    "group": "locomo-1",
+    "upstream_question_index": 17
+  },
+  {
+    "id": "locomo-1/q24",
+    "history": "locomo-1",
+    "cutoff": 369,
+    "question": "Which events has Jon participated in to promote his business venture?",
+    "answers": [
+      "fair, networking events, dance competition"
+    ],
+    "evidence": [
+      "e00177",
+      "e00302",
+      "e00140"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "1",
+    "group": "locomo-1",
+    "upstream_question_index": 24
+  },
+  {
+    "id": "locomo-1/q28",
+    "history": "locomo-1",
+    "cutoff": 369,
+    "question": "When was Jon in Rome?",
+    "answers": [
+      "June 2023"
+    ],
+    "evidence": [
+      "e00275"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "2",
+    "group": "locomo-1",
+    "upstream_question_index": 28
+  },
+  {
+    "id": "locomo-1/q34",
+    "history": "locomo-1",
+    "cutoff": 369,
+    "question": "When did Gina start being recognized by fashion editors?",
+    "answers": [
+      "July 2023"
+    ],
+    "evidence": [
+      "e00313"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "2",
+    "group": "locomo-1",
+    "upstream_question_index": 34
+  },
+  {
+    "id": "locomo-1/q63",
+    "history": "locomo-1",
+    "cutoff": 369,
+    "question": "What kind of professional experience did Gina get accepted for on May 23, 2023?",
+    "answers": [
+      "fashion internship"
+    ],
+    "evidence": [
+      "e00213"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "4",
+    "group": "locomo-1",
+    "upstream_question_index": 63
+  },
+  {
+    "id": "locomo-1/q84",
+    "history": "locomo-1",
+    "cutoff": 369,
+    "question": "What kind of dance piece did Jon's team perform to win first place?",
+    "answers": [
+      "I don't know"
+    ],
+    "evidence": [
+      "e00019"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "5",
+    "group": "locomo-1",
+    "upstream_question_index": 84
+  },
+  {
+    "id": "locomo-1/q89",
+    "history": "locomo-1",
+    "cutoff": 369,
+    "question": "What did Jon want his customers to feel in her store?",
+    "answers": [
+      "I don't know"
+    ],
+    "evidence": [
+      "e00050",
+      "e00052"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "benchmark": "locomo",
+    "category": "5",
+    "group": "locomo-1",
+    "upstream_question_index": 89
+  },
+  {
+    "id": "mab-0/0/q96",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "At which place did the creator of \"Lady Windermere's Fan\" breathe their last?",
+    "answers": [
+      "Guangzhou"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-0",
+    "upstream_question_index": 96
+  },
+  {
+    "id": "mab-0/0/q45",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "At what location did the author of \"Sketches by Boz\" breathe his last?",
+    "answers": [
+      "London"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-0",
+    "upstream_question_index": 45
+  },
+  {
+    "id": "mab-0/0/q98",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "What is the capital city of the country where the founder of the manufacturer of Ford Transit Connect holds citizenship?",
+    "answers": [
+      "Paris"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-0",
+    "upstream_question_index": 98
+  },
+  {
+    "id": "mab-0/0/q30",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "What city or town is the headquarters of the educational institution, where the performer of the album \"Blood on the Tracks\" received education, located in?",
+    "answers": [
+      "New York City"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-0",
+    "upstream_question_index": 30
+  },
+  {
+    "id": "mab-0/0/q17",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "In which city is the capital of the country where Madame du Barry held a citizenship?",
+    "answers": [
+      "London"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-0",
+    "upstream_question_index": 17
+  },
+  {
+    "id": "mab-0/0/q41",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "Which language is recognized as the official language of the place where Gennady Rozhdestvensky took his last breath?",
+    "answers": [
+      "German"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-0",
+    "upstream_question_index": 41
+  },
+  {
+    "id": "mab-0/4/q96",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "What is the country of citizenship of Colin Irwin?",
+    "answers": [
+      "Israel"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-0",
+    "upstream_question_index": 96
+  },
+  {
+    "id": "mab-0/4/q45",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "Who is the author of A Wizard of Earthsea?",
+    "answers": [
+      "Pius XII"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-0",
+    "upstream_question_index": 45
+  },
+  {
+    "id": "mab-0/4/q98",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "Who is Charles Darwin married to?",
+    "answers": [
+      "Amala Paul"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-0",
+    "upstream_question_index": 98
+  },
+  {
+    "id": "mab-0/4/q30",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "Which country was baseball created in?",
+    "answers": [
+      "Japan"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-0",
+    "upstream_question_index": 30
+  },
+  {
+    "id": "mab-0/4/q17",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "Which country was association football created in?",
+    "answers": [
+      "Italy"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-0",
+    "upstream_question_index": 17
+  },
+  {
+    "id": "mab-0/4/q41",
+    "history": "mab-0",
+    "cutoff": 456,
+    "question": "Which sport is wide receiver associated with?",
+    "answers": [
+      "rugby"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-0",
+    "upstream_question_index": 41
+  },
+  {
+    "id": "mab-1/1/q93",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "In which language does the government of the country of citizenship of W. G. Sebald conduct official business?",
+    "answers": [
+      "English"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-1",
+    "upstream_question_index": 93
+  },
+  {
+    "id": "mab-1/1/q83",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "What is the place of death of the partner of Katherine Mansfield?",
+    "answers": [
+      "Birmingham"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-1",
+    "upstream_question_index": 83
+  },
+  {
+    "id": "mab-1/1/q16",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "What is the name of the educational institution where the partner of Nicolae Ceaușescu was educated?",
+    "answers": [
+      "Baldwin Wallace University"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-1",
+    "upstream_question_index": 16
+  },
+  {
+    "id": "mab-1/1/q14",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "What was the location of the work of the person who founded the Kingdom of Etruria?",
+    "answers": [
+      "Washington, D.C."
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-1",
+    "upstream_question_index": 14
+  },
+  {
+    "id": "mab-1/1/q7",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "Who holds the title of chief public representative in the country where Jason Motte is a citizen?",
+    "answers": [
+      "Roch Marc Christian Kaboré"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-1",
+    "upstream_question_index": 7
+  },
+  {
+    "id": "mab-1/1/q10",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "What was the place of death of the author of \"Theaetetus\"?",
+    "answers": [
+      "Portland"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "multi-hop",
+    "group": "mab-1",
+    "upstream_question_index": 10
+  },
+  {
+    "id": "mab-1/5/q93",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "Which country was Orkneyinga saga created in?",
+    "answers": [
+      "Iceland"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-1",
+    "upstream_question_index": 93
+  },
+  {
+    "id": "mab-1/5/q83",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "What is the country of citizenship of Madame du Barry?",
+    "answers": [
+      "Great Britain"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-1",
+    "upstream_question_index": 83
+  },
+  {
+    "id": "mab-1/5/q16",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "Which sport is Jeff Hornacek associated with?",
+    "answers": [
+      "association football"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-1",
+    "upstream_question_index": 16
+  },
+  {
+    "id": "mab-1/5/q14",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "Which city was Bachir Gemayel born in?",
+    "answers": [
+      "Beirut"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-1",
+    "upstream_question_index": 14
+  },
+  {
+    "id": "mab-1/5/q7",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "Who founded Montanism?",
+    "answers": [
+      "Montanus of Phrygia"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-1",
+    "upstream_question_index": 7
+  },
+  {
+    "id": "mab-1/5/q10",
+    "history": "mab-1",
+    "cutoff": 2311,
+    "question": "What is the country of citizenship of Edmund Burke?",
+    "answers": [
+      "Kingdom of Ireland"
+    ],
+    "evidence": [],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "group": "mab-1",
+    "upstream_question_index": 10
+  },
+  {
+    "id": "longmemeval-432/5c40ec5b",
+    "history": "longmemeval-432",
+    "cutoff": 479,
+    "question": "How many times have I met up with Alex from Germany?",
+    "answers": [
+      "We've met up twice."
+    ],
+    "evidence": [],
+    "evidence_groups": [
+      [
+        "e00140",
+        "e00141",
+        "e00142",
+        "e00143",
+        "e00144",
+        "e00145",
+        "e00146",
+        "e00147",
+        "e00148",
+        "e00149"
+      ],
+      [
+        "e00470",
+        "e00471",
+        "e00472",
+        "e00473",
+        "e00474",
+        "e00475",
+        "e00476",
+        "e00477",
+        "e00478",
+        "e00479"
+      ]
+    ],
+    "status": "known",
+    "forbidden": [],
+    "benchmark": "longmemeval",
+    "category": "knowledge-update",
+    "group": "longmemeval-432",
+    "question_time": "2023/10/30 (Mon) 13:39"
+  },
+  {
+    "id": "longmemeval-440/0ddfec37_abs",
+    "history": "longmemeval-440",
+    "cutoff": 447,
+    "question": "How many autographed football have I added to my collection in the first three months of collection?",
+    "answers": [
+      "The information provided is not enough. You mentioned collecting autographed baseball but not football."
+    ],
+    "evidence": [],
+    "evidence_groups": [],
+    "status": "unknown",
+    "forbidden": [],
+    "benchmark": "longmemeval",
+    "category": "abstention",
+    "group": "longmemeval-440",
+    "question_time": "2023/06/07 (Wed) 08:31"
+  }
+]

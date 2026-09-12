@@ -1,0 +1,4 @@
+{
+  "reason": "Restart before public evaluation to make MAB original fact-number update policy explicit, independent of retrieval display order. Already completed product model calls can be reused byte-for-byte through cache. No scores discarded selectively. Final report uses main-v2 only.",
+  "at": "2026-09-12T00:57:08.555798+00:00"
+}

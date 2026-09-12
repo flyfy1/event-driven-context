@@ -1,0 +1,126 @@
+{
+  "answer": {
+    "answer": "United States of America",
+    "citations": [
+      "[e00162]"
+    ],
+    "status": "known"
+  },
+  "answer_completion_tokens": 34,
+  "answer_prompt_tokens": 2019,
+  "answer_s": 1.3768634579901118,
+  "benchmark": "mab",
+  "cache_hit": false,
+  "call_key": "6b2559d7718fea0cd8e3647b78b42ce686ea67ac2c7c09d8cb9ebf2b9b6c4145",
+  "category": "single-hop",
+  "context": "[e00384] time=ordered fact 384 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n382. baseball was created in the country of Japan.\n\n[e00162] time=ordered fact 162 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n160. baseball was created in the country of United States of America.\n\n[e00152] time=ordered fact 152 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n150. cricket was created in the country of Australia.\n\n[e00097] time=ordered fact 97 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n95. sumo was created in the country of Japan.\n\n[e00059] time=ordered fact 59 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n57. cricket was created in the country of England.\n\n[e00164] time=ordered fact 164 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n162. country music was created in the country of United States of America.\n\n[e00391] time=ordered fact 391 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n389. association football was created in the country of Italy.\n\n[e00360] time=ordered fact 360 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n358. Charlie Hebdo was created in the country of Italy.\n\n[e00350] time=ordered fact 350 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n348. basketball was created in the country of Soviet Union.\n\n[e00274] time=ordered fact 274 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n272. association football was created in the country of England.\n\n[e00269] time=ordered fact 269 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n267. post-punk was created in the country of Canada.\n\n[e00263] time=ordered fact 263 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n261. pesäpallo was created in the country of Philippines.\n\n[e00188] time=ordered fact 188 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n186. rugby union was created in the country of India.\n\n[e00157] time=ordered fact 157 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n155. Charlie Hebdo was created in the country of France.\n\n[e00102] time=ordered fact 102 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n100. rugby union was created in the country of England.\n\n[e00061] time=ordered fact 61 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n59. pesäpallo was created in the country of Finland.\n\n[e00438] time=ordered fact 438 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n436. Le Petit Parisien was created in the country of Germany.\n\n[e00405] time=ordered fact 405 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n403. rap rock was created in the country of Russian Empire.\n\n[e00355] time=ordered fact 355 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n353. Club Nouveau was created in the country of Soviet Union.\n\n[e00347] time=ordered fact 347 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n345. Thus Spoke Zarathustra was created in the country of Germany.\n\n[e00259] time=ordered fact 259 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n257. Le Petit Parisien was created in the country of France.\n\n[e00163] time=ordered fact 163 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n161. post-punk was created in the country of United Kingdom.\n\n[e00218] time=ordered fact 218 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n216. basketball was created in the country of United States of America.\n\n[e00214] time=ordered fact 214 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n212. jazz was created in the country of United States of America.\n\n[e00361] time=ordered fact 361 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n359. rap rock was created in the country of United States of America.\n\n[e00104] time=ordered fact 104 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n102. Club Nouveau was created in the country of United States of America.\n\n[e00392] time=ordered fact 392 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n390. Vito Corleone was created by Nobuhiro Watsuki.\n\n[e00328] time=ordered fact 328 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n326. Rand al'Thor was created by Ferdowsi.\n\n[e00258] time=ordered fact 258 speaker=benchmark type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\n256. Vito Corleone was created by Mario Puzo.",
+  "context_tokens": 1493,
+  "cutoff": 456,
+  "done_reason": "stop",
+  "gold": {
+    "answers": [
+      "Japan"
+    ],
+    "benchmark": "mab",
+    "category": "single-hop",
+    "cutoff": 456,
+    "evidence": [],
+    "forbidden": [],
+    "group": "mab-0",
+    "history": "mab-0",
+    "id": "mab-0/4/q30",
+    "question": "Which country was baseball created in?",
+    "status": "known",
+    "upstream_question_index": 30
+  },
+  "history": "mab-0",
+  "id": "mab-0/4/q30",
+  "method": "D",
+  "question": "Which country was baseball created in?",
+  "retrieval_s": 0.04225574999873061,
+  "scores": {
+    "answer_match": 0,
+    "citation_complete": null,
+    "citation_id_exists": 0.0,
+    "citation_precision_gold": null,
+    "citation_recall_gold": null,
+    "citation_source_visible": 0.0,
+    "conflict_question": false,
+    "f1": 0.0,
+    "forbidden_hit": 0,
+    "retrieval_recall_gold": null,
+    "retrieval_session_recall": null,
+    "status_correct": 1,
+    "strict_answer": 0,
+    "unanswerable": false
+  },
+  "selected_ids": [
+    "e00384",
+    "e00162",
+    "e00152",
+    "e00097",
+    "e00059",
+    "e00164",
+    "e00391",
+    "e00360",
+    "e00350",
+    "e00274",
+    "e00269",
+    "e00263",
+    "e00188",
+    "e00157",
+    "e00102",
+    "e00061",
+    "e00438",
+    "e00405",
+    "e00355",
+    "e00347",
+    "e00259",
+    "e00163",
+    "e00218",
+    "e00214",
+    "e00361",
+    "e00104",
+    "e00392",
+    "e00328",
+    "e00258"
+  ],
+  "source_events": [
+    {
+      "id": "e00162",
+      "sequence": 162,
+      "project": "mab-0",
+      "time": "ordered fact 162",
+      "text": "160. baseball was created in the country of United States of America.",
+      "type": "log",
+      "speaker": "benchmark",
+      "session": null,
+      "source": {
+        "channel": "hook",
+        "message_role": "user"
+      },
+      "metadata": {},
+      "refs": []
+    },
+    {
+      "id": "e00384",
+      "sequence": 384,
+      "project": "mab-0",
+      "time": "ordered fact 384",
+      "text": "382. baseball was created in the country of Japan.",
+      "type": "log",
+      "speaker": "benchmark",
+      "session": null,
+      "source": {
+        "channel": "hook",
+        "message_role": "user"
+      },
+      "metadata": {},
+      "refs": []
+    }
+  ],
+  "selection": "Diagnostic case chosen after results; not a random accuracy sample",
+  "posthoc_manual_evidence": [
+    "e00384"
+  ]
+}

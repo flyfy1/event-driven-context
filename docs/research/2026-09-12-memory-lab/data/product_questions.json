@@ -1,0 +1,1190 @@
+[
+  {
+    "id": "product-0/budget_initial",
+    "history": "product-0",
+    "cutoff": 4,
+    "question": "海桥项目当前预算多少元？",
+    "answers": [
+      "50000"
+    ],
+    "evidence": [
+      "73452f84-280c-57b0-8212-5ad8182dd1e8"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "budget",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/budget_updated",
+    "history": "product-0",
+    "cutoff": 19,
+    "question": "海桥项目当前预算多少元？只报当前数额。",
+    "answers": [
+      "30000"
+    ],
+    "evidence": [
+      "75afa1b7-9569-5b63-9980-54af3b564777"
+    ],
+    "status": "known",
+    "forbidden": [
+      "50000"
+    ],
+    "category": "budget",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/todo_open",
+    "history": "product-0",
+    "cutoff": 20,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "待办",
+      "未完成",
+      "待提交",
+      "未提交"
+    ],
+    "evidence": [
+      "e0ecfe1f-4a03-5930-be54-0c0fe94c1767"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/todo_done",
+    "history": "product-0",
+    "cutoff": 21,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "完成",
+      "已提交"
+    ],
+    "evidence": [
+      "11eb3d29-64e4-5a92-95c3-621dd1861b14"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/todo_reopen",
+    "history": "product-0",
+    "cutoff": 22,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "重新打开",
+      "未完成",
+      "重新提交"
+    ],
+    "evidence": [
+      "b788b78a-de94-5330-90e9-73492f15aa84"
+    ],
+    "status": "known",
+    "forbidden": [
+      "已经完成"
+    ],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/todo_cancel",
+    "history": "product-0",
+    "cutoff": 24,
+    "question": "还需要印刷海桥宣传册吗？",
+    "answers": [
+      "取消",
+      "不再需要",
+      "不需要"
+    ],
+    "evidence": [
+      "2b48dc17-6025-5bb3-81fc-756590709e2c"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/member_conflict",
+    "history": "product-0",
+    "cutoff": 26,
+    "question": "海桥上线日期到底是哪天？",
+    "answers": [
+      "4 月 10",
+      "4月10",
+      "4 月 20",
+      "4月20"
+    ],
+    "evidence": [
+      "6aae9390-02d0-539c-9ca2-a351abc3922e",
+      "b5531fcd-dd0e-53e7-9108-70e34ab3cc6d"
+    ],
+    "status": "conflict",
+    "forbidden": [],
+    "category": "conflict",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/agent_unconfirmed",
+    "history": "product-0",
+    "cutoff": 27,
+    "question": "用户已经同意为海桥购买付费云转录服务了吗？",
+    "answers": [
+      "未",
+      "没有",
+      "不知道",
+      "尚未"
+    ],
+    "evidence": [
+      "172b7eeb-0fc1-535b-be15-22ad006720cb"
+    ],
+    "status": "unknown",
+    "forbidden": [
+      "已经同意"
+    ],
+    "category": "inference",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/duplicate_once",
+    "history": "product-0",
+    "cutoff": 28,
+    "question": "海桥目标设备数量是多少台？",
+    "answers": [
+      "12"
+    ],
+    "evidence": [
+      "d5919e15-980f-5522-a879-b1b75412efd9"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "duplicate",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/audio_unclear",
+    "history": "product-0",
+    "cutoff": 30,
+    "question": "海桥交付负责人是谁？",
+    "answers": [
+      "听不清",
+      "不确定",
+      "不知道",
+      "无法确定"
+    ],
+    "evidence": [
+      "2f0e0625-44d1-5c7b-8840-a497a2779a59"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "category": "audio",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/audio_corrected",
+    "history": "product-0",
+    "cutoff": 31,
+    "question": "海桥交付负责人是谁？",
+    "answers": [
+      "小宁"
+    ],
+    "evidence": [
+      "3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0"
+    ],
+    "status": "known",
+    "forbidden": [
+      "小林"
+    ],
+    "category": "audio",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/unknown",
+    "history": "product-0",
+    "cutoff": 52,
+    "question": "海桥当前选定的转录引擎实测准确率是多少？",
+    "answers": [
+      "不知道",
+      "未",
+      "没有",
+      "无法"
+    ],
+    "evidence": [
+      "5df82780-fc67-5a6b-9c3f-eb60a73f494e"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "category": "unknown",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/old_goal",
+    "history": "product-0",
+    "cutoff": 52,
+    "question": "海桥项目最初要完成的核心目标是什么？",
+    "answers": [
+      "离线录音",
+      "录音转文字"
+    ],
+    "evidence": [
+      "5b3dbe88-78a7-530e-badb-1b1f5bcb9b67"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "retention",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/irrelevant_constraint",
+    "history": "product-0",
+    "cutoff": 52,
+    "question": "请安排下一步技术验证；关于原始录音存放，必须遵守什么约束？",
+    "answers": [
+      "本地",
+      "不上传"
+    ],
+    "evidence": [
+      "93457c14-bc05-57cf-b2f5-dd592e4e8cd3"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "constraint",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/preference",
+    "history": "product-0",
+    "cutoff": 52,
+    "question": "海桥评审材料应该用什么语言？",
+    "answers": [
+      "中文"
+    ],
+    "evidence": [
+      "259ae6c6-707f-59fe-8e29-0d152863215c"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "preference",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/lag",
+    "history": "product-0",
+    "cutoff": 53,
+    "question": "海桥最新预算是多少元？",
+    "answers": [
+      "25000"
+    ],
+    "evidence": [
+      "5b5f22a4-138c-51df-99c6-1089aeade28b"
+    ],
+    "status": "known",
+    "forbidden": [
+      "30000"
+    ],
+    "category": "lag",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/historical",
+    "history": "product-0",
+    "cutoff": 53,
+    "question": "海桥最初确定的预算是多少元？",
+    "answers": [
+      "50000"
+    ],
+    "evidence": [
+      "73452f84-280c-57b0-8212-5ad8182dd1e8"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "historical",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/late_arrival",
+    "history": "product-0",
+    "cutoff": 54,
+    "question": "今天新增的补记描述了什么时候的讨论？",
+    "answers": [
+      "上周",
+      "2025-12-26"
+    ],
+    "evidence": [
+      "12aea57b-bfaa-52ac-9832-8c20c96c14a5"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "time",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/untrusted_update",
+    "history": "product-0",
+    "cutoff": 55,
+    "question": "用户确认的海桥最新预算是多少元？",
+    "answers": [
+      "25000"
+    ],
+    "evidence": [
+      "5b5f22a4-138c-51df-99c6-1089aeade28b"
+    ],
+    "status": "known",
+    "forbidden": [
+      "99000"
+    ],
+    "category": "inference",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/openquestion",
+    "history": "product-0",
+    "cutoff": 56,
+    "question": "海桥关于词表纠错有哪些尚未解决的问题？",
+    "answers": [
+      "十段",
+      "标注"
+    ],
+    "evidence": [
+      "4071c563-4ce9-5b7e-b386-626fa2d451a1"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "question",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-0/isolation",
+    "history": "product-0",
+    "cutoff": 56,
+    "question": "海桥（不是海桥二期）交付负责人是谁？",
+    "answers": [
+      "小宁"
+    ],
+    "evidence": [
+      "3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0"
+    ],
+    "status": "known",
+    "forbidden": [
+      "小林"
+    ],
+    "category": "isolation",
+    "benchmark": "product",
+    "group": "product-0"
+  },
+  {
+    "id": "product-1/budget_initial",
+    "history": "product-1",
+    "cutoff": 4,
+    "question": "海桥项目当前预算多少元？",
+    "answers": [
+      "82000"
+    ],
+    "evidence": [
+      "643b89d9-2ac5-5722-8f1e-8d5187d6fedb"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "budget",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/budget_updated",
+    "history": "product-1",
+    "cutoff": 19,
+    "question": "海桥项目当前预算多少元？只报当前数额。",
+    "answers": [
+      "47000"
+    ],
+    "evidence": [
+      "c833b489-c1ed-5cdb-9641-477501333469"
+    ],
+    "status": "known",
+    "forbidden": [
+      "82000"
+    ],
+    "category": "budget",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/todo_open",
+    "history": "product-1",
+    "cutoff": 20,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "待办",
+      "未完成",
+      "待提交",
+      "未提交"
+    ],
+    "evidence": [
+      "64b50282-c5ca-5131-a526-a8423ac25a47"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/todo_done",
+    "history": "product-1",
+    "cutoff": 21,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "完成",
+      "已提交"
+    ],
+    "evidence": [
+      "c5bdaa42-8ac7-51b1-a539-3c48998cefec"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/todo_reopen",
+    "history": "product-1",
+    "cutoff": 22,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "重新打开",
+      "未完成",
+      "重新提交"
+    ],
+    "evidence": [
+      "e67a7142-4857-5452-9520-871c24347f55"
+    ],
+    "status": "known",
+    "forbidden": [
+      "已经完成"
+    ],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/todo_cancel",
+    "history": "product-1",
+    "cutoff": 24,
+    "question": "还需要印刷海桥宣传册吗？",
+    "answers": [
+      "取消",
+      "不再需要",
+      "不需要"
+    ],
+    "evidence": [
+      "c16c71cf-d4b3-5d3a-b131-2d12eab405e1"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/member_conflict",
+    "history": "product-1",
+    "cutoff": 26,
+    "question": "海桥上线日期到底是哪天？",
+    "answers": [
+      "4 月 10",
+      "4月10",
+      "4 月 20",
+      "4月20"
+    ],
+    "evidence": [
+      "6086f314-00d7-566d-a9ea-18c750b30ecc",
+      "3cd377e2-f3e0-5980-b270-5d9cea5b33d8"
+    ],
+    "status": "conflict",
+    "forbidden": [],
+    "category": "conflict",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/agent_unconfirmed",
+    "history": "product-1",
+    "cutoff": 27,
+    "question": "用户已经同意为海桥购买付费云转录服务了吗？",
+    "answers": [
+      "未",
+      "没有",
+      "不知道",
+      "尚未"
+    ],
+    "evidence": [
+      "9660d29e-01e4-559b-8ed6-771927164480"
+    ],
+    "status": "unknown",
+    "forbidden": [
+      "已经同意"
+    ],
+    "category": "inference",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/duplicate_once",
+    "history": "product-1",
+    "cutoff": 28,
+    "question": "海桥目标设备数量是多少台？",
+    "answers": [
+      "12"
+    ],
+    "evidence": [
+      "9286f9ea-6c21-5c51-8760-8eccb0a5f696"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "duplicate",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/audio_unclear",
+    "history": "product-1",
+    "cutoff": 30,
+    "question": "海桥交付负责人是谁？",
+    "answers": [
+      "听不清",
+      "不确定",
+      "不知道",
+      "无法确定"
+    ],
+    "evidence": [
+      "6451c7ae-81ec-5b41-82a4-01aa11682215"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "category": "audio",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/audio_corrected",
+    "history": "product-1",
+    "cutoff": 31,
+    "question": "海桥交付负责人是谁？",
+    "answers": [
+      "小宁"
+    ],
+    "evidence": [
+      "630b21d9-e884-51bb-a87a-54db62fad91c"
+    ],
+    "status": "known",
+    "forbidden": [
+      "小林"
+    ],
+    "category": "audio",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/unknown",
+    "history": "product-1",
+    "cutoff": 52,
+    "question": "海桥当前选定的转录引擎实测准确率是多少？",
+    "answers": [
+      "不知道",
+      "未",
+      "没有",
+      "无法"
+    ],
+    "evidence": [
+      "8fdf0aea-683a-53d6-b713-fe5df8b518ca"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "category": "unknown",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/old_goal",
+    "history": "product-1",
+    "cutoff": 52,
+    "question": "海桥项目最初要完成的核心目标是什么？",
+    "answers": [
+      "离线录音",
+      "录音转文字"
+    ],
+    "evidence": [
+      "08c25003-5e43-552e-85c4-9d133828fa46"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "retention",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/irrelevant_constraint",
+    "history": "product-1",
+    "cutoff": 52,
+    "question": "请安排下一步技术验证；关于原始录音存放，必须遵守什么约束？",
+    "answers": [
+      "本地",
+      "不上传"
+    ],
+    "evidence": [
+      "ccecded6-07e3-5422-b664-4908768fb1c1"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "constraint",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/preference",
+    "history": "product-1",
+    "cutoff": 52,
+    "question": "海桥评审材料应该用什么语言？",
+    "answers": [
+      "中文"
+    ],
+    "evidence": [
+      "cf042e0b-2755-58c1-af6f-f1103882be87"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "preference",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/lag",
+    "history": "product-1",
+    "cutoff": 53,
+    "question": "海桥最新预算是多少元？",
+    "answers": [
+      "42000"
+    ],
+    "evidence": [
+      "5721bafd-1c44-51e1-a1a6-f1f410976c50"
+    ],
+    "status": "known",
+    "forbidden": [
+      "47000"
+    ],
+    "category": "lag",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/historical",
+    "history": "product-1",
+    "cutoff": 53,
+    "question": "海桥最初确定的预算是多少元？",
+    "answers": [
+      "82000"
+    ],
+    "evidence": [
+      "643b89d9-2ac5-5722-8f1e-8d5187d6fedb"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "historical",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/late_arrival",
+    "history": "product-1",
+    "cutoff": 54,
+    "question": "今天新增的补记描述了什么时候的讨论？",
+    "answers": [
+      "上周",
+      "2025-12-26"
+    ],
+    "evidence": [
+      "ff7d393e-c372-5d92-a042-49e6b26fb7ff"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "time",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/untrusted_update",
+    "history": "product-1",
+    "cutoff": 55,
+    "question": "用户确认的海桥最新预算是多少元？",
+    "answers": [
+      "42000"
+    ],
+    "evidence": [
+      "5721bafd-1c44-51e1-a1a6-f1f410976c50"
+    ],
+    "status": "known",
+    "forbidden": [
+      "99000"
+    ],
+    "category": "inference",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/openquestion",
+    "history": "product-1",
+    "cutoff": 56,
+    "question": "海桥关于词表纠错有哪些尚未解决的问题？",
+    "answers": [
+      "十段",
+      "标注"
+    ],
+    "evidence": [
+      "01bb56d3-e624-596b-bc4d-36c787534af8"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "question",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-1/isolation",
+    "history": "product-1",
+    "cutoff": 56,
+    "question": "海桥（不是海桥二期）交付负责人是谁？",
+    "answers": [
+      "小宁"
+    ],
+    "evidence": [
+      "630b21d9-e884-51bb-a87a-54db62fad91c"
+    ],
+    "status": "known",
+    "forbidden": [
+      "小林"
+    ],
+    "category": "isolation",
+    "benchmark": "product",
+    "group": "product-1"
+  },
+  {
+    "id": "product-2/budget_initial",
+    "history": "product-2",
+    "cutoff": 4,
+    "question": "海桥项目当前预算多少元？",
+    "answers": [
+      "64000"
+    ],
+    "evidence": [
+      "a40820b7-9c28-5ee1-ab98-2631a6f4acda"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "budget",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/budget_updated",
+    "history": "product-2",
+    "cutoff": 19,
+    "question": "海桥项目当前预算多少元？只报当前数额。",
+    "answers": [
+      "29000"
+    ],
+    "evidence": [
+      "b86db033-e918-5c28-b8b0-f536c435c4ab"
+    ],
+    "status": "known",
+    "forbidden": [
+      "64000"
+    ],
+    "category": "budget",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/todo_open",
+    "history": "product-2",
+    "cutoff": 20,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "待办",
+      "未完成",
+      "待提交",
+      "未提交"
+    ],
+    "evidence": [
+      "6ae1f31e-ddd6-5fb4-a3f5-cccfd813a5fa"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/todo_done",
+    "history": "product-2",
+    "cutoff": 21,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "完成",
+      "已提交"
+    ],
+    "evidence": [
+      "40676b0d-2b0f-5fa9-9a2a-ebee2e5eb923"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/todo_reopen",
+    "history": "product-2",
+    "cutoff": 22,
+    "question": "海桥录音原型待办是什么状态？",
+    "answers": [
+      "重新打开",
+      "未完成",
+      "重新提交"
+    ],
+    "evidence": [
+      "0a1cf49c-02dd-5997-a0e6-1ee453f72fda"
+    ],
+    "status": "known",
+    "forbidden": [
+      "已经完成"
+    ],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/todo_cancel",
+    "history": "product-2",
+    "cutoff": 24,
+    "question": "还需要印刷海桥宣传册吗？",
+    "answers": [
+      "取消",
+      "不再需要",
+      "不需要"
+    ],
+    "evidence": [
+      "39d0e0c2-0329-5790-a4b1-d26eac258d0d"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "todo",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/member_conflict",
+    "history": "product-2",
+    "cutoff": 26,
+    "question": "海桥上线日期到底是哪天？",
+    "answers": [
+      "4 月 10",
+      "4月10",
+      "4 月 20",
+      "4月20"
+    ],
+    "evidence": [
+      "0e1c4b36-d281-5f5a-8a87-79f5d4a80ee7",
+      "b8f77151-a4ec-5aa6-976e-5722063a66e4"
+    ],
+    "status": "conflict",
+    "forbidden": [],
+    "category": "conflict",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/agent_unconfirmed",
+    "history": "product-2",
+    "cutoff": 27,
+    "question": "用户已经同意为海桥购买付费云转录服务了吗？",
+    "answers": [
+      "未",
+      "没有",
+      "不知道",
+      "尚未"
+    ],
+    "evidence": [
+      "3038eccc-8e40-53be-bda8-1c811e87a855"
+    ],
+    "status": "unknown",
+    "forbidden": [
+      "已经同意"
+    ],
+    "category": "inference",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/duplicate_once",
+    "history": "product-2",
+    "cutoff": 28,
+    "question": "海桥目标设备数量是多少台？",
+    "answers": [
+      "12"
+    ],
+    "evidence": [
+      "870167a0-55c2-5cd6-b23d-1debf47658a7"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "duplicate",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/audio_unclear",
+    "history": "product-2",
+    "cutoff": 30,
+    "question": "海桥交付负责人是谁？",
+    "answers": [
+      "听不清",
+      "不确定",
+      "不知道",
+      "无法确定"
+    ],
+    "evidence": [
+      "ce3e9075-c61a-5381-bc40-dba95ff064e4"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "category": "audio",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/audio_corrected",
+    "history": "product-2",
+    "cutoff": 31,
+    "question": "海桥交付负责人是谁？",
+    "answers": [
+      "小宁"
+    ],
+    "evidence": [
+      "69091eac-6767-5961-b0f5-0a64aaba337a"
+    ],
+    "status": "known",
+    "forbidden": [
+      "小林"
+    ],
+    "category": "audio",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/unknown",
+    "history": "product-2",
+    "cutoff": 52,
+    "question": "海桥当前选定的转录引擎实测准确率是多少？",
+    "answers": [
+      "不知道",
+      "未",
+      "没有",
+      "无法"
+    ],
+    "evidence": [
+      "252a611d-bd7f-5199-b437-e84af7ceb347"
+    ],
+    "status": "unknown",
+    "forbidden": [],
+    "category": "unknown",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/old_goal",
+    "history": "product-2",
+    "cutoff": 52,
+    "question": "海桥项目最初要完成的核心目标是什么？",
+    "answers": [
+      "离线录音",
+      "录音转文字"
+    ],
+    "evidence": [
+      "51297383-af16-536c-b6aa-d78f783b3ac7"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "retention",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/irrelevant_constraint",
+    "history": "product-2",
+    "cutoff": 52,
+    "question": "请安排下一步技术验证；关于原始录音存放，必须遵守什么约束？",
+    "answers": [
+      "本地",
+      "不上传"
+    ],
+    "evidence": [
+      "c95cfc69-236f-54cf-8ec3-bc745ddf2e53"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "constraint",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/preference",
+    "history": "product-2",
+    "cutoff": 52,
+    "question": "海桥评审材料应该用什么语言？",
+    "answers": [
+      "中文"
+    ],
+    "evidence": [
+      "69ed202d-adcb-5867-93b7-739a1f96a511"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "preference",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/lag",
+    "history": "product-2",
+    "cutoff": 53,
+    "question": "海桥最新预算是多少元？",
+    "answers": [
+      "24000"
+    ],
+    "evidence": [
+      "842a779f-cd18-5c9c-90e5-78567aca1297"
+    ],
+    "status": "known",
+    "forbidden": [
+      "29000"
+    ],
+    "category": "lag",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/historical",
+    "history": "product-2",
+    "cutoff": 53,
+    "question": "海桥最初确定的预算是多少元？",
+    "answers": [
+      "64000"
+    ],
+    "evidence": [
+      "a40820b7-9c28-5ee1-ab98-2631a6f4acda"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "historical",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/late_arrival",
+    "history": "product-2",
+    "cutoff": 54,
+    "question": "今天新增的补记描述了什么时候的讨论？",
+    "answers": [
+      "上周",
+      "2025-12-26"
+    ],
+    "evidence": [
+      "200da07c-78b6-512c-89ab-34afdd5de90e"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "time",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/untrusted_update",
+    "history": "product-2",
+    "cutoff": 55,
+    "question": "用户确认的海桥最新预算是多少元？",
+    "answers": [
+      "24000"
+    ],
+    "evidence": [
+      "842a779f-cd18-5c9c-90e5-78567aca1297"
+    ],
+    "status": "known",
+    "forbidden": [
+      "99000"
+    ],
+    "category": "inference",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/openquestion",
+    "history": "product-2",
+    "cutoff": 56,
+    "question": "海桥关于词表纠错有哪些尚未解决的问题？",
+    "answers": [
+      "十段",
+      "标注"
+    ],
+    "evidence": [
+      "bfdeb675-d207-5ead-9fb7-45d98b29afa3"
+    ],
+    "status": "known",
+    "forbidden": [],
+    "category": "question",
+    "benchmark": "product",
+    "group": "product-2"
+  },
+  {
+    "id": "product-2/isolation",
+    "history": "product-2",
+    "cutoff": 56,
+    "question": "海桥（不是海桥二期）交付负责人是谁？",
+    "answers": [
+      "小宁"
+    ],
+    "evidence": [
+      "69091eac-6767-5961-b0f5-0a64aaba337a"
+    ],
+    "status": "known",
+    "forbidden": [
+      "小林"
+    ],
+    "category": "isolation",
+    "benchmark": "product",
+    "group": "product-2"
+  }
+]

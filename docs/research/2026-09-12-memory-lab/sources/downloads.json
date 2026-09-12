@@ -1,0 +1,44 @@
+[
+  {
+    "file": "locomo10.json",
+    "url": "https://raw.githubusercontent.com/snap-research/locomo/main/data/locomo10.json",
+    "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4",
+    "bytes": 2805274,
+    "retrieved": "2026-09-12T00:24:29.224914+00:00"
+  },
+  {
+    "file": "locomo-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/snap-research/locomo/main/LICENSE.txt",
+    "sha256": "41003d4a74749c0220e33dd415042164b5a1093ed401f36277234f772d22d3d0",
+    "bytes": 19347,
+    "retrieved": "2026-09-12T00:24:29.225427+00:00"
+  },
+  {
+    "file": "longmemeval-README.md",
+    "url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/raw/98d7416c24c778c2fee6e6f3006e7a073259d48f/README.md",
+    "sha256": "fe31783d4e5d132681a25e4192e85def8edd214094939879f5283818c0a4a3e0",
+    "bytes": 626,
+    "retrieved": "2026-09-12T00:24:29.225522+00:00"
+  },
+  {
+    "file": "longmemeval_s_cleaned.json",
+    "url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_s_cleaned.json",
+    "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+    "bytes": 277383467,
+    "retrieved": "2026-09-12T00:24:29.225581+00:00"
+  },
+  {
+    "file": "mab-conflict.parquet",
+    "url": "https://huggingface.co/datasets/ai-hyz/MemoryAgentBench/resolve/7ea066982b140a19337e17e60d45d4076e042faf/data/Conflict_Resolution-00000-of-00001.parquet",
+    "sha256": "24d5c3f09ce0ce15625cb9f8a98f44f0d864ca6c94d7b4ad04eb697ca3a5ff45",
+    "bytes": 1491588,
+    "retrieved": "2026-09-12T00:27:35.373008+00:00"
+  },
+  {
+    "file": "mab-README.md",
+    "url": "https://huggingface.co/datasets/ai-hyz/MemoryAgentBench/raw/7ea066982b140a19337e17e60d45d4076e042faf/README.md",
+    "sha256": "5a9fd0dc2fbab5beb081eae40f24964ad1e47da75b9a7a01f0007791845b1580",
+    "bytes": 9883,
+    "retrieved": "2026-09-12T01:03:03.074174+00:00"
+  }
+]

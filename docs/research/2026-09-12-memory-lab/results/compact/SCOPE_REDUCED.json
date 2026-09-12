@@ -1,0 +1,4 @@
+{
+  "reason": "Sensitivity check bounded to one complete synthetic project after its 21 answers finished. LoCoMo build interrupted to limit optional compute. No partial LoCoMo scores reported. The complete subset is replayed as compact-product using identical cached model requests.",
+  "at": "2026-09-12T01:14:12.548232+00:00"
+}
