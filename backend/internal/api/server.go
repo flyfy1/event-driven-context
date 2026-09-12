@@ -19,6 +19,7 @@ import (
 	"event-driven-context/internal/automation"
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/mcpserver"
+	"event-driven-context/internal/transcription"
 )
 
 func Handler(store *core.Store, allowedOrigins []string) http.Handler {
@@ -32,6 +33,7 @@ type Config struct {
 	Automation          *automation.Coordinator
 	IntegAuth           IntegAuthConfig
 	AdminUsers          []string
+	AudioTranscriber    transcription.Transcriber
 }
 
 func HandlerWithConfig(store *core.Store, config Config) http.Handler {

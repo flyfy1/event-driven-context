@@ -179,9 +179,10 @@ type StatesResult struct {
 }
 
 type Permissions struct {
-	ReadEvents  []string `json:"read_events" yaml:"read_events"`
-	WriteEvents []string `json:"write_events" yaml:"write_events"`
-	WriteState  []string `json:"write_state" yaml:"write_state"`
+	OrganizeNotes bool     `json:"organize_notes,omitempty" yaml:"organize_notes"`
+	ReadEvents    []string `json:"read_events" yaml:"read_events"`
+	WriteEvents   []string `json:"write_events" yaml:"write_events"`
+	WriteState    []string `json:"write_state" yaml:"write_state"`
 }
 type Manifest struct {
 	ID             string             `json:"id" yaml:"id"`
@@ -268,6 +269,7 @@ type ServiceAPI interface {
 	GetState(context.Context, string, GetStateInput) (StatesResult, error)
 	PutState(context.Context, string, PutStateInput) (State, error)
 	InstallPlugin(context.Context, string, InstallPluginInput) (InstallPluginResult, error)
+	EnsureBuiltinPlugin(context.Context, string, Manifest, json.RawMessage) (PluginPrincipal, Installation, error)
 	ListPlugins(context.Context, string) ([]Installation, error)
 	RevisePlugin(context.Context, string, string, RevisePluginInput) (Installation, error)
 	SetPluginStatus(context.Context, string, string, string) (Installation, error)
