@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"event-driven-context/internal/buildinfo"
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/v2"
 )
@@ -83,6 +84,7 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body io.Re
 	if c.Token != "" {
 		r.Header.Set("Authorization", "Bearer "+c.Token)
 	}
+	r.Header.Set("User-Agent", "edc/"+buildinfo.Version)
 	return r, nil
 }
 
@@ -128,8 +130,9 @@ func decodeJSON(r io.Reader, limit int64, out any) error {
 	if int64(len(b)) > limit {
 		return fmt.Errorf("server response exceeds %d byte limit", limit)
 	}
+	// Server responses may gain additive fields without breaking older clients.
+	// Request/configuration decoders remain strict at their trust boundaries.
 	d := json.NewDecoder(bytes.NewReader(b))
-	d.DisallowUnknownFields()
 	if err := d.Decode(out); err != nil {
 		return fmt.Errorf("invalid server JSON: %w", err)
 	}

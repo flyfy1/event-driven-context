@@ -137,6 +137,18 @@ Login stores a token valid for 30 days in `event-driven-context/config.json` und
 
 `EDC_SERVER`, `EDC_CONFIG`, and `EDC_TOKEN` can be set. A token stored in a config file is only used for the server it is bound to; switching `--server` will not send the old server's token to the new server. The CLI only permits plaintext HTTP for loopback addresses. Remote addresses require HTTPS, and automatic redirects are rejected.
 
+### CLI Version and Updates
+
+```sh
+edc version
+edc update --check
+edc update
+```
+
+The V2 server publishes the recommended CLI version, minimum compatible version, and official GitHub Release location at the unauthenticated `GET /.well-known/edc-cli` endpoint. `edc status` reports the installed version, compatibility, and available update under `cli`. Interactive commands warn on stderr at most once per day without changing their JSON stdout; hook, MCP, and long-running host commands never perform an update check. Set `EDC_UPDATE_CHECK=off` to disable reminders from ordinary commands; explicit `version`, `status`, and `update` commands remain available.
+
+`edc update` never installs silently. Only an explicit invocation downloads the release asset for the current OS and architecture, verifies its SHA-256 using the GitHub release digest or `checksums.txt`, retains a no-clobber backup beside the current executable, and atomically replaces it with a same-directory rename. Source builds use `make build`, which embeds the Git commit and build time. Tagged releases use `.github/workflows/release-cli.yml` to cross-compile CLI assets for `darwin/arm64`, `darwin/amd64`, `linux/amd64`, and `linux/arm64`.
+
 ## Data Contract
 
 Example event:

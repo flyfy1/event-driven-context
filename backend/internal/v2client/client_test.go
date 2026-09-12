@@ -68,6 +68,18 @@ func TestAddMemberByEmailSendsOnlyEmailIdentifier(t *testing.T) {
 	}
 }
 
+func TestResponseAllowsAdditiveFieldsAndSendsVersion(t *testing.T) {
+	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if !strings.HasPrefix(r.Header.Get("User-Agent"), "edc/v") {
+			t.Errorf("user agent = %q", r.Header.Get("User-Agent"))
+		}
+		_, _ = io.WriteString(w, `{"projects":[],"future_server_field":true}`)
+	})
+	if _, err := c.ListProjects(context.Background()); err != nil {
+		t.Fatalf("additive response field was rejected: %v", err)
+	}
+}
+
 func TestRecordEventsReturnsPartialResultAndError(t *testing.T) {
 	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(v2.RecordEventsResult{Results: []v2.EventWriteResult{

@@ -1,0 +1,43 @@
+name: Release CLI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - name: Verify and build release assets
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+          RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          cd backend
+          source_version="$(go run ./cmd/edc version | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')"
+          test "$source_version" = "$RELEASE_VERSION"
+          go test ./internal/buildinfo ./internal/updater ./internal/v2client ./cmd/edc
+          mkdir -p ../dist
+          built_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          ldflags="-s -w -X event-driven-context/internal/buildinfo.Version=$RELEASE_VERSION -X event-driven-context/internal/buildinfo.Commit=$RELEASE_COMMIT -X event-driven-context/internal/buildinfo.BuiltAt=$built_at"
+          for target in darwin/arm64 darwin/amd64 linux/amd64 linux/arm64; do
+            os="${target%/*}"
+            arch="${target#*/}"
+            CGO_ENABLED=0 GOOS="$os" GOARCH="$arch" go build -trimpath -ldflags="$ldflags" -o "../dist/edc-$os-$arch" ./cmd/edc
+          done
+          cd ../dist
+          sha256sum edc-* > checksums.txt
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" dist/edc-* dist/checksums.txt --verify-tag --generate-notes --title "Event-driven Context CLI ${{ github.ref_name }}"

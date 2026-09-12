@@ -104,6 +104,7 @@ Plugins extend only three capabilities: appending derived Events, publishing the
 | State | list, get by key/version, put | `list_state`, `get_state`, `put_state` | App reviews, session context, Web state, and CLI use the same version and lag |
 | Plugin management | install, list, patch, run, delete | Not exposed | The Web, App, and CLI manage installations; processors hold only plugin tokens |
 | Conversation integration | Local agents invoke HTTP through the CLI; remote agents use `/mcp` | Standard remote toolset | Local Codex / Claude Code executes `edc` directly; it does not register MCP; `edc mcp` is retained only for compatibility |
+| CLI release policy | Public `GET /.well-known/edc-cli`; every V2 response carries the server version | Not exposed | `edc status` and `edc update --check` compare semantic versions; only explicit `edc update` installs a checksum-verified release |
 
 Project, Event, File, State, and plugin identifiers must also appear in the path or authentication boundary. Adapters must not trust only the project, actor, producer, or plugin ID in a request body; responses must also prevent data from another project from being treated as a successful result.
 
@@ -172,6 +173,7 @@ The same facts use consistent states across the Web, Android, and CLI:
 - source and actor are displayed separately; agent notes, a user's original words, plugin-derived content, and State must not impersonate one another.
 - The team Event view displays the actor username (and ID when needed), recorded_at, and source channel; the project-members entry point displays current members and allows an owner to add a registered username.
 - All four target languages cover the same flows, validation, errors, empty states, and cross-page selection; generated-content language is controlled by plugin configuration, while transcription preserves the original language.
+- Interactive CLI commands may check the selected server's cached release policy and write a reminder only to stderr, at most once per day. Hooks, MCP, and long-running hosts never perform this check, JSON stdout is unchanged, and installation occurs only after an explicit `edc update`.
 
 The Web first provides project records, project state, integration, member sharing, restorable URL routing, and plugin management. After the primary Web flow, Android continues to provide Record, Review, and Mine, reusing the same project, plugin, and State interfaces. The interface prioritizes names and results that users can understand; IDs are used for provenance and diagnosis.
 

@@ -104,6 +104,7 @@ State 是插件发布的可重建项目视图，不是原始记录。key 使用 
 | State | list、按 key/version get、put | `list_state`、`get_state`、`put_state` | App 回顾、会话背景、网页状态与 CLI 使用同一版本和 lag |
 | 插件管理 | install、list、patch、run、delete | 不暴露 | 网页、App 与 CLI 管理安装；处理器只持插件令牌 |
 | 对话接入 | 本地 Agent 经 CLI 调用 HTTP；远程 Agent 使用 `/mcp` | 远程标准工具集 | 本地 Codex / Claude Code 直接执行 `edc`；不注册 MCP；`edc mcp` 仅保留兼容能力 |
+| CLI 发布策略 | 公开 `GET /.well-known/edc-cli`；所有 V2 响应携带服务端版本 | 不暴露 | `edc status` 与 `edc update --check` 比较语义化版本；只有显式 `edc update` 才安装经校验的 release |
 
 项目、事件、文件、State 和插件的标识必须同时出现在路径或认证边界内。适配器不得仅相信请求体中的项目、actor、producer 或 plugin ID；响应也要防止把另一个项目的数据当成成功结果。
 
@@ -172,6 +173,7 @@ Web 默认从 Context 后端进入 Integ.Life 中心 Google 登录。产品后�
 - source 与 actor 分开显示；agent note、用户原话、插件 derived 和 State 不能互相冒充。
 - 团队 Event 视图显示 actor username（必要时 ID）、recorded_at 和 source channel；项目成员入口显示当前成员，并允许 owner 添加已注册用户名。
 - 四种目标语言覆盖同一流程、校验、错误、空状态和跨页选择；生成内容语言由插件配置决定，转录保留原语言。
+- 交互式 CLI 命令可读取所选服务端的缓存发布策略，每天至多只向 stderr 提醒一次。hook、MCP 和长期运行的 host 从不执行该检查，JSON stdout 不变；只有显式运行 `edc update` 才会安装。
 
 网页先提供项目记录、项目状态、接入、成员共享、可恢复 URL 路由和插件管理。Android 在 Web 主链之后继续提供记录、回顾、我的，并复用相同项目、插件和 State 接口。界面优先显示用户可理解的名称与结果，ID 用于来源和诊断。
 

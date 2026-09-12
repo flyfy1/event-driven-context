@@ -571,7 +571,8 @@ Global arguments are `--server` and `--config`. Commands that require a project 
 | `edc register` / `login` / `logout` / `whoami` | Account and login |
 | `edc project create` / `list` / `members` / `add-member` | Projects and members |
 | `edc link [PROJECT_ID]` | Link the current directory to a project; without an argument, display the current link |
-| `edc status` | Display the linked project, hook status, most recent push time, and pending queue |
+| `edc status` | Display the linked project, hook status, most recent push time, pending queue, installed CLI version, compatibility, and available update |
+| `edc version` / `edc update [--check]` | Inspect build identity, check the selected server's CLI policy, or explicitly install a checksum-verified GitHub Release |
 | `edc push` | Push events: text, `--file`, `--json`, or `--jsonl`; automatically add UUIDs, redact, and queue offline |
 | `edc query` / `edc get EVENT_ID` / `edc metadata` | Query and read events |
 | `edc file get FILE_ID [-o PATH]` | Download the original file bytes |

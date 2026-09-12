@@ -37,8 +37,11 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 make check
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags='-s -w' -o "$TEMP_DIR/edc-server" ./cmd/edc-server
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags='-s -w' -o "$TEMP_DIR/edc" ./cmd/edc
+BUILD_COMMIT="$(git rev-parse HEAD)"
+BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+BUILD_LDFLAGS="-s -w -X event-driven-context/internal/buildinfo.Commit=$BUILD_COMMIT -X event-driven-context/internal/buildinfo.BuiltAt=$BUILD_DATE"
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags="$BUILD_LDFLAGS" -o "$TEMP_DIR/edc-server" ./cmd/edc-server
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags="$BUILD_LDFLAGS" -o "$TEMP_DIR/edc" ./cmd/edc
 cp -R backend/plugins "$TEMP_DIR/plugins"
 cp deploy/production/context-api.service "$TEMP_DIR/$SERVICE.service"
 cp deploy/production/context-api.caddy "$TEMP_DIR/$SERVICE.Caddyfile"

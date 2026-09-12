@@ -571,7 +571,8 @@ MCP 面向对话 agent。插件安装、暂停等管理操作在 App、网页和
 | `edc register` / `login` / `logout` / `whoami` | 账号与登录 |
 | `edc project create` / `list` / `members` / `add-member` | 项目与成员 |
 | `edc link [PROJECT_ID]` | 把当前目录绑定到项目；不带参数时显示当前绑定 |
-| `edc status` | 显示绑定项目、hook 状态、最近推送时间、待发队列 |
+| `edc status` | 显示绑定项目、hook 状态、最近推送时间、待发队列、本机 CLI 版本、兼容性和可用更新 |
+| `edc version` / `edc update [--check]` | 查看构建身份、检查所选服务端的 CLI 策略，或显式安装经校验的 GitHub Release |
 | `edc push` | 推送事件：文本、`--file`、`--json`、`--jsonl`；自动补 UUID、脱敏、离线排队 |
 | `edc query` / `edc get EVENT_ID` / `edc metadata` | 查询与读取事件 |
 | `edc file get FILE_ID [-o PATH]` | 下载文件原始字节 |

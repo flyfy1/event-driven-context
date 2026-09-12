@@ -137,6 +137,18 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 
 可设置 `EDC_SERVER`、`EDC_CONFIG`、`EDC_TOKEN`。配置中的令牌只用于其绑定的服务器，切换 `--server` 不会把旧服务器令牌发过去。CLI 只允许 loopback 使用明文 HTTP，远程地址要求 HTTPS，并拒绝自动重定向。
 
+### CLI 版本与更新
+
+```sh
+edc version
+edc update --check
+edc update
+```
+
+V2 服务通过无需认证的 `GET /.well-known/edc-cli` 公布当前推荐版本、最低兼容版本和官方 GitHub Release 地址。`edc status` 在 `cli` 字段中显示本机版本、兼容性和可用更新。交互式 CLI 命令每天至多在 stderr 提醒一次，不改变 stdout 的 JSON；`hook`、`mcp` 和长期运行的 host 不执行更新检查。设置 `EDC_UPDATE_CHECK=off` 可关闭普通命令的提醒，显式 `version`、`status` 和 `update` 仍然可用。
+
+`edc update` 不会静默安装：只有用户明确运行该命令时，CLI 才下载当前系统与架构对应的 release asset，按 GitHub release digest 或 `checksums.txt` 校验 SHA-256，在现有二进制旁保留一个不可覆盖的备份，再以同目录 rename 原子替换。源码构建可运行 `make build`；该构建会嵌入 Git commit 和构建时间。正式 tag 由 `.github/workflows/release-cli.yml` 交叉编译 `darwin/arm64`、`darwin/amd64`、`linux/amd64` 和 `linux/arm64` 四个 CLI 产物。
+
 ## 数据契约
 
 事件示例：

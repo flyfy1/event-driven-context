@@ -15,6 +15,7 @@ import (
 
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/processorhost"
+	"event-driven-context/internal/updater"
 	"event-driven-context/internal/v2client"
 	"golang.org/x/term"
 )
@@ -24,6 +25,7 @@ const help = `edc — append-only project context
 Usage: edc [--server URL] [--config PATH] COMMAND
 
 Commands:
+  version | update [--check]
   register --username NAME --email ADDRESS | login | logout | whoami
   project create | list | members | add-member
   link [PROJECT_ID] | status
@@ -62,6 +64,8 @@ type app struct {
 	ctx           context.Context
 	io            streams
 	client        *v2client.Client
+	updates       *updater.Client
+	executable    string
 	configPath    string
 	config        config
 	server, token string
@@ -97,6 +101,10 @@ func run(ctx context.Context, args []string, ioStreams streams) error {
 		_, err = fmt.Fprint(ioStreams.out, help)
 		return err
 	}
+	if args[0] == "version" {
+		a := &app{ctx: ctx, io: ioStreams}
+		return a.version(args[1:])
+	}
 	cfg, err := readConfig(*configPath)
 	if err != nil {
 		return err
@@ -116,11 +124,25 @@ func run(ctx context.Context, args []string, ioStreams streams) error {
 	if err != nil {
 		return err
 	}
-	a := &app{ctx: ctx, io: ioStreams, client: c, configPath: *configPath, config: cfg, server: *server, token: token}
-	return a.dispatch(args[0], args[1:])
+	executable, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	a := &app{ctx: ctx, io: ioStreams, client: c, updates: updater.New(), executable: executable, configPath: *configPath, config: cfg, server: *server, token: token}
+	if err = a.dispatch(args[0], args[1:]); err != nil {
+		return err
+	}
+	a.maybeNotifyUpdate(args[0])
+	return nil
 }
 
 func (a *app) dispatch(command string, args []string) error {
+	if command == "version" {
+		return a.version(args)
+	}
+	if command == "update" {
+		return a.update(args)
+	}
 	if command == "register" || command == "login" {
 		return a.auth(command, args)
 	}

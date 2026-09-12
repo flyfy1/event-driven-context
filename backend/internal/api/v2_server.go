@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"event-driven-context/internal/buildinfo"
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/mcpserver"
 	"event-driven-context/internal/v2"
@@ -22,8 +23,11 @@ func V2Handler(store *core.Store, service v2.ServiceAPI, allowedOrigins []string
 func V2HandlerWithConfig(store *core.Store, service v2.ServiceAPI, config Config) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /agent-setup.md", agentSetupHandler(config))
+	mux.HandleFunc("GET /.well-known/edc-cli", func(w http.ResponseWriter, _ *http.Request) {
+		respond(w, http.StatusOK, buildinfo.CurrentCLIPolicy())
+	})
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
-		respond(w, http.StatusOK, map[string]string{"status": "ok", "api": "v2"})
+		respond(w, http.StatusOK, map[string]string{"status": "ok", "api": "v2", "version": buildinfo.Version})
 	})
 	gate := newAuthGate()
 	mux.Handle("POST /v1/auth/register", gate.wrap(jsonEndpoint(http.StatusCreated, store.Register)))
@@ -66,6 +70,7 @@ func v2HTTPMiddleware(next http.Handler, config Config) http.Handler {
 			requestID = "req_" + strings.ToLower(rand.Text())
 		}
 		w.Header().Set("X-Request-ID", requestID)
+		w.Header().Set("X-EDC-Server-Version", buildinfo.Version)
 		logged := &statusWriter{ResponseWriter: w, status: http.StatusOK}
 		started := time.Now()
 		defer func() {

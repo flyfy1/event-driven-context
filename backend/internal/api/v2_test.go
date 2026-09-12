@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	"event-driven-context/internal/buildinfo"
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/v2"
 )
@@ -50,6 +51,21 @@ func TestFailV2ReportsInsufficientStorage(t *testing.T) {
 	}
 	if payload.Error.Code != "storage_unavailable" {
 		t.Fatalf("error code = %q, want storage_unavailable", payload.Error.Code)
+	}
+}
+
+func TestCLIUpdatePolicyIsPublicAndVersioned(t *testing.T) {
+	f := newV2APIFixture(t)
+	w := f.request(t, http.MethodGet, "/.well-known/edc-cli", "", "", nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", w.Code, w.Body.String())
+	}
+	policy := decodeV2Response[buildinfo.CLIPolicy](t, w)
+	if policy.LatestVersion != buildinfo.Version || policy.MinimumVersion != buildinfo.MinimumCLIVersion || policy.ReleaseAPIURL == "" {
+		t.Fatalf("policy = %#v", policy)
+	}
+	if got := w.Header().Get("X-EDC-Server-Version"); got != buildinfo.Version {
+		t.Fatalf("server version header = %q", got)
 	}
 }
 
