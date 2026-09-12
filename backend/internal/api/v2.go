@@ -37,6 +37,8 @@ func v2SubjectFrom(ctx context.Context) v2Subject {
 // Authentication endpoints and OAuth discovery are registered by the outer
 // handler because they continue to use the identity database in core.Store.
 func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.ServiceAPI, config Config) {
+	registerNotesHandlers(mux, store, service, config)
+	registerNotesOrganizerHandlers(mux, store, service, config)
 	readUser := func(next http.Handler) http.Handler { return v2UserAuthenticated(store, config, core.ScopeRead, next) }
 	writeUser := func(next http.Handler) http.Handler { return v2UserAuthenticated(store, config, core.ScopeWrite, next) }
 	readSubject := func(next http.Handler) http.Handler {

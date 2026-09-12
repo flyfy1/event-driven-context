@@ -1,0 +1,22 @@
+{
+  "id": "notes-indexer",
+  "version": "0.1.0",
+  "name": "Notes indexer",
+  "description": "Organizes project events into source-linked daily, persons, topics, and goals notes using the built-in bounded agent runtime.",
+  "skills": [],
+  "state": [],
+  "session_context": [],
+  "processor": {
+    "runs_in": "host",
+    "entry": { "type": "agent", "protocol": "edc-notes-v1" },
+    "input": { "types": ["note", "derived", "log"] },
+    "limits": { "timeout_seconds": 300 }
+  },
+  "config": {},
+  "permissions": {
+    "read_events": ["note", "derived", "log"],
+    "write_events": [],
+    "write_state": [],
+    "organize_notes": true
+  }
+}

@@ -179,9 +179,10 @@ type StatesResult struct {
 }
 
 type Permissions struct {
-	ReadEvents  []string `json:"read_events" yaml:"read_events"`
-	WriteEvents []string `json:"write_events" yaml:"write_events"`
-	WriteState  []string `json:"write_state" yaml:"write_state"`
+	OrganizeNotes bool     `json:"organize_notes,omitempty" yaml:"organize_notes"`
+	ReadEvents    []string `json:"read_events" yaml:"read_events"`
+	WriteEvents   []string `json:"write_events" yaml:"write_events"`
+	WriteState    []string `json:"write_state" yaml:"write_state"`
 }
 type Manifest struct {
 	ID             string             `json:"id" yaml:"id"`

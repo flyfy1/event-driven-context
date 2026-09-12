@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
-	"time"
 
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/processorhost"
@@ -32,6 +31,7 @@ Commands:
   query | get EVENT_ID | metadata
   file get FILE_ID
   state list | get | put
+  notes sync --project ID --output DIR
   plugin install | list | config | pause | resume | rerun | remove
   pull --after SEQUENCE
   hook CLIENT | setup CLIENT [--apply]
@@ -123,7 +123,7 @@ func (a *app) dispatch(command string, args []string) error {
 	if command == "register" || command == "login" {
 		return a.auth(command, args)
 	}
-	if a.token == "" {
+	if a.token == "" && command != "host" {
 		return fmt.Errorf("login first or set EDC_TOKEN")
 	}
 	switch command {
@@ -164,6 +164,8 @@ func (a *app) dispatch(command string, args []string) error {
 		return a.metadata(args)
 	case "file":
 		return a.file(args)
+	case "notes":
+		return a.notes(args)
 	case "state":
 		return a.state(args)
 	case "plugin":
@@ -199,9 +201,12 @@ func (a *app) host(args []string) error {
 	timeout := f.Duration("timeout", 0, "processor timeout override (default from manifest)")
 	once := f.Bool("once", false, "run one processor pass")
 	watch := f.Bool("watch", false, "keep checking the processor schedule and event cursor")
-	interval := f.Duration("interval", 30*time.Second, "watch check interval")
+	interval := f.Duration("interval", 0, "watch interval (default 15s for notes-indexer, 30s otherwise)")
 	if err := parse(f, args[1:]); err != nil {
 		return err
+	}
+	if a.token == "" && strings.TrimSpace(*projectID) == "" {
+		return fmt.Errorf("--project is required when running the host with only a plugin token")
 	}
 	if err := a.requiredProject(projectID); err != nil {
 		return err
@@ -234,6 +239,9 @@ func (a *app) host(args []string) error {
 	}
 	opts.OnResult = func(result processorhost.Result, runErr error) {
 		if runErr == nil {
+			if result.PluginID == "notes-indexer" && result.Noop {
+				return
+			}
 			_ = json.NewEncoder(a.io.out).Encode(result)
 			return
 		}

@@ -1,0 +1,29 @@
+[Unit]
+Description=Event-driven Context notes indexer
+After=network-online.target event-context.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=yycy
+Group=context-admins
+UMask=0077
+WorkingDirectory=/var/lib/event-driven-context
+Environment=HOME=/home/yycy
+Environment=EDC_SERVER=http://127.0.0.1:8401
+Environment=EDC_NOTES_CODEX=/home/yycy/.local/bin/codex
+# Required file defines EDC_NOTES_PROJECT and may override EDC_NOTES_CODEX.
+EnvironmentFile=/etc/event-context-notes.env
+ExecStart=/opt/event-driven-context/current/edc host run --project ${EDC_NOTES_PROJECT} --plugin notes-indexer --plugin-dir /opt/event-driven-context/current/plugins --plugin-token-file /var/lib/event-driven-context/notes-indexer.token --agent-command ${EDC_NOTES_CODEX} --watch --interval 15s
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=30
+KillMode=control-group
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=false
+ReadWritePaths=/var/lib/event-driven-context -/home/yycy/.codex
+
+[Install]
+WantedBy=multi-user.target

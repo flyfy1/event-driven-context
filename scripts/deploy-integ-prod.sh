@@ -20,6 +20,8 @@ fi
 
 make check
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags='-s -w' -o "$TEMP_DIR/edc-server" ./cmd/edc-server
+GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags='-s -w' -o "$TEMP_DIR/edc" ./cmd/edc
+cp -R backend/plugins "$TEMP_DIR/plugins"
 cp deploy/production/context-api.service "$TEMP_DIR/$SERVICE.service"
 cp deploy/production/context-api.caddy "$TEMP_DIR/$SERVICE.Caddyfile"
 cp deploy/production/event-context-proxy.service "$TEMP_DIR/$PROXY_SERVICE.service"
@@ -29,7 +31,7 @@ cp -R backend/skills "$TEMP_DIR/skills"
 
 gcloud compute ssh "$INSTANCE" --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" --command "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
 gcloud compute scp --recurse --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" \
-  "$TEMP_DIR/edc-server" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/$SERVICE.Caddyfile" "$TEMP_DIR/$PROXY_SERVICE.service" "$TEMP_DIR/context-service-admin" "$TEMP_DIR/context-service-admin.sudoers" \
+  "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/$SERVICE.Caddyfile" "$TEMP_DIR/$PROXY_SERVICE.service" "$TEMP_DIR/context-service-admin" "$TEMP_DIR/context-service-admin.sudoers" \
   "$TEMP_DIR/skills" \
   "$INSTANCE:/tmp/$SERVICE-$RELEASE_ID/"
 
@@ -45,10 +47,11 @@ shared_group="context-admins"
 stage_dir="/tmp/${service}-${release_id}"
 release_dir="${remote_root}/releases/${release_id}"
 old_target=""
+notes_was_active=""
 
 cleanup() { rm -rf "$stage_dir"; }
 trap cleanup EXIT
-if [[ ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/$service.Caddyfile" || ! -f "$stage_dir/event-context-proxy.service" || ! -x "$stage_dir/context-service-admin" || ! -f "$stage_dir/context-service-admin.sudoers" || ! -f "$stage_dir/skills/audio-transcribe/SKILL.md" || ! -f "$stage_dir/skills/daily-review/SKILL.md" ]]; then
+if [[ ! -x "$stage_dir/edc" || ! -f "$stage_dir/plugins/notes-indexer/manifest.json" || ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/$service.Caddyfile" || ! -f "$stage_dir/event-context-proxy.service" || ! -x "$stage_dir/context-service-admin" || ! -f "$stage_dir/context-service-admin.sudoers" || ! -f "$stage_dir/skills/audio-transcribe/SKILL.md" || ! -f "$stage_dir/skills/daily-review/SKILL.md" ]]; then
   echo "incomplete staged release" >&2
   exit 1
 fi
@@ -65,6 +68,10 @@ fi
 usermod -aG "$shared_group" "$runtime_user"
 usermod -aG "$shared_group" songyy
 
+if systemctl is-active --quiet event-context-notes.service; then
+  notes_was_active=yes
+  systemctl stop event-context-notes.service
+fi
 systemctl stop "$service.service" || true
 install -d -o "$runtime_user" -g "$shared_group" -m 2770 "$remote_data"
 backup_dir="$remote_data/backups"
@@ -85,12 +92,16 @@ install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root"
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root/releases"
 chown -R "$runtime_user:$shared_group" "$remote_data" "$remote_root"
 chmod -R g+rwX "$remote_data" "$remote_root"
+if [[ -f "$remote_data/notes-indexer.token" ]]; then chmod 0600 "$remote_data/notes-indexer.token"; fi
 # Backups contain password and token hashes; keep them private to the runtime
 # account even though live event data and releases are shared with admins.
 find "$backup_dir" -type f -exec chmod 0600 {} +
 find "$remote_data" "$remote_root" -type d -exec chmod g+s {} +
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$release_dir"
 install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc-server" "$release_dir/edc-server"
+install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc" "$release_dir/edc"
+cp -R "$stage_dir/plugins" "$release_dir/plugins"
+chown -R "$runtime_user:$shared_group" "$release_dir/plugins"
 install -d -o "$runtime_user" -g "$shared_group" -m 0755 "$release_dir/skills/audio-transcribe" "$release_dir/skills/daily-review"
 install -o "$runtime_user" -g "$shared_group" -m 0644 "$stage_dir/skills/audio-transcribe/SKILL.md" "$release_dir/skills/audio-transcribe/SKILL.md"
 install -o "$runtime_user" -g "$shared_group" -m 0644 "$stage_dir/skills/daily-review/SKILL.md" "$release_dir/skills/daily-review/SKILL.md"
@@ -119,8 +130,10 @@ done
 if [[ -z "$healthy" ]]; then
   systemctl status "$service.service" --no-pager >&2 || true
   if [[ -n "$old_target" ]]; then ln -sfn "$old_target" "$remote_root/current"; systemctl restart "$service.service"; else systemctl disable --now "$service.service" || true; fi
+  if [[ -n "$notes_was_active" ]]; then systemctl start event-context-notes.service; fi
   exit 1
 fi
+if [[ -n "$notes_was_active" ]]; then systemctl start event-context-notes.service; fi
 REMOTE_SCRIPT
 
 echo "Deployed $SERVICE release $RELEASE_ID"

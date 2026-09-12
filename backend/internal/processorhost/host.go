@@ -48,6 +48,7 @@ type Result struct {
 	ThroughSequence int64    `json:"through_sequence"`
 	StateVersion    int64    `json:"state_version,omitempty"`
 	CursorVersion   int64    `json:"cursor_version,omitempty"`
+	NotesRevision   int64    `json:"notes_revision,omitempty"`
 	Noop            bool     `json:"noop"`
 	ScheduledDate   string   `json:"scheduled_date,omitempty"`
 	ScheduledAt     string   `json:"scheduled_at,omitempty"`
@@ -58,8 +59,7 @@ type Result struct {
 	Reason          string   `json:"reason,omitempty"`
 }
 
-// Run is the long-lived host entrypoint. V2 currently supports an explicit
-// single run only; callers must set Once so the command cannot imply a daemon.
+// Run executes one processor pass or watches for new work until canceled.
 func Run(ctx context.Context, control *v2client.Client, opts Options) error {
 	if opts.Once == opts.Watch {
 		return fmt.Errorf("choose exactly one of one-shot or watch mode")
@@ -73,19 +73,30 @@ func Run(ctx context.Context, control *v2client.Client, opts Options) error {
 	}
 	if opts.Interval <= 0 {
 		opts.Interval = 30 * time.Second
+		if opts.PluginID == notesPluginID {
+			opts.Interval = 15 * time.Second
+		}
 	}
 	if opts.Interval < time.Second {
 		return fmt.Errorf("watch interval must be at least 1s")
 	}
+	var backoff time.Duration
 	for {
 		result, err := RunOnce(ctx, control, opts)
 		if opts.OnResult != nil {
 			opts.OnResult(result, err)
 		}
+		delay := opts.Interval
+		if opts.PluginID == notesPluginID {
+			backoff = notesWatchBackoff(opts.Interval, backoff, err != nil)
+			if backoff > 0 {
+				delay = backoff
+			}
+		}
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-time.After(opts.Interval):
+		case <-time.After(delay):
 		}
 	}
 }
@@ -115,12 +126,18 @@ func RunOnce(ctx context.Context, control *v2client.Client, opts Options) (Resul
 	if installation.Status != "active" {
 		return result, fmt.Errorf("plugin %s is %s", opts.PluginID, installation.Status)
 	}
-	if !contains(installation.Permissions.WriteState, "_cursor") {
-		return result, fmt.Errorf("installed plugin does not allow its processor cursor")
-	}
 	localRoot, localManifest, processor, err := loadProcessor(opts.PluginDir, opts.PluginID)
 	if err != nil {
 		return result, err
+	}
+	if localManifest.ID != installation.Manifest.ID || localManifest.Version != installation.Manifest.Version {
+		return result, fmt.Errorf("local plugin manifest does not match installed %s@%s", installation.PluginID, installation.PluginVersion)
+	}
+	if opts.PluginID == notesPluginID {
+		return runNotes(ctx, pluginClient, opts, processor, installation, result)
+	}
+	if !contains(installation.Permissions.WriteState, "_cursor") {
+		return result, fmt.Errorf("installed plugin does not allow its processor cursor")
 	}
 	if opts.Timeout == 0 {
 		if processor.Limits.TimeoutSeconds > 0 {
@@ -131,9 +148,6 @@ func RunOnce(ctx context.Context, control *v2client.Client, opts Options) (Resul
 	}
 	if opts.Timeout > 30*time.Minute {
 		return result, fmt.Errorf("processor manifest timeout must not exceed 30m")
-	}
-	if localManifest.ID != installation.Manifest.ID || localManifest.Version != installation.Manifest.Version {
-		return result, fmt.Errorf("local plugin manifest does not match installed %s@%s", installation.PluginID, installation.PluginVersion)
 	}
 	if processor.Schedule.Time != "" {
 		return runDaily(ctx, pluginClient, opts, localRoot, processor, installation, result)

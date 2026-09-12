@@ -38,11 +38,12 @@ type snapshot struct {
 }
 
 type Service struct {
-	identity *core.Store
-	root     string
-	mu       sync.Mutex
-	data     snapshot
-	lockFile *os.File
+	noteLeases map[string]noteLease
+	identity   *core.Store
+	root       string
+	mu         sync.Mutex
+	data       snapshot
+	lockFile   *os.File
 }
 
 var _ ServiceAPI = (*Service)(nil)

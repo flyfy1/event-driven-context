@@ -31,10 +31,12 @@ Event-driven Context 是一个本地优先、支持自行部署的开源项目�
 
 ## 产品与设计文档
 
+- [Memory Recall 用户指南](docs/memory-recall.md)：安装检索 Skill，让 Agent 按需读取本地 Notes 并获取来源 Events。
 - [完整产品设计](docs/product.md)：持续记录、按需提取 context、基于 skill 的输入处理与定时服务。
 - [技术设计](docs/technical-design.md)：数据契约、规则、runner、检索、权限和故障恢复。
 - [用户旅程与页面流程](docs/ux-flows.md)：六条用户旅程、信息架构、页面操作与异常反馈。
 - [手机 App 采集流程](docs/mobile-capture-ux.md)：录音后自动保存、上传、整理及离线恢复，是修订后的日常主入口。
+- [Agent 整理的 Notes 设计](docs/notes-design.md)：同一批 Event 的 daily、persons、topics 与 goals 文档视图、组织规则和本地同步契约。
 - [既有第一版范围](docs/mvp.md)：存储、授权和条件查询基线；当前实现已在此基础上加入媒体、context 与固定自动处理链路。
 
 ## 启动
