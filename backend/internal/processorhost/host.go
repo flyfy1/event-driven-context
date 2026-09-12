@@ -560,14 +560,29 @@ func strictJSON(raw []byte, out any) error {
 func runProcess(ctx context.Context, timeout time.Duration, command string, args []string, stdin, dir string) ([]byte, error) {
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	cmd := exec.CommandContext(runCtx, command, args...)
+	cmd := exec.Command(command, args...)
+	configureProcessGroup(cmd)
 	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(stdin)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &limitedWriter{w: &stdout, n: maxProcessorOutput}
 	cmd.Stderr = &limitedWriter{w: &stderr, n: 64 << 10}
-	err := cmd.Run()
-	if runCtx.Err() != nil {
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+	var err error
+	select {
+	case err = <-done:
+	case <-runCtx.Done():
+		terminateProcessGroup(cmd)
+		select {
+		case <-done:
+		case <-time.After(750 * time.Millisecond):
+			killProcessGroup(cmd)
+			<-done
+		}
 		return nil, runCtx.Err()
 	}
 	if err != nil {
