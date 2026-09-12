@@ -7,8 +7,15 @@ attachments. Empty projects show an empty state until notes are published.
 - Filter by path; folders expand with click or arrow keys. Up/Down, Home/End,
   Enter/Space and typing a filename navigate the tree. Only the visible rows and
   the focused row mount, including for the 10,000-file notes limit.
-- CodeMirror provides line numbers, Markdown highlighting, search, folding and
-  undo/redo. Save or Cmd/Ctrl-S saves only the selected file.
+- Switch between **Visual editor** (ProseMirror) and **Raw Markdown** (CodeMirror)
+  using the tabs above the document. Both share the same draft and Save control.
+  The visual toolbar supports headings, emphasis, lists, quotes, code and undo/redo.
+  Raw mode provides line numbers, Markdown highlighting, search and folding.
+  Save or Cmd/Ctrl-S saves only the selected file.
+- Switching modes without editing leaves the source unchanged. Visual edits can
+  normalize Markdown formatting. Metadata stays untouched; advanced syntax such
+  as tables, task lists and HTML appears as preserved source blocks. Use Raw
+  Markdown to edit those blocks. Unsupported input falls back to raw mode.
 - Drafts, undo history, selection, filter and folder expansion survive file and
   project switches in the current session. Reload/close warns about unsaved
   changes. Sign-out asks before discarding drafts. Drafts are not persisted to

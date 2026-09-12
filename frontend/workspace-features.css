@@ -509,3 +509,34 @@ button.danger { border-color: var(--danger); color: var(--danger); }
   #files-tree { height: 200px; }
   #files-editor, .files-placeholder { height: 420px; }
 }
+
+/* Both editor modes share one document draft and the existing Save control. */
+#files-editor { display: flex; flex-direction: column; }
+.file-editor-tabs { display: flex; gap: 4px; padding: 5px 12px; border-bottom: 1px solid var(--line); background: #fbfcfa; }
+.file-editor-tabs button { padding: 6px 10px; background: transparent; color: var(--muted); font-size: 12px; }
+.file-editor-tabs button[aria-selected="true"] { background: var(--mint); color: var(--dark); font-weight: 700; }
+.file-editor-tabs button:focus-visible, .visual-format-button:focus-visible { outline: 2px solid var(--leaf); outline-offset: -2px; }
+.file-editor-pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.file-editor-pane[hidden], .file-editor-mode-message[hidden], .visual-editor-note[hidden] { display: none; }
+.file-editor-mode-message, .visual-editor-note { margin: 0; padding: 7px 14px; font-size: 12px; color: var(--muted); background: #f8faf7; border-bottom: 1px solid var(--line); }
+.visual-format-toolbar { display: flex; flex-wrap: wrap; gap: 3px; padding: 5px 10px; border-bottom: 1px solid var(--line); }
+.visual-format-button { min-width: 29px; padding: 4px 7px; background: transparent; font-size: 13px; }
+.visual-format-button[aria-pressed="true"] { background: var(--mint); }
+.visual-format-button:disabled { opacity: .35; cursor: default; }
+.visual-editor-surface { flex: 1; min-height: 0; overflow: auto; }
+.visual-editor-surface .ProseMirror { min-height: 100%; outline: none; padding: 20px 24px; line-height: 1.65; font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ProseMirror h1 { font-size: 28px; line-height: 1.25; margin: 0 0 16px; }
+.ProseMirror h2 { font-size: 23px; margin: 20px 0 12px; }
+.ProseMirror h3 { font-size: 19px; margin: 16px 0 8px; }
+.ProseMirror p { margin: 0 0 12px; }
+.ProseMirror ul, .ProseMirror ol { padding-left: 24px; }
+.ProseMirror li p { margin-bottom: 4px; }
+.ProseMirror blockquote { margin: 12px 0; padding: 0 16px; border-left: 3px solid var(--leaf); color: var(--muted); }
+.ProseMirror pre { white-space: pre-wrap; padding: 12px; background: #f0f3ee; border-radius: 4px; font: 12px/1.6 var(--mono); }
+.ProseMirror code { background: #f0f3ee; }
+.ProseMirror a { color: var(--leaf); text-decoration: underline; }
+.ProseMirror img { max-width: 100%; height: auto; }
+.ProseMirror-selectednode { outline: 2px solid var(--leaf); }
+.visual-source-block { border: 1px dashed #bcc7bd; color: var(--muted); }
+.visual-source-inline { border-bottom: 1px dashed #bcc7bd; }
+@media (max-width: 760px) { .visual-editor-surface .ProseMirror { padding: 16px; } }

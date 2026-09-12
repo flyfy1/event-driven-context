@@ -22,6 +22,8 @@ git clone --quiet --branch gh-pages "git@github.com:${REPOSITORY}.git" "$TEMP_DI
 rsync -a --delete \
   --exclude '.git' \
   --exclude '.DS_Store' \
+  --exclude 'node_modules/' \
+  --exclude '/editor-src/' \
   --exclude '/skills/' \
   frontend/ "$TEMP_DIR/site/"
 
