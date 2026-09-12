@@ -41,6 +41,7 @@ const state = {
   events: [], cursor: "", latestSequence: 0, eventsStatus: "idle", eventsError: "", eventsRequest: 0,
   metadataFields: [], metadataStatus: "idle", metadataError: "", metadataRequest: 0,
   states: [], statesStatus: "idle", statesError: "", statesRequest: 0,
+  members: [], membersStatus: "idle", membersError: "", membersRequest: 0,
   plugins: [], pluginsStatus: "idle", pluginsError: "", pluginsRequest: 0,
   eventCache: new Map(), pluginToken: "",
   audioStatus: { key: "audioNotSelected", variables: {}, success: false }
@@ -157,6 +158,7 @@ function setLocale(locale, persist) {
   renderEvents();
   renderMetadata();
   renderStates();
+  renderMembers();
   renderPlugins();
   renderIntegration();
   renderAudioStatus();
@@ -185,9 +187,10 @@ function clearSession() {
   state.eventsRequest += 1;
   state.metadataRequest += 1;
   state.statesRequest += 1;
+  state.membersRequest += 1;
   state.pluginsRequest += 1;
   state.token = null; state.user = null; state.projects = []; state.project = null;
-  state.events = []; state.states = []; state.plugins = []; state.eventCache.clear();
+  state.events = []; state.states = []; state.members = []; state.plugins = []; state.eventCache.clear();
   state.projectVersion += 1;
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
@@ -241,11 +244,14 @@ function renderProjects() {
 async function selectProject(id) {
   state.project = state.projects.find((project) => project.id === id) || null;
   state.projectVersion += 1;
-  state.pendingEventID = ""; state.cursor = ""; state.events = []; state.states = []; state.plugins = []; state.eventCache.clear();
-  state.eventsStatus = state.metadataStatus = state.statesStatus = state.pluginsStatus = "loading";
-  renderProjects(); renderProject(); renderEvents(); renderMetadata(); renderStates(); renderPlugins(); renderIntegration();
+  setMessage("#record-message");
+  setMessage("#members-message");
+  $("#add-member-form").reset();
+  state.pendingEventID = ""; state.cursor = ""; state.events = []; state.states = []; state.members = []; state.plugins = []; state.eventCache.clear();
+  state.eventsStatus = state.metadataStatus = state.statesStatus = state.membersStatus = state.pluginsStatus = "loading";
+  renderProjects(); renderProject(); renderEvents(); renderMetadata(); renderStates(); renderMembers(); renderPlugins(); renderIntegration();
   if (!state.project) return;
-  await Promise.allSettled([loadEvents(), loadMetadata(), loadStates(), loadPlugins()]);
+  await Promise.allSettled([loadEvents(), loadMetadata(), loadStates(), loadMembers(), loadPlugins()]);
 }
 function renderProject() {
   const open = Boolean(state.project);
@@ -318,9 +324,11 @@ function eventNode(event, compact) {
     for (const ref of event.refs) appendSourceControl(refs, ref.id, ref.rel);
     article.append(refs);
   }
-  const details = document.createElement("pre"); details.className = "event-json";
-  details.textContent = JSON.stringify({ id: event.id, sequence: event.sequence, occurred_at: event.occurred_at, metadata: event.metadata, refs: event.refs }, null, 2);
-  article.append(details);
+  const details = document.createElement("details"); details.className = "event-details";
+  const summary = document.createElement("summary"); summary.textContent = t("eventDetails");
+  const detailBody = document.createElement("pre"); detailBody.className = "event-json";
+  detailBody.textContent = JSON.stringify({ id: event.id, sequence: event.sequence, actor: event.actor, recorded_at: event.recorded_at, occurred_at: event.occurred_at, source: event.source, metadata: event.metadata, refs: event.refs }, null, 2);
+  details.append(summary, detailBody); article.append(details);
   return article;
 }
 async function downloadFile(content) {
@@ -551,6 +559,40 @@ function renderIntegration() {
   $("#integration-project-id").textContent = state.project.id;
   $("#link-command").textContent = "edc link " + state.project.id;
 }
+async function loadMembers() {
+  if (!state.project) return;
+  const projectID = state.project.id, version = state.projectVersion, requestVersion = ++state.membersRequest;
+  state.membersStatus = "loading"; state.membersError = ""; renderMembers();
+  try {
+    const payload = await request(projectPath("/members"));
+    if (!activeProject(version, projectID) || requestVersion !== state.membersRequest) return;
+    state.members = payload.members || []; state.membersStatus = "ready"; renderMembers();
+  } catch (error) {
+    if (!activeProject(version, projectID) || requestVersion !== state.membersRequest) return;
+    state.membersStatus = "error"; state.membersError = error.message; renderMembers();
+  }
+}
+function renderMembers() {
+  const list = $("#members-list");
+  if (!list) return;
+  list.replaceChildren();
+  const owner = Boolean(state.project && state.user && state.project.owner_user_id === state.user.id);
+  $("#add-member-form").classList.toggle("hidden", !owner);
+  $("#member-owner-note").classList.toggle("hidden", owner || !state.project);
+  setMessage("#members-message", state.membersStatus === "error" ? state.membersError : "");
+  if (state.membersStatus === "loading") return appendEmpty(list, "membersLoading");
+  if (state.membersStatus === "ready" && !state.members.length) return appendEmpty(list, "membersEmpty");
+  for (const member of state.members) {
+    const item = document.createElement("div"); item.className = "member-item";
+    const username = document.createElement("strong"); username.textContent = "@" + member.username;
+    const id = document.createElement("code"); id.textContent = t("memberID", { id: member.id });
+    item.append(username, id);
+    if (state.project && member.id === state.project.owner_user_id) {
+      const badge = document.createElement("span"); badge.className = "status-badge ready"; badge.textContent = t("projectOwner"); item.append(badge);
+    }
+    list.append(item);
+  }
+}
 function renderPlugins() {
   const list = $("#plugins-list"); list.replaceChildren();
   setMessage("#plugins-message", state.pluginsStatus === "error" ? state.pluginsError : "");
@@ -715,6 +757,22 @@ $("#clear-query").addEventListener("click", async () => {
 $("#load-more").addEventListener("click", () => loadEvents({ more: true }));
 $("#metadata-refresh").addEventListener("click", loadMetadata);
 $("#state-refresh").addEventListener("click", loadStates);
+$("#members-refresh").addEventListener("click", loadMembers);
+$("#add-member-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!state.project) return;
+  const form = event.currentTarget, button = form.querySelector("button[type=submit]");
+  const username = $("#member-username").value.trim(), projectID = state.project.id, version = state.projectVersion;
+  setBusy(button, true, "addMember"); setMessage("#members-message");
+  try {
+    const member = await request(projectPath("/members"), { method: "POST", body: { username } });
+    if (!activeProject(version, projectID)) return;
+    form.reset(); await loadMembers();
+    setMessage("#members-message", t("memberAdded", { username: member.username }), true);
+  } catch (error) {
+    if (activeProject(version, projectID)) setMessage("#members-message", error.code === "not_found" ? t("memberNotFound") : error.message);
+  } finally { setBusy(button, false, "addMember"); }
+});
 $("#plugins-refresh").addEventListener("click", loadPlugins);
 $("#edit-project-timezone").addEventListener("click", () => {
   populateTimezones($("#project-timezone-select"), state.project && state.project.timezone || "UTC");

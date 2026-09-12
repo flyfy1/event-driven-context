@@ -111,6 +111,16 @@
 
           <section id="integration-panel" class="workspace-panel hidden" data-workspace-panel="integration" aria-labelledby="integration-title">
             <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Bind a working directory, preview setup changes, then verify hook and outbox status locally.</p></div></div>
+            <section class="members-card" aria-labelledby="members-title">
+              <div class="card-title"><div><h4 id="members-title" data-i18n="membersTitle">Project members</h4><p class="muted" data-i18n="membersHint">Everyone listed here can read and append this project's shared context.</p></div><button id="members-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
+              <div id="members-list" class="members-list" aria-live="polite"></div>
+              <form id="add-member-form" class="add-member-form hidden">
+                <label><span data-i18n="addMemberTitle">Add a registered member</span><input id="member-username" required autocomplete="off" placeholder="registered username" data-i18n-placeholder="memberUsernamePlaceholder" /></label>
+                <button class="primary" type="submit" data-i18n="addMember">Add member</button>
+              </form>
+              <p id="member-owner-note" class="muted hidden" data-i18n="onlyOwnerCanAdd">Only the project owner can add members.</p>
+              <p id="members-message" class="message" aria-live="polite"></p>
+            </section>
             <div class="integration-status-grid">
               <article class="status-card"><strong data-i18n="selectedProject">Selected project</strong><code id="integration-project-id"></code><span class="status-badge ready" data-i18n="projectReady">Ready</span></article>
               <article class="status-card"><strong data-i18n="localClientStatus">Local client status</strong><p data-i18n="localStatusUnavailable">The web app cannot read local binding, hook or outbox state yet. Step ② must provide that bridge.</p><span class="status-badge pending" data-i18n="notAvailableYet">Not available yet</span></article>
