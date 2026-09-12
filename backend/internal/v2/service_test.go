@@ -91,6 +91,42 @@ func install(t *testing.T, f *fixture) (InstallPluginResult, PluginPrincipal) {
 	return out, p
 }
 
+func TestAdminProjectStatsAggregateWithoutPluginConfig(t *testing.T) {
+	f := newFixture(t)
+	created(t, mustRecord(t, f.service, f.aliceCtx, f.project.ID, textInput(eventOne, "admin stats")))
+	contents := []byte("file contents")
+	if _, err := f.service.PutFile(f.aliceCtx, f.project.ID, FileUpload{Filename: "stats.txt", MediaType: "text/plain", SizeBytes: int64(len(contents)), Reader: bytes.NewReader(contents)}); err != nil {
+		t.Fatal(err)
+	}
+	installed, _ := install(t, f)
+	stats := f.service.AdminProjectStats([]string{f.project.ID, "missing-project"})
+	if len(stats) != 2 || stats[0].EventCount != 1 || stats[0].FileCount != 1 || stats[0].FileBytes != int64(len(contents)) || stats[0].PluginCount != 1 || stats[0].LatestSequence != 1 {
+		t.Fatalf("stats = %#v", stats)
+	}
+	if stats[0].Plugins[0].PluginID != installed.Installation.PluginID || stats[0].Plugins[0].Name != installed.Installation.Manifest.Name || stats[0].LastActivityAt == "" {
+		t.Fatalf("plugin stats = %#v", stats[0])
+	}
+	if stats[1].ProjectID != "missing-project" || stats[1].EventCount != 0 || stats[1].Plugins == nil {
+		t.Fatalf("empty stats = %#v", stats[1])
+	}
+	raw, err := json.Marshal(stats[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if bytes.Contains(raw, []byte("\"config\"")) || bytes.Contains(raw, []byte("token")) {
+		t.Fatalf("admin stats leaked plugin secret fields: %s", raw)
+	}
+}
+
+func mustRecord(t *testing.T, service *Service, ctx context.Context, projectID string, input EventInput) RecordEventsResult {
+	t.Helper()
+	result, err := service.RecordEvents(ctx, projectID, RecordEventsInput{Events: []EventInput{input}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return result
+}
+
 func TestEventDedupeRefsBatchAndRestart(t *testing.T) {
 	f := newFixture(t)
 	first, err := f.service.RecordEvents(f.aliceCtx, f.project.ID, RecordEventsInput{Events: []EventInput{textInput(eventOne, "budget 5")}})

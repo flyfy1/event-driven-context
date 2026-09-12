@@ -81,6 +81,12 @@ func run() (runErr error) {
 			allowed = append(allowed, v)
 		}
 	}
+	var adminUsers []string
+	for _, value := range strings.Split(os.Getenv("EDC_ADMIN_USERS"), ",") {
+		if value = strings.TrimSpace(value); value != "" {
+			adminUsers = append(adminUsers, value)
+		}
+	}
 	if *publicBaseURL != "" {
 		u, parseErr := url.Parse(*publicBaseURL)
 		if parseErr != nil || u.Scheme != "https" || u.Host == "" || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || strings.HasSuffix(*publicBaseURL, "/") {
@@ -104,7 +110,7 @@ func run() (runErr error) {
 	if configuredFields != 0 && configuredFields != 5 {
 		return fmt.Errorf("EDC Integ.Auth configuration must set issuer, client ID, client secret, redirect URI, and web base URL together")
 	}
-	httpServer := &http.Server{Addr: *addr, Handler: api.V2HandlerWithConfig(store, service, api.Config{AllowedOrigins: allowed, PublicBaseURL: *publicBaseURL, IntegAuth: integAuth}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 3 * time.Minute, WriteTimeout: 3 * time.Minute, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	httpServer := &http.Server{Addr: *addr, Handler: api.V2HandlerWithConfig(store, service, api.Config{AllowedOrigins: allowed, PublicBaseURL: *publicBaseURL, IntegAuth: integAuth, AdminUsers: adminUsers}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 3 * time.Minute, WriteTimeout: 3 * time.Minute, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {
 		return err
@@ -113,7 +119,7 @@ func run() (runErr error) {
 	defer stop()
 	done := make(chan error, 1)
 	go func() { done <- httpServer.Serve(ln) }()
-	slog.Info("event-driven-context listening", "address", ln.Addr().String(), "mcp", "/mcp")
+	slog.Info("event-driven-context listening", "address", ln.Addr().String(), "mcp", "/mcp", "admin_users", len(adminUsers))
 	select {
 	case err = <-done:
 		if errors.Is(err, http.ErrServerClosed) {
