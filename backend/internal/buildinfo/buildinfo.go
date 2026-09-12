@@ -4,7 +4,7 @@ package buildinfo
 const (
 	// Version is intentionally source-controlled so a server built from the same
 	// release can recommend the matching CLI without contacting a third party.
-	DefaultVersion    = "v0.1.0"
+	DefaultVersion    = "v0.1.1"
 	MinimumCLIVersion = "v0.1.0"
 	ReleaseAPIURL     = "https://api.github.com/repos/flyfy1/event-driven-context/releases/latest"
 	ReleasePageURL    = "https://github.com/flyfy1/event-driven-context/releases/latest"

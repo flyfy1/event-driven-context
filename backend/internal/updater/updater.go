@@ -234,7 +234,7 @@ type releaseResponse struct {
 }
 
 func (c *Client) fetchRelease(ctx context.Context, endpoint string) (releaseResponse, error) {
-	data, err := c.download(ctx, endpoint, maxReleaseBytes)
+	data, err := c.downloadWithAccept(ctx, endpoint, maxReleaseBytes, "application/vnd.github+json")
 	if err != nil {
 		return releaseResponse{}, fmt.Errorf("read CLI release: %w", err)
 	}
@@ -273,6 +273,10 @@ func (c *Client) assetDigest(ctx context.Context, assets []releaseAsset, binary 
 }
 
 func (c *Client) download(ctx context.Context, rawURL string, limit int64) ([]byte, error) {
+	return c.downloadWithAccept(ctx, rawURL, limit, "application/octet-stream")
+}
+
+func (c *Client) downloadWithAccept(ctx context.Context, rawURL string, limit int64, accept string) ([]byte, error) {
 	if err := validateRemoteURL(rawURL); err != nil {
 		return nil, err
 	}
@@ -280,7 +284,7 @@ func (c *Client) download(ctx context.Context, rawURL string, limit int64) ([]by
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("Accept", "application/octet-stream")
+	request.Header.Set("Accept", accept)
 	request.Header.Set("User-Agent", "edc/"+buildinfo.Version)
 	response, err := c.httpClient().Do(request)
 	if err != nil {

@@ -65,6 +65,10 @@ func TestUpdateDownloadsVerifiesAndAtomicallyReplaces(t *testing.T) {
 		case "/.well-known/edc-cli":
 			_ = json.NewEncoder(w).Encode(buildinfo.CLIPolicy{LatestVersion: "v1.1.0", MinimumVersion: "v1.0.0", ReleaseAPIURL: server.URL + "/release", ReleasePageURL: server.URL + "/page"})
 		case "/release":
+			if got := r.Header.Get("Accept"); got != "application/vnd.github+json" {
+				http.Error(w, "unsupported media type", http.StatusUnsupportedMediaType)
+				return
+			}
 			_ = json.NewEncoder(w).Encode(releaseResponse{TagName: "v1.1.0", HTMLURL: server.URL + "/page", Assets: []releaseAsset{{Name: "edc-darwin-arm64", BrowserDownloadURL: server.URL + "/binary", Digest: "sha256:" + digest, Size: int64(len(newBinary))}}})
 		case "/binary":
 			_, _ = w.Write(newBinary)
