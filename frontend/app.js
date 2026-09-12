@@ -1,4 +1,4 @@
-const { resolveAPI, sessionStorageKey, audioMediaType, contextFileKind, fileTitle, buildMetadata, pathWithLocale, uuidV7 } = window.ContextWorkspaceUtils;
+const { resolveAPI, sessionStorageKey, audioMediaType, contextFileKind, fileTitle, buildMetadata, buildMetadataFilter, buildReferences, localDateTimeValue, pathWithLocale, uuidV7 } = window.ContextWorkspaceUtils;
 const { normalizeLocale, resolveLocalePreference, translate } = window.ContextI18n;
 const API = resolveAPI(window.location.hostname, new URLSearchParams(window.location.search).get("api"));
 const TOKEN_KEY = sessionStorageKey("event-context.token", API);
@@ -37,7 +37,7 @@ const state = {
   projects: [], project: null, projectsStatus: "idle", projectsError: "", projectsRequest: 0,
   sessionEpoch: 0, projectVersion: 0,
   contentMode: "text", pendingEventID: "", captureFile: null, captureKind: "", capturePreviewURL: "", autoMetadataTitle: "",
-  query: { types: [], metadataRaw: "{}", source: {}, refs_to: "" },
+  query: { types: [], metadata: {}, source: {}, refs_to: "" },
   events: [], cursor: "", latestSequence: 0, eventsStatus: "idle", eventsError: "", eventsRequest: 0,
   metadataFields: [], metadataStatus: "idle", metadataError: "", metadataRequest: 0,
   states: [], statesStatus: "idle", statesError: "", statesRequest: 0,
@@ -306,6 +306,7 @@ async function loadEvents(options) {
   const projectID = state.project.id, version = state.projectVersion, requestVersion = ++state.eventsRequest;
   const query = {
     types: state.query.types,
+    metadata: state.query.metadata,
     source: state.query.source,
     refs_to: state.query.refs_to,
     limit: 30,
@@ -313,8 +314,7 @@ async function loadEvents(options) {
   };
   state.eventsStatus = "loading"; state.eventsError = ""; renderEvents();
   try {
-    const rawBody = jsonWithRaw(query, { metadata: state.query.metadataRaw });
-    const page = await request(projectPath("/events/query"), { method: "POST", rawBody });
+    const page = await request(projectPath("/events/query"), { method: "POST", body: query });
     if (!activeProject(version, projectID) || requestVersion !== state.eventsRequest) return;
     state.events = more ? state.events.concat(page.events || []) : (page.events || []);
     for (const event of state.events) state.eventCache.set(event.id, event);
@@ -557,6 +557,28 @@ function metadataForRecord() {
     throw error;
   }
 }
+function addReferenceField(rel, id) {
+  const row = document.createElement("div"); row.className = "event-reference-row";
+  const relation = document.createElement("select"); relation.className = "event-reference-rel"; relation.setAttribute("aria-label", t("referenceRelation")); relation.dataset.i18nAriaLabel = "referenceRelation";
+  for (const [value, key] of [["replies_to", "relationRepliesTo"], ["derived_from", "relationDerivedFrom"], ["supersedes", "relationSupersedes"], ["retracts", "relationRetracts"], ["resolves", "relationResolves"]]) {
+    const option = document.createElement("option"); option.value = value; option.textContent = t(key); option.dataset.i18n = key; relation.append(option);
+  }
+  relation.value = rel || "replies_to";
+  const eventID = document.createElement("input"); eventID.className = "event-reference-id"; eventID.value = id || ""; eventID.placeholder = t("referenceIDPlaceholder"); eventID.dataset.i18nPlaceholder = "referenceIDPlaceholder"; eventID.setAttribute("aria-label", t("referenceEventID")); eventID.dataset.i18nAriaLabel = "referenceEventID";
+  const remove = document.createElement("button"); remove.type = "button"; remove.className = "quiet event-reference-remove"; remove.textContent = t("removeReference"); remove.dataset.i18n = "removeReference"; remove.setAttribute("aria-label", t("removeReference")); remove.dataset.i18nAriaLabel = "removeReference"; remove.addEventListener("click", () => { row.remove(); resetRecordID(); });
+  row.append(relation, eventID, remove); $("#event-reference-fields").append(row); return row;
+}
+function referencesForRecord() {
+  const fields = Array.from(document.querySelectorAll(".event-reference-row"), (row) => ({ rel: $(".event-reference-rel", row).value, id: $(".event-reference-id", row).value }));
+  try { return buildReferences(fields); }
+  catch (error) {
+    if (error.message === "reference_fields_required") throw new Error(t("referenceFieldsRequired"));
+    if (error.message === "reference_relation_invalid") throw new Error(t("referenceRelationInvalid"));
+    if (error.message === "reference_duplicate") throw new Error(t("referenceDuplicate"));
+    throw error;
+  }
+}
+function setOccurredAtNow() { $("#event-occurred-at").value = localDateTimeValue(); }
 async function sha256Hex(file) {
   const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -581,7 +603,7 @@ async function submitRecord(form) {
   setMessage("#record-message"); setBusy(button, true, "addContext");
   try {
     const metadata = metadataForRecord();
-    const refs = jsonLiteral($("#event-refs").value, "referencesLabel", true).parsed;
+    const refs = referencesForRecord();
     if (!state.pendingEventID) state.pendingEventID = uuidV7();
     const eventID = state.pendingEventID, contentMode = state.contentMode;
     const eventType = $("#event-type").value, occurredAt = $("#event-occurred-at").value;
@@ -622,7 +644,7 @@ async function submitRecord(form) {
     state.events = [savedEvent].concat(state.events.filter((item) => item.id !== savedEvent.id));
     state.eventsStatus = "ready";
     if (state.pendingEventID === eventID) {
-      form.reset(); $("#event-refs").value = "[]"; $("#metadata-custom-fields").replaceChildren(); state.pendingEventID = "";
+      form.reset(); $("#metadata-custom-fields").replaceChildren(); $("#event-reference-fields").replaceChildren(); setOccurredAtNow(); state.pendingEventID = "";
       clearCaptureFile(false);
     }
     setMessage("#record-message", t(outcome.status === "duplicate" ? "eventDuplicate" : "eventAppended") + " · " + outcome.id, true);
@@ -839,6 +861,7 @@ $("#metadata-title-input").addEventListener("input", () => {
   if ($("#metadata-title-input").value !== state.autoMetadataTitle) state.autoMetadataTitle = "";
 });
 $("#add-metadata-field").addEventListener("click", () => { $("#metadata-more").open = true; addMetadataField().querySelector("input").focus(); });
+$("#add-event-reference").addEventListener("click", () => { addReferenceField().querySelector("input").focus(); });
 $("#media-file").addEventListener("change", () => {
   const file = $("#media-file").files[0];
   if (!file) return;
@@ -863,18 +886,18 @@ recordForm.addEventListener("drop", (event) => {
 $("#query-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
-    const metadata = jsonLiteral($("#query-metadata").value || "{}", "filterCriteriaLabel", false);
+    const metadata = buildMetadataFilter($("#query-metadata-key").value, $("#query-metadata-value").value);
     state.query = {
       types: $("#query-type").value ? [$("#query-type").value] : [],
-      metadataRaw: metadata.raw,
+      metadata,
       source: $("#query-source").value.trim() ? { channel: $("#query-source").value.trim() } : {},
       refs_to: $("#query-refs").value.trim()
     };
     state.cursor = ""; await loadEvents();
-  } catch (error) { setMessage("#events-message", error.message); }
+  } catch (error) { setMessage("#events-message", error.message === "metadata_key_required" ? t("queryMetadataKeyRequired") : error.message); }
 });
 $("#clear-query").addEventListener("click", async () => {
-  $("#query-form").reset(); state.query = { types: [], metadataRaw: "{}", source: {}, refs_to: "" }; state.cursor = ""; await loadEvents();
+  $("#query-form").reset(); state.query = { types: [], metadata: {}, source: {}, refs_to: "" }; state.cursor = ""; await loadEvents();
 });
 $("#load-more").addEventListener("click", () => loadEvents({ more: true }));
 $("#metadata-refresh").addEventListener("click", loadMetadata);
@@ -976,7 +999,7 @@ window.addEventListener("hashchange", restoreRoute);
 
 async function boot() {
   populateTimezones($("#project-timezone"), BROWSER_TIMEZONE);
-  setLocale(state.locale, false); setView(state.view); setContentMode(); renderCaptureFile();
+  setLocale(state.locale, false); setView(state.view); setContentMode(); renderCaptureFile(); setOccurredAtNow();
   const expectedSession = Boolean(state.token || state.user || returnedFromCentralAuth);
   const epoch = state.sessionEpoch, token = state.token;
   try {
