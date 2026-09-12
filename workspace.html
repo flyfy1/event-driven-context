@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Append and query immutable context with your team." data-i18n-content="metaDescription" />
     <title>Context · Integ.Life</title>
-    <link rel="stylesheet" href="./styles.css?v=da78246f4d2b" />
-    <link rel="stylesheet" href="./workspace-features.css?v=da78246f4d2b" />
-    <link rel="stylesheet" href="./i18n.css?v=da78246f4d2b" />
+    <link rel="stylesheet" href="./styles.css?v=0173b4e8b5ea" />
+    <link rel="stylesheet" href="./workspace-features.css?v=0173b4e8b5ea" />
+    <link rel="stylesheet" href="./i18n.css?v=0173b4e8b5ea" />
   </head>
   <body>
     <header class="topbar">
@@ -105,26 +105,56 @@
           </section>
 
           <section id="integration-panel" class="workspace-panel hidden" data-workspace-panel="integration" aria-labelledby="integration-title">
-            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Bind a working directory, preview setup changes, then verify hook and outbox status locally.</p></div></div>
-            <section class="members-card" aria-labelledby="members-title">
+            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Choose your AI, authorize it with OAuth, and verify that it can read this exact project.</p></div></div>
+            <div class="integration-context-bar" aria-label="Connection details" data-i18n-aria-label="connectionDetails">
+              <div><strong data-i18n="selectedProject">Selected project</strong><code id="integration-project-id"></code></div>
+              <div><strong data-i18n="mcpEndpoint">MCP endpoint</strong><code id="integration-mcp-url">https://context-api.integ.life/mcp</code><button class="quiet" type="button" data-copy-command="integration-mcp-url" data-i18n="copyCommand">Copy</button></div>
+            </div>
+            <div class="connect-methods">
+              <article class="connect-card agent-connect-card">
+                <div class="connect-card-meta"><span>Claude Code · Codex</span><span class="status-badge ready" data-i18n="recommended">Recommended</span></div>
+                <h4 data-i18n="agentSetupTitle">Let your agent set it up</h4>
+                <p class="muted" data-i18n="agentSetupBody">Open Claude Code or Codex in the working directory, then paste the instruction below. The agent will read the setup guide, add the remote MCP server, and install the recorder Skill.</p>
+                <ol class="connect-checklist">
+                  <li data-i18n="agentSetupStepOne">Paste the project-specific instruction into your coding agent.</li>
+                  <li data-i18n="agentSetupStepTwo">Complete the Integ.Life OAuth page when the agent opens it.</li>
+                  <li data-i18n="agentSetupStepThree">Do not stop at “configured”: let the agent call Context and verify this project.</li>
+                </ol>
+                <div class="prompt-label" data-i18n="pasteIntoAgent">Paste into your agent</div>
+                <div class="command-row prompt-row"><code id="agent-setup-prompt"></code><button class="quiet" type="button" data-copy-command="agent-setup-prompt" data-i18n="copyInstruction">Copy instruction</button></div>
+                <div class="connect-links">
+                  <a id="agent-setup-guide-link" href="./agent-setup.md" target="_blank" rel="noopener" data-i18n="openAgentGuide">Open agent setup guide ↗</a>
+                  <a href="./skills/edc-recorder/SKILL.md" target="_blank" rel="noopener" data-i18n="openRecorderSkill">Read edc-recorder Skill ↗</a>
+                  <a href="./skills/edc-recorder/SKILL.md" download="SKILL.md" data-i18n="downloadRecorderSkill">Download Skill ↓</a>
+                </div>
+              </article>
+
+              <article class="connect-card chatgpt-connect-card">
+                <div class="connect-card-meta"><span>ChatGPT</span><span class="status-badge" data-i18n="developerMode">Developer mode</span></div>
+                <h4 data-i18n="chatGPTSetupTitle">Add an MCP Plugin / connector</h4>
+                <p class="muted" data-i18n="chatGPTSetupBody">Open ChatGPT's Plugin connector form, enter the Context MCP URL, choose OAuth, and authorize your Integ.Life account.</p>
+                <ol class="connect-checklist chatgpt-steps">
+                  <li data-i18n="chatGPTStepOne">Open the “Create connector” link below. Enable Developer mode if ChatGPT asks.</li>
+                  <li><span data-i18n="chatGPTStepTwoPrefix">Set the name to</span> <code>Event-driven Context</code><span data-i18n="chatGPTStepTwoMiddle">, and the MCP URL to</span> <code>https://context-api.integ.life/mcp</code>.</li>
+                  <li data-i18n="chatGPTStepThree">Choose OAuth authentication, scan the tools, then complete Integ.Life sign-in and authorization.</li>
+                  <li data-i18n="chatGPTStepFour">Create or save the connector. In a new chat, enable it for the message and run the verification prompt below.</li>
+                </ol>
+                <a class="primary-link" href="https://chatgpt.com/plugins#settings/Connectors?create-connector=true&amp;redirectAfter=%2Fplugins" target="_blank" rel="noopener" data-i18n="openChatGPTConnector">Open ChatGPT connector setup ↗</a>
+                <div class="prompt-label" data-i18n="verifyConnection">Verify the connection</div>
+                <div class="command-row prompt-row"><code id="chatgpt-verify-prompt"></code><button class="quiet" type="button" data-copy-command="chatgpt-verify-prompt" data-i18n="copyPrompt">Copy prompt</button></div>
+                <p class="setup-note" data-i18n="chatGPTAvailability">Custom MCP connectors require an eligible ChatGPT plan and may be controlled by your workspace administrator.</p>
+              </article>
+            </div>
+            <section class="members-card integration-members-card" aria-labelledby="members-title">
               <div class="card-title"><div><h4 id="members-title" data-i18n="membersTitle">Project members</h4><p class="muted" data-i18n="membersHint">Everyone listed here can read and append this project's shared context.</p></div><button id="members-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
               <div id="members-list" class="members-list" aria-live="polite"></div>
               <form id="add-member-form" class="add-member-form hidden">
                 <label><span data-i18n="addMemberTitle">Add a registered member</span><input id="member-username" required autocomplete="off" placeholder="registered username" data-i18n-placeholder="memberUsernamePlaceholder" /></label>
                 <button class="primary" type="submit" data-i18n="addMember">Add member</button>
               </form>
-              <p id="member-owner-note" class="muted hidden" data-i18n="onlyOwnerCanAdd">Only the project owner can add members.</p>
+              <p id="member-owner-note" class="muted hidden" data-i18n="onlyOwnerCanManage">Only project owners can add members or manage owners.</p>
               <p id="members-message" class="message" aria-live="polite"></p>
             </section>
-            <div class="integration-status-grid">
-              <article class="status-card"><strong data-i18n="selectedProject">Selected project</strong><code id="integration-project-id"></code><span class="status-badge ready" data-i18n="projectReady">Ready</span></article>
-              <article class="status-card"><strong data-i18n="localClientStatus">Local client status</strong><p data-i18n="localStatusUnavailable">The web app cannot read local binding, hook or outbox state yet. Step ② must provide that bridge.</p><span class="status-badge pending" data-i18n="notAvailableYet">Not available yet</span></article>
-            </div>
-            <ol class="integration-steps">
-              <li><strong data-i18n="bindDirectory">Bind this directory</strong><p class="muted" data-i18n="bindDirectoryHint">Run from the working directory you want attached to this project.</p><div class="command-row"><code id="link-command"></code><button class="quiet" type="button" data-copy-command="link-command" data-i18n="copyCommand">Copy</button></div></li>
-              <li><strong data-i18n="setupClient">Preview and set up Claude Code</strong><p class="muted" data-i18n="setupClientHint">The CLI must show the skill, hook and MCP changes before writing them.</p><div class="command-row"><code id="setup-command">edc setup claude-code</code><button class="quiet" type="button" data-copy-command="setup-command" data-i18n="copyCommand">Copy</button></div></li>
-              <li><strong data-i18n="verifyClient">Verify local status</strong><p class="muted" data-i18n="verifyClientHint">Check binding, hook activity, last push and pending outbox without treating configuration as proof.</p><div class="command-row"><code id="status-command">edc status &amp;&amp; edc outbox list</code><button class="quiet" type="button" data-copy-command="status-command" data-i18n="copyCommand">Copy</button></div></li>
-            </ol>
             <p id="integration-message" class="message" aria-live="polite"></p>
           </section>
 
@@ -145,8 +175,8 @@
       </section>
     </main>
     <template id="event-template"><article class="event"><div class="event-meta"><strong class="event-author"></strong><time class="event-time"></time><span class="event-kind"></span></div><p class="event-text"></p><a class="event-file hidden" target="_blank" rel="noopener" data-i18n="downloadOriginalFile">Download original file</a><pre class="event-json"></pre></article></template>
-    <script src="./i18n.js?v=da78246f4d2b" defer></script>
-    <script src="./workspace-utils.js?v=da78246f4d2b" defer></script>
-    <script src="./app.js?v=da78246f4d2b" defer></script>
+    <script src="./i18n.js?v=0173b4e8b5ea" defer></script>
+    <script src="./workspace-utils.js?v=0173b4e8b5ea" defer></script>
+    <script src="./app.js?v=0173b4e8b5ea" defer></script>
   </body>
 </html>

@@ -90,6 +90,14 @@ function setBusy(button, busy, idleKey) {
 function activeProject(version, projectID) {
   return state.projectVersion === version && state.project && state.project.id === projectID;
 }
+function projectOwnerIDs(project) {
+  if (!project) return [];
+  if (Array.isArray(project.owner_user_ids) && project.owner_user_ids.length) return project.owner_user_ids;
+  return project.owner_user_id ? [project.owner_user_id] : [];
+}
+function currentUserIsOwner() {
+  return Boolean(state.project && state.user && projectOwnerIDs(state.project).includes(state.user.id));
+}
 function activeSession(epoch, token) { return state.sessionEpoch === epoch && state.token === token; }
 function projectPath(suffix) {
   return "/v1/projects/" + encodeURIComponent(state.project.id) + suffix;
@@ -278,7 +286,7 @@ function renderProject() {
   if (!open) return;
   $("#project-title").textContent = state.project.name;
   $("#project-description-display").textContent = state.project.description || t("noProjectDescription");
-  $("#project-owner").textContent = t("owner", { id: state.project.owner_user_id });
+  $("#project-owner").textContent = t("owners", { ids: projectOwnerIDs(state.project).join(", ") });
   $("#project-timezone-display").textContent = state.project.timezone || "UTC";
   populateTimezones($("#project-timezone-select"), state.project.timezone || "UTC");
   $("#project-timezone-form").classList.add("hidden");
@@ -575,8 +583,15 @@ async function submitRecord(form) {
 
 function renderIntegration() {
   if (!state.project) return;
-  $("#integration-project-id").textContent = state.project.id;
-  $("#link-command").textContent = "edc link " + state.project.id;
+  const projectID = state.project.id;
+  const guideURL = new URL("./agent-setup.md", window.location.href);
+  guideURL.searchParams.set("project", projectID);
+  guideURL.searchParams.set("locale", state.locale);
+  const skillURL = new URL("./skills/edc-recorder/SKILL.md", window.location.href).href;
+  $("#integration-project-id").textContent = projectID;
+  $("#agent-setup-guide-link").href = guideURL.href;
+  $("#agent-setup-prompt").textContent = t("agentSetupPrompt", { guide_url: guideURL.href, project_id: projectID, skill_url: skillURL });
+  $("#chatgpt-verify-prompt").textContent = t("chatGPTVerifyPrompt", { project_id: projectID });
 }
 async function loadMembers() {
   if (!state.project) return;
@@ -595,7 +610,9 @@ function renderMembers() {
   const list = $("#members-list");
   if (!list) return;
   list.replaceChildren();
-  const owner = Boolean(state.project && state.user && state.project.owner_user_id === state.user.id);
+  const owner = currentUserIsOwner();
+  const ownerIDs = new Set(projectOwnerIDs(state.project));
+  const ownerCount = state.members.filter((member) => member.role === "owner" || ownerIDs.has(member.id)).length;
   $("#add-member-form").classList.toggle("hidden", !owner);
   $("#member-owner-note").classList.toggle("hidden", owner || !state.project);
   setMessage("#members-message", state.membersStatus === "error" ? state.membersError : "");
@@ -606,8 +623,16 @@ function renderMembers() {
     const username = document.createElement("strong"); username.textContent = "@" + member.username;
     const id = document.createElement("code"); id.textContent = t("memberID", { id: member.id });
     item.append(username, id);
-    if (state.project && member.id === state.project.owner_user_id) {
+    const memberIsOwner = member.role === "owner" || ownerIDs.has(member.id);
+    if (memberIsOwner) {
       const badge = document.createElement("span"); badge.className = "status-badge ready"; badge.textContent = t("projectOwner"); item.append(badge);
+    }
+    if (owner && state.user && member.id !== state.user.id) {
+      const action = document.createElement("button"); action.type = "button"; action.className = "quiet member-role-action";
+      action.dataset.memberId = member.id; action.dataset.role = memberIsOwner ? "member" : "owner";
+      action.textContent = t(memberIsOwner ? "makeMember" : "makeOwner");
+      if (memberIsOwner && ownerCount <= 1) { action.disabled = true; action.title = t("lastOwnerRequired"); }
+      item.append(action);
     }
     list.append(item);
   }
@@ -771,6 +796,25 @@ $("#load-more").addEventListener("click", () => loadEvents({ more: true }));
 $("#metadata-refresh").addEventListener("click", loadMetadata);
 $("#state-refresh").addEventListener("click", loadStates);
 $("#members-refresh").addEventListener("click", loadMembers);
+$("#members-list").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-member-id]");
+  if (!button || !state.project) return;
+  const projectID = state.project.id, version = state.projectVersion, role = button.dataset.role;
+  setBusy(button, true, role === "owner" ? "makeOwner" : "makeMember"); setMessage("#members-message");
+  try {
+    const member = await request(projectPath("/members/" + encodeURIComponent(button.dataset.memberId)), { method: "PATCH", body: { role } });
+    if (!activeProject(version, projectID)) return;
+    await loadMembers();
+    const ownerIDs = state.members.filter((item) => item.role === "owner").map((item) => item.id);
+    state.project.owner_user_ids = ownerIDs;
+    const listedProject = state.projects.find((item) => item.id === projectID);
+    if (listedProject) listedProject.owner_user_ids = ownerIDs;
+    renderProject(); renderMembers();
+    setMessage("#members-message", t("memberRoleUpdated", { username: member.username, role: t(role === "owner" ? "projectOwner" : "projectMember") }), true);
+  } catch (error) {
+    if (activeProject(version, projectID)) setMessage("#members-message", error.code === "conflict" ? t("lastOwnerRequired") : error.message);
+  } finally { if (button.isConnected) setBusy(button, false, role === "owner" ? "makeOwner" : "makeMember"); }
+});
 $("#add-member-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!state.project) return;
