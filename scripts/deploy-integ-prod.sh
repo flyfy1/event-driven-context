@@ -84,7 +84,7 @@ visudo -cf /etc/sudoers.d/context-service-admin >/dev/null
 
 if [[ -L "$remote_root/current" ]]; then old_target="$(readlink -f "$remote_root/current")"; fi
 ln -sfn "$release_dir" "$remote_root/current"
-rm -f "/etc/caddy/sites-enabled/$service.caddy"
+# Public proxy configuration is provisioned separately; preserve it across releases.
 systemctl daemon-reload
 systemctl enable --now "$service.service"
 healthy=""

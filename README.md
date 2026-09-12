@@ -203,7 +203,7 @@ make deploy-prod       # 编译 linux/amd64、上传 integ-prod、安装 systemd
 make deploy-frontend   # 将 frontend/ 推送到 gh-pages
 ```
 
-服务运行于 integ-prod 的 `127.0.0.1:8401`。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；event manifest 与原始文件在 `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。当前生产环境不运行 Caddy，因此 API 保持 loopback，不经 `context-api.integ.life` 公开暴露。首次启动新版本会把旧 SQLite event/file 表导出为数据目录中的文件，再移除旧表。
+服务运行于 integ-prod 的 `127.0.0.1:8401`。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；event manifest 与原始文件在 `/var/lib/event-driven-context/data/projects/<project-id>/{events,files}/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。API 保持 loopback，由独立的 `event-context-proxy.service`（Caddy）通过 `https://context-api.integ.life` 提供公网 HTTPS 访问。首次启动新版本会把旧 SQLite event/file 表导出为数据目录中的文件，再移除旧表。
 
 ### integ-prod 运维
 
@@ -218,7 +218,7 @@ sudo context-service-admin start
 sudo context-service-admin stop
 ```
 
-部署脚本会安装这个 helper 和 sudo 规则，并且不会启动或重新加载 Caddy。
+部署脚本会安装这个 helper 和 sudo 规则，保留现有代理配置，并且不会启动或重新加载 Caddy。公网 API 的独立 HTTPS 代理配置与管理员安装步骤见 [proxy-setup.md](deploy/production/proxy-setup.md)。
 
 ## 验证与当前边界
 
