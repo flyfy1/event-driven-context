@@ -16,9 +16,14 @@ func TestV2HTTPProjectTimezoneLifecycleAndPluginSelfView(t *testing.T) {
 	if f.project.Timezone != "UTC" {
 		t.Fatalf("default timezone = %q", f.project.Timezone)
 	}
+	w := f.request(t, http.MethodPost, "/v1/projects", f.token, "application/json", v2JSONBody(t, core.ProjectInput{Name: "HTTP default timezone"}))
+	created := decodeV2Response[core.Project](t, w)
+	if w.Code != http.StatusCreated || created.Timezone != "UTC" {
+		t.Fatalf("HTTP create default timezone: %d %#v", w.Code, created)
+	}
 
 	path := "/v1/projects/" + f.project.ID
-	w := f.request(t, http.MethodPatch, path, f.token, "application/json", v2JSONBody(t, map[string]string{"timezone": "not/a-zone"}))
+	w = f.request(t, http.MethodPatch, path, f.token, "application/json", v2JSONBody(t, map[string]string{"timezone": "not/a-zone"}))
 	if w.Code != http.StatusBadRequest || v2ErrorCode(decodeV2APIError(t, w)) != "invalid_input" {
 		t.Fatalf("invalid timezone: %d %s", w.Code, w.Body.String())
 	}
@@ -38,7 +43,7 @@ func TestV2HTTPProjectTimezoneLifecycleAndPluginSelfView(t *testing.T) {
 	}
 	w = f.request(t, http.MethodGet, "/v1/projects", f.token, "", nil)
 	projects := decodeV2Response[core.Projects](t, w)
-	if w.Code != http.StatusOK || len(projects.Projects) != 1 || projects.Projects[0].Timezone != "Asia/Singapore" {
+	if w.Code != http.StatusOK || projectTimezone(projects.Projects, f.project.ID) != "Asia/Singapore" {
 		t.Fatalf("timezone list: %d %#v", w.Code, projects)
 	}
 
@@ -58,6 +63,15 @@ func TestV2HTTPProjectTimezoneLifecycleAndPluginSelfView(t *testing.T) {
 	if w.Code != http.StatusOK || len(self.Plugins) != 1 || self.Plugins[0].ProjectTimezone != "Asia/Singapore" {
 		t.Fatalf("plugin timezone: %d %#v", w.Code, self)
 	}
+}
+
+func projectTimezone(projects []core.Project, projectID string) string {
+	for _, project := range projects {
+		if project.ID == projectID {
+			return project.Timezone
+		}
+	}
+	return ""
 }
 
 func decodeV2APIError(t *testing.T, w *httptest.ResponseRecorder) error {

@@ -38,6 +38,9 @@ type dailyPeriod struct {
 }
 
 func runDaily(ctx context.Context, client *v2client.Client, opts Options, root string, spec processorSpec, installation v2.Installation, result Result) (Result, error) {
+	if spec.Schedule.Timezone != "project" {
+		return result, fmt.Errorf("daily schedule must use the project timezone")
+	}
 	zone := installation.ProjectTimezone
 	if zone == "" {
 		zone = "UTC"
