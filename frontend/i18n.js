@@ -851,6 +851,13 @@
     pluginPausedSuccess: "प्लगइन रोका गया।", pluginResumedSuccess: "प्लगइन फिर चालू हुआ।", pluginUninstalled: "प्लगइन uninstall हुआ।", pluginInstalled: "प्लगइन इंस्टॉल हुआ। इसका token अभी कॉपी करें।"
   });
 
+  for (const [locale, message] of Object.entries({
+    en: "This project is unavailable or you are not a member. Choose another project or ask its owner to add you.",
+    "zh-CN": "这个项目不存在，或你尚未加入。请选择其他项目，或请项目所有者添加你。",
+    ms: "Projek ini tidak tersedia atau anda bukan ahli. Pilih projek lain atau minta pemilik menambah anda.",
+    hi: "यह प्रोजेक्ट उपलब्ध नहीं है या आप सदस्य नहीं हैं। दूसरा प्रोजेक्ट चुनें या मालिक से जोड़ने को कहें।"
+  })) translations[locale].projectRouteUnavailable = message;
+
   function normalizeLocale(raw) {
     const value = String(raw || "").trim().toLowerCase();
     if (value === "zh" || value.startsWith("zh-")) return "zh-CN";
