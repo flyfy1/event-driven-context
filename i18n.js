@@ -740,6 +740,8 @@
 
   Object.assign(translations.en, {
     projectTimezone: "Project time zone", changeTimezone: "Change", saveTimezone: "Save time zone", timezoneSaved: "Project time zone saved.", dailyReviewDate: "Daily review · {date}",
+    eventDetails: "Record details", membersTitle: "Project members", membersHint: "Everyone listed here can read and append this project's shared context.", membersLoading: "Loading project members…", membersEmpty: "No project members were returned.",
+    addMemberTitle: "Add a registered member", memberUsernamePlaceholder: "registered username", addMember: "Add member", memberAdded: "@{username} is now a project member.", memberNotFound: "No registered user has that username.", memberID: "User ID · {id}", projectOwner: "Owner", onlyOwnerCanAdd: "Only the project owner can add members.",
     projectSections: "Project sections", recordsTab: "Records", stateTab: "State", integrationTab: "Connect", pluginsTab: "Plugins",
     recordsEyebrow: "PROJECT RECORDS", recordsTitle: "Original records", recordsHint: "Append a note or log, then inspect immutable events, files, sources and references.",
     eventType: "Record type", noteType: "Note", logType: "Log", derivedType: "Derived", allTypes: "All types",
@@ -766,6 +768,8 @@
   });
   Object.assign(translations["zh-CN"], {
     projectTimezone: "项目时区", changeTimezone: "修改", saveTimezone: "保存时区", timezoneSaved: "项目时区已保存。", dailyReviewDate: "每日回顾 · {date}",
+    eventDetails: "记录详情", membersTitle: "项目成员", membersHint: "这里列出的每位成员都能读取并追加该项目的团队 context。", membersLoading: "正在加载项目成员…", membersEmpty: "没有返回项目成员。",
+    addMemberTitle: "添加已注册成员", memberUsernamePlaceholder: "已注册的用户名", addMember: "添加成员", memberAdded: "@{username} 已加入项目。", memberNotFound: "找不到这个用户名对应的已注册用户。", memberID: "用户 ID · {id}", projectOwner: "所有者", onlyOwnerCanAdd: "只有项目所有者可以添加成员。",
     projectSections: "项目分区", recordsTab: "记录", stateTab: "项目状态", integrationTab: "接入", pluginsTab: "插件",
     recordsEyebrow: "项目记录", recordsTitle: "原始记录", recordsHint: "追加 note 或 log，并查看不可修改的事件、文件、来源和引用。",
     eventType: "记录类型", noteType: "主动记录", logType: "自动日志", derivedType: "插件产出", allTypes: "全部类型",
@@ -792,6 +796,8 @@
   });
   Object.assign(translations.ms, {
     projectTimezone: "Zon waktu projek", changeTimezone: "Ubah", saveTimezone: "Simpan zon waktu", timezoneSaved: "Zon waktu projek disimpan.", dailyReviewDate: "Ulasan harian · {date}",
+    eventDetails: "Butiran rekod", membersTitle: "Ahli projek", membersHint: "Setiap orang dalam senarai ini boleh membaca dan menambah context kongsi projek.", membersLoading: "Memuatkan ahli projek…", membersEmpty: "Tiada ahli projek dikembalikan.",
+    addMemberTitle: "Tambah ahli berdaftar", memberUsernamePlaceholder: "nama pengguna berdaftar", addMember: "Tambah ahli", memberAdded: "@{username} kini ahli projek.", memberNotFound: "Tiada pengguna berdaftar dengan nama pengguna itu.", memberID: "ID pengguna · {id}", projectOwner: "Pemilik", onlyOwnerCanAdd: "Hanya pemilik projek boleh menambah ahli.",
     projectSections: "Bahagian projek", recordsTab: "Rekod", stateTab: "State", integrationTab: "Sambung", pluginsTab: "Plugin",
     recordsEyebrow: "REKOD PROJEK", recordsTitle: "Rekod asal", recordsHint: "Tambah note atau log, kemudian semak event, fail, sumber dan rujukan yang kekal.",
     eventType: "Jenis rekod", noteType: "Nota", logType: "Log", derivedType: "Terbitan", allTypes: "Semua jenis",
@@ -818,6 +824,8 @@
   });
   Object.assign(translations.hi, {
     projectTimezone: "प्रोजेक्ट का समय क्षेत्र", changeTimezone: "बदलें", saveTimezone: "समय क्षेत्र सेव करें", timezoneSaved: "प्रोजेक्ट का समय क्षेत्र सेव हो गया।", dailyReviewDate: "दैनिक समीक्षा · {date}",
+    eventDetails: "रिकॉर्ड का विवरण", membersTitle: "प्रोजेक्ट सदस्य", membersHint: "यहाँ सूचीबद्ध हर सदस्य इस प्रोजेक्ट का साझा context पढ़ और जोड़ सकता है।", membersLoading: "प्रोजेक्ट सदस्य लोड हो रहे हैं…", membersEmpty: "कोई प्रोजेक्ट सदस्य नहीं मिला।",
+    addMemberTitle: "रजिस्टर्ड सदस्य जोड़ें", memberUsernamePlaceholder: "रजिस्टर्ड उपयोगकर्ता नाम", addMember: "सदस्य जोड़ें", memberAdded: "@{username} अब प्रोजेक्ट सदस्य हैं।", memberNotFound: "इस उपयोगकर्ता नाम का कोई रजिस्टर्ड उपयोगकर्ता नहीं मिला।", memberID: "उपयोगकर्ता ID · {id}", projectOwner: "मालिक", onlyOwnerCanAdd: "केवल प्रोजेक्ट मालिक सदस्य जोड़ सकते हैं।",
     projectSections: "प्रोजेक्ट अनुभाग", recordsTab: "रिकॉर्ड", stateTab: "State", integrationTab: "कनेक्ट", pluginsTab: "प्लगइन",
     recordsEyebrow: "प्रोजेक्ट रिकॉर्ड", recordsTitle: "मूल रिकॉर्ड", recordsHint: "note या log जोड़ें, फिर स्थायी event, फ़ाइल, स्रोत और संदर्भ देखें।",
     eventType: "रिकॉर्ड प्रकार", noteType: "नोट", logType: "लॉग", derivedType: "व्युत्पन्न", allTypes: "सभी प्रकार",
