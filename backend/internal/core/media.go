@@ -1,6 +1,9 @@
 package core
 
-import "encoding/binary"
+import (
+	"bytes"
+	"encoding/binary"
+)
 
 // ValidateAudioContent applies the bounded container/type checks shared by
 // authenticated upload surfaces. It is intentionally not a media decoder.
@@ -12,9 +15,35 @@ func ValidateAudioContent(mediaType string, data []byte) bool {
 		return isMP3(data)
 	case "audio/wav":
 		return isWAV(data)
+	case "audio/ogg":
+		return isOgg(data)
 	default:
 		return false
 	}
+}
+
+func isOgg(data []byte) bool {
+	if len(data) < 28 || !bytes.Equal(data[:4], []byte("OggS")) || data[4] != 0 || data[5]&0x02 == 0 {
+		return false
+	}
+	segments := int(data[26])
+	if segments == 0 || len(data) < 27+segments {
+		return false
+	}
+	packetSize, complete := 0, false
+	for _, size := range data[27 : 27+segments] {
+		packetSize += int(size)
+		if size < 255 {
+			complete = true
+			break
+		}
+	}
+	packetStart := 27 + segments
+	if !complete || packetSize == 0 || packetStart+packetSize > len(data) {
+		return false
+	}
+	packet := data[packetStart : packetStart+packetSize]
+	return bytes.HasPrefix(packet, []byte("OpusHead")) || len(packet) >= 7 && packet[0] == 1 && bytes.Equal(packet[1:7], []byte("vorbis"))
 }
 
 type mp4Box struct {

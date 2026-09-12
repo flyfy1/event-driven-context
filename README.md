@@ -312,6 +312,8 @@ make deploy-frontend   # 将 frontend/ 推送到 gh-pages
 
 ### integ-prod 运维
 
+已有生产 SSH 登录时，可使用 `EDC_DEPLOY_SSH_TARGET=user@host make deploy-prod`；未设置时仍使用 gcloud/IAP。两种连接方式执行相同的校验、备份、发布与回滚流程。
+
 服务进程和 SQLite 数据使用 Linux 账户 `yycy`，共享组为 `context-admins`。`yycy` 与 `songyy` 都在该组中；发布目录保持组可读写，后续发布目录继承该组。SQLite 驱动将数据库文件收紧为运行账户私有，协作者通过服务接口访问数据。systemd unit 仍由 root 管理。`yycy` 只能通过以下受限命令管理 Context 服务，不能获得通用 sudo：
 
 ```sh

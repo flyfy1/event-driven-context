@@ -25,6 +25,10 @@ rsync -a --delete \
   --exclude '/skills/' \
   frontend/ "$TEMP_DIR/site/"
 
+# This repository owns memory-recall; preserve independently published siblings.
+mkdir -p "$TEMP_DIR/site/skills/memory-recall"
+rsync -a --delete frontend/skills/memory-recall/ "$TEMP_DIR/site/skills/memory-recall/"
+
 # GitHub Pages serves JavaScript and CSS with long browser/CDN cache lifetimes.
 # Give every local asset reference a release-specific URL so returning browsers
 # cannot combine a fresh HTML document with code from an older deployment.

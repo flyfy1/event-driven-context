@@ -13,6 +13,24 @@ readonly RELEASE_ID="$(date -u +%Y%m%dT%H%M%SZ)-$(git rev-parse --short HEAD)"
 readonly TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
+# Use an existing authenticated SSH connection when gcloud/IAP is unavailable.
+# Example: EDC_DEPLOY_SSH_TARGET=yycy@35.198.216.126 make deploy-prod
+remote_exec() {
+  if [[ -n "${EDC_DEPLOY_SSH_TARGET:-}" ]]; then
+    ssh -o BatchMode=yes "$EDC_DEPLOY_SSH_TARGET" "$1"
+  else
+    gcloud compute ssh "$INSTANCE" --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" --command "$1"
+  fi
+}
+
+remote_copy() {
+  if [[ -n "${EDC_DEPLOY_SSH_TARGET:-}" ]]; then
+    scp -r "$@" "$EDC_DEPLOY_SSH_TARGET:/tmp/$SERVICE-$RELEASE_ID/"
+  else
+    gcloud compute scp --recurse --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" "$@" "$INSTANCE:/tmp/$SERVICE-$RELEASE_ID/"
+  fi
+}
+
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "refusing deployment from a dirty worktree" >&2
   exit 1
@@ -29,13 +47,12 @@ cp deploy/production/context-service-admin "$TEMP_DIR/context-service-admin"
 cp deploy/production/context-service-admin.sudoers "$TEMP_DIR/context-service-admin.sudoers"
 cp -R backend/skills "$TEMP_DIR/skills"
 
-gcloud compute ssh "$INSTANCE" --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" --command "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
-gcloud compute scp --recurse --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" \
+remote_exec "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
+remote_copy \
   "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/$SERVICE.Caddyfile" "$TEMP_DIR/$PROXY_SERVICE.service" "$TEMP_DIR/context-service-admin" "$TEMP_DIR/context-service-admin.sudoers" \
-  "$TEMP_DIR/skills" \
-  "$INSTANCE:/tmp/$SERVICE-$RELEASE_ID/"
+  "$TEMP_DIR/skills"
 
-gcloud compute ssh "$INSTANCE" --tunnel-through-iap --project "$PROJECT_ID" --zone "$ZONE" --command "sudo -n bash -s -- '$RELEASE_ID' '$SERVICE' '$REMOTE_ROOT' '$REMOTE_DATA' '$PORT'" <<'REMOTE_SCRIPT'
+remote_exec "sudo -n bash -s -- '$RELEASE_ID' '$SERVICE' '$REMOTE_ROOT' '$REMOTE_DATA' '$PORT'" <<'REMOTE_SCRIPT'
 set -euo pipefail
 release_id="$1"
 service="$2"

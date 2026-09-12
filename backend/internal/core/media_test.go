@@ -30,6 +30,16 @@ func wavFixture(totalBytes int) []byte {
 	return data
 }
 
+func oggFixture() []byte {
+	payload := []byte("OpusHead\x01\x02\x00\x00\x80\xbb\x00\x00\x00\x00\x00")
+	page := make([]byte, 28, 28+len(payload))
+	copy(page[:4], "OggS")
+	page[5] = 0x02
+	page[26] = 1
+	page[27] = byte(len(payload))
+	return append(page, payload...)
+}
+
 func TestMediaTypeValidationUsesBoundedStructure(t *testing.T) {
 	realM4A, err := os.ReadFile("testdata/fixture.m4a")
 	if err != nil {
@@ -55,7 +65,15 @@ func TestMediaTypeValidationUsesBoundedStructure(t *testing.T) {
 	if !isMP3([]byte{0xff, 0xfb, 0x90, 0x64}) {
 		t.Fatal("valid MP3 frame header rejected")
 	}
-	for _, mediaType := range []string{"audio/mp4", "audio/mpeg", "audio/wav", "text/html"} {
+	if !isOgg(oggFixture()) {
+		t.Fatal("valid Ogg Opus identification header rejected")
+	}
+	for _, data := range [][]byte{[]byte("OggS"), append([]byte("OggS\x00\x02"), make([]byte, 22)...), append([]byte("OggS\x00\x02"), append(make([]byte, 21), []byte("<script>")...)...)} {
+		if isOgg(data) {
+			t.Fatalf("invalid Ogg accepted: %x", data)
+		}
+	}
+	for _, mediaType := range []string{"audio/mp4", "audio/mpeg", "audio/wav", "audio/ogg", "text/html"} {
 		if _, err = validateMedia(mediaType, []byte("<!doctype html><script>mp4a</script>")); err == nil {
 			t.Fatalf("HTML accepted as %s", mediaType)
 		}

@@ -57,3 +57,7 @@ edc --server {{.APIURL}} state list --project {{.Project}}
 ```
 
 वास्तविक project name, लौटे Event UUID और State lag या coverage limits बताएँ। खाली history भी वैध है; Event न गढ़ें। वास्तविक CLI read सफल होने पर ही setup पूरा है। स्पष्ट अनुरोध के बिना test Event न लिखें।
+
+## वैकल्पिक: Memory Recall इंस्टॉल करें
+
+जानकारी खोजने के लिए `{{.RecallSkillURL}}` पढ़ें और मौजूदा बदलाव सुरक्षित रखते हुए इसे `.agents/skills/memory-recall/SKILL.md` (Codex) या `.claude/skills/memory-recall/SKILL.md` (Claude Code) में सेव करें। `$memory-recall` के साथ प्रोजेक्ट `{{.Project}}` और अपना प्रश्न दें। यह प्रकाशित नोट स्थानीय फ़ोल्डर में सिंक करता है, संबंधित फ़ाइलें पढ़ता है और ज़रूरत पर CLI से स्रोत Events प्राप्त करता है। Recall रिकॉर्डिंग hook चालू नहीं करता और दूरस्थ रिकॉर्ड नहीं लिखता।

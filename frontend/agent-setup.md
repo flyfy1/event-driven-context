@@ -58,3 +58,7 @@ edc --server https://context-api.integ.life state list --project YOUR_PROJECT_ID
 Report the actual project, newest Event UUID, and any State lag or access limitation. Configuration alone is not proof. Do not write a test Event unless the user explicitly asks for one.
 
 Remote ChatGPT remains a separate integration and uses the HTTPS MCP endpoint with OAuth.
+
+## Optional: install Memory Recall
+
+For focused retrieval, read `https://context.integ.life/skills/memory-recall/SKILL.md` and save it as `.agents/skills/memory-recall/SKILL.md` (Codex) or `.claude/skills/memory-recall/SKILL.md` (Claude Code), preserving existing edits. Invoke `$memory-recall` with project `YOUR_PROJECT_ID` and your question. It syncs published notes into a local folder, reads relevant files selectively, and retrieves source Events with the CLI when needed. Recall does not enable recording hooks or write remote records.

@@ -57,3 +57,7 @@ edc --server {{.APIURL}} state list --project {{.Project}}
 ```
 
 Laporkan nama projek sebenar, UUID Event yang dikembalikan dan sebarang lag State atau had liputan. Sejarah kosong ialah hasil yang sah. Persediaan selesai hanya selepas bacaan CLI sebenar berjaya; jangan tulis Event ujian tanpa permintaan jelas.
+
+## Pilihan: pasang Memory Recall
+
+Untuk carian konteks, baca `{{.RecallSkillURL}}` dan simpan sebagai `.agents/skills/memory-recall/SKILL.md` (Codex) atau `.claude/skills/memory-recall/SKILL.md` (Claude Code), sambil mengekalkan suntingan sedia ada. Gunakan `$memory-recall` dengan projek `{{.Project}}` dan soalan anda. Skill menyegerakkan nota diterbitkan ke folder setempat, membaca fail berkaitan dan mendapatkan Event sumber melalui CLI apabila perlu. Recall tidak mengaktifkan hook rakaman atau menulis rekod jauh.

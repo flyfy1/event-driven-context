@@ -409,3 +409,9 @@ func writeFile(t *testing.T, path, contents string, mode os.FileMode) {
 		t.Fatal(err)
 	}
 }
+
+func TestAudioExtensionSupportsOgg(t *testing.T) {
+	if got := audioExtension("audio/ogg"); got != ".ogg" {
+		t.Fatalf("audioExtension(audio/ogg) = %q", got)
+	}
+}

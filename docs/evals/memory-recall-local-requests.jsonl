@@ -1,0 +1,7 @@
+{"client": "fixture-self", "method": "GET", "path": "/v1/projects/prj_recall_fixture/notes/export", "query": null, "status": 200, "response_bytes": 80493}
+{"client": "fixture-agent", "method": "GET", "path": "/v1/projects/prj_recall_fixture/notes/export", "query": null, "status": 200, "response_bytes": 80493}
+{"client": "fixture-self", "method": "POST", "path": "/v1/projects/prj_recall_fixture/events/query", "query": {"from": "2026-09-10T00:00:00Z", "time_field": "recorded_at", "limit": 20}, "status": 200, "response_bytes": 1623}
+{"client": "fixture-agent", "method": "POST", "path": "/v1/projects/prj_recall_fixture/events/query", "query": {"time_field": "recorded_at", "limit": 20}, "status": 200, "response_bytes": 8846}
+{"client": "fixture-self", "method": "GET", "path": "/v1/projects/prj_recall_fixture/events/019f0000-0000-7000-8000-000000000004", "query": null, "status": 200, "response_bytes": 443}
+{"client": "fixture-self", "method": "POST", "path": "/v1/projects/prj_recall_fixture/events/query", "query": {"refs_to": "019f0000-0000-7000-8000-000000000004", "time_field": "recorded_at", "limit": 20}, "status": 200, "response_bytes": 37}
+{"client": "fixture-agent", "method": "POST", "path": "/v1/projects/prj_recall_fixture/events/query", "query": {"time_field": "recorded_at", "limit": 20, "cursor": "20"}, "status": 200, "response_bytes": 3379}

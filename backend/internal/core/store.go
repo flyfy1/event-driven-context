@@ -931,7 +931,7 @@ func validateFilename(filename string) error {
 func validateMedia(declared string, data []byte) (string, error) {
 	mediaType, params, err := mime.ParseMediaType(declared)
 	if err != nil || len(params) != 0 {
-		return "", Invalid("declare a supported media_type: audio/mp4, audio/mpeg, or audio/wav")
+		return "", Invalid("declare a supported media_type: audio/mp4, audio/mpeg, audio/wav, or audio/ogg")
 	}
 	switch mediaType {
 	case "audio/mp4":
@@ -947,8 +947,12 @@ func validateMedia(declared string, data []byte) (string, error) {
 			return "", Invalid("file content does not match audio/wav")
 		}
 		mediaType = "audio/wav"
+	case "audio/ogg":
+		if !ValidateAudioContent("audio/ogg", data) {
+			return "", Invalid("file content does not match audio/ogg")
+		}
 	default:
-		return "", Invalid("declare a supported media_type: audio/mp4, audio/mpeg, or audio/wav")
+		return "", Invalid("declare a supported media_type: audio/mp4, audio/mpeg, audio/wav, or audio/ogg")
 	}
 	return mediaType, nil
 }

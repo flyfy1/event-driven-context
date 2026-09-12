@@ -80,7 +80,7 @@ COLLECTION/
 
 Default sync pulls notes and every page of one frozen file catalog. `--files all` also downloads all catalog bytes. The self-checksummed manifest binds canonical server origin and project ID and records three independent completion states: notes revision plus `through_sequence`, catalog through-sequence/cursor, and bytes through-sequence. Counts belong in command output. Catalog completion never implies notes coverage; metadata completion never implies bytes are local.
 
-Notes retain the conflict behavior above. Machine metadata and bytes use verified temporary writes and atomic rename. Interrupted work may retain verified files but leaves the relevant completion false for retry. Existing `edc notes sync` remains supported. Recall defaults new collections to `.context/projects/PROJECT_ID/`; sync never migrates, modifies, or deletes old `.context/notes/` directories.
+Notes retain the conflict behavior above. Machine metadata uses verified temporary writes and atomic rename; each verified byte inode is installed with a no-clobber hardlink. Interrupted work may retain verified files but leaves the relevant completion false for retry. Existing `edc notes sync` remains supported. Recall defaults new collections to `.context/projects/PROJECT_ID/`; sync never migrates, modifies, or deletes old `.context/notes/` directories.
 
 One attachment can be cached on demand:
 

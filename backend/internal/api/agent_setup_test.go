@@ -22,7 +22,7 @@ func TestAgentSetupMarkdownPublicRoute(t *testing.T) {
 				t.Fatalf("%d: %s", response.Code, response.Body.String())
 			}
 			body := response.Body.String()
-			for _, want := range []string{title, "`" + setupProjectA + "`", v2TestIssuer, "https://app.example/skills/edc-recorder/SKILL.md", "edc --server " + v2TestIssuer + " whoami", "query --project " + setupProjectA + " --limit 5", "state list --project " + setupProjectA} {
+			for _, want := range []string{title, "`" + setupProjectA + "`", v2TestIssuer, "https://app.example/skills/edc-recorder/SKILL.md", "https://app.example/skills/memory-recall/SKILL.md", "edc --server " + v2TestIssuer + " whoami", "query --project " + setupProjectA + " --limit 5", "state list --project " + setupProjectA} {
 				if !strings.Contains(body, want) {
 					t.Errorf("missing %q", want)
 				}

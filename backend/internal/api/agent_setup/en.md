@@ -57,3 +57,7 @@ edc --server {{.APIURL}} state list --project {{.Project}}
 ```
 
 Report the actual project name, returned Event UUIDs, and any State lag or coverage limitation. Empty history is a valid result; do not invent an Event. Setup is complete only after a real CLI read succeeds. Do not write a test Event unless the user explicitly asks for a write test.
+
+## Optional: install Memory Recall
+
+For focused retrieval, read `{{.RecallSkillURL}}` and save it as `.agents/skills/memory-recall/SKILL.md` (Codex) or `.claude/skills/memory-recall/SKILL.md` (Claude Code), preserving existing edits. Invoke `$memory-recall` with project `{{.Project}}` and your question. It syncs published notes into a local folder, reads relevant files selectively, and retrieves source Events with the CLI when needed. Recall does not enable recording hooks or write remote records.

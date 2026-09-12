@@ -399,6 +399,8 @@ func audioExtension(mediaType string) string {
 		return ".wav"
 	case "audio/mpeg", "audio/mp3":
 		return ".mp3"
+	case "audio/ogg":
+		return ".ogg"
 	default:
 		return ""
 	}

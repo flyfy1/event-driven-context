@@ -98,7 +98,7 @@ func (s *Service) PutFile(ctx context.Context, projectID string, in FileUpload) 
 
 func validMedia(mt string, data []byte) bool {
 	switch mt {
-	case "audio/mp4", "audio/mpeg", "audio/wav":
+	case "audio/mp4", "audio/mpeg", "audio/wav", "audio/ogg":
 		return core.ValidateAudioContent(mt, data)
 	case "image/jpeg":
 		return validImage(data, "jpeg") && validJPEGStructure(data)
