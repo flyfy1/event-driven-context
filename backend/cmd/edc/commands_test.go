@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	"event-driven-context/internal/mcpserver"
 	"event-driven-context/internal/v2"
 	"event-driven-context/internal/v2client"
 )
@@ -59,5 +61,28 @@ func TestRemoteErrorPreservesPublicCode(t *testing.T) {
 	var v2Err *v2.Error
 	if !errors.As(err, &v2Err) || v2Err.Code != "state_version_mismatch" || v2Err.Message != "revision changed" {
 		t.Fatalf("error = %#v", err)
+	}
+}
+
+func TestRemoteGetStateReconcilesLatestSequence(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/v1/projects/prj_one/state":
+			_ = json.NewEncoder(w).Encode(v2.StatesResult{States: []v2.State{}, LatestSequence: 10})
+		case "/v1/projects/prj_one/state/project-brief/current":
+			_ = json.NewEncoder(w).Encode(v2.State{ProjectID: "prj_one", Key: "project-brief/current", Version: 1, BasedOnSequence: 11, Lag: 0})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(server.Close)
+	client, err := v2client.New(server.URL, "test-token")
+	if err != nil {
+		t.Fatal(err)
+	}
+	version := int64(1)
+	out, err := (remoteMCPBackend{client: client}).GetState(context.Background(), mcpserver.V2GetStateInput{ProjectID: "prj_one", Keys: []string{"project-brief/current"}, Version: &version})
+	if err != nil || out.LatestSequence != 11 || len(out.States) != 1 || out.States[0].Lag != 0 {
+		t.Fatalf("result = %#v, error = %v", out, err)
 	}
 }

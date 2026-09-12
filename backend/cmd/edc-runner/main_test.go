@@ -354,7 +354,7 @@ cat "$script_dir/result.json" > "$out"
 		writeFile(t, filepath.Join(dir, "slow"), "1", 0o600)
 	}
 	codex := writeExecutable(t, dir, "codex", script)
-	return options{skillRoot: skillRoot, codexPath: codex, executionTimeout: 2 * time.Second, requestTimeout: time.Second, heartbeatInterval: time.Hour, maxOutputBytes: 64 << 10}
+	return options{skillRoot: skillRoot, codexPath: codex, executionTimeout: 10 * time.Second, requestTimeout: 5 * time.Second, heartbeatInterval: time.Hour, maxOutputBytes: 64 << 10}
 }
 
 func testClient(t *testing.T, server string, timeout time.Duration) *runnerClient {

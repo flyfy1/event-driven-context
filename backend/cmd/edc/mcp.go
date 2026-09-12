@@ -109,10 +109,10 @@ func (b remoteMCPBackend) UploadFile(ctx context.Context, in mcpserver.V2UploadF
 	digest := hex.EncodeToString(sum[:])
 	if in.SHA256 != "" {
 		decoded, decodeErr := hex.DecodeString(in.SHA256)
-		if decodeErr != nil || len(decoded) != sha256.Size || in.SHA256 != strings.ToLower(in.SHA256) {
-			return v2.FileInfo{}, &v2.Error{Code: "invalid_input", Message: "sha256 must be 64 lowercase hexadecimal characters"}
+		if decodeErr != nil || len(decoded) != sha256.Size {
+			return v2.FileInfo{}, &v2.Error{Code: "invalid_input", Message: "sha256 must be 64 hexadecimal characters"}
 		}
-		if in.SHA256 != digest {
+		if !strings.EqualFold(in.SHA256, digest) {
 			return v2.FileInfo{}, &v2.Error{Code: "invalid_input", Message: "sha256 does not match content"}
 		}
 	}
@@ -163,8 +163,18 @@ func (b remoteMCPBackend) GetState(ctx context.Context, in mcpserver.V2GetStateI
 	if err != nil {
 		return v2.StatesResult{}, err
 	}
+	latestByKey := make(map[string]v2.State, len(listed.States))
+	for _, state := range listed.States {
+		latestByKey[state.Key] = state
+	}
 	out := v2.StatesResult{States: make([]v2.State, 0, len(in.Keys)), LatestSequence: listed.LatestSequence}
 	for _, key := range in.Keys {
+		if in.Version == nil {
+			if state, ok := latestByKey[key]; ok {
+				out.States = append(out.States, state)
+				continue
+			}
+		}
 		state, err := b.client.GetState(ctx, in.ProjectID, key, in.Version)
 		if err != nil {
 			var apiErr *v2client.APIError
@@ -174,6 +184,12 @@ func (b remoteMCPBackend) GetState(ctx context.Context, in mcpserver.V2GetStateI
 			return v2.StatesResult{}, remoteError(err)
 		}
 		out.States = append(out.States, state)
+		if latest := state.BasedOnSequence + state.Lag; latest > out.LatestSequence {
+			out.LatestSequence = latest
+		}
+	}
+	for i := range out.States {
+		out.States[i].Lag = out.LatestSequence - out.States[i].BasedOnSequence
 	}
 	return out, nil
 }

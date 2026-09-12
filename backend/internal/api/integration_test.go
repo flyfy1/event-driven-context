@@ -576,12 +576,13 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 		stderr string
 		err    error
 	}
-	cliRaw := func(profile, stdin string, args ...string) cliResult {
+	cliRawIn := func(workdir, profile, stdin string, args ...string) cliResult {
 		t.Helper()
 		argv := append([]string{"--server", h.URL, "--config", filepath.Join(dir, profile+".json")}, args...)
 		cmd := exec.Command(bin, argv...)
 		cmd.Env = env
 		cmd.Stdin = strings.NewReader(stdin)
+		cmd.Dir = workdir
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 		out, runErr := cmd.Output()
@@ -590,9 +591,20 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 		}
 		return cliResult{stdout: out, stderr: stderr.String(), err: runErr}
 	}
+	cliRaw := func(profile, stdin string, args ...string) cliResult {
+		return cliRawIn("", profile, stdin, args...)
+	}
 	cli := func(profile, stdin string, args ...string) []byte {
 		t.Helper()
 		result := cliRaw(profile, stdin, args...)
+		if result.err != nil {
+			t.Fatalf("CLI %v failed: %v %s", args, result.err, result.stderr)
+		}
+		return result.stdout
+	}
+	cliIn := func(workdir, profile, stdin string, args ...string) []byte {
+		t.Helper()
+		result := cliRawIn(workdir, profile, stdin, args...)
 		if result.err != nil {
 			t.Fatalf("CLI %v failed: %v %s", args, result.err, result.stderr)
 		}
@@ -625,6 +637,19 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 	var members core.Members
 	if err = json.Unmarshal(cli("bob", "", "project", "members", "--project", p.ID), &members); err != nil || len(members.Members) != 2 {
 		t.Fatal("CLI members failed", err)
+	}
+	projectDir := filepath.Join(dir, "workspace")
+	if err = os.Mkdir(projectDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	var binding struct {
+		ProjectID string `json:"project_id"`
+	}
+	if err = json.Unmarshal(cliIn(projectDir, "alice", "", "link", p.ID), &binding); err != nil || binding.ProjectID != p.ID {
+		t.Fatalf("link failed: %#v %v", binding, err)
+	}
+	if err = json.Unmarshal(cliIn(projectDir, "alice", "", "link"), &binding); err != nil || binding.ProjectID != p.ID {
+		t.Fatalf("show link failed: %#v %v", binding, err)
 	}
 
 	// JSON input keeps large integers exact and canonicalizes a valid client UUID.
@@ -676,12 +701,44 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 	}
 	cli("alice", "", "metadata", "--project", p.ID, "--key", "source")
 
+	preview := cliRawIn(projectDir, "alice", "", "setup", "claude-code")
+	if preview.err != nil || !bytes.Contains(preview.stdout, []byte(`"applied": false`)) {
+		t.Fatalf("setup preview: %v %s %s", preview.err, preview.stderr, preview.stdout)
+	}
+	if _, statErr := os.Stat(filepath.Join(projectDir, ".mcp.json")); !errors.Is(statErr, os.ErrNotExist) {
+		t.Fatalf("setup preview changed files: %v", statErr)
+	}
+	applied := cliRawIn(projectDir, "alice", "", "setup", "--apply", "--enable-shared-hooks", "claude-code")
+	if applied.err != nil || !bytes.Contains(applied.stdout, []byte(`"applied": true`)) || !strings.Contains(applied.stderr, `"preview"`) {
+		t.Fatalf("setup apply: %v %s %s", applied.err, applied.stderr, applied.stdout)
+	}
+	settings, err := os.ReadFile(filepath.Join(projectDir, ".claude", "settings.local.json"))
+	if err != nil || !bytes.Contains(settings, []byte("UserPromptSubmit")) {
+		t.Fatalf("setup hooks missing: %s %v", settings, err)
+	}
+	hookInput := fmt.Sprintf(`{"session_id":"session-one","prompt_id":"prompt-one","cwd":%q,"hook_event_name":"UserPromptSubmit","prompt":"hook text"}`, projectDir)
+	hooked := cliRawIn(projectDir, "alice", hookInput, "hook", "claude-code")
+	if hooked.err != nil {
+		t.Fatalf("hook failed: %v %s", hooked.err, hooked.stderr)
+	}
+	var hookPage v2.EventsPage
+	if err = json.Unmarshal(cliIn(projectDir, "alice", "", "query", "--source", `{"channel":"hook"}`), &hookPage); err != nil || len(hookPage.Events) != 1 || hookPage.Events[0].Content.Text != "hook text" {
+		t.Fatalf("hook event roundtrip: %#v %v", hookPage, err)
+	}
+	var linkedStatus struct {
+		HooksEnabled  bool `json:"hooks_enabled"`
+		OutboxPending int  `json:"outbox_pending"`
+	}
+	if err = json.Unmarshal(cliIn(projectDir, "alice", "", "status"), &linkedStatus); err != nil || !linkedStatus.HooksEnabled || linkedStatus.OutboxPending != 0 {
+		t.Fatalf("capture status: %#v %v", linkedStatus, err)
+	}
+
 	// Per-item failure prints the complete receipt and exits non-zero; the
 	// successful item remains queryable because batches are deliberately partial.
 	partialInput := `{"id":"BBBBBBBB-BBBB-4BBB-8BBB-BBBBBBBBBBBB","type":"note","content":{"kind":"text","text":"kept"},"source":{"channel":"cli"}}
 {"id":"CCCCCCCC-CCCC-4CCC-8CCC-CCCCCCCCCCCC","type":"unknown","content":{"kind":"text","text":"rejected"},"source":{"channel":"cli"}}
 `
-	partialRun := cliRaw("alice", partialInput, "push", "--project", p.ID, "--jsonl")
+	partialRun := cliRawIn(projectDir, "alice", partialInput, "push", "--jsonl")
 	var partial v2.RecordEventsResult
 	if partialRun.err == nil || json.Unmarshal(partialRun.stdout, &partial) != nil || len(partial.Results) != 2 || partial.Results[0].Status != "created" || partial.Results[1].Status != "invalid" {
 		t.Fatalf("partial batch semantics: err=%v stderr=%s out=%s", partialRun.err, partialRun.stderr, partialRun.stdout)
@@ -690,6 +747,12 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 	if err = json.Unmarshal(cli("alice", "", "get", "--project", p.ID, strings.ToLower("BBBBBBBB-BBBB-4BBB-8BBB-BBBBBBBBBBBB")), &kept); err != nil || kept.Content.Text != "kept" {
 		t.Fatal("partial batch lost successful item", err)
 	}
+	var queued struct {
+		Items []json.RawMessage `json:"items"`
+	}
+	if err = json.Unmarshal(cliIn(projectDir, "alice", "", "outbox", "list"), &queued); err != nil || len(queued.Items) != 1 {
+		t.Fatalf("partial failure was not retained: items=%d err=%v", len(queued.Items), err)
+	}
 
 	manifestPath := filepath.Join(dir, "manifest.json")
 	manifest := v2.Manifest{ID: "project-brief", Version: "0.1.0", Name: "Project brief", State: []v2.StateDeclaration{{Key: "current"}}, Processor: json.RawMessage(`{"entry":{"type":"agent"}}`), Permissions: v2.Permissions{ReadEvents: []string{"note"}, WriteState: []string{"current"}}}
@@ -697,7 +760,8 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 	if err = os.WriteFile(manifestPath, manifestBytes, 0600); err != nil {
 		t.Fatal(err)
 	}
-	installOut := cli("alice", "", "plugin", "install", "--project", p.ID, "--manifest", manifestPath)
+	pluginTokenPath := filepath.Join(dir, "project-brief.token")
+	installOut := cli("alice", "", "plugin", "install", "--project", p.ID, "--manifest", manifestPath, "--token-file", pluginTokenPath)
 	for _, token := range tokens {
 		if bytes.Contains(installOut, []byte(token)) {
 			t.Fatal("plugin command leaked a user token")
@@ -705,6 +769,9 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 	}
 	if bytes.Contains(installOut, []byte(`"token":`)) || !bytes.Contains(installOut, []byte(`"token_returned": true`)) {
 		t.Fatalf("plugin token disclosure contract: %s", installOut)
+	}
+	if tokenInfo, statErr := os.Stat(pluginTokenPath); statErr != nil || tokenInfo.Mode().Perm() != 0600 {
+		t.Fatalf("plugin token file is not private: %v", statErr)
 	}
 	contentPath := filepath.Join(dir, "brief.md")
 	if err = os.WriteFile(contentPath, []byte("# Current\n"), 0600); err != nil {
@@ -739,12 +806,6 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 	if result := cliRaw("alice", "", "pull", "--project", p.ID, "--after", "0", "--follow"); result.err == nil || !strings.Contains(result.stderr, "not implemented") {
 		t.Fatalf("pull --follow pretended success: %v %s", result.err, result.stderr)
 	}
-	for _, command := range []string{"hook", "setup", "outbox", "host"} {
-		if result := cliRaw("alice", "", command); result.err == nil || !strings.Contains(result.stderr, "not implemented") {
-			t.Fatalf("%s pretended success: %v %s", command, result.err, result.stderr)
-		}
-	}
-
 	// A real child process speaks MCP on stdout and forwards calls to the same HTTP backend.
 	cmd := exec.Command(bin, "--server", h.URL, "--config", filepath.Join(dir, "bob.json"), "mcp")
 	cmd.Env = env

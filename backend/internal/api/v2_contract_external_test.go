@@ -347,8 +347,8 @@ func TestV2PublicHTTPAndMCPShareOneContract(t *testing.T) {
 		t.Fatalf("HTTP pause = %#v, %v", paused, err)
 	}
 	pausedResult, pausedErr := pluginMCP.CallTool(ctx, &mcp.CallToolParams{Name: "query_events", Arguments: mcpserver.V2QueryEventsInput{ProjectID: f.aliceProject.ID}})
-	if pausedErr == nil && (pausedResult == nil || !pausedResult.IsError) {
-		t.Fatalf("paused plugin MCP token remained usable: %#v", pausedResult)
+	if pausedErr != nil || pausedResult == nil || !pausedResult.IsError || !strings.Contains(contractToolText(pausedResult), "plugin_paused") {
+		t.Fatalf("paused plugin MCP result=%#v err=%v", pausedResult, pausedErr)
 	}
 	resumed, err := f.aliceHTTP.PatchPlugin(ctx, f.aliceProject.ID, "contract-brief", v2client.PatchPluginInput{Action: "resume"})
 	if err != nil || resumed.Status != "active" {

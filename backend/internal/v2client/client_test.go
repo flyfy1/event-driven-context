@@ -138,7 +138,7 @@ func TestPutFileValidatesReturnedIdentity(t *testing.T) {
 		_ = json.NewEncoder(w).Encode(v2.FileInfo{ID: "file_one", ProjectID: "prj_other", SizeBytes: 5, SHA256: hash})
 	})
 	_, err := c.PutFile(context.Background(), "prj_one", v2.FileUpload{
-		Filename: "hello.txt", MediaType: "text/plain", SizeBytes: int64(len(data)), SHA256: hash, Reader: bytes.NewReader(data),
+		Filename: "hello.txt", MediaType: "text/plain", SizeBytes: int64(len(data)), SHA256: strings.ToUpper(hash), Reader: bytes.NewReader(data),
 	})
 	if err == nil || !strings.Contains(err.Error(), "unexpected project") {
 		t.Fatalf("error = %v", err)

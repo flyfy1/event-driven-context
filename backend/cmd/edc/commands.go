@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 
+	"event-driven-context/internal/capture"
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/v2"
 	"event-driven-context/internal/v2client"
@@ -25,13 +26,6 @@ type stringList []string
 
 func (s *stringList) String() string     { return strings.Join(*s, ",") }
 func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
-
-func requiredProject(value string) error {
-	if value == "" {
-		return fmt.Errorf("--project is required until directory binding is implemented")
-	}
-	return nil
-}
 
 func (a *app) project(args []string) error {
 	if len(args) == 0 {
@@ -62,7 +56,7 @@ func (a *app) project(args []string) error {
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		out, err := a.client.ListMembers(a.ctx, *projectID)
@@ -73,7 +67,7 @@ func (a *app) project(args []string) error {
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		if *username == "" {
@@ -103,7 +97,7 @@ func (a *app) push(args []string) error {
 	if err := f.Parse(args); err != nil {
 		return err
 	}
-	if err := requiredProject(*projectID); err != nil {
+	if err := a.requiredProject(projectID); err != nil {
 		return err
 	}
 	modes := 0
@@ -179,13 +173,44 @@ func (a *app) push(args []string) error {
 		}
 		events[i].ID = parsed.String()
 	}
+	var queueManager *capture.Manager
+	var queueBinding capture.Binding
+	if manager, binding, bindingErr := a.currentBinding(a.ctx); bindingErr == nil && binding.ProjectID == *projectID {
+		queueManager, queueBinding = manager, binding
+		// A new push is also an opportunity to deliver older durable items. A
+		// pending conflict must not prevent this new batch from being attempted.
+		_, _ = queueManager.Flush(a.ctx, queueBinding)
+	}
 	out, err := a.client.RecordEvents(a.ctx, *projectID, v2.RecordEventsInput{Events: events})
 	if err != nil {
+		queued := 0
+		if queueManager != nil {
+			unconfirmed := events
+			var batchErr *v2client.BatchError
+			if errors.As(err, &batchErr) && len(out.Results) == len(events) {
+				unconfirmed = make([]v2.EventInput, 0, len(events))
+				for i, item := range out.Results {
+					if item.Status != "created" && item.Status != "duplicate" {
+						unconfirmed = append(unconfirmed, events[i])
+					}
+				}
+			}
+			if len(unconfirmed) > 0 {
+				var queueErr error
+				queued, queueErr = queueManager.Enqueue(queueBinding, unconfirmed)
+				if queueErr != nil {
+					return errors.Join(err, fmt.Errorf("persist failed events in outbox: %w", queueErr))
+				}
+			}
+		}
 		var batchErr *v2client.BatchError
 		if errors.As(err, &batchErr) {
 			if printErr := a.json(out); printErr != nil {
 				return printErr
 			}
+		}
+		if queued > 0 {
+			_, _ = fmt.Fprintf(a.io.err, "queued %d unconfirmed event(s) in the local outbox\n", queued)
 		}
 		return err
 	}
@@ -346,7 +371,7 @@ func (a *app) query(args []string) error {
 	if err := parse(f, args); err != nil {
 		return err
 	}
-	if err := requiredProject(*projectID); err != nil {
+	if err := a.requiredProject(projectID); err != nil {
 		return err
 	}
 	meta, err := objectWithPairs(*metadata, nil, true)
@@ -371,7 +396,7 @@ func (a *app) get(args []string) error {
 	if err := f.Parse(args); err != nil {
 		return err
 	}
-	if err := requiredProject(*projectID); err != nil {
+	if err := a.requiredProject(projectID); err != nil {
 		return err
 	}
 	if f.NArg() != 1 {
@@ -388,7 +413,7 @@ func (a *app) metadata(args []string) error {
 	if err := parse(f, args); err != nil {
 		return err
 	}
-	if err := requiredProject(*projectID); err != nil {
+	if err := a.requiredProject(projectID); err != nil {
 		return err
 	}
 	out, err := a.client.ListMetadata(a.ctx, *projectID, *key)
@@ -405,7 +430,7 @@ func (a *app) file(args []string) error {
 	if err := f.Parse(args[1:]); err != nil {
 		return err
 	}
-	if err := requiredProject(*projectID); err != nil {
+	if err := a.requiredProject(projectID); err != nil {
 		return err
 	}
 	if f.NArg() != 1 {
@@ -478,7 +503,7 @@ func (a *app) state(args []string) error {
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		out, err := a.client.ListState(a.ctx, *projectID, *prefix)
@@ -488,7 +513,7 @@ func (a *app) state(args []string) error {
 		if err := f.Parse(args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		if f.NArg() != 1 {
@@ -516,7 +541,7 @@ func (a *app) state(args []string) error {
 		if err := f.Parse(args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		if f.NArg() != 1 {
@@ -586,7 +611,7 @@ func (a *app) plugin(args []string) error {
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		out, err := a.client.ListPlugins(a.ctx, *projectID)
@@ -596,10 +621,11 @@ func (a *app) plugin(args []string) error {
 	case "install":
 		manifestPath := f.String("manifest", "", "manifest JSON path or -")
 		configRaw := f.String("config", "", "optional config JSON")
+		tokenFile := f.String("token-file", "", "new private file for the one-time plugin token")
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		if *manifestPath == "" {
@@ -624,10 +650,16 @@ func (a *app) plugin(args []string) error {
 		if err != nil {
 			return err
 		}
+		if *tokenFile != "" {
+			if err = writePrivateNewFile(*tokenFile, []byte(out.Token+"\n")); err != nil {
+				return fmt.Errorf("save plugin token: %w", err)
+			}
+		}
 		return a.json(struct {
 			Installation  v2.Installation `json:"installation"`
 			TokenReturned bool            `json:"token_returned"`
-		}{out.Installation, out.Token != ""})
+			TokenFile     string          `json:"token_file,omitempty"`
+		}{out.Installation, out.Token != "", *tokenFile})
 	case "config":
 		pluginID := f.String("plugin", "", "plugin id")
 		revision := f.Int64("expected-revision", 0, "expected config revision")
@@ -635,7 +667,7 @@ func (a *app) plugin(args []string) error {
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		if *pluginID == "" || *revision < 1 || *configRaw == "" {
@@ -651,7 +683,7 @@ func (a *app) plugin(args []string) error {
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		if *pluginID == "" {
@@ -667,7 +699,7 @@ func (a *app) plugin(args []string) error {
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		if *pluginID == "" {
@@ -690,7 +722,7 @@ func (a *app) plugin(args []string) error {
 		if err := parse(f, args[1:]); err != nil {
 			return err
 		}
-		if err := requiredProject(*projectID); err != nil {
+		if err := a.requiredProject(projectID); err != nil {
 			return err
 		}
 		if *pluginID == "" {
@@ -711,7 +743,7 @@ func (a *app) pull(args []string) error {
 	if err := parse(f, args); err != nil {
 		return err
 	}
-	if err := requiredProject(*projectID); err != nil {
+	if err := a.requiredProject(projectID); err != nil {
 		return err
 	}
 	if *follow {

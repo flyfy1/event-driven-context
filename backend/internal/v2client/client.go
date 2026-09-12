@@ -272,17 +272,18 @@ func (c *Client) PutFile(ctx context.Context, projectID string, in v2.FileUpload
 		return out, fmt.Errorf("file must be 0-%d bytes", v2.MaxFileBytes)
 	}
 	if len(in.SHA256) != sha256.Size*2 {
-		return out, fmt.Errorf("sha256 must be 64 lowercase hexadecimal characters")
+		return out, fmt.Errorf("sha256 must be 64 hexadecimal characters")
 	}
-	if _, err = hex.DecodeString(in.SHA256); err != nil || in.SHA256 != strings.ToLower(in.SHA256) {
-		return out, fmt.Errorf("sha256 must be 64 lowercase hexadecimal characters")
+	if _, err = hex.DecodeString(in.SHA256); err != nil {
+		return out, fmt.Errorf("sha256 must be 64 hexadecimal characters")
 	}
+	digest := strings.ToLower(in.SHA256)
 	pr, pw := io.Pipe()
 	mw := multipart.NewWriter(pw)
 	go func() {
 		var writeErr error
 		defer func() { _ = pw.CloseWithError(writeErr) }()
-		if writeErr = mw.WriteField("sha256", in.SHA256); writeErr != nil {
+		if writeErr = mw.WriteField("sha256", digest); writeErr != nil {
 			return
 		}
 		h := make(textproto.MIMEHeader)
@@ -323,7 +324,7 @@ func (c *Client) PutFile(ctx context.Context, projectID string, in v2.FileUpload
 	if out.ProjectID != projectID {
 		return out, fmt.Errorf("server returned file from an unexpected project")
 	}
-	if out.SHA256 != in.SHA256 || out.SizeBytes != in.SizeBytes {
+	if !strings.EqualFold(out.SHA256, digest) || out.SizeBytes != in.SizeBytes {
 		return out, fmt.Errorf("server returned file metadata that does not match the upload")
 	}
 	return out, nil

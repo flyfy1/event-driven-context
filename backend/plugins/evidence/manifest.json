@@ -1,0 +1,21 @@
+{
+  "id": "evidence",
+  "version": "0.1.0",
+  "name": "Evidence",
+  "description": "Guides an agent to answer project questions from source events, including superseded facts, conflicts, and coverage gaps.",
+  "skills": [
+    "skills/evidence/SKILL.md"
+  ],
+  "state": [],
+  "session_context": [],
+  "config": {},
+  "permissions": {
+    "read_events": [
+      "note",
+      "derived",
+      "log"
+    ],
+    "write_events": [],
+    "write_state": []
+  }
+}

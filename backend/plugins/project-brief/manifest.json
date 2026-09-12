@@ -1,0 +1,51 @@
+{
+  "id": "project-brief",
+  "version": "0.1.0",
+  "name": "Project brief",
+  "description": "Maintains a source-linked view of the project's goals, current decisions, constraints, open work, and unresolved questions.",
+  "skills": [
+    "skills/project-brief/SKILL.md"
+  ],
+  "state": [
+    { "key": "current" },
+    { "key": "_cursor" },
+    { "key": "_requests" }
+  ],
+  "session_context": [
+    "current"
+  ],
+  "processor": {
+    "runs_in": "host",
+    "entry": {
+      "type": "agent",
+      "skill": "skills/project-brief/SKILL.md",
+      "protocol": "edc-processor-v1"
+    },
+    "input": {
+      "types": [
+        "note",
+        "derived",
+        "log"
+      ]
+    },
+    "limits": {
+      "timeout_seconds": 120
+    }
+  },
+  "config": {
+    "language": "auto",
+    "prompt": "Keep the brief compact and emphasize current decisions and unfinished work."
+  },
+  "permissions": {
+    "read_events": [
+      "note",
+      "derived",
+      "log"
+    ],
+    "write_events": [],
+    "write_state": [
+      "current",
+      "_cursor"
+    ]
+  }
+}

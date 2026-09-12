@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"event-driven-context/internal/core"
+	"event-driven-context/internal/processorhost"
 	"event-driven-context/internal/v2client"
 	"golang.org/x/term"
 )
@@ -25,23 +26,29 @@ Usage: edc [--server URL] [--config PATH] COMMAND
 Commands:
   register | login | logout | whoami
   project create | list | members | add-member
+  link [PROJECT_ID] | status
   push [TEXT] | --file PATH | --json | --jsonl
   query | get EVENT_ID | metadata
   file get FILE_ID
   state list | get | put
   plugin install | list | config | pause | resume | rerun | remove
   pull --after SEQUENCE
+  hook CLIENT | setup CLIENT [--apply]
+  outbox [list|flush]
+  host run --plugin ID --plugin-dir PATH --plugin-token-file PATH --once
   mcp
 
-Global flags precede COMMAND. Project commands require --project until directory
-binding is implemented. Passwords are prompted without echo; --password-stdin
-reads one password from stdin. Login writes a private config. EDC_SERVER,
-EDC_CONFIG and EDC_TOKEN override defaults. Structured output is JSON.
+Global flags precede COMMAND. Commands use the current directory binding when
+--project is omitted. Passwords are prompted without echo; --password-stdin
+reads one password from stdin. Login writes a private config. Setup previews
+changes and writes only with --apply. EDC_SERVER, EDC_CONFIG and EDC_TOKEN
+override defaults. Structured output is JSON.
 `
 
 type config struct {
-	Server string `json:"server"`
-	Token  string `json:"token"`
+	Server    string `json:"server"`
+	Token     string `json:"token"`
+	AccountID string `json:"account_id,omitempty"`
 }
 
 type streams struct {
@@ -133,13 +140,19 @@ func (a *app) dispatch(command string, args []string) error {
 			return err
 		}
 		if a.config.Server == a.server && a.config.Token == a.token {
-			if err := saveConfig(a.configPath, config{Server: a.server}); err != nil {
+			updated := a.config
+			updated.Token, updated.AccountID = "", ""
+			if err := saveConfig(a.configPath, updated); err != nil {
 				return err
 			}
 		}
 		return a.json(map[string]bool{"logged_out": true})
 	case "project":
 		return a.project(args)
+	case "link":
+		return a.link(args)
+	case "status":
+		return a.status(args)
 	case "push":
 		return a.push(args)
 	case "query":
@@ -158,11 +171,115 @@ func (a *app) dispatch(command string, args []string) error {
 		return a.pull(args)
 	case "mcp":
 		return a.mcp(args)
-	case "link", "status", "hook", "setup", "outbox", "host":
-		return fmt.Errorf("%s is not implemented in this V2 CLI build", command)
+	case "hook":
+		return a.hook(args)
+	case "setup":
+		return a.setup(args)
+	case "outbox":
+		return a.outbox(args)
+	case "host":
+		return a.host(args)
 	default:
 		return fmt.Errorf("unknown command %q; run edc help", command)
 	}
+}
+
+func (a *app) host(args []string) error {
+	if len(args) == 0 || args[0] != "run" {
+		return fmt.Errorf("host requires run")
+	}
+	f := a.flags("host run")
+	projectID := f.String("project", "", "project ID")
+	pluginID := f.String("plugin", "", "plugin id")
+	pluginDir := f.String("plugin-dir", "", "directory containing local plugin packages")
+	pluginTokenFile := f.String("plugin-token-file", "", "private file containing the plugin token")
+	agentCommand := f.String("agent-command", "", "Codex executable path for agent processors")
+	command := f.String("command", "", "executable override for command processors")
+	timeout := f.Duration("timeout", 0, "processor timeout override (default from manifest)")
+	once := f.Bool("once", false, "run one processor pass")
+	if err := parse(f, args[1:]); err != nil {
+		return err
+	}
+	if err := a.requiredProject(projectID); err != nil {
+		return err
+	}
+	if *pluginID == "" || *pluginDir == "" || !*once {
+		return fmt.Errorf("--plugin, --plugin-dir and --once are required")
+	}
+	pluginToken := os.Getenv("EDC_PLUGIN_TOKEN")
+	if *pluginTokenFile != "" {
+		if pluginToken != "" {
+			return fmt.Errorf("use either --plugin-token-file or EDC_PLUGIN_TOKEN")
+		}
+		value, err := readPrivateTokenFile(*pluginTokenFile)
+		if err != nil {
+			return err
+		}
+		pluginToken = value
+	}
+	if pluginToken == "" {
+		return fmt.Errorf("--plugin-token-file or EDC_PLUGIN_TOKEN is required")
+	}
+	result, err := processorhost.RunOnce(a.ctx, a.client, processorhost.Options{
+		ProjectID: *projectID, PluginID: *pluginID, PluginDir: *pluginDir,
+		PluginToken: pluginToken, AgentCommand: *agentCommand, Command: *command,
+		Once: *once, Timeout: *timeout,
+	})
+	return a.result(result, err)
+}
+
+func readPrivateTokenFile(path string) (string, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return "", fmt.Errorf("read plugin token file: %w", err)
+	}
+	if !info.Mode().IsRegular() || info.Mode().Perm()&0o077 != 0 {
+		return "", fmt.Errorf("plugin token file must be a private regular file")
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("read plugin token file: %w", err)
+	}
+	value := strings.TrimSpace(string(raw))
+	// Accept installation receipts used by early V2 deployments as well as the
+	// plain token files written by current CLI installs.
+	if strings.HasPrefix(value, "{") {
+		var receipt struct {
+			Token string `json:"token"`
+		}
+		if json.Unmarshal(raw, &receipt) != nil {
+			return "", fmt.Errorf("plugin token file is invalid")
+		}
+		value = strings.TrimSpace(receipt.Token)
+	}
+	if value == "" || len(value) > 4096 {
+		return "", fmt.Errorf("plugin token file is invalid")
+	}
+	return value, nil
+}
+
+func writePrivateNewFile(path string, contents []byte) error {
+	if strings.TrimSpace(path) == "" {
+		return fmt.Errorf("token file path is required")
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return err
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+	if err != nil {
+		return err
+	}
+	writeErr := error(nil)
+	if _, writeErr = f.Write(contents); writeErr == nil {
+		writeErr = f.Sync()
+	}
+	if closeErr := f.Close(); writeErr == nil {
+		writeErr = closeErr
+	}
+	if writeErr != nil {
+		_ = os.Remove(path)
+	}
+	return writeErr
 }
 
 func (a *app) auth(command string, args []string) error {
@@ -188,7 +305,9 @@ func (a *app) auth(command string, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err = saveConfig(a.configPath, config{Server: a.server, Token: out.Token}); err != nil {
+	updated := a.config
+	updated.Server, updated.Token, updated.AccountID = a.server, out.Token, out.User.ID
+	if err = saveConfig(a.configPath, updated); err != nil {
 		return err
 	}
 	return a.json(map[string]any{"user": out.User, "expires_at": out.ExpiresAt, "config": a.configPath})
@@ -280,6 +399,9 @@ func saveConfig(path string, cfg config) error {
 	defer os.Remove(name)
 	if err = tmp.Chmod(0600); err == nil {
 		_, err = tmp.Write(b)
+	}
+	if err == nil {
+		err = tmp.Sync()
 	}
 	if closeErr := tmp.Close(); err == nil {
 		err = closeErr
