@@ -591,7 +591,7 @@ async function submitRecord(form) {
 function renderIntegration() {
   if (!state.project) return;
   const projectID = state.project.id;
-  const guideURL = new URL("./agent-setup.md", window.location.href);
+  const guideURL = new URL(API + "/agent-setup.md");
   guideURL.searchParams.set("project", projectID);
   guideURL.searchParams.set("locale", state.locale);
   const skillURL = new URL("./skills/edc-recorder/SKILL.md", window.location.href).href;

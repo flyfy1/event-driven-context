@@ -215,6 +215,8 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 
 ## MCP 接入
 
+工作区的 Agent 接入说明由 V2 API 动态提供：`GET /agent-setup.md?project=prj_...&locale=zh-CN`。返回 `text/markdown`，将项目 ID、MCP 地址和官方 Skill 地址直接写入正文，支持 `en`、`zh-CN`、`ms`、`hi`；下载后也保留项目信息。这个公开接口只使用传入的项目 ID，不查询项目名称、成员或内容，实际访问仍需 OAuth 和成员权限。省略项目时返回要求先选择项目的通用说明；非法或重复参数返回 400。生成地址使用 `-public-base-url` 与 `EDC_WEB_BASE_URL`（未设置时使用首个 allowed origin），不采用请求 Host。静态站点的 `/agent-setup.md` 仅保留通用说明。
+
 使用 [官方 Go SDK](https://github.com/modelcontextprotocol/go-sdk) v1.7.0。支持标准初始化、工具发现、工具调用、JSON Schema 和读写注解；业务错误以 `isError` 返回。所有工具返回结构化 JSON，同时提供 JSON 文本内容。
 
 工具：`create_project`、`list_projects`、`add_project_member`、`list_project_members`、`record_event`、`get_event`、`query_events`、`query_context`、`list_metadata`、`get_file`。

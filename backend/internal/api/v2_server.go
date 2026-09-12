@@ -21,6 +21,7 @@ func V2Handler(store *core.Store, service v2.ServiceAPI, allowedOrigins []string
 // but the server command uses this handler.
 func V2HandlerWithConfig(store *core.Store, service v2.ServiceAPI, config Config) http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /agent-setup.md", agentSetupHandler(config))
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		respond(w, http.StatusOK, map[string]string{"status": "ok", "api": "v2"})
 	})

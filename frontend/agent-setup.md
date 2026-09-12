@@ -1,6 +1,8 @@
 # Connect Claude Code or Codex to Event-driven Context
 
-This page is a setup instruction for a coding agent. The target project ID is the `project` value in this page's URL. If the URL has no `project` value, stop and ask the user which existing project to use. Do not create a project implicitly.
+This is a generic, static setup guide. Query parameters on this static file do not change its contents. For a guide with the target project ID and language written into the Markdown, use `https://context-api.integ.life/agent-setup.md?project=YOUR_PROJECT_ID&locale=en`, replacing `YOUR_PROJECT_ID` with the existing project ID. The workspace's Agent setup link opens this dynamic guide automatically.
+
+If you only have this generic guide, obtain the target project ID explicitly from the user before proceeding. Do not infer a project or create one implicitly.
 
 ## Goal
 
@@ -63,7 +65,7 @@ If a file already exists at the target path, compare it first. Preserve user cha
 
 Reconnect the MCP server or start a fresh agent session so the new MCP and Skill are loaded. Then:
 
-1. Call `list_projects` and confirm the project ID from this page's URL is present.
+1. Call `list_projects` and confirm the explicitly selected project ID is present.
 2. Call `query_events` for that exact project ID with a small limit.
 3. If the project has State, call `list_state` and report any `lag`; State does not replace the source Events.
 4. Report the project name, the newest Event UUID returned, and any access or coverage limitation.
