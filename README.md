@@ -270,9 +270,9 @@ ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 pu
 
 ## Web 前端与发布
 
-`frontend/` 是没有构建依赖的静态页面，生产域名为 `https://context.integ.life`，默认调用 `https://context-api.integ.life`。它提供注册、登录、项目创建和选择、文本／文本文件追加、metadata 浏览、metadata 筛选、事件分页及原始文件下载。项目成员管理保留在 CLI/MCP，因为第一版只让创建者添加已经注册的成员。
+`frontend/` 是没有构建依赖的静态网站，生产域名为 `https://context.integ.life`，默认调用 `https://context-api.integ.life`。公开首页介绍 V2 产品；工作区提供中心登录、项目记录、共享成员、文件与引用、版本化 State、接入和插件配置。
 
-公开入口 `frontend/index.html` 是产品介绍页；注册、登录及原有项目操作保留在 `frontend/workspace.html`。首页包含概念示例、能力进展和工作区入口，使用 `landing.css`、`landing-copy.js`、`landing.js`，复用工作区的语言解析与偏好键；示例不会调用后台或写入数据。
+公开入口 `frontend/index.html` 在未登录时显示 landing page；中心 Session 或兼容令牌验证成功后进入 `frontend/workspace.html`。工作区的“产品介绍”链接打开 `?page=about`，登录用户仍可查看并返回原项目与分区。退出成功后回到首页。项目深链、中心登录回跳和语言选择沿用当前路由。首页的交互示例不执行推理或写入数据。V2 对照和验证边界见 [Landing page](docs/landing-page.md)。发布时保留首页，不再以工作区覆盖 index.html。
 
 主站和 OAuth 的完整当前界面均支持 English、简体中文、Bahasa Melayu 与 हिन्दी，包括动态状态、表单校验和错误提示。没有手动选择时使用浏览器报告的系统语言；无法读取或不支持该语言时回退 English。手动选择会在刷新、登录和两个子域之间保留。
 

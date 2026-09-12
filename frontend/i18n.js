@@ -9,6 +9,7 @@
     en: {
       documentTitle: "Context · Integ.Life",
       metaDescription: "Append and query immutable context with your team.",
+      aboutProduct: "About Context",
       brandHome: "Context home",
       languageLabel: "Language",
       signedOut: "Signed out",
@@ -97,6 +98,7 @@
     "zh-CN": {
       documentTitle: "Context · Integ.Life",
       metaDescription: "为团队追加、查询不可修改的原始 context。",
+      aboutProduct: "产品介绍",
       brandHome: "Context 首页",
       languageLabel: "语言",
       signedOut: "未登录",
@@ -185,6 +187,7 @@
     ms: {
       documentTitle: "Context · Integ.Life",
       metaDescription: "Tambah dan cari konteks kekal bersama pasukan anda.",
+      aboutProduct: "Tentang Context",
       brandHome: "Laman utama Context",
       languageLabel: "Bahasa",
       signedOut: "Belum log masuk",
@@ -273,6 +276,7 @@
     hi: {
       documentTitle: "Context · Integ.Life",
       metaDescription: "अपनी टीम के साथ अपरिवर्तनीय context जोड़ें और खोजें।",
+      aboutProduct: "Context के बारे में",
       brandHome: "Context मुखपृष्ठ",
       languageLabel: "भाषा",
       signedOut: "साइन इन नहीं किया गया",

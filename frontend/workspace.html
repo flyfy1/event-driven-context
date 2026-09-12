@@ -12,6 +12,7 @@
   <body>
     <header class="topbar">
       <a class="brand" href="./" aria-label="Context home" data-i18n-aria-label="brandHome">Context<span>·</span>Integ.Life</a>
+      <a id="about-link" class="quiet" href="./?page=about" data-i18n="aboutProduct">About Context</a>
       <span id="connection-status" class="status" aria-live="polite">Signed out</span>
       <select id="language-select" class="language-select" aria-label="Language" data-i18n-aria-label="languageLabel">
         <option value="en">English</option>
@@ -147,6 +148,7 @@
     <template id="event-template"><article class="event"><div class="event-meta"><strong class="event-author"></strong><time class="event-time"></time><span class="event-kind"></span></div><p class="event-text"></p><a class="event-file hidden" target="_blank" rel="noopener" data-i18n="downloadOriginalFile">Download original file</a><pre class="event-json"></pre></article></template>
     <script src="./i18n.js" defer></script>
     <script src="./workspace-utils.js" defer></script>
+    <script src="./navigation.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>
