@@ -289,6 +289,10 @@ select {
 .command-row { display: flex; align-items: center; gap: 8px; }
 .command-row code { flex: 1; min-width: 0; padding: 10px; overflow-wrap: anywhere; background: #edf0ea; }
 .plugin-install-form { max-width: 760px; margin-bottom: 22px; }
+.plugin-catalog-preview { margin: 0 0 16px; padding: 16px; border: 1px solid var(--line); border-radius: 6px; background: #f8faf7; }
+.plugin-catalog-preview .card-title { align-items: center; }
+.plugin-catalog-preview p { margin: 10px 0; }
+.plugin-catalog-preview details { margin-top: 10px; }
 .plugin-card .actions { justify-content: start; flex-wrap: wrap; }
 .plugin-inline-editor, .uninstall-review { margin-top: 16px; padding: 14px; border: 1px solid var(--line); background: #f8faf7; }
 .uninstall-review { border-color: #d6aaa7; background: #fff0ed; }
