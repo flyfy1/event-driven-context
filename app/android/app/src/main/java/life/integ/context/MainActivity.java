@@ -289,7 +289,9 @@ public final class MainActivity extends Activity {
                     for (ApiClient.RecordSummary record : records) {
                         LinearLayout box = card();
                         box.addView(strong(record.filename.isEmpty() ? record.id : record.filename));
+                        box.addView(text(getString(R.string.recorded_by, record.actor.displayName(), record.actor.id)));
                         box.addView(text(record.recordedAt + " · " + humanBytes(record.size)));
+                        box.addView(text(getString(R.string.event_source, record.sourceChannel)));
                         if (record.mediaType.startsWith("audio/") && !record.fileId.isEmpty()
                                 && !record.sha256.isEmpty() && record.size > 0) {
                             Button play = button(getString(R.string.play));
@@ -358,10 +360,12 @@ public final class MainActivity extends Activity {
         return box;
     }
 
-    private void loadSource(SessionStore.Session expected, String eventId) {
+    void loadSource(SessionStore.Session expected, String eventId) {
         io.execute(() -> {
             try {
-                String source = new ApiClient(expected.endpoint, expected.token).eventText(expected.projectId, eventId);
+                ApiClient.EventDetail detail = new ApiClient(expected.endpoint, expected.token).eventDetail(expected.projectId, eventId);
+                String source = getString(R.string.source_detail, detail.actor.displayName(), detail.actor.id,
+                        detail.actor.type, detail.recordedAt, detail.source, detail.content);
                 runUi(() -> { if (sameView(expected)) new android.app.AlertDialog.Builder(this).setTitle(eventId).setMessage(source).setPositiveButton(android.R.string.ok, null).show(); });
             } catch (Exception error) { runUi(() -> toast(getString(R.string.load_failed, message(error)))); }
         });

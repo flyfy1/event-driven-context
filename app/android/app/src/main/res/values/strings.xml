@@ -51,6 +51,9 @@
     <string name="create_project">Create project</string>
     <string name="project_name_required">Enter a project name.</string>
     <string name="project_created">Project created with this device’s time zone.</string>
+    <string name="recorded_by">Recorded by %1$s · %2$s</string>
+    <string name="event_source">Source: %1$s</string>
+    <string name="source_detail">Recorded by %1$s\nActor ID: %2$s\nActor type: %3$s\nRecorded at: %4$s\nSource: %5$s\n\n%6$s</string>
     <string name="recording_notification">Recording audio</string>
     <string name="stop_recording">Stop recording</string>
     <string name="review_coverage">Version %1$d · through event %2$d · lag %3$d</string>

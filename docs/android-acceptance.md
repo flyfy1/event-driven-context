@@ -31,7 +31,7 @@ Android MVP 已有可安装 APK，并在生产隔离项目完成模拟器主路�
 
 ## 2026-09-12 实测结果
 
-构建、单元测试、Lint 和 instrumentation APK 构建通过。当前调试 APK 为 3,160,774 bytes，SHA-256 `0aa3a04ffd23037e0f53cc0a907d6e4ee605c48e0911089b0ad44fe16623098c`。
+构建、单元测试、Lint 和 instrumentation APK 构建通过。当前调试 APK 为 3,162,878 bytes，SHA-256 `8c68b11e7e7098f6210ee48d30fa80784ad7720c93ae937ee25c1081b6e45edc`。
 
 在现有 ARM64 `Medium_Phone` AVD 上以只读、无快照、无宿主音频方式完成生产登录和隔离项目选择：
 
@@ -44,6 +44,8 @@ Android MVP 已有可安装 APK，并在生产隔离项目完成模拟器主路�
 隔离项目当时 `plugins=[]`，未产生 derived 转录、project-brief 或 daily-review State。物理设备仍需验收真实麦克风、锁屏和音频中断、厂商后台策略、通知、相机及真实文件提供方。
 
 同日又在生产主验收项目 `prj_zyb3rqghg6a77drgrcym6nax3p` 完成真实定时回顾：项目时区为 `Asia/Singapore`，计划在 `2026-09-12T09:10:00+08:00` 发布 `daily-review/2026-09-12` v1，`based_on_sequence=32`，含 20 个来源；重复 tick 后仍为 v1。Android 单条 instrumentation 验证了项目时区显示、按日期加载该 State，并点击来源 `01a092f1-4dac-7115-ba1c-7ae6bf007b0f` 打开真实 Event，结果为 `OK (1 test)`，用时 3.081 秒。
+
+团队归属显示也在生产 dogfood 项目完成单条模拟器验收：Android 读取 Event `01a09371-27f0-7008-8fe8-9f3a79987ae1`，核对可信 actor 为用户名 `songyy`、稳定 ID `usr_zhf5geavmwa4gv6xv6gh3b2pmj`，并保留 `recorded_at` 与 source；来源对话框实际显示用户名和 ID。结果为 `OK (1 test)`，用时 4.108 秒。记录列表同步显示记录者用户名、稳定 ID、记录时间和 source channel。
 
 ## 与既有后端证据连接
 

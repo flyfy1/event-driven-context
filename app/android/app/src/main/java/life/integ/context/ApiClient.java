@@ -63,12 +63,31 @@ final class ApiClient {
         EventResult(String status, long sequence) { this.status = status; this.sequence = sequence; }
     }
 
+    static final class Actor {
+        final String type, id, username;
+        Actor(String type, String id, String username) {
+            this.type = type; this.id = id; this.username = username;
+        }
+        String displayName() { return username == null || username.isEmpty() ? id : username; }
+    }
+
     static final class RecordSummary {
-        final String id, type, recordedAt, fileId, filename, mediaType, sha256;
+        final String id, type, recordedAt, fileId, filename, mediaType, sha256, sourceChannel;
+        final Actor actor;
         final long size;
-        RecordSummary(String id, String type, String recordedAt, String fileId, String filename, String mediaType, String sha256, long size) {
+        RecordSummary(String id, String type, String recordedAt, String fileId, String filename, String mediaType,
+                      String sha256, long size, Actor actor, String sourceChannel) {
             this.id = id; this.type = type; this.recordedAt = recordedAt;
             this.fileId = fileId; this.filename = filename; this.mediaType = mediaType; this.sha256 = sha256; this.size = size;
+            this.actor = actor; this.sourceChannel = sourceChannel;
+        }
+    }
+
+    static final class EventDetail {
+        final String content, recordedAt, source;
+        final Actor actor;
+        EventDetail(String content, String recordedAt, String source, Actor actor) {
+            this.content = content; this.recordedAt = recordedAt; this.source = source; this.actor = actor;
         }
     }
 
@@ -185,9 +204,11 @@ final class ApiClient {
             for (int i = 0; i < events.length(); i++) {
                 JSONObject event = events.getJSONObject(i);
                 JSONObject content = event.getJSONObject("content");
+                JSONObject source = event.optJSONObject("source");
                 ascending.add(new RecordSummary(event.getString("id"), event.getString("type"),
                         event.optString("recorded_at"), content.optString("file_id"), content.optString("filename"),
-                        content.optString("media_type"), content.optString("sha256"), content.optLong("size_bytes")));
+                        content.optString("media_type"), content.optString("sha256"), content.optLong("size_bytes"),
+                        actor(event.getJSONObject("actor")), source == null ? "" : source.optString("channel")));
             }
             cursor = page.optString("next_cursor", "");
             if (cursor.isEmpty()) cursor = null;
@@ -225,15 +246,18 @@ final class ApiClient {
         return output;
     }
 
-    String eventText(String projectId, String eventId) throws IOException, JSONException {
+    EventDetail eventDetail(String projectId, String eventId) throws IOException, JSONException {
         JSONObject event = json("GET", projectPath(projectId, "/events/") + Uri.encode(eventId), null);
         if (!projectId.equals(event.getString("project_id")) || !eventId.equals(event.getString("id"))) {
             throw new IOException("server returned a different event");
         }
         JSONObject content = event.getJSONObject("content");
-        if ("text".equals(content.optString("kind"))) return content.optString("text");
-        return content.optString("filename", eventId) + "\n" + content.optString("media_type")
+        String value = "text".equals(content.optString("kind")) ? content.optString("text")
+                : content.optString("filename", eventId) + "\n" + content.optString("media_type")
                 + " · " + content.optLong("size_bytes") + " bytes\nSHA-256 " + content.optString("sha256");
+        JSONObject source = event.optJSONObject("source");
+        return new EventDetail(value, event.optString("recorded_at"), source == null ? "{}" : source.toString(),
+                actor(event.getJSONObject("actor")));
     }
 
     void downloadFile(String projectId, String fileId, String expectedSha256, long expectedSize, File target) throws IOException {
@@ -345,6 +369,10 @@ final class ApiClient {
     private static Project project(JSONObject value) throws JSONException {
         return new Project(value.getString("id"), value.getString("name"), value.optString("owner_user_id"),
                 value.getString("timezone"));
+    }
+
+    private static Actor actor(JSONObject value) throws JSONException {
+        return new Actor(value.getString("type"), value.getString("id"), value.optString("username"));
     }
 
     private static void write(BufferedOutputStream output, String value) throws IOException {

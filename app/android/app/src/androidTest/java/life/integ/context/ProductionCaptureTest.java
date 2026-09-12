@@ -272,6 +272,43 @@ public class ProductionCaptureTest {
         System.out.println("EDC_DAILY_REVIEW key=" + reviewKey + " source=" + sourceEventId + " timezone=" + timezone);
     }
 
+    @Test public void productionActorAppearsInSourceDetail() throws Exception {
+        Bundle arguments = InstrumentationRegistry.getArguments();
+        String endpoint = required(arguments, "edcEndpoint");
+        String username = required(arguments, "edcUsername");
+        String password = required(arguments, "edcPassword");
+        String projectId = required(arguments, "edcProjectId");
+        String eventId = required(arguments, "edcEventId");
+        String actorUsername = required(arguments, "edcActorUsername");
+        String actorId = required(arguments, "edcActorId");
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        ApiClient.Login login = ApiClient.login(endpoint, username, password);
+        SessionStore store = new SessionStore(context);
+        store.save(endpoint, login.userId, login.username, login.token, login.expiresAt);
+        ApiClient client = new ApiClient(endpoint, login.token);
+        ApiClient.Project selected = null;
+        for (ApiClient.Project project : client.projects()) if (projectId.equals(project.id)) selected = project;
+        assertNotNull("dogfood project must be accessible", selected);
+        store.selectProject(selected.id, selected.name, selected.timezone);
+
+        ApiClient.EventDetail detail = client.eventDetail(projectId, eventId);
+        assertEquals(actorUsername, detail.actor.username);
+        assertEquals(actorId, detail.actor.id);
+        assertTrue("recorded_at must remain available", !detail.recordedAt.isEmpty());
+        assertTrue("source must remain available", !"{}".equals(detail.source));
+
+        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            waitFor("app navigation", 15_000, () -> hasButton(scenario, R.string.record));
+            scenario.onActivity(activity -> activity.loadSource(store.load(), eventId));
+            assertNotNull("source detail must show actor username",
+                    device.wait(Until.findObject(By.textContains(actorUsername)), 30_000));
+            assertNotNull("source detail must show stable actor id",
+                    device.wait(Until.findObject(By.textContains(actorId)), 30_000));
+        }
+        System.out.println("EDC_ACTOR event=" + eventId + " username=" + actorUsername + " actor_id=" + actorId);
+    }
+
     private static String required(Bundle arguments, String key) {
         String value = arguments.getString(key);
         if (value == null || value.isEmpty()) fail("missing instrumentation argument " + key);
