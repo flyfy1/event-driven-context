@@ -2,15 +2,26 @@
   "name": "context-workspace-editor",
   "private": true,
   "scripts": {
-    "build": "node build.mjs"
+    "build": "npm test && node build.mjs",
+    "test": "node --test visual-markdown.test.mjs",
+    "test:browser": "node --test editor-browser.test.mjs"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "6.5.2",
     "@codemirror/state": "6.7.4",
     "@codemirror/view": "6.43.11",
-    "codemirror": "6.0.2"
+    "codemirror": "6.0.2",
+    "prosemirror-commands": "1.7.2",
+    "prosemirror-history": "1.5.0",
+    "prosemirror-keymap": "1.2.3",
+    "prosemirror-markdown": "1.13.7",
+    "prosemirror-model": "1.25.11",
+    "prosemirror-schema-list": "1.5.1",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-view": "1.42.3"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "playwright": "1.62.1"
   }
 }

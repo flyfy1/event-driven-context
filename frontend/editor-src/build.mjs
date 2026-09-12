@@ -19,7 +19,7 @@ for (const input of Object.keys(result.metafile.inputs)) {
       const info = JSON.parse(await readFile(resolve(directory, 'package.json'), 'utf8'));
       if (info.name && !packages.has(info.name)) {
         let license;
-        for (const name of ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'license']) {
+        for (const name of ['LICENSE', 'LICENSE.txt', 'LICENSE.md', 'LICENSE-MIT.txt', 'license']) {
           try { await access(resolve(directory, name)); license = await readFile(resolve(directory, name), 'utf8'); break; } catch {}
         }
         if (!license) throw new Error('Missing license: ' + info.name);
