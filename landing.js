@@ -1,14 +1,17 @@
 (() => {
   const { resolveLocalePreference, normalizeLocale } = window.ContextI18n;
   const dictionaries = window.ContextLandingCopy;
-  const { workspaceURL, workspaceIntent, readSession } = window.ContextNavigation;
-  const { resolveAPI, sessionStorageKey } = window.ContextWorkspaceUtils;
-  const api = resolveAPI(location.hostname, new URLSearchParams(location.search).get('api'));
-  let identity = null;
-  let sessionUnavailable = false;
   const localeKey = 'event-context.locale';
   const localeCookie = 'event_context_locale';
   const params = new URLSearchParams(location.search);
+  const workspaceViews = new Set(['records', 'state', 'integration', 'plugins']);
+  if (params.has('project') && workspaceViews.has(location.hash.slice(1))) {
+    const target = new URL('./workspace.html', location.href);
+    target.search = location.search;
+    target.hash = location.hash;
+    location.replace(target.pathname + target.search + target.hash);
+    return;
+  }
   let saved;
   try { saved = localStorage.getItem(localeKey); } catch { /* Storage may be unavailable. */ }
   function sharedLocale() {
@@ -51,10 +54,11 @@
     document.querySelector('nav').setAttribute('aria-label', copy.navHow);
     document.querySelector('.questions').setAttribute('aria-label', copy.newChat);
     document.querySelectorAll('[data-workspace]').forEach(link => {
-      link.href = workspaceURL(location.href, locale);
-      if (identity) link.querySelector('[data-copy]').textContent = copy.returnWorkspace;
+      const target = new URL('./workspace.html', location.href);
+      target.searchParams.set('locale', locale);
+      if (params.has('api')) target.searchParams.set('api', params.get('api'));
+      link.href = target.pathname + target.search;
     });
-    document.getElementById('landing-session-status').textContent = sessionUnavailable ? copy.sessionUnavailable : '';
     renderExample();
   }
   function persist() {
@@ -106,25 +110,4 @@
   persist();
   render();
   revealGuide(location.hash);
-  async function checkSession() {
-    if (workspaceIntent(location.href)) {
-      location.replace(workspaceURL(location.href, locale));
-      return;
-    }
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    try {
-      identity = await readSession({ api, fetcher: window.fetch.bind(window), storage: localStorage,
-        tokenKey: sessionStorageKey('event-context.token', api), userKey: sessionStorageKey('event-context.user', api), signal: controller.signal });
-      sessionUnavailable = false;
-      if (identity && new URL(location.href).searchParams.get('page') !== 'about') {
-        location.replace(workspaceURL(location.href, locale));
-        return;
-      }
-    } catch { sessionUnavailable = true; }
-    finally { clearTimeout(timeout); }
-    render();
-  }
-  window.addEventListener('pageshow', event => { if (event.persisted) checkSession(); });
-  checkSession();
 })();

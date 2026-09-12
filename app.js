@@ -159,7 +159,6 @@ function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => { element.placeholder = t(element.dataset.i18nPlaceholder); });
   document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => { element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel)); });
   $("#language-select").value = state.locale;
-  updateHomeLink();
 }
 function setLocale(locale, persist) {
   state.locale = normalizeLocale(locale) || "en";
@@ -179,20 +178,14 @@ function setLocale(locale, persist) {
   renderIntegration();
   renderAudioStatus();
 }
-function updateHomeLink() {
-  const href = window.ContextNavigation.homeURL(location.href, state.locale, true);
-  $("#about-link").href = href;
-  $(".brand").href = href;
-}
 function syncRoute(mode = "replace") {
-  if (mode === "none") { updateHomeLink(); return; }
+  if (mode === "none") return;
   const target = new URL(location.href);
   if (state.routeProjectID) target.searchParams.set("project", state.routeProjectID);
   else target.searchParams.delete("project");
   target.hash = state.view;
   const path = target.pathname + target.search + target.hash;
   if (path !== location.pathname + location.search + location.hash) history[mode === "push" ? "pushState" : "replaceState"](null, "", path);
-  updateHomeLink();
 }
 function restoreRoute() {
   const id = new URLSearchParams(location.search).get("project") || "";
@@ -590,8 +583,15 @@ async function submitRecord(form) {
 
 function renderIntegration() {
   if (!state.project) return;
-  $("#integration-project-id").textContent = state.project.id;
-  $("#link-command").textContent = "edc link " + state.project.id;
+  const projectID = state.project.id;
+  const guideURL = new URL("./agent-setup.md", window.location.href);
+  guideURL.searchParams.set("project", projectID);
+  guideURL.searchParams.set("locale", state.locale);
+  const skillURL = new URL("./skills/edc-recorder/SKILL.md", window.location.href).href;
+  $("#integration-project-id").textContent = projectID;
+  $("#agent-setup-guide-link").href = guideURL.href;
+  $("#agent-setup-prompt").textContent = t("agentSetupPrompt", { guide_url: guideURL.href, project_id: projectID, skill_url: skillURL });
+  $("#chatgpt-verify-prompt").textContent = t("chatGPTVerifyPrompt", { project_id: projectID });
 }
 async function loadMembers() {
   if (!state.project) return;
@@ -753,16 +753,7 @@ $("#auth-submit").addEventListener("click", () => {
   location.assign(start.toString());
 });
 $("#logout-button").addEventListener("click", async () => {
-  const button = $("#logout-button");
-  button.disabled = true;
-  try {
-    await request("/v1/auth/logout", { method: "POST" });
-    clearSession();
-    location.replace(window.ContextNavigation.homeURL(location.href, state.locale));
-  } catch (error) {
-    // Keep the live session on failure so a cookie cannot silently sign back in.
-    $("#connection-status").textContent = error.message;
-  } finally { button.disabled = false; }
+  try { await request("/v1/auth/logout", { method: "POST" }); } finally { clearSession(); updateIdentity(); renderProjects(); renderProject(); }
 });
 function showProjectForm(show) { $("#project-form").classList.toggle("hidden", !show); }
 $("#new-project-button").addEventListener("click", () => showProjectForm(true));
@@ -828,11 +819,10 @@ $("#add-member-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!state.project) return;
   const form = event.currentTarget, button = form.querySelector("button[type=submit]");
-  const identity = $("#member-identity").value.trim(), projectID = state.project.id, version = state.projectVersion;
-  const body = identity.includes("@") ? { email: identity } : { username: identity };
+  const username = $("#member-username").value.trim(), projectID = state.project.id, version = state.projectVersion;
   setBusy(button, true, "addMember"); setMessage("#members-message");
   try {
-    const member = await request(projectPath("/members"), { method: "POST", body });
+    const member = await request(projectPath("/members"), { method: "POST", body: { username } });
     if (!activeProject(version, projectID)) return;
     form.reset(); await loadMembers();
     setMessage("#members-message", t("memberAdded", { username: member.username }), true);
@@ -905,20 +895,14 @@ async function boot() {
   const expectedSession = Boolean(state.token || state.user || returnedFromCentralAuth);
   const epoch = state.sessionEpoch, token = state.token;
   try {
-    const user = await window.ContextNavigation.readSession({ api: API, fetcher: window.fetch.bind(window), storage: localStorage, tokenKey: TOKEN_KEY, userKey: USER_KEY });
+    const user = await request("/v1/me");
     if (!activeSession(epoch, token)) return;
-    if (!user) {
-      clearSession(); updateIdentity();
-      if (expectedSession) setMessage("#auth-message", t("sessionExpired"));
-      return;
-    }
-    state.token = localStorage.getItem(TOKEN_KEY);
     state.user = user; localStorage.setItem(USER_KEY, JSON.stringify(user)); updateIdentity(); await loadProjects();
   } catch (error) {
     if (error.status === 401 || error.code === "unauthenticated") {
       clearSession(); updateIdentity();
       if (expectedSession) setMessage("#auth-message", t("sessionExpired"));
-    } else setMessage("#auth-message", t("networkError"));
+    } else setMessage("#auth-message", error.message);
   }
 }
 boot();

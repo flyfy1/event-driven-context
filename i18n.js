@@ -9,7 +9,6 @@
     en: {
       documentTitle: "Context · Integ.Life",
       metaDescription: "Append and query immutable context with your team.",
-      aboutProduct: "About Context",
       brandHome: "Context home",
       languageLabel: "Language",
       signedOut: "Signed out",
@@ -98,7 +97,6 @@
     "zh-CN": {
       documentTitle: "Context · Integ.Life",
       metaDescription: "为团队追加、查询不可修改的原始 context。",
-      aboutProduct: "产品介绍",
       brandHome: "Context 首页",
       languageLabel: "语言",
       signedOut: "未登录",
@@ -187,7 +185,6 @@
     ms: {
       documentTitle: "Context · Integ.Life",
       metaDescription: "Tambah dan cari konteks kekal bersama pasukan anda.",
-      aboutProduct: "Tentang Context",
       brandHome: "Laman utama Context",
       languageLabel: "Bahasa",
       signedOut: "Belum log masuk",
@@ -276,7 +273,6 @@
     hi: {
       documentTitle: "Context · Integ.Life",
       metaDescription: "अपनी टीम के साथ अपरिवर्तनीय context जोड़ें और खोजें।",
-      aboutProduct: "Context के बारे में",
       brandHome: "Context मुखपृष्ठ",
       languageLabel: "भाषा",
       signedOut: "साइन इन नहीं किया गया",
@@ -746,7 +742,7 @@
     authTitle: "Sign in to Context", authHint: "Use your Integ.Life account to keep one verified identity across shared projects.", continueWithGoogle: "Continue with Google", centralAuthNote: "Google is the default sign-in option. The central Integ.Life page also supports verified email.",
     projectTimezone: "Project time zone", changeTimezone: "Change", saveTimezone: "Save time zone", timezoneSaved: "Project time zone saved.", dailyReviewDate: "Daily review · {date}",
     eventDetails: "Record details", membersTitle: "Project members", membersHint: "Everyone listed here can read and append this project's shared context.", membersLoading: "Loading project members…", membersEmpty: "No project members were returned.",
-    addMemberTitle: "Add a registered member", memberIdentityPlaceholder: "registered username or email", addMember: "Add member", memberAdded: "@{username} is now a project member.", memberNotFound: "No registered account has that username or email.", memberID: "User ID · {id}", projectOwner: "Owner", projectMember: "Member", owners: "OWNERS · {ids}", makeOwner: "Make owner", makeMember: "Make member", memberRoleUpdated: "@{username} is now a {role}.", lastOwnerRequired: "A project must retain at least one owner.", onlyOwnerCanManage: "Only project owners can add members or manage owners.",
+    addMemberTitle: "Add a registered member", memberUsernamePlaceholder: "registered username", addMember: "Add member", memberAdded: "@{username} is now a project member.", memberNotFound: "No registered user has that username.", memberID: "User ID · {id}", projectOwner: "Owner", projectMember: "Member", owners: "OWNERS · {ids}", makeOwner: "Make owner", makeMember: "Make member", memberRoleUpdated: "@{username} is now a {role}.", lastOwnerRequired: "A project must retain at least one owner.", onlyOwnerCanManage: "Only project owners can add members or manage owners.",
     projectSections: "Project sections", recordsTab: "Records", stateTab: "State", integrationTab: "Connect", pluginsTab: "Plugins",
     recordsEyebrow: "PROJECT RECORDS", recordsTitle: "Original records", recordsHint: "Append a note or log, then inspect immutable events, files, sources and references.",
     eventType: "Record type", noteType: "Note", logType: "Log", derivedType: "Derived", allTypes: "All types",
@@ -775,7 +771,7 @@
     authTitle: "登录 Context", authHint: "使用 Integ.Life 账号，以同一个已验证身份参与共享项目。", continueWithGoogle: "使用 Google 继续", centralAuthNote: "默认使用 Google 登录；也可以在 Integ.Life 中心登录页使用已验证邮箱。",
     projectTimezone: "项目时区", changeTimezone: "修改", saveTimezone: "保存时区", timezoneSaved: "项目时区已保存。", dailyReviewDate: "每日回顾 · {date}",
     eventDetails: "记录详情", membersTitle: "项目成员", membersHint: "这里列出的每位成员都能读取并追加该项目的团队 context。", membersLoading: "正在加载项目成员…", membersEmpty: "没有返回项目成员。",
-    addMemberTitle: "添加已注册成员", memberIdentityPlaceholder: "已注册的用户名或邮箱", addMember: "添加成员", memberAdded: "@{username} 已加入项目。", memberNotFound: "找不到这个用户名或邮箱对应的已注册账号。", memberID: "用户 ID · {id}", projectOwner: "所有者", projectMember: "成员", owners: "所有者 · {ids}", makeOwner: "设为所有者", makeMember: "改为普通成员", memberRoleUpdated: "@{username} 现在是{role}。", lastOwnerRequired: "项目必须至少保留一位所有者。", onlyOwnerCanManage: "只有项目所有者可以添加成员或管理所有者。",
+    addMemberTitle: "添加已注册成员", memberUsernamePlaceholder: "已注册的用户名", addMember: "添加成员", memberAdded: "@{username} 已加入项目。", memberNotFound: "找不到这个用户名对应的已注册用户。", memberID: "用户 ID · {id}", projectOwner: "所有者", projectMember: "成员", owners: "所有者 · {ids}", makeOwner: "设为所有者", makeMember: "改为普通成员", memberRoleUpdated: "@{username} 现在是{role}。", lastOwnerRequired: "项目必须至少保留一位所有者。", onlyOwnerCanManage: "只有项目所有者可以添加成员或管理所有者。",
     projectSections: "项目分区", recordsTab: "记录", stateTab: "项目状态", integrationTab: "接入", pluginsTab: "插件",
     recordsEyebrow: "项目记录", recordsTitle: "原始记录", recordsHint: "追加 note 或 log，并查看不可修改的事件、文件、来源和引用。",
     eventType: "记录类型", noteType: "主动记录", logType: "自动日志", derivedType: "插件产出", allTypes: "全部类型",
@@ -804,7 +800,7 @@
     authTitle: "Log masuk ke Context", authHint: "Gunakan akaun Integ.Life anda untuk satu identiti disahkan dalam projek kongsi.", continueWithGoogle: "Teruskan dengan Google", centralAuthNote: "Google ialah pilihan log masuk lalai. Halaman pusat Integ.Life turut menyokong e-mel yang disahkan.",
     projectTimezone: "Zon waktu projek", changeTimezone: "Ubah", saveTimezone: "Simpan zon waktu", timezoneSaved: "Zon waktu projek disimpan.", dailyReviewDate: "Ulasan harian · {date}",
     eventDetails: "Butiran rekod", membersTitle: "Ahli projek", membersHint: "Setiap orang dalam senarai ini boleh membaca dan menambah context kongsi projek.", membersLoading: "Memuatkan ahli projek…", membersEmpty: "Tiada ahli projek dikembalikan.",
-    addMemberTitle: "Tambah ahli berdaftar", memberIdentityPlaceholder: "nama pengguna atau e-mel berdaftar", addMember: "Tambah ahli", memberAdded: "@{username} kini ahli projek.", memberNotFound: "Tiada akaun berdaftar dengan nama pengguna atau e-mel itu.", memberID: "ID pengguna · {id}", projectOwner: "Pemilik", projectMember: "Ahli", owners: "PEMILIK · {ids}", makeOwner: "Jadikan pemilik", makeMember: "Jadikan ahli", memberRoleUpdated: "@{username} kini {role}.", lastOwnerRequired: "Projek mesti mempunyai sekurang-kurangnya seorang pemilik.", onlyOwnerCanManage: "Hanya pemilik projek boleh menambah ahli atau mengurus pemilik.",
+    addMemberTitle: "Tambah ahli berdaftar", memberUsernamePlaceholder: "nama pengguna berdaftar", addMember: "Tambah ahli", memberAdded: "@{username} kini ahli projek.", memberNotFound: "Tiada pengguna berdaftar dengan nama pengguna itu.", memberID: "ID pengguna · {id}", projectOwner: "Pemilik", projectMember: "Ahli", owners: "PEMILIK · {ids}", makeOwner: "Jadikan pemilik", makeMember: "Jadikan ahli", memberRoleUpdated: "@{username} kini {role}.", lastOwnerRequired: "Projek mesti mempunyai sekurang-kurangnya seorang pemilik.", onlyOwnerCanManage: "Hanya pemilik projek boleh menambah ahli atau mengurus pemilik.",
     projectSections: "Bahagian projek", recordsTab: "Rekod", stateTab: "State", integrationTab: "Sambung", pluginsTab: "Plugin",
     recordsEyebrow: "REKOD PROJEK", recordsTitle: "Rekod asal", recordsHint: "Tambah note atau log, kemudian semak event, fail, sumber dan rujukan yang kekal.",
     eventType: "Jenis rekod", noteType: "Nota", logType: "Log", derivedType: "Terbitan", allTypes: "Semua jenis",
@@ -833,7 +829,7 @@
     authTitle: "Context में साइन इन करें", authHint: "साझा प्रोजेक्ट में एक सत्यापित पहचान रखने के लिए अपने Integ.Life खाते का उपयोग करें।", continueWithGoogle: "Google से जारी रखें", centralAuthNote: "Google डिफ़ॉल्ट साइन-इन विकल्प है। केंद्रीय Integ.Life पेज सत्यापित ईमेल भी स्वीकार करता है।",
     projectTimezone: "प्रोजेक्ट का समय क्षेत्र", changeTimezone: "बदलें", saveTimezone: "समय क्षेत्र सेव करें", timezoneSaved: "प्रोजेक्ट का समय क्षेत्र सेव हो गया।", dailyReviewDate: "दैनिक समीक्षा · {date}",
     eventDetails: "रिकॉर्ड का विवरण", membersTitle: "प्रोजेक्ट सदस्य", membersHint: "यहाँ सूचीबद्ध हर सदस्य इस प्रोजेक्ट का साझा context पढ़ और जोड़ सकता है।", membersLoading: "प्रोजेक्ट सदस्य लोड हो रहे हैं…", membersEmpty: "कोई प्रोजेक्ट सदस्य नहीं मिला।",
-    addMemberTitle: "रजिस्टर्ड सदस्य जोड़ें", memberIdentityPlaceholder: "रजिस्टर्ड यूज़रनेम या ईमेल", addMember: "सदस्य जोड़ें", memberAdded: "@{username} अब प्रोजेक्ट सदस्य हैं।", memberNotFound: "इस यूज़रनेम या ईमेल का कोई रजिस्टर्ड खाता नहीं मिला।", memberID: "उपयोगकर्ता ID · {id}", projectOwner: "मालिक", projectMember: "सदस्य", owners: "मालिक · {ids}", makeOwner: "मालिक बनाएँ", makeMember: "सदस्य बनाएँ", memberRoleUpdated: "@{username} अब {role} हैं।", lastOwnerRequired: "प्रोजेक्ट में कम से कम एक मालिक रहना चाहिए।", onlyOwnerCanManage: "केवल प्रोजेक्ट मालिक सदस्य जोड़ या मालिकों को प्रबंधित कर सकते हैं।",
+    addMemberTitle: "रजिस्टर्ड सदस्य जोड़ें", memberUsernamePlaceholder: "रजिस्टर्ड उपयोगकर्ता नाम", addMember: "सदस्य जोड़ें", memberAdded: "@{username} अब प्रोजेक्ट सदस्य हैं।", memberNotFound: "इस उपयोगकर्ता नाम का कोई रजिस्टर्ड उपयोगकर्ता नहीं मिला।", memberID: "उपयोगकर्ता ID · {id}", projectOwner: "मालिक", projectMember: "सदस्य", owners: "मालिक · {ids}", makeOwner: "मालिक बनाएँ", makeMember: "सदस्य बनाएँ", memberRoleUpdated: "@{username} अब {role} हैं।", lastOwnerRequired: "प्रोजेक्ट में कम से कम एक मालिक रहना चाहिए।", onlyOwnerCanManage: "केवल प्रोजेक्ट मालिक सदस्य जोड़ या मालिकों को प्रबंधित कर सकते हैं।",
     projectSections: "प्रोजेक्ट अनुभाग", recordsTab: "रिकॉर्ड", stateTab: "State", integrationTab: "कनेक्ट", pluginsTab: "प्लगइन",
     recordsEyebrow: "प्रोजेक्ट रिकॉर्ड", recordsTitle: "मूल रिकॉर्ड", recordsHint: "note या log जोड़ें, फिर स्थायी event, फ़ाइल, स्रोत और संदर्भ देखें।",
     eventType: "रिकॉर्ड प्रकार", noteType: "नोट", logType: "लॉग", derivedType: "व्युत्पन्न", allTypes: "सभी प्रकार",
@@ -857,6 +853,51 @@
     configRevision: "Config revision {revision}", permissionsTitle: "Permissions", editConfig: "Config बदलें", saveConfig: "Config सहेजें", configReviewHint: "Revision {revision} बदलने से पहले पूरा config देखें।", configSaved: "प्लगइन config सहेजा गया।",
     manualRun: "Run का अनुरोध", runAccepted: "Run अनुरोध {id} स्वीकार हुआ; processing अभी पूरी नहीं मानी गई।", reviewUninstall: "Uninstall देखें", uninstallReview: "{name} uninstall करें? इसका token बंद हो जाएगा। मौजूदा Event और State रहेंगे।", uninstallAction: "प्लगइन uninstall करें",
     pluginPausedSuccess: "प्लगइन रोका गया।", pluginResumedSuccess: "प्लगइन फिर चालू हुआ।", pluginUninstalled: "प्लगइन uninstall हुआ।", pluginInstalled: "प्लगइन इंस्टॉल हुआ। इसका token अभी कॉपी करें।"
+  });
+
+  Object.assign(translations.en, {
+    integrationHint: "Choose your AI, authorize it with OAuth, and verify that it can read this exact project.", connectionDetails: "Connection details", mcpEndpoint: "MCP endpoint", recommended: "Recommended", developerMode: "Developer mode",
+    agentSetupTitle: "Let your agent set it up", agentSetupBody: "Open Claude Code or Codex in the working directory, then paste the instruction below. The agent will read the setup guide, add the remote MCP server, and install the recorder Skill.",
+    agentSetupStepOne: "Paste the project-specific instruction into your coding agent.", agentSetupStepTwo: "Complete the Integ.Life OAuth page when the agent opens it.", agentSetupStepThree: "Do not stop at “configured”: let the agent call Context and verify this project.",
+    pasteIntoAgent: "Paste into your agent", copyInstruction: "Copy instruction", openAgentGuide: "Open agent setup guide ↗", openRecorderSkill: "Read edc-recorder Skill ↗", downloadRecorderSkill: "Download Skill ↓",
+    chatGPTSetupTitle: "Add an MCP Plugin / connector", chatGPTSetupBody: "Open ChatGPT's Plugin connector form, enter the Context MCP URL, choose OAuth, and authorize your Integ.Life account.",
+    chatGPTStepOne: "Open the “Create connector” link below. Enable Developer mode if ChatGPT asks.", chatGPTStepTwoPrefix: "Set the name to", chatGPTStepTwoMiddle: ", and the MCP URL to", chatGPTStepThree: "Choose OAuth authentication, scan the tools, then complete Integ.Life sign-in and authorization.", chatGPTStepFour: "Create or save the connector. In a new chat, enable it for the message and run the verification prompt below.",
+    openChatGPTConnector: "Open ChatGPT connector setup ↗", verifyConnection: "Verify the connection", copyPrompt: "Copy prompt", chatGPTAvailability: "Custom MCP connectors require an eligible ChatGPT plan and may be controlled by your workspace administrator.",
+    agentSetupPrompt: "Read {guide_url} and set up Event-driven Context for project {project_id} in this working directory. Configure the remote MCP endpoint with OAuth and install the edc-recorder Skill from {skill_url}. Inspect existing configuration first and preserve unrelated entries. Never ask me to paste a token into chat. If browser authorization is required, open it for me. Finish by calling list_projects and query_events for project {project_id}; report the real result, not just that configuration exists.",
+    chatGPTVerifyPrompt: "Use Event-driven Context to list my projects, then read recent records from project {project_id}. Report the project name, newest record UUID, and any current project-brief State or lag. Do not write anything yet."
+  });
+  Object.assign(translations["zh-CN"], {
+    integrationHint: "选择你的 AI，通过 OAuth 授权，并实际验证它能读取当前项目。", connectionDetails: "接入信息", mcpEndpoint: "MCP 地址", recommended: "推荐", developerMode: "开发者模式",
+    agentSetupTitle: "让 Agent 帮你配置", agentSetupBody: "在要接入的工作目录中打开 Claude Code 或 Codex，然后粘贴下面的指令。Agent 会读取接入说明、添加远程 MCP，并安装记录 Skill。",
+    agentSetupStepOne: "把项目专属指令发给你的编程 Agent。", agentSetupStepTwo: "Agent 打开 Integ.Life 授权页时，由你完成 OAuth 登录和授权。", agentSetupStepThree: "不要停在“已配置”：让 Agent 实际调用 Context，验证这个项目可读。",
+    pasteIntoAgent: "复制给 Agent", copyInstruction: "复制指令", openAgentGuide: "打开 Agent 接入说明 ↗", openRecorderSkill: "查看 edc-recorder Skill ↗", downloadRecorderSkill: "下载 Skill ↓",
+    chatGPTSetupTitle: "添加 MCP Plugin（连接器）", chatGPTSetupBody: "打开 ChatGPT 的 Plugin 连接器表单，填入 Context MCP 地址，选择 OAuth，并授权你的 Integ.Life 账号。",
+    chatGPTStepOne: "打开下方“新建连接器”链接；如果 ChatGPT 提示，请先开启开发者模式。", chatGPTStepTwoPrefix: "名称填写", chatGPTStepTwoMiddle: "，MCP 地址填写", chatGPTStepThree: "身份验证选择 OAuth，扫描工具，然后完成 Integ.Life 登录与授权。", chatGPTStepFour: "创建或保存连接器。在新对话中为当前消息启用它，再运行下方验证提示词。",
+    openChatGPTConnector: "打开 ChatGPT 新建 Plugin ↗", verifyConnection: "验证接入", copyPrompt: "复制提示词", chatGPTAvailability: "自定义 MCP Plugin 需要 ChatGPT 支持的套餐，也可能受工作区管理员策略限制。",
+    agentSetupPrompt: "请阅读 {guide_url}，在当前工作目录为项目 {project_id} 配置 Event-driven Context。使用 OAuth 配置远程 MCP，并从 {skill_url} 安装 edc-recorder Skill。先检查已有配置，保留所有无关内容；不要让我把 token 粘贴到对话中。需要浏览器授权时请为我打开。最后实际调用 list_projects，并用 query_events 读取项目 {project_id}；请汇报真实调用结果，不要只说配置文件已存在。",
+    chatGPTVerifyPrompt: "使用 Event-driven Context 列出我的项目，然后读取项目 {project_id} 的最近记录。告诉我项目名称、最新记录 UUID，以及当前 project-brief State 或落后程度。本次只读，不要写入。"
+  });
+  Object.assign(translations.ms, {
+    integrationHint: "Pilih AI anda, benarkannya dengan OAuth dan sahkan ia boleh membaca projek ini.", connectionDetails: "Butiran sambungan", mcpEndpoint: "Endpoint MCP", recommended: "Disyorkan", developerMode: "Mod pembangun",
+    agentSetupTitle: "Biarkan agent menyediakannya", agentSetupBody: "Buka Claude Code atau Codex dalam direktori kerja, kemudian tampal arahan di bawah. Agent akan membaca panduan, menambah pelayan MCP jauh dan memasang Skill perakam.",
+    agentSetupStepOne: "Tampal arahan khusus projek ke dalam agent pengekodan anda.", agentSetupStepTwo: "Lengkapkan halaman OAuth Integ.Life apabila agent membukanya.", agentSetupStepThree: "Jangan berhenti pada ‘dikonfigurasi’: biarkan agent memanggil Context dan mengesahkan projek ini.",
+    pasteIntoAgent: "Tampal ke dalam agent", copyInstruction: "Salin arahan", openAgentGuide: "Buka panduan persediaan agent ↗", openRecorderSkill: "Baca Skill edc-recorder ↗", downloadRecorderSkill: "Muat turun Skill ↓",
+    chatGPTSetupTitle: "Tambah penyambung MCP", chatGPTSetupBody: "Buka borang penyambung ChatGPT, masukkan URL MCP Context, pilih OAuth dan benarkan akaun Integ.Life anda.",
+    chatGPTStepOne: "Buka pautan ‘Create connector’ di bawah. Dayakan mod pembangun jika diminta.", chatGPTStepTwoPrefix: "Tetapkan nama kepada", chatGPTStepTwoMiddle: ", dan URL MCP kepada", chatGPTStepThree: "Pilih pengesahan OAuth, imbas alat, kemudian lengkapkan log masuk dan kebenaran Integ.Life.", chatGPTStepFour: "Cipta atau simpan penyambung. Dalam sembang baharu, dayakannya untuk mesej dan jalankan arahan pengesahan di bawah.",
+    openChatGPTConnector: "Buka persediaan penyambung ChatGPT ↗", verifyConnection: "Sahkan sambungan", copyPrompt: "Salin prompt", chatGPTAvailability: "Penyambung MCP tersuai memerlukan pelan ChatGPT yang layak dan mungkin dikawal oleh pentadbir ruang kerja.",
+    agentSetupPrompt: "Baca {guide_url} dan sediakan Event-driven Context untuk projek {project_id} dalam direktori kerja ini. Konfigurasikan MCP jauh dengan OAuth dan pasang Skill edc-recorder daripada {skill_url}. Periksa konfigurasi sedia ada dahulu dan kekalkan entri yang tidak berkaitan. Jangan minta saya menampal token dalam sembang. Jika kebenaran pelayar diperlukan, bukakannya untuk saya. Akhir sekali, panggil list_projects dan query_events untuk projek {project_id}; laporkan hasil sebenar, bukan sekadar konfigurasi wujud.",
+    chatGPTVerifyPrompt: "Gunakan Event-driven Context untuk menyenaraikan projek saya, kemudian baca rekod terbaru daripada projek {project_id}. Laporkan nama projek, UUID rekod terkini, dan State project-brief atau ketinggalan semasa. Jangan tulis apa-apa lagi."
+  });
+  Object.assign(translations.hi, {
+    integrationHint: "अपना AI चुनें, OAuth से अनुमति दें और सत्यापित करें कि वह इसी प्रोजेक्ट को पढ़ सकता है।", connectionDetails: "कनेक्शन विवरण", mcpEndpoint: "MCP endpoint", recommended: "सुझाया गया", developerMode: "डेवलपर मोड",
+    agentSetupTitle: "अपने agent से सेटअप कराएँ", agentSetupBody: "वर्किंग डायरेक्टरी में Claude Code या Codex खोलें, फिर नीचे का निर्देश चिपकाएँ। Agent गाइड पढ़ेगा, remote MCP server जोड़ेगा और recorder Skill इंस्टॉल करेगा।",
+    agentSetupStepOne: "प्रोजेक्ट वाला निर्देश अपने coding agent में चिपकाएँ।", agentSetupStepTwo: "Agent के खोलने पर Integ.Life OAuth पेज पूरा करें।", agentSetupStepThree: "सिर्फ ‘configured’ पर न रुकें: agent से Context कॉल कराकर यह प्रोजेक्ट सत्यापित करें।",
+    pasteIntoAgent: "Agent में चिपकाएँ", copyInstruction: "निर्देश कॉपी करें", openAgentGuide: "Agent setup guide खोलें ↗", openRecorderSkill: "edc-recorder Skill पढ़ें ↗", downloadRecorderSkill: "Skill डाउनलोड करें ↓",
+    chatGPTSetupTitle: "MCP connector जोड़ें", chatGPTSetupBody: "ChatGPT का connector form खोलें, Context MCP URL भरें, OAuth चुनें और अपने Integ.Life खाते को अधिकृत करें।",
+    chatGPTStepOne: "नीचे ‘Create connector’ लिंक खोलें। पूछे जाने पर Developer mode चालू करें।", chatGPTStepTwoPrefix: "नाम रखें", chatGPTStepTwoMiddle: ", और MCP URL रखें", chatGPTStepThree: "OAuth authentication चुनें, tools scan करें, फिर Integ.Life sign-in और authorization पूरा करें।", chatGPTStepFour: "Connector बनाएँ या सेव करें। नई chat में इस message के लिए इसे चालू करें और नीचे का verification prompt चलाएँ।",
+    openChatGPTConnector: "ChatGPT connector setup खोलें ↗", verifyConnection: "कनेक्शन जाँचें", copyPrompt: "Prompt कॉपी करें", chatGPTAvailability: "Custom MCP connector के लिए योग्य ChatGPT plan चाहिए और workspace administrator इसे नियंत्रित कर सकता है।",
+    agentSetupPrompt: "{guide_url} पढ़ें और इस working directory में project {project_id} के लिए Event-driven Context सेट करें। OAuth के साथ remote MCP endpoint configure करें और {skill_url} से edc-recorder Skill इंस्टॉल करें। पहले मौजूदा configuration जाँचें और असंबंधित entries बचाएँ। मुझसे chat में token चिपकाने को न कहें। Browser authorization चाहिए तो मेरे लिए खोलें। अंत में list_projects और project {project_id} के लिए query_events वास्तव में कॉल करें; केवल configuration मौजूद होने के बजाय वास्तविक परिणाम बताएँ।",
+    chatGPTVerifyPrompt: "Event-driven Context से मेरे projects सूचीबद्ध करें, फिर project {project_id} के हाल के records पढ़ें। Project name, नवीनतम record UUID और मौजूदा project-brief State या lag बताएँ। अभी कुछ न लिखें।"
   });
 
   for (const [locale, message] of Object.entries({
