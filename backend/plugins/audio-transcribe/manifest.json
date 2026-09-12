@@ -26,6 +26,18 @@
     "language": "auto",
     "prompt": "Transcribe faithfully in the original language and mark unclear speech without guessing."
   },
+  "config_fields": [
+    {
+      "key": "language",
+      "type": "string",
+      "description": "Use auto to detect the spoken language, or provide the language code expected by the local transcription adapter."
+    },
+    {
+      "key": "prompt",
+      "type": "string",
+      "description": "Instructions passed to the transcription adapter, for example terminology to preserve or how to mark unclear speech."
+    }
+  ],
   "permissions": {
     "read_events": ["note", "log"],
     "write_events": ["derived"],

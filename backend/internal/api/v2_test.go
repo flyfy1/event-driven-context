@@ -352,10 +352,20 @@ func TestV2HTTPListsAndInstallsSystemPluginsByID(t *testing.T) {
 		t.Fatalf("catalog plugins = %d, want 5", len(catalog.Plugins))
 	}
 	var expected v2.Manifest
+	var configFree v2.Manifest
 	for _, manifest := range catalog.Plugins {
 		if manifest.ID == "project-brief" {
 			expected = manifest
 		}
+		if manifest.ID == "evidence" {
+			configFree = manifest
+		}
+	}
+	if len(expected.ConfigFields) != 2 || expected.ConfigFields[0].Key != "language" || expected.ConfigFields[1].Key != "prompt" {
+		t.Fatalf("project-brief config documentation missing from catalog: %#v", expected.ConfigFields)
+	}
+	if string(configFree.Config) != "{}" || len(configFree.ConfigFields) != 0 {
+		t.Fatalf("evidence should advertise an empty configuration: %#v", configFree)
 	}
 	if expected.ID == "" {
 		t.Fatal("project-brief missing from catalog")

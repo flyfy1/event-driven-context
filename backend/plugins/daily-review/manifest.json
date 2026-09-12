@@ -40,6 +40,23 @@
     "language": "auto",
     "prompt": "Keep progress, decisions, todos, questions, and suggestions distinct."
   },
+  "config_fields": [
+    {
+      "key": "time",
+      "type": "HH:MM",
+      "description": "Daily run time in the project's current IANA time zone, using 24-hour HH:MM format."
+    },
+    {
+      "key": "language",
+      "type": "string",
+      "description": "Use auto to follow the project records, or set the preferred language for the generated review."
+    },
+    {
+      "key": "prompt",
+      "type": "string",
+      "description": "Additional instructions that shape the review while the fixed plugin Skill and evidence rules remain in control."
+    }
+  ],
   "permissions": {
     "read_events": [
       "note",
