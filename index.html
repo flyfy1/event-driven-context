@@ -15,17 +15,17 @@
 
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%235347eb'/%3E%3Cpath d='M12 8H8v16h4m8-16h4v16h-4M13 16h6' stroke='white' stroke-width='2.5' fill='none'/%3E%3C/svg%3E" />
 
-<link rel="stylesheet" href="./landing.css?v=4d25ee674cce" />
+<link rel="stylesheet" href="./landing.css?v=aa9d42d411c0" />
 
-<script src="./i18n.js?v=4d25ee674cce" defer>
+<script src="./i18n.js?v=aa9d42d411c0" defer>
 </script>
 
-<script src="./landing-copy.js?v=4d25ee674cce" defer>
+<script src="./landing-copy.js?v=aa9d42d411c0" defer>
 </script>
 
-<script src="./workspace-utils.js?v=4d25ee674cce" defer></script>
-<script src="./navigation.js?v=4d25ee674cce" defer></script>
-<script src="./landing.js?v=4d25ee674cce" defer>
+<script src="./workspace-utils.js?v=aa9d42d411c0" defer></script>
+<script src="./navigation.js?v=aa9d42d411c0" defer></script>
+<script src="./landing.js?v=aa9d42d411c0" defer>
 </script>
 </head><body>
 <a class="skip" href="#main"><span data-copy="skip">Skip to content</span></a>
@@ -293,6 +293,15 @@ Do not record credentials, personal sensitive information without the user&#x27;
 <h3 data-copy="skillTryTitle">Try it in a new conversation</h3><p data-copy="skillTryBody">Replace PROJECT_ID and invoke $edc-recorder in a new conversation. Other agents can load the same skill explicitly.</p>
 <div class="setup-code"><div class="setup-code-bar"><span>Agent</span><button type="button" data-copy-code="skill-prompt" aria-describedby="skill-prompt"><span data-copy="copyCode">Copy</span></button></div><pre tabindex="0"><code id="skill-prompt" data-copy="agentPrompt">$edc-recorder Read project PROJECT_ID: discover State with list_state, read its project brief, then check the original records for confirmed decisions and open questions. Cite event UUIDs and report any lag. Read only for now.</code></pre></div>
 <p class="setup-note" data-copy="skillVerify">Expect real source UUIDs and any coverage gaps. Then ask to record a decision; verify its UUID with edc get --project PROJECT_ID EVENT_ID.</p>
+<h3 data-copy="recallTitle">Memory Recall · Find what you already know</h3>
+<p data-copy="recallBody">Add memory-recall for focused retrieval alongside edc-recorder, or install it on its own. Your agent reads local notes selectively and retrieves source Events through MCP or the CLI when needed. MCP connection and Skill installation are separate steps.</p>
+<p data-copy="recallInstall">Download the file and save it as .agents/skills/memory-recall/SKILL.md in your Codex project, or copy it from the repository below. Review an existing file before replacing it. Other agents should use their supported Skill directory.</p>
+<div class="setup-code"><div class="setup-code-bar"><span>Codex · Terminal</span><button type="button" data-copy-code="recall-install" aria-describedby="recall-install"><span data-copy="copyCode">Copy</span></button></div><pre tabindex="0"><code id="recall-install">mkdir -p .agents/skills/memory-recall
+cp /absolute/path/to/event-driven-context/frontend/skills/memory-recall/SKILL.md \
+  .agents/skills/memory-recall/SKILL.md</code></pre></div>
+<a class="button skill-download" href="./skills/memory-recall/SKILL.md" download="SKILL.md"><span data-copy="recallDownload">Download memory-recall/SKILL.md</span><span aria-hidden="true">↓</span></a>
+<p data-copy="recallTry">Try: $memory-recall In project PROJECT_ID, what did we decide about the launch date? Cite your sources.</p>
+<p class="setup-note" data-copy="recallNotes">With an authenticated CLI and filesystem, the skill syncs to .context/notes/PROJECT_ID/ unless you choose another folder, then explores indexes and relevant files. Without local access or published notes, it uses MCP Events directly. Recall does not create remote records or enable automatic recording.</p>
 <p data-copy="skillBoundary">Installing the recorder skill does not start transcription or scheduled reviews. Those plugins need scoped authorization and an agent or processor host.</p>
 <a class="setup-doc-link" href="https://learn.chatgpt.com/docs/build-skills" data-copy="skillDocs">Codex Skill documentation ↗</a>
 </div></details>
