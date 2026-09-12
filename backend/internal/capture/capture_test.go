@@ -136,7 +136,7 @@ func TestNormalizeCodexUsesTurnIDAndCurrentWireFields(t *testing.T) {
 	stop.Prompt = ""
 	stop.LastAssistantMessage = "done"
 	normalizedStop, err := NormalizeCodex(stop)
-	if err != nil || normalizedStop.Event.ID == one.Event.ID || !normalizedStop.Reminder {
+	if err != nil || normalizedStop.Event.ID == one.Event.ID || normalizedStop.Reminder {
 		t.Fatalf("Codex Stop normalization failed: %v %#v", err, normalizedStop)
 	}
 	stop.LastAssistantMessage = ""

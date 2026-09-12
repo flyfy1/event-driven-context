@@ -88,7 +88,6 @@ func NormalizeCodex(in HookInput) (normalizedHook, error) {
 			text = "Codex turn stopped without an assistant message."
 			metadata["message_missing"] = mustJSON(true)
 		}
-		result.Reminder = !in.StopHookActive
 		metadata["stop_hook_active"] = mustJSON(in.StopHookActive)
 	case "PreCompact":
 		if in.TurnID == "" || !oneOf(in.Trigger, "manual", "auto") {
