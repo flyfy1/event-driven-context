@@ -18,7 +18,7 @@
 
 生产切流已于 2026-09-12（Asia/Singapore）完成：
 
-- Pi release：`/opt/event-driven-context/releases/20260912T125000Z-22e4b15`。
+- Pi release：`/opt/event-driven-context/releases/20260912T131619Z-542e674`。
 - 最终停写快照：SQLite integrity `ok`；7 个用户、9 个项目、15 条成员关系、9 个 V2 项目、339 条 Event、16 个 File、24 个 State version、17 个 installation。
 - 传输校验：数据库 SHA-256 为 `c2633dfd0f994c3d4db7ac814f716f9d99abb7d6af4679042dd5e312d9a2ce86`；数据归档 SHA-256 为 `43331b2e11e0b264d6e7bd0f1436a55bc40139c5d46a86ca1283a60d4959f6a0`。
 - Cloudflare Tunnel `integ-pi` 的第 20 条 route 把 `context-api.integ.life` 发布到 `http://localhost:8401`；catch-all 仍为 `http_status:404`。
