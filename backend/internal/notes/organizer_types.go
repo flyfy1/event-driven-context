@@ -7,6 +7,7 @@ type EventPreview struct {
 	Kind       string `json:"kind"`
 	RecordedAt string `json:"recorded_at"`
 	Preview    string `json:"preview"`
+	Backfill   bool   `json:"backfill,omitempty"`
 }
 
 type BeginInput struct {

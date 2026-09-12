@@ -21,9 +21,10 @@ type NotesFile struct {
 	SHA256  string `json:"sha256"`
 }
 type NotesExport struct {
-	ProjectID string      `json:"project_id"`
-	Revision  int64       `json:"revision"`
-	Files     []NotesFile `json:"files"`
+	ProjectID       string      `json:"project_id"`
+	Revision        int64       `json:"revision"`
+	ThroughSequence int64       `json:"through_sequence"`
+	Files           []NotesFile `json:"files"`
 }
 
 // ValidateNotePath is intentionally portable: note paths cannot alias local
@@ -38,7 +39,7 @@ func ValidateNotePath(name string) error {
 func NoteHash(content string) string { return fmt.Sprintf("%x", sha256.Sum256([]byte(content))) }
 
 func validateNotesExport(projectID string, out NotesExport) error {
-	if out.ProjectID != projectID || out.Revision < 0 {
+	if out.ProjectID != projectID || out.Revision < 0 || out.ThroughSequence < 0 {
 		return fmt.Errorf("server returned unexpected notes project or revision")
 	}
 	if len(out.Files) > MaxNotesFiles {

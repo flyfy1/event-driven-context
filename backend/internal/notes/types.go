@@ -15,9 +15,10 @@ type File struct {
 }
 
 type Export struct {
-	ProjectID string `json:"project_id"`
-	Revision  int64  `json:"revision"`
-	Files     []File `json:"files"`
+	ProjectID       string `json:"project_id"`
+	Revision        int64  `json:"revision"`
+	ThroughSequence int64  `json:"through_sequence"`
+	Files           []File `json:"files"`
 }
 
 type WriteFile struct {
@@ -33,10 +34,11 @@ type SyncInput struct {
 }
 
 type Checkpoint struct {
-	AfterSequence int64  `json:"after_sequence"`
-	PromptVersion string `json:"prompt_version"`
-	PolicyHash    string `json:"policy_hash"`
-	RunID         string `json:"run_id"`
+	AfterSequence                     int64  `json:"after_sequence"`
+	AttachmentBackfillThroughSequence int64  `json:"attachment_backfill_through_sequence"`
+	PromptVersion                     string `json:"prompt_version"`
+	PolicyHash                        string `json:"policy_hash"`
+	RunID                             string `json:"run_id"`
 }
 
 type Error struct{ Code, Message string }

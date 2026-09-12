@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const PromptVersion = "1"
+const PromptVersion = "2"
 const Model = "gpt-5.6-luna"
 const Reasoning = "medium"
 
