@@ -14,6 +14,17 @@ English | [简体中文](production-deployment.cn.md)
 
 The core has a single-writer filesystem contract. Never run the Pi and GCE services as simultaneous writers after cutover.
 
+## Current Verified Deployment
+
+The production cutover completed on 2026-09-12 (Asia/Singapore):
+
+- Pi release: `/opt/event-driven-context/releases/20260912T125000Z-22e4b15`.
+- Final stopped-writer snapshot: SQLite integrity `ok`; 7 users, 9 projects, 15 memberships, 9 V2 projects, 339 Events, 16 Files, 24 State versions, and 17 installations.
+- Transfer verification: database SHA-256 `c2633dfd0f994c3d4db7ac814f716f9d99abb7d6af4679042dd5e312d9a2ce86`; data archive SHA-256 `43331b2e11e0b264d6e7bd0f1436a55bc40139c5d46a86ca1283a60d4959f6a0`.
+- Cloudflare Tunnel `integ-pi` route 20 publishes `context-api.integ.life` to `http://localhost:8401`; its catch-all remains `http_status:404`.
+- Public health, OAuth discovery, the unauthenticated MCP challenge, authenticated CLI reads, and the signed-in Web project/State/source flow passed. Public request IDs were matched to the Pi journal.
+- The former GCE `event-context.service` and `event-context-proxy.service` are inactive and disabled, and port 8401 is closed. Their data, configuration, releases, and final snapshot remain available only for rollback.
+
 ## Normal Release
 
 Run from a clean, pushed commit:

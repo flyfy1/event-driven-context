@@ -14,6 +14,17 @@
 
 核心采用文件系统单写入者契约。切流后绝不能让 Pi 与 GCE 同时承担写入。
 
+## 当前已验证部署
+
+生产切流已于 2026-09-12（Asia/Singapore）完成：
+
+- Pi release：`/opt/event-driven-context/releases/20260912T125000Z-22e4b15`。
+- 最终停写快照：SQLite integrity `ok`；7 个用户、9 个项目、15 条成员关系、9 个 V2 项目、339 条 Event、16 个 File、24 个 State version、17 个 installation。
+- 传输校验：数据库 SHA-256 为 `c2633dfd0f994c3d4db7ac814f716f9d99abb7d6af4679042dd5e312d9a2ce86`；数据归档 SHA-256 为 `43331b2e11e0b264d6e7bd0f1436a55bc40139c5d46a86ca1283a60d4959f6a0`。
+- Cloudflare Tunnel `integ-pi` 的第 20 条 route 把 `context-api.integ.life` 发布到 `http://localhost:8401`；catch-all 仍为 `http_status:404`。
+- 公网健康检查、OAuth discovery、未认证 MCP challenge、已认证 CLI 读取，以及登录后的 Web 项目、State 和来源流程均通过；公网 request ID 已在 Pi journal 中精确匹配。
+- 原 GCE `event-context.service` 与 `event-context-proxy.service` 均 inactive/disabled，8401 端口已关闭；其数据、配置、release 与最终快照仅作为回滚材料保留。
+
 ## 日常发布
 
 从干净且已推送的 commit 运行：
