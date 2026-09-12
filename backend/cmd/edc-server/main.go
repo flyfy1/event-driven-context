@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strings"
 	"syscall"
@@ -17,6 +18,7 @@ import (
 
 	"event-driven-context/internal/api"
 	"event-driven-context/internal/core"
+	"event-driven-context/internal/notescheduler"
 	"event-driven-context/internal/transcription"
 	"event-driven-context/internal/v2"
 )
@@ -39,6 +41,8 @@ func run() (runErr error) {
 	// Kept as a parsed compatibility flag while deployments move to V2. The V2
 	// server does not expose or start the legacy automation coordinator.
 	_ = flag.String("skill-root", "", "deprecated V1 automation skill directory; ignored by the V2 server")
+	automaticNotes := flag.Bool("automatic-notes", true, "index all projects automatically with one shared worker")
+	notesCodex := flag.String("notes-codex", os.Getenv("EDC_NOTES_CODEX"), "authenticated Codex executable for automatic notes")
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return fmt.Errorf("unexpected arguments")
@@ -125,6 +129,22 @@ func run() (runErr error) {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	if *automaticNotes {
+		command := *notesCodex
+		if command == "" {
+			command = "codex"
+		}
+		resolved, lookupErr := exec.LookPath(command)
+		if lookupErr != nil {
+			slog.Error("automatic notes unavailable: configure --notes-codex", "error", lookupErr)
+		} else {
+			workerCtx, cancelWorker := context.WithCancel(ctx)
+			workerDone := make(chan struct{})
+			go func() { defer close(workerDone); notescheduler.Run(workerCtx, store, service, resolved) }()
+			defer func() { cancelWorker(); <-workerDone }()
+			slog.Info("automatic notes enabled", "concurrency", 1)
+		}
+	}
 	done := make(chan error, 1)
 	go func() { done <- httpServer.Serve(ln) }()
 	slog.Info("event-driven-context listening", "address", ln.Addr().String(), "mcp", "/mcp", "admin_users", len(adminUsers))

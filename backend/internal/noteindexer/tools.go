@@ -12,13 +12,13 @@ import (
 
 	"event-driven-context/internal/notes"
 	"event-driven-context/internal/v2"
-	"event-driven-context/internal/v2client"
+
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type draft struct {
 	mu          sync.Mutex
-	client      *v2client.Client
+	client      Client
 	project     string
 	run         notes.OrganizationRun
 	files       map[string]string

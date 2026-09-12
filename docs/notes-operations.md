@@ -4,7 +4,21 @@ Status: notes and attachment support is implemented and tested; production deplo
 
 The API and worker are separate processes. Install the notes plugin as project owner, then run one worker per project. Codex CLI must already be authenticated as the worker's Unix user; its bundled MCP support must be available. Shell, browser, app, plugin discovery, and external action tools are disabled for organizer sessions.
 
-## Install
+## Automatic indexing (default)
+
+The scheduler checks projects in stable order, once per sweep, then waits 15 seconds. Each project gets at most one batch per sweep, so a backlog cannot monopolize the worker. Failed projects back off from 15 seconds to five minutes; other projects continue. An explicit plugin pause or removal opts that project out. Empty projects register the processor but do not launch an agent until events exist.
+
+Set `EDC_NOTES_CODEX` or `--notes-codex` to the authenticated Codex executable. `--automatic-notes=false` disables the shared scheduler. Missing Codex logs an explicit error while leaving the API available. Model usage and remote account limits are shared across projects; one active agent is the default concurrency bound. A sweep can take longer than 15 seconds when multiple projects need generation.
+
+Server-internal discovery is not exposed through HTTP or MCP. Each run uses a single-project principal and the existing event/file permissions, lease, validation, and publication checkpoint. Raw events and file bytes remain unchanged. Existing indexers are reused without rotating tokens; paused and removed installations are not re-enabled. Checkpoints survive restart. On shutdown the scheduler cancels its agent and waits before storage closes.
+
+The production API unit permits read-only access to the Codex executable and writes to its existing authenticated Codex home. Deployment stops and disables the legacy single-project notes service after API health checks pass; its token and notes are retained. The shared scheduler requires no additional inbound endpoint or broad bearer token.
+
+## Legacy per-project worker
+
+Use this only with automatic indexing disabled. Do not run both scheduling modes intentionally. Existing project leases prevent duplicate publication, but separate workers would defeat the global one-agent limit.
+
+### Install
 
 With a project-owner CLI session:
 

@@ -150,7 +150,11 @@ if [[ -z "$healthy" ]]; then
   if [[ -n "$notes_was_active" ]]; then systemctl start event-context-notes.service; fi
   exit 1
 fi
-if [[ -n "$notes_was_active" ]]; then systemctl start event-context-notes.service; fi
+# Automatic indexing now runs in the API with a single shared slot. Keep the
+# legacy per-project worker stopped; its token and checkpoints remain intact.
+if systemctl cat event-context-notes.service >/dev/null 2>&1; then
+  systemctl disable event-context-notes.service
+fi
 
 # Keep rollback capacity without allowing immutable releases to fill the
 # production boot disk. Always retain the active target even if clock skew

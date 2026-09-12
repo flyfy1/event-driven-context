@@ -121,6 +121,14 @@ func (s *Service) InstallPlugin(ctx context.Context, projectID string, in Instal
 // on first use when the caller owns the project. Built-ins do not receive a
 // bearer token: only code running inside this server can obtain their principal.
 func (s *Service) EnsureBuiltinPlugin(ctx context.Context, projectID string, manifest Manifest, config json.RawMessage) (PluginPrincipal, Installation, error) {
+	return s.ensureBuiltinPlugin(ctx, projectID, manifest, config, false)
+}
+
+// EnsureAutomaticPlugin never revives an explicitly removed installation.
+func (s *Service) EnsureAutomaticPlugin(ctx context.Context, projectID string, manifest Manifest) (PluginPrincipal, Installation, error) {
+	return s.ensureBuiltinPlugin(ctx, projectID, manifest, nil, true)
+}
+func (s *Service) ensureBuiltinPlugin(ctx context.Context, projectID string, manifest Manifest, config json.RawMessage, respectRemoved bool) (PluginPrincipal, Installation, error) {
 	if err := s.identity.RequireProjectMember(ctx, projectID); err != nil {
 		return PluginPrincipal{}, Installation{}, err
 	}
@@ -145,8 +153,11 @@ func (s *Service) EnsureBuiltinPlugin(ctx context.Context, projectID string, man
 	s.mu.Lock()
 	p := s.data.Projects[projectID]
 	if p != nil {
-		if current, ok := p.Installations[manifest.ID]; ok && current.Status != "removed" {
+		if current, ok := p.Installations[manifest.ID]; ok && (respectRemoved || current.Status != "removed") {
 			s.mu.Unlock()
+			if current.Status == "removed" {
+				return PluginPrincipal{}, Installation{}, v2err("plugin_removed", "plugin is removed")
+			}
 			if current.Status == "paused" {
 				return PluginPrincipal{}, Installation{}, v2err("plugin_paused", "plugin is paused")
 			}
@@ -176,7 +187,10 @@ func (s *Service) EnsureBuiltinPlugin(ctx context.Context, projectID string, man
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p = s.projectLocked(projectID)
-	if current, ok := p.Installations[manifest.ID]; ok && current.Status != "removed" {
+	if current, ok := p.Installations[manifest.ID]; ok && (respectRemoved || current.Status != "removed") {
+		if current.Status == "removed" {
+			return PluginPrincipal{}, Installation{}, v2err("plugin_removed", "plugin is removed")
+		}
 		if current.Status == "paused" {
 			return PluginPrincipal{}, Installation{}, v2err("plugin_paused", "plugin is paused")
 		}

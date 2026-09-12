@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"event-driven-context/internal/notes"
-	"event-driven-context/internal/v2client"
+
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -33,7 +33,7 @@ type Result struct {
 	ThroughSequence, Revision int64
 }
 
-func Run(ctx context.Context, client *v2client.Client, opts Options) (result Result, err error) {
+func Run(ctx context.Context, client Client, opts Options) (result Result, err error) {
 	if client == nil || opts.ProjectID == "" {
 		return result, fmt.Errorf("project and client required")
 	}
