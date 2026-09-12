@@ -6,7 +6,7 @@ const USER_KEY = sessionStorageKey("event-context.user", API);
 const LOCALE_KEY = "event-context.locale";
 const SHARED_LOCALE_COOKIE = "event_context_locale";
 const MAX_FILE_BYTES = 50 << 20;
-const VIEWS = new Set(["records", "state", "integration", "plugins"]);
+const VIEWS = new Set(["records", "files", "state", "integration", "plugins"]);
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const $ = (selector, root = document) => root.querySelector(selector);
 
@@ -45,6 +45,7 @@ const state = {
   plugins: [], pluginsStatus: "idle", pluginsError: "", pluginsRequest: 0,
   eventCache: new Map(), pluginToken: ""
 };
+const filesWorkspace = window.createFilesWorkspace({ request, t });
 const returnedFromCentralAuth = new URLSearchParams(location.search).get("auth") === "complete";
 if (returnedFromCentralAuth) {
   state.token = null; state.user = null;
@@ -179,6 +180,7 @@ function setLocale(locale, persist) {
   renderPlugins();
   renderIntegration();
   renderCaptureFile();
+  filesWorkspace.translate();
 }
 function updateHomeLink() {
   const href = window.ContextNavigation.homeURL(location.href, state.locale, true);
@@ -213,9 +215,11 @@ function setView(view, historyMode = "replace") {
   });
   document.querySelectorAll("[data-workspace-panel]").forEach((panel) => panel.classList.toggle("hidden", panel.dataset.workspacePanel !== state.view));
   syncRoute(historyMode);
+  if (state.view === "files") filesWorkspace.show();
 }
 
 function clearSession() {
+  filesWorkspace.clear();
   state.sessionEpoch += 1;
   state.projectsRequest += 1;
   state.eventsRequest += 1;
@@ -274,6 +278,7 @@ async function selectProject(id, historyMode = "push") {
   state.routeError = Boolean(id && !state.project);
   syncRoute(historyMode);
   state.projectVersion += 1;
+  filesWorkspace.select(state.project && state.project.id, state.view === "files");
   setMessage("#record-message");
   setMessage("#members-message");
   $("#add-member-form").reset();
@@ -871,6 +876,7 @@ $("#auth-submit").addEventListener("click", () => {
   location.assign(start.toString());
 });
 $("#logout-button").addEventListener("click", async () => {
+  if (filesWorkspace.hasDrafts() && !window.confirm(t("filesSignOutConfirm"))) return;
   const button = $("#logout-button");
   button.disabled = true;
   try {

@@ -8,3 +8,4 @@
 coverage.out
 .gh-pages/
 .local-docs/
+node_modules/
