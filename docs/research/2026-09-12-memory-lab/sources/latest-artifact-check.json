@@ -1,0 +1,20 @@
+{
+  "checked_at": "2026-09-12T01:24:02.032176+00:00",
+  "url": "https://api.github.com/repos/MiuLab/LoCoMo-Conv",
+  "status": "ok",
+  "repo": "MiuLab/LoCoMo-Conv",
+  "license": null,
+  "default_branch": "main",
+  "commit": "1925e924c36e632283ea91f2212157829f4e0e45",
+  "root_files": [
+    ".gitignore",
+    "README.md",
+    "analysis",
+    "annotation",
+    "construction",
+    "data",
+    "response_eval",
+    "retrieval",
+    "variance"
+  ]
+}

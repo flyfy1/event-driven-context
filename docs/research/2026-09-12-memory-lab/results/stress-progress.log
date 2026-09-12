@@ -1,0 +1,149 @@
+product-0/stale_undisclosed {
+"answer": "30000 元",
+"status": "known",
+"citations": [
+"75afa1b7-9569-5b63-9980-54af3b564777"
+]
+}
+product-0/tail_catchup {
+"answer": "25000 元",
+"status": "known",
+"citations": [
+"[5b5f22a4-138c-51df-99c6-1089aeade28b]"
+]
+}
+product-0/stale_disclosed {
+"answer": "30000 元",
+"status": "known",
+"citations": [
+"[75afa1b7-9569-5b63-9980-54af3b564777]"
+]
+}
+product-0/query_only {
+"answer": "无法直接开始。海桥尚未选择具体转录引擎且无准确率测试数据（[5df82780-fc67-5a6b-9c3f-eb60a73f494e]），同时付费服务意愿尚未确认（[172b7eeb-0fc1-535b-be15-22ad006720cb]）。",
+"status": "unknown",
+"citations": ["[5df82780-fc67-5a6b-9c3f-eb60a73f494e]", "[172b7eeb-0fc1-535b-be15-22ad006720cb]"]
+}
+product-0/pinned_constraints {
+"answer": "无法确定具体托管服务，且不可直接开始。项目目标要求3月底前验证闭环，但截至1月3日尚未选择转录引擎且无准确率数据（[5df82780-fc67-5a6b-9c3f-eb60a73f494e]）。虽然约束要求本地存储（[93457c14-bc05-57cf-b2f5-dd592e4e8cd3]），但缺乏引擎选型和测试数据，无法直接启动实验。",
+"status": "unknown",
+"citations": ["[5df82780-fc67-5a6b-9c3f-eb60a73f494e]", "[93457c14-bc05-57cf-b2f5-dd592e4e8cd3]"]
+}
+product-0/metadata_available {
+"answer": "存在冲突：林主张4月10日，陈主张4月20日",
+"status": "conflict",
+"citations": [
+"6aae9390-02d0-539c-9ca2-a351abc3922e",
+"b5531fcd-dd0e-53e7-9108-70e34ab3cc6d"
+]
+}
+product-0/metadata_absent {
+"answer": "存在冲突：4月10日（林）与4月20日（陈）。",
+"status": "conflict",
+"citations": [
+"6aae9390-02d0-539c-9ca2-a351abc3922e",
+"b5531fcd-dd0e-53e7-9108-70e34ab3cc6d"
+]
+}
+product-1/stale_undisclosed {
+"answer": "47000 元",
+"status": "known",
+"citations": [
+"[c833b489-c1ed-5cdb-9641-477501333469]"
+]
+}
+product-1/tail_catchup {
+"answer": "42000 元",
+"status": "known",
+"citations": [
+"[5721bafd-1c44-51e1-a1a6-f1f410976c50]"
+]
+}
+product-1/stale_disclosed {
+"answer": "47000 元",
+"status": "known",
+"citations": [
+"[c833b489-c1ed-5cdb-9641-477501333469]"
+]
+}
+product-1/query_only {
+"answer": "无法直接开始。海桥尚未选择具体转录引擎且无准确率测试数据（[8fdf0aea-683a-53d6-b713-fe5df8b518ca]），同时付费云端服务意愿尚未确认（[9660d29e-01e4-559b-8ed6-771927164480]）。",
+"status": "unknown",
+"citations": [
+"8fdf0aea-683a-53d6-b713-fe5df8b518ca",
+"9660d29e-01e4-559b-8ed6-771927164480"
+]
+}
+product-1/pinned_constraints {
+"answer": "无法确定具体托管服务，且不可直接开始。证据显示项目尚未选择转录引擎（[8fdf0aea...]），且目标是在三月底前验证闭环（[08c25003...]）。",
+"status": "unknown",
+"citations": [
+"8fdf0aea-683a-53d6-b713-fe5df8b518ca",
+"08c25003-5e43-552e-85c4-9d133828fa46"
+]
+}
+product-1/metadata_available {
+"answer": "存在冲突：4月10日（[6086f314-00d7-566d-a9ea-18c750b30ecc]）与4月20日（[3cd377e2-f3e0-5980-b270-5d9cea5b33d8]）。",
+"status": "conflict",
+"citations": ["6086f314-00d7-566d-a9ea-18c750b30ecc", "3cd377e2-f3e0-5980-b270-5d9cea5b33d8"]
+}
+product-1/metadata_absent {
+"answer": "存在冲突：4月10日（周）与4月20日（赵）。",
+"status": "conflict",
+"citations": [
+"6086f314-00d7-566d-a9ea-18c750b30ecc",
+"3cd377e2-f3e0-5980-b270-5d9cea5b33d8"
+]
+}
+product-2/stale_undisclosed {
+"answer": "29000 元",
+"status": "known",
+"citations": [
+"b86db033-e918-5c28-b8b0-f536c435c4ab"
+]
+}
+product-2/tail_catchup {
+"answer": "24000 元",
+"status": "known",
+"citations": [
+"[842a779f-cd18-5c9c-90e5-78567aca1297]"
+]
+}
+product-2/stale_disclosed {
+"answer": "29000 元",
+"status": "known",
+"citations": [
+"[b86db033-e918-5c28-b8b0-f536c435c4ab]"
+]
+}
+product-2/query_only {
+"answer": "无法直接开始。海桥尚未选择具体转录引擎且无准确率测试数据（[252a611d]），同时付费云端服务意愿未获用户确认（[3038eccc]）。",
+"status": "unknown",
+"citations": ["252a611d-bd7f-5199-b437-e84af7ceb347", "3038eccc-8e40-53be-bda8-1c811e87a855"]
+}
+product-2/pinned_constraints {
+"answer": "无法确定具体托管服务，且不可直接开始。项目目标要求3月底前验证闭环，但截至1月3日尚未选择转录引擎且无准确率数据（[252a611d-bd7f-5199-b437-e84af7ceb347]）。此外，约束要求录音仅存本地不上传第三方（[c95cfc69-236f-54cf-8ec3-bc745ddf2e53]），这与选择外部托管服务存在潜在冲突。",
+"status": "unknown",
+"citations": [
+"252a611d-bd7f-5199-b437-e84af7ceb347",
+"c95cfc69-236f-54cf-8ec3-bc745ddf2e53",
+"51297383-af16-536c-b6aa-d78f783b3ac7"
+]
+}
+product-2/metadata_available {
+"answer": "存在冲突：江主张4月10日，孙主张4月20日",
+"status": "conflict",
+"citations": [
+"[0e1c4b36-d281-5f5a-8a87-79f5d4a80ee7]",
+"[b8f77151-a4ec-5aa6-976e-5722063a66e4]"
+]
+}
+product-2/metadata_absent {
+"answer": "存在冲突：孙主张4月20日，江主张4月10日",
+"status": "conflict",
+"citations": [
+"b8f77151-a4ec-5aa6-976e-5722063a66e4",
+"0e1c4b36-d281-5f5a-8a87-79f5d4a80ee7"
+]
+}
+deterministic checks 7 passes 4 planned reader probes 21

@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-09-12T00:23:23.284073+00:00",
+  "repo": "/Users/songyy/Documents/event-driven-context",
+  "head": "df671750f7ebe6d93f53239fdf9ad941de54fdd3",
+  "warning": "Working tree has ongoing parallel development; hashes identify inspected source. No runtime data accessed.",
+  "files": {
+    "docs/product-V2.md": "a4256ed6284199796ddf03425af3036944fde35f9462d8eb00d88cb83e442f51",
+    "docs/technical-design.md": "5ba0e3a6a7ad8c8bb0ad9bb39119e45dcb62d96df41eebeedc6e4fda5bb57c49",
+    "backend/internal/v2/types.go": "b8dd9dabb35e9c300d268c1c2c5f2559ce73e14b006b40ebe6b812500fdf1150",
+    "backend/internal/v2/state.go": "b99e78c9e8c9faeae83ea9842ad8cec3b48b4e26d7de5901c5b9bdbff9fc64f3",
+    "backend/internal/v2/events.go": "43c28f46e79760e4136c40e220975a084740d92087cbc8c3db313dfd6891a04b",
+    "backend/internal/v2/validate.go": "ed53fc2a86c22bc5f8f38e744b81142c355ee39dfaf73ee654b1b5551aa266ae",
+    "backend/internal/v2/storage.go": "ec46afc5a0a7d796396606857c4dbcc86a8da3732d451cd33e7c5f1abe562138",
+    "backend/plugins/project-brief/skills/project-brief/SKILL.md": "6981c48b10eb7d562ddf468a9f972d814739b13a257fa1a4e2b243378ee73f12",
+    "backend/plugins/evidence/skills/evidence/SKILL.md": "703332744191a43bc16ee83fe0159189afa8c00283bcd411eb6ed229494a7d56"
+  }
+}

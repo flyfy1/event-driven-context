@@ -1,0 +1,464 @@
+built product-0 4 summary_tokens 420
+built product-0 19 summary_tokens 905
+built product-0 20 summary_tokens 987
+built product-0 21 summary_tokens 1109
+built product-0 22 summary_tokens 1359
+built product-0 24 summary_tokens 1526
+built product-0 26 summary_tokens 1536
+built product-0 27 summary_tokens 1536
+built product-0 28 summary_tokens 1536
+built product-0 30 summary_tokens 1536
+built product-0 31 summary_tokens 1536
+built product-0 52 summary_tokens 1536
+built product-0 53 summary_tokens 1536
+built product-0 54 summary_tokens 1536
+built product-0 55 summary_tokens 1536
+built product-0 56 summary_tokens 1536
+answered product-0/budget_initial A 1
+answered product-0/budget_initial B 1
+answered product-0/budget_initial C 1
+answered product-0/budget_initial D 1
+answered product-0/budget_updated A 1
+answered product-0/budget_updated B 1
+answered product-0/budget_updated C 1
+answered product-0/budget_updated D 1
+answered product-0/todo_open A 1
+answered product-0/todo_open B 1
+answered product-0/todo_open C 1
+answered product-0/todo_open D 1
+answered product-0/todo_done A 1
+answered product-0/todo_done B 1
+answered product-0/todo_done C 1
+answered product-0/todo_done D 1
+answered product-0/todo_reopen A 1
+answered product-0/todo_reopen B 1
+answered product-0/todo_reopen C 1
+answered product-0/todo_reopen D 1
+answered product-0/todo_cancel A 1
+answered product-0/todo_cancel B 1
+answered product-0/todo_cancel C 1
+answered product-0/todo_cancel D 1
+answered product-0/member_conflict A 0
+answered product-0/member_conflict B 1
+answered product-0/member_conflict C 1
+answered product-0/member_conflict D 1
+answered product-0/agent_unconfirmed A 1
+answered product-0/agent_unconfirmed B 1
+answered product-0/agent_unconfirmed C 1
+answered product-0/agent_unconfirmed D 1
+answered product-0/duplicate_once A 1
+answered product-0/duplicate_once B 1
+answered product-0/duplicate_once C 1
+answered product-0/duplicate_once D 1
+answered product-0/audio_unclear A 1
+answered product-0/audio_unclear B 0
+answered product-0/audio_unclear C 1
+answered product-0/audio_unclear D 1
+answered product-0/audio_corrected A 1
+answered product-0/audio_corrected B 0
+answered product-0/audio_corrected C 1
+answered product-0/audio_corrected D 1
+answered product-0/unknown A 0
+answered product-0/unknown B 0
+answered product-0/unknown C 0
+answered product-0/unknown D 0
+answered product-0/old_goal A 0
+answered product-0/old_goal B 1
+answered product-0/old_goal C 1
+answered product-0/old_goal D 1
+answered product-0/irrelevant_constraint A 0
+answered product-0/irrelevant_constraint B 0
+answered product-0/irrelevant_constraint C 1
+answered product-0/irrelevant_constraint D 1
+answered product-0/preference A 0
+answered product-0/preference B 1
+answered product-0/preference C 1
+answered product-0/preference D 1
+answered product-0/lag A 1
+answered product-0/lag B 1
+answered product-0/lag C 1
+answered product-0/lag D 1
+answered product-0/historical A 0
+answered product-0/historical B 0
+answered product-0/historical C 1
+answered product-0/historical D 1
+answered product-0/late_arrival A 1
+answered product-0/late_arrival B 0
+answered product-0/late_arrival C 1
+answered product-0/late_arrival D 1
+answered product-0/untrusted_update A 0
+answered product-0/untrusted_update B 1
+answered product-0/untrusted_update C 0
+answered product-0/untrusted_update D 1
+answered product-0/openquestion A 1
+answered product-0/openquestion B 0
+answered product-0/openquestion C 1
+answered product-0/openquestion D 1
+answered product-0/isolation A 0
+answered product-0/isolation B 0
+answered product-0/isolation C 1
+answered product-0/isolation D 1
+built product-1 4 summary_tokens 406
+built product-1 19 summary_tokens 633
+built product-1 20 summary_tokens 697
+built product-1 21 summary_tokens 635
+built product-1 22 summary_tokens 741
+built product-1 24 summary_tokens 932
+built product-1 26 summary_tokens 1129
+built product-1 27 summary_tokens 1256
+built product-1 28 summary_tokens 1333
+built product-1 30 summary_tokens 1503
+built product-1 31 summary_tokens 1487
+built product-1 52 summary_tokens 1536
+built product-1 53 summary_tokens 1536
+built product-1 54 summary_tokens 1536
+built product-1 55 summary_tokens 1535
+built product-1 56 summary_tokens 1536
+answered product-1/budget_initial A 1
+answered product-1/budget_initial B 1
+answered product-1/budget_initial C 1
+answered product-1/budget_initial D 1
+answered product-1/budget_updated A 1
+answered product-1/budget_updated B 1
+answered product-1/budget_updated C 1
+answered product-1/budget_updated D 1
+answered product-1/todo_open A 1
+answered product-1/todo_open B 1
+answered product-1/todo_open C 1
+answered product-1/todo_open D 1
+answered product-1/todo_done A 1
+answered product-1/todo_done B 1
+answered product-1/todo_done C 1
+answered product-1/todo_done D 1
+answered product-1/todo_reopen A 1
+answered product-1/todo_reopen B 1
+answered product-1/todo_reopen C 1
+answered product-1/todo_reopen D 1
+answered product-1/todo_cancel A 1
+answered product-1/todo_cancel B 1
+answered product-1/todo_cancel C 1
+answered product-1/todo_cancel D 1
+answered product-1/member_conflict A 0
+answered product-1/member_conflict B 1
+answered product-1/member_conflict C 0
+answered product-1/member_conflict D 0
+answered product-1/agent_unconfirmed A 1
+answered product-1/agent_unconfirmed B 1
+answered product-1/agent_unconfirmed C 1
+answered product-1/agent_unconfirmed D 1
+answered product-1/duplicate_once A 1
+answered product-1/duplicate_once B 1
+answered product-1/duplicate_once C 1
+answered product-1/duplicate_once D 1
+answered product-1/audio_unclear A 1
+answered product-1/audio_unclear B 1
+answered product-1/audio_unclear C 1
+answered product-1/audio_unclear D 1
+answered product-1/audio_corrected A 1
+answered product-1/audio_corrected B 0
+answered product-1/audio_corrected C 1
+answered product-1/audio_corrected D 1
+answered product-1/unknown A 0
+answered product-1/unknown B 0
+answered product-1/unknown C 0
+answered product-1/unknown D 0
+answered product-1/old_goal A 0
+answered product-1/old_goal B 1
+answered product-1/old_goal C 1
+answered product-1/old_goal D 1
+answered product-1/irrelevant_constraint A 0
+answered product-1/irrelevant_constraint B 1
+answered product-1/irrelevant_constraint C 1
+answered product-1/irrelevant_constraint D 1
+answered product-1/preference A 0
+answered product-1/preference B 0
+answered product-1/preference C 1
+answered product-1/preference D 1
+answered product-1/lag A 1
+answered product-1/lag B 1
+answered product-1/lag C 1
+answered product-1/lag D 1
+answered product-1/historical A 0
+answered product-1/historical B 0
+answered product-1/historical C 1
+answered product-1/historical D 1
+answered product-1/late_arrival A 1
+answered product-1/late_arrival B 0
+answered product-1/late_arrival C 1
+answered product-1/late_arrival D 1
+answered product-1/untrusted_update A 0
+answered product-1/untrusted_update B 1
+answered product-1/untrusted_update C 0
+answered product-1/untrusted_update D 1
+answered product-1/openquestion A 1
+answered product-1/openquestion B 0
+answered product-1/openquestion C 1
+answered product-1/openquestion D 1
+answered product-1/isolation A 0
+answered product-1/isolation B 0
+answered product-1/isolation C 1
+answered product-1/isolation D 1
+built product-2 4 summary_tokens 406
+built product-2 19 summary_tokens 857
+built product-2 20 summary_tokens 975
+built product-2 21 summary_tokens 1055
+built product-2 22 summary_tokens 1149
+built product-2 24 summary_tokens 1330
+built product-2 26 summary_tokens 1530
+built product-2 27 summary_tokens 1536
+built product-2 28 summary_tokens 1536
+built product-2 30 summary_tokens 1536
+built product-2 31 summary_tokens 1536
+built product-2 52 summary_tokens 1536
+built product-2 53 summary_tokens 1536
+built product-2 54 summary_tokens 1536
+built product-2 55 summary_tokens 1536
+built product-2 56 summary_tokens 1536
+answered product-2/budget_initial A 1
+answered product-2/budget_initial B 1
+answered product-2/budget_initial C 1
+answered product-2/budget_initial D 1
+answered product-2/budget_updated A 1
+answered product-2/budget_updated B 1
+answered product-2/budget_updated C 1
+answered product-2/budget_updated D 1
+answered product-2/todo_open A 1
+answered product-2/todo_open B 1
+answered product-2/todo_open C 1
+answered product-2/todo_open D 1
+answered product-2/todo_done A 1
+answered product-2/todo_done B 1
+answered product-2/todo_done C 1
+answered product-2/todo_done D 1
+answered product-2/todo_reopen A 1
+answered product-2/todo_reopen B 1
+answered product-2/todo_reopen C 1
+answered product-2/todo_reopen D 1
+answered product-2/todo_cancel A 1
+answered product-2/todo_cancel B 1
+answered product-2/todo_cancel C 1
+answered product-2/todo_cancel D 1
+answered product-2/member_conflict A 0
+answered product-2/member_conflict B 1
+answered product-2/member_conflict C 0
+answered product-2/member_conflict D 0
+answered product-2/agent_unconfirmed A 1
+answered product-2/agent_unconfirmed B 1
+answered product-2/agent_unconfirmed C 1
+answered product-2/agent_unconfirmed D 1
+answered product-2/duplicate_once A 1
+answered product-2/duplicate_once B 1
+answered product-2/duplicate_once C 1
+answered product-2/duplicate_once D 1
+answered product-2/audio_unclear A 1
+answered product-2/audio_unclear B 0
+answered product-2/audio_unclear C 1
+answered product-2/audio_unclear D 1
+answered product-2/audio_corrected A 1
+answered product-2/audio_corrected B 1
+answered product-2/audio_corrected C 1
+answered product-2/audio_corrected D 1
+answered product-2/unknown A 0
+answered product-2/unknown B 0
+answered product-2/unknown C 0
+answered product-2/unknown D 0
+answered product-2/old_goal A 0
+answered product-2/old_goal B 1
+answered product-2/old_goal C 1
+answered product-2/old_goal D 1
+answered product-2/irrelevant_constraint A 0
+answered product-2/irrelevant_constraint B 1
+answered product-2/irrelevant_constraint C 1
+answered product-2/irrelevant_constraint D 1
+answered product-2/preference A 0
+answered product-2/preference B 1
+answered product-2/preference C 1
+answered product-2/preference D 1
+answered product-2/lag A 1
+answered product-2/lag B 1
+answered product-2/lag C 1
+answered product-2/lag D 1
+answered product-2/historical A 0
+answered product-2/historical B 1
+answered product-2/historical C 1
+answered product-2/historical D 1
+answered product-2/late_arrival A 1
+answered product-2/late_arrival B 1
+answered product-2/late_arrival C 1
+answered product-2/late_arrival D 1
+answered product-2/untrusted_update A 0
+answered product-2/untrusted_update B 1
+answered product-2/untrusted_update C 0
+answered product-2/untrusted_update D 1
+answered product-2/openquestion A 1
+answered product-2/openquestion B 0
+answered product-2/openquestion C 1
+answered product-2/openquestion D 1
+answered product-2/isolation A 0
+answered product-2/isolation B 0
+answered product-2/isolation C 1
+answered product-2/isolation D 1
+built locomo-0 419 summary_tokens 1536
+answered locomo-0/q24 A 0
+answered locomo-0/q24 B 0
+answered locomo-0/q24 C 0
+answered locomo-0/q24 D 0
+answered locomo-0/q25 A 0
+answered locomo-0/q25 B 0
+answered locomo-0/q25 C 0
+answered locomo-0/q25 D 0
+answered locomo-0/q73 A 0
+answered locomo-0/q73 B 0
+answered locomo-0/q73 C 0
+answered locomo-0/q73 D 0
+answered locomo-0/q76 A 0
+answered locomo-0/q76 B 0
+answered locomo-0/q76 C 0
+answered locomo-0/q76 D 0
+answered locomo-0/q88 A 0
+answered locomo-0/q88 B 0
+answered locomo-0/q88 C 0
+answered locomo-0/q88 D 0
+answered locomo-0/q103 A 0
+answered locomo-0/q103 B 0
+answered locomo-0/q103 C 1
+answered locomo-0/q103 D 0
+answered locomo-0/q157 A 1
+answered locomo-0/q157 B 1
+answered locomo-0/q157 C 1
+answered locomo-0/q157 D 1
+answered locomo-0/q187 A 1
+answered locomo-0/q187 B 0
+answered locomo-0/q187 C 0
+answered locomo-0/q187 D 0
+built locomo-1 369 summary_tokens 1536
+answered locomo-1/q2 A 0
+answered locomo-1/q2 B 0
+answered locomo-1/q2 C 0
+answered locomo-1/q2 D 0
+answered locomo-1/q17 A 0
+answered locomo-1/q17 B 0
+answered locomo-1/q17 C 0
+answered locomo-1/q17 D 0
+answered locomo-1/q24 A 0
+answered locomo-1/q24 B 0
+answered locomo-1/q24 C 0
+answered locomo-1/q24 D 0
+answered locomo-1/q28 A 0
+answered locomo-1/q28 B 0
+answered locomo-1/q28 C 0
+answered locomo-1/q28 D 1
+answered locomo-1/q34 A 0
+answered locomo-1/q34 B 0
+answered locomo-1/q34 C 1
+answered locomo-1/q34 D 1
+answered locomo-1/q63 A 0
+answered locomo-1/q63 B 0
+answered locomo-1/q63 C 0
+answered locomo-1/q63 D 0
+answered locomo-1/q84 A 1
+answered locomo-1/q84 B 1
+answered locomo-1/q84 C 1
+answered locomo-1/q84 D 1
+answered locomo-1/q89 A 1
+answered locomo-1/q89 B 1
+answered locomo-1/q89 C 1
+answered locomo-1/q89 D 1
+built mab-0 456 summary_tokens 1536
+answered mab-0/0/q96 A 0
+answered mab-0/0/q96 B 0
+answered mab-0/0/q96 C 0
+answered mab-0/0/q96 D 0
+answered mab-0/0/q45 A 0
+answered mab-0/0/q45 B 0
+answered mab-0/0/q45 C 0
+answered mab-0/0/q45 D 0
+answered mab-0/0/q98 A 0
+answered mab-0/0/q98 B 0
+answered mab-0/0/q98 C 0
+answered mab-0/0/q98 D 0
+answered mab-0/0/q30 A 0
+answered mab-0/0/q30 B 1
+answered mab-0/0/q30 C 0
+answered mab-0/0/q30 D 1
+answered mab-0/0/q17 A 0
+answered mab-0/0/q17 B 1
+answered mab-0/0/q17 C 0
+answered mab-0/0/q17 D 0
+answered mab-0/0/q41 A 0
+answered mab-0/0/q41 B 0
+answered mab-0/0/q41 C 0
+answered mab-0/0/q41 D 0
+answered mab-0/4/q96 A 1
+answered mab-0/4/q96 B 1
+answered mab-0/4/q96 C 1
+answered mab-0/4/q96 D 1
+answered mab-0/4/q45 A 0
+answered mab-0/4/q45 B 0
+answered mab-0/4/q45 C 0
+answered mab-0/4/q45 D 1
+answered mab-0/4/q98 A 0
+answered mab-0/4/q98 B 0
+answered mab-0/4/q98 C 1
+answered mab-0/4/q98 D 1
+answered mab-0/4/q30 A 0
+answered mab-0/4/q30 B 0
+answered mab-0/4/q30 C 0
+answered mab-0/4/q30 D 0
+answered mab-0/4/q17 A 0
+answered mab-0/4/q17 B 0
+answered mab-0/4/q17 C 0
+answered mab-0/4/q17 D 1
+answered mab-0/4/q41 A 0
+answered mab-0/4/q41 B 0
+answered mab-0/4/q41 C 0
+answered mab-0/4/q41 D 0
+built mab-1 2311 summary_tokens 1536
+answered mab-1/1/q93 A 0
+answered mab-1/1/q93 B 0
+answered mab-1/1/q93 C 0
+answered mab-1/1/q93 D 0
+answered mab-1/1/q83 A 0
+answered mab-1/1/q83 B 0
+answered mab-1/1/q83 C 0
+answered mab-1/1/q83 D 0
+answered mab-1/1/q16 A 0
+answered mab-1/1/q16 B 0
+answered mab-1/1/q16 C 0
+answered mab-1/1/q16 D 0
+answered mab-1/1/q14 A 0
+answered mab-1/1/q14 B 0
+answered mab-1/1/q14 C 0
+answered mab-1/1/q14 D 0
+answered mab-1/1/q7 A 0
+answered mab-1/1/q7 B 0
+answered mab-1/1/q7 C 0
+answered mab-1/1/q7 D 0
+answered mab-1/1/q10 A 0
+answered mab-1/1/q10 B 0
+answered mab-1/1/q10 C 0
+answered mab-1/1/q10 D 0
+answered mab-1/5/q93 A 0
+answered mab-1/5/q93 B 0
+answered mab-1/5/q93 C 1
+answered mab-1/5/q93 D 1
+answered mab-1/5/q83 A 0
+answered mab-1/5/q83 B 0
+answered mab-1/5/q83 C 1
+answered mab-1/5/q83 D 1
+answered mab-1/5/q16 A 0
+answered mab-1/5/q16 B 0
+answered mab-1/5/q16 C 1
+answered mab-1/5/q16 D 0
+answered mab-1/5/q14 A 0
+answered mab-1/5/q14 B 0
+answered mab-1/5/q14 C 1
+answered mab-1/5/q14 D 1
+answered mab-1/5/q7 A 0
+answered mab-1/5/q7 B 0
+answered mab-1/5/q7 C 1
+answered mab-1/5/q7 D 1
+answered mab-1/5/q10 A 0
+answered mab-1/5/q10 B 0
+answered mab-1/5/q10 C 1
+answered mab-1/5/q10 D 1

@@ -1,0 +1,251 @@
+[
+  {
+    "run": "compact",
+    "started_at": "2026-09-12T01:04:47.268277+00:00",
+    "completed_at": null,
+    "elapsed_s": null,
+    "records": null,
+    "code_commit": "4edc99115806be32f575e50bbc6ff4897c96243e",
+    "args": {
+      "benchmarks": "product,locomo,mab",
+      "budget": null,
+      "histories": "product-0,locomo-0",
+      "limit_questions": null,
+      "methods": "B",
+      "run": "compact",
+      "smoke": false
+    },
+    "config": {
+      "answer_max_tokens": 256,
+      "build_batch_budget": 4200,
+      "context_budget": 1536,
+      "endpoint": "http://127.0.0.1:11439",
+      "max_model_calls": 1000,
+      "methods": [
+        "B"
+      ],
+      "model": "qwen3.5:35b-a3b-nvfp4",
+      "seed": 912,
+      "summary_budget": 1536,
+      "summary_max_tokens": 2048
+    },
+    "markers": {
+      "SCOPE_REDUCED.json": {
+        "reason": "Sensitivity check bounded to one complete synthetic project after its 21 answers finished. LoCoMo build interrupted to limit optional compute. No partial LoCoMo scores reported. The complete subset is replayed as compact-product using identical cached model requests.",
+        "at": "2026-09-12T01:14:12.548232+00:00"
+      }
+    }
+  },
+  {
+    "run": "compact-product",
+    "started_at": "2026-09-12T01:14:12.708529+00:00",
+    "completed_at": "2026-09-12T01:14:12.754108+00:00",
+    "elapsed_s": 0.045578956604003906,
+    "records": 21,
+    "code_commit": "4edc99115806be32f575e50bbc6ff4897c96243e",
+    "args": {
+      "benchmarks": "product,locomo,mab",
+      "budget": null,
+      "histories": "product-0",
+      "limit_questions": null,
+      "methods": "B",
+      "run": "compact-product",
+      "smoke": false
+    },
+    "config": {
+      "answer_max_tokens": 256,
+      "build_batch_budget": 4200,
+      "context_budget": 1536,
+      "endpoint": "http://127.0.0.1:11439",
+      "max_model_calls": 1000,
+      "methods": [
+        "B"
+      ],
+      "model": "qwen3.5:35b-a3b-nvfp4",
+      "seed": 912,
+      "summary_budget": 1536,
+      "summary_max_tokens": 2048
+    },
+    "markers": {}
+  },
+  {
+    "run": "empty",
+    "started_at": "2026-09-12T02:33:10.299348+00:00",
+    "completed_at": "2026-09-12T02:33:29.715151+00:00",
+    "elapsed_s": 19.41580319404602,
+    "records": 40,
+    "code_commit": "4edc99115806be32f575e50bbc6ff4897c96243e",
+    "args": {
+      "benchmarks": "locomo,mab",
+      "budget": null,
+      "histories": null,
+      "limit_questions": null,
+      "methods": "E",
+      "run": "empty",
+      "smoke": false
+    },
+    "config": {
+      "answer_max_tokens": 256,
+      "build_batch_budget": 4200,
+      "context_budget": 1536,
+      "endpoint": "http://127.0.0.1:11439",
+      "max_model_calls": 1000,
+      "methods": [
+        "E"
+      ],
+      "model": "qwen3.5:35b-a3b-nvfp4",
+      "seed": 912,
+      "summary_budget": 1536,
+      "summary_max_tokens": 2048
+    },
+    "markers": {}
+  },
+  {
+    "run": "main",
+    "started_at": "2026-09-12T00:40:09.991155+00:00",
+    "completed_at": null,
+    "elapsed_s": null,
+    "records": null,
+    "code_commit": "40cfc1dc63e93187ea03e1fbe0acf01935df12b4",
+    "args": {
+      "benchmarks": "product,locomo,mab",
+      "budget": null,
+      "histories": null,
+      "limit_questions": null,
+      "methods": null,
+      "run": "main",
+      "smoke": false
+    },
+    "config": {
+      "answer_max_tokens": 256,
+      "build_batch_budget": 4200,
+      "context_budget": 1536,
+      "endpoint": "http://127.0.0.1:11439",
+      "max_model_calls": 1000,
+      "methods": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "model": "qwen3.5:35b-a3b-nvfp4",
+      "seed": 912,
+      "summary_budget": 1536,
+      "summary_max_tokens": 2048
+    },
+    "markers": {
+      "INVALIDATED.json": {
+        "reason": "Stopped before answers. Raw render omitted metadata exposed by D; equal-input repair required. This run is excluded from all quality results. Successful partial model calls count toward overall resource use. The interrupted in-flight call has unknown token count.",
+        "at": "2026-09-12T00:48:12.936180+00:00"
+      }
+    }
+  },
+  {
+    "run": "main-v1",
+    "started_at": "2026-09-12T00:48:13.215642+00:00",
+    "completed_at": null,
+    "elapsed_s": null,
+    "records": null,
+    "code_commit": "04d0fa97a72c43676fee5f990d46aa41bf09f68d",
+    "args": {
+      "benchmarks": "product,locomo,mab",
+      "budget": null,
+      "histories": null,
+      "limit_questions": null,
+      "methods": null,
+      "run": "main-v1",
+      "smoke": false
+    },
+    "config": {
+      "answer_max_tokens": 256,
+      "build_batch_budget": 4200,
+      "context_budget": 1536,
+      "endpoint": "http://127.0.0.1:11439",
+      "max_model_calls": 1000,
+      "methods": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "model": "qwen3.5:35b-a3b-nvfp4",
+      "seed": 912,
+      "summary_budget": 1536,
+      "summary_max_tokens": 2048
+    },
+    "markers": {
+      "SUPERSEDED.json": {
+        "reason": "Restart before public evaluation to make MAB original fact-number update policy explicit, independent of retrieval display order. Already completed product model calls can be reused byte-for-byte through cache. No scores discarded selectively. Final report uses main-v2 only.",
+        "at": "2026-09-12T00:57:08.555798+00:00"
+      }
+    }
+  },
+  {
+    "run": "main-v2",
+    "started_at": "2026-09-12T00:57:08.720777+00:00",
+    "completed_at": "2026-09-12T02:33:06.925823+00:00",
+    "elapsed_s": 5758.205045938492,
+    "records": 412,
+    "code_commit": "6bfb08601dc5790e5c84c9222a6e75ee65fb2761",
+    "args": {
+      "benchmarks": "product,locomo,mab",
+      "budget": null,
+      "histories": null,
+      "limit_questions": null,
+      "methods": null,
+      "run": "main-v2",
+      "smoke": false
+    },
+    "config": {
+      "answer_max_tokens": 256,
+      "build_batch_budget": 4200,
+      "context_budget": 1536,
+      "endpoint": "http://127.0.0.1:11439",
+      "max_model_calls": 1000,
+      "methods": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "model": "qwen3.5:35b-a3b-nvfp4",
+      "seed": 912,
+      "summary_budget": 1536,
+      "summary_max_tokens": 2048
+    },
+    "markers": {}
+  },
+  {
+    "run": "smoke",
+    "started_at": "2026-09-12T00:35:10.023336+00:00",
+    "completed_at": "2026-09-12T00:39:26.419170+00:00",
+    "elapsed_s": 256.3958342075348,
+    "records": 16,
+    "code_commit": "9df0366b11b36568f7ebd0efaa283051a2faa527",
+    "args": {
+      "benchmarks": "product,locomo,mab",
+      "budget": null,
+      "limit_questions": null,
+      "methods": null,
+      "run": "smoke",
+      "smoke": true
+    },
+    "config": {
+      "answer_max_tokens": 256,
+      "build_batch_budget": 2400,
+      "context_budget": 1536,
+      "endpoint": "http://127.0.0.1:11439",
+      "max_model_calls": 650,
+      "methods": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "model": "qwen3.5:35b-a3b-nvfp4",
+      "seed": 912,
+      "summary_budget": 380
+    },
+    "markers": {}
+  }
+]

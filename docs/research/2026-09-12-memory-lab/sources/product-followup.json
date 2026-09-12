@@ -1,0 +1,6 @@
+{
+  "captured_at": "2026-09-12T02:27:25.494410+00:00",
+  "file": "/Users/songyy/Documents/event-driven-context/backend/plugins/project-brief/manifest.json",
+  "sha256": "2b626c0325523dba217fac2d0c675c8de75f041d50bef3c811dedda95dbd0093",
+  "observation": "current, _cursor, _requests declared; current and _cursor writable; current injected into session context"
+}

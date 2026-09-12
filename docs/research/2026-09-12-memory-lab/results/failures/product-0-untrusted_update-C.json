@@ -1,0 +1,124 @@
+{
+  "answer": {
+    "answer": "25000 元（林确认），99000 元（agent 建议但未获用户确认）",
+    "citations": [
+      "5b5f22a4-138c-51df-99c6-1089aeade28b",
+      "fc282a12-6d7c-58dd-8e36-57cd445dc37b"
+    ],
+    "status": "conflict"
+  },
+  "answer_completion_tokens": 121,
+  "answer_prompt_tokens": 2000,
+  "answer_s": 3.529876625005272,
+  "benchmark": "product",
+  "cache_hit": false,
+  "call_key": "2b8e4d21448a93379235f511c0981070944a5e9e03e4e1fc0efc58a15a61d613",
+  "category": "inference",
+  "context": "[fc282a12-6d7c-58dd-8e36-57cd445dc37b] time=2026-01-03T07:00:00+00:00 speaker=agent type=note metadata={\"kind\": \"decision\", \"topic\": \"budget\"} source={\"channel\": \"skill\"} refs=[{\"id\": \"5b5f22a4-138c-51df-99c6-1089aeade28b\", \"rel\": \"supersedes\"}]\n作为 agent，我建议将预算升到 99000 元；用户尚未确认。\n\n[75afa1b7-9569-5b63-9980-54af3b564777] time=2026-01-01T19:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"decision\", \"topic\": \"budget\"} source={\"channel\": \"app\"} refs=[{\"id\": \"73452f84-280c-57b0-8212-5ad8182dd1e8\", \"rel\": \"supersedes\"}]\n海桥项目预算改为 30000 元，取代此前预算。\n\n[172b7eeb-0fc1-535b-be15-22ad006720cb] time=2026-01-02T03:00:00+00:00 speaker=agent type=note metadata={\"kind\": \"decision\", \"topic\": \"cloud\"} source={\"channel\": \"skill\"}\n我推测用户愿意为海桥购买付费云端转录服务，但尚未询问用户。\n\n[5b5f22a4-138c-51df-99c6-1089aeade28b] time=2026-01-03T05:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"decision\", \"topic\": \"budget\"} source={\"channel\": \"app\"} refs=[{\"id\": \"75afa1b7-9569-5b63-9980-54af3b564777\", \"rel\": \"supersedes\"}]\n再次修改海桥预算为 25000 元。\n\n[73452f84-280c-57b0-8212-5ad8182dd1e8] time=2026-01-01T02:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"decision\", \"topic\": \"budget\"} source={\"channel\": \"app\"}\n海桥项目预算确定为 50000 元。\n\n[d5919e15-980f-5522-a879-b1b75412efd9] time=2026-01-02T04:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"fact\", \"topic\": \"devices\"} source={\"channel\": \"app\"}\n海桥目标设备数量为 12 台。\n\n[927db03f-d685-50f2-8d1e-ff7934017401] time=2026-01-01T23:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"todo\", \"topic\": \"task-brochure\"} source={\"channel\": \"app\"}\n待办：安排海桥印刷宣传册。\n\n[b5531fcd-dd0e-53e7-9108-70e34ab3cc6d] time=2026-01-02T02:00:00+00:00 speaker=陈 type=note metadata={\"kind\": \"decision\", \"topic\": \"release\"} source={\"channel\": \"app\"}\n海桥上线日期定为 4 月 20 日。\n\n[6aae9390-02d0-539c-9ca2-a351abc3922e] time=2026-01-02T01:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"decision\", \"topic\": \"release\"} source={\"channel\": \"app\"}\n海桥上线日期定为 4 月 10 日。\n\n[2f0e0625-44d1-5c7b-8840-a497a2779a59] time=2026-01-02T06:00:00+00:00 speaker=audio-transcribe type=derived metadata={\"kind\": \"transcript\", \"topic\": \"owner\"} source={\"channel\": \"plugin\"} refs=[{\"id\": \"82b19adf-b194-5af9-95ef-1798027d43b9\", \"rel\": \"derived_from\"}]\n海桥交付负责人是 [小林/小宁，听不清]。\n\n[3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0] time=2026-01-02T07:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"fact\", \"topic\": \"owner\"} source={\"channel\": \"app\"} refs=[{\"id\": \"2f0e0625-44d1-5c7b-8840-a497a2779a59\", \"rel\": \"supersedes\"}]\n我澄清录音：海桥交付负责人是小宁。\n\n[11eb3d29-64e4-5a92-95c3-621dd1861b14] time=2026-01-01T21:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"progress\", \"topic\": \"task-prototype\"} source={\"channel\": \"app\"} refs=[{\"id\": \"e0ecfe1f-4a03-5930-be54-0c0fe94c1767\", \"rel\": \"resolves\"}]\n海桥录音原型已提交，这项待办完成。\n\n[e0ecfe1f-4a03-5930-be54-0c0fe94c1767] time=2026-01-01T20:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"todo\", \"topic\": \"task-prototype\"} source={\"channel\": \"app\"}\n待办：由我在周五前提交海桥录音原型。\n\n[2b48dc17-6025-5bb3-81fc-756590709e2c] time=2026-01-02T00:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"todo\", \"topic\": \"task-brochure\"} source={\"channel\": \"app\"} refs=[{\"id\": \"927db03f-d685-50f2-8d1e-ff7934017401\", \"rel\": \"retracts\"}]\n取消海桥印刷宣传册待办，不再需要宣传册。",
+  "context_tokens": 1532,
+  "cutoff": 55,
+  "done_reason": "stop",
+  "gold": {
+    "answers": [
+      "25000"
+    ],
+    "benchmark": "product",
+    "category": "inference",
+    "cutoff": 55,
+    "evidence": [
+      "5b5f22a4-138c-51df-99c6-1089aeade28b"
+    ],
+    "forbidden": [
+      "99000"
+    ],
+    "group": "product-0",
+    "history": "product-0",
+    "id": "product-0/untrusted_update",
+    "question": "用户确认的海桥最新预算是多少元？",
+    "status": "known"
+  },
+  "history": "product-0",
+  "id": "product-0/untrusted_update",
+  "method": "C",
+  "question": "用户确认的海桥最新预算是多少元？",
+  "retrieval_s": 0.0034447079960955307,
+  "scores": {
+    "answer_match": 1,
+    "citation_complete": 1,
+    "citation_id_exists": 1.0,
+    "citation_precision_gold": 0.5,
+    "citation_recall_gold": 1.0,
+    "citation_source_visible": 1.0,
+    "conflict_question": false,
+    "f1": 0.25,
+    "forbidden_hit": 1,
+    "retrieval_recall_gold": 1.0,
+    "retrieval_session_recall": null,
+    "status_correct": 0,
+    "strict_answer": 0,
+    "unanswerable": false
+  },
+  "selected_ids": [
+    "fc282a12-6d7c-58dd-8e36-57cd445dc37b",
+    "75afa1b7-9569-5b63-9980-54af3b564777",
+    "172b7eeb-0fc1-535b-be15-22ad006720cb",
+    "5b5f22a4-138c-51df-99c6-1089aeade28b",
+    "73452f84-280c-57b0-8212-5ad8182dd1e8",
+    "d5919e15-980f-5522-a879-b1b75412efd9",
+    "927db03f-d685-50f2-8d1e-ff7934017401",
+    "b5531fcd-dd0e-53e7-9108-70e34ab3cc6d",
+    "6aae9390-02d0-539c-9ca2-a351abc3922e",
+    "2f0e0625-44d1-5c7b-8840-a497a2779a59",
+    "3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0",
+    "11eb3d29-64e4-5a92-95c3-621dd1861b14",
+    "e0ecfe1f-4a03-5930-be54-0c0fe94c1767",
+    "2b48dc17-6025-5bb3-81fc-756590709e2c"
+  ],
+  "source_events": [
+    {
+      "id": "5b5f22a4-138c-51df-99c6-1089aeade28b",
+      "sequence": 53,
+      "project": "product-0",
+      "time": "2026-01-03T05:00:00+00:00",
+      "text": "再次修改海桥预算为 25000 元。",
+      "type": "note",
+      "speaker": "林",
+      "metadata": {
+        "kind": "decision",
+        "topic": "budget"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": [
+        {
+          "rel": "supersedes",
+          "id": "75afa1b7-9569-5b63-9980-54af3b564777"
+        }
+      ]
+    },
+    {
+      "id": "fc282a12-6d7c-58dd-8e36-57cd445dc37b",
+      "sequence": 55,
+      "project": "product-0",
+      "time": "2026-01-03T07:00:00+00:00",
+      "text": "作为 agent，我建议将预算升到 99000 元；用户尚未确认。",
+      "type": "note",
+      "speaker": "agent",
+      "metadata": {
+        "kind": "decision",
+        "topic": "budget"
+      },
+      "source": {
+        "channel": "skill"
+      },
+      "refs": [
+        {
+          "rel": "supersedes",
+          "id": "5b5f22a4-138c-51df-99c6-1089aeade28b"
+        }
+      ]
+    }
+  ],
+  "selection": "Diagnostic case chosen after results; not a random accuracy sample"
+}

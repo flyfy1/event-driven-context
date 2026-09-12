@@ -1,0 +1,60 @@
+built locomo-0 419 summary_tokens 1536
+answered locomo-0/q24 E 0
+answered locomo-0/q25 E 0
+answered locomo-0/q73 E 0
+answered locomo-0/q76 E 0
+answered locomo-0/q88 E 0
+answered locomo-0/q103 E 0
+answered locomo-0/q157 E 1
+answered locomo-0/q187 E 1
+built locomo-1 369 summary_tokens 1536
+answered locomo-1/q2 E 0
+answered locomo-1/q17 E 0
+answered locomo-1/q24 E 0
+answered locomo-1/q28 E 0
+answered locomo-1/q34 E 0
+answered locomo-1/q63 E 0
+answered locomo-1/q84 E 1
+answered locomo-1/q89 E 1
+built mab-0 456 summary_tokens 1536
+answered mab-0/0/q96 E 0
+answered mab-0/0/q45 E 0
+answered mab-0/0/q98 E 0
+answered mab-0/0/q30 E 0
+answered mab-0/0/q17 E 0
+answered mab-0/0/q41 E 0
+answered mab-0/4/q96 E 0
+answered mab-0/4/q45 E 0
+answered mab-0/4/q98 E 0
+answered mab-0/4/q30 E 0
+answered mab-0/4/q17 E 0
+answered mab-0/4/q41 E 0
+built mab-1 2311 summary_tokens 1536
+answered mab-1/1/q93 E 0
+answered mab-1/1/q83 E 0
+answered mab-1/1/q16 E 0
+answered mab-1/1/q14 E 0
+answered mab-1/1/q7 E 0
+answered mab-1/1/q10 E 0
+answered mab-1/5/q93 E 0
+answered mab-1/5/q83 E 0
+answered mab-1/5/q16 E 0
+answered mab-1/5/q14 E 0
+answered mab-1/5/q7 E 0
+answered mab-1/5/q10 E 0
+product-0/budget_updated A 1.45
+product-0/budget_updated B 1.23
+product-0/budget_updated C 1.17
+product-0/budget_updated D 1.2
+locomo-0/q24 A 1.6
+locomo-0/q24 B 1.59
+locomo-0/q24 C 1.26
+locomo-0/q24 D 1.18
+locomo-0/q24 D 0.46
+locomo-0/q24 C 0.46
+locomo-0/q24 B 0.78
+locomo-0/q24 A 0.84
+product-0/budget_updated D 0.87
+product-0/budget_updated C 0.89
+product-0/budget_updated B 0.89
+product-0/budget_updated A 0.71

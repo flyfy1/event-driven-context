@@ -1,0 +1,8 @@
+{
+  "stopped_at": "2026-09-12T02:35:17.066290+00:00",
+  "owned_pid": 89133,
+  "endpoint": "127.0.0.1:11439",
+  "port_closed": true,
+  "method": "SIGTERM after confirming listener PID",
+  "scope": "Only the experiment-owned temporary server; no other services or configuration touched"
+}

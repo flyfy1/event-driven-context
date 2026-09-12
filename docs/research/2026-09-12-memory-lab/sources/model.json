@@ -1,0 +1,34 @@
+{
+  "captured_at": "2026-09-12T00:39:49.360629+00:00",
+  "ollama": {
+    "version": "0.32.15"
+  },
+  "model": {
+    "name": "qwen3.5:35b-a3b-nvfp4",
+    "model": "qwen3.5:35b-a3b-nvfp4",
+    "modified_at": "2026-08-09T11:03:42.094454571+08:00",
+    "size": 21909194238,
+    "digest": "fb2d58ab6d451bbcdddbdddf8c2c10524f0a704ebe48dc87f2ddb957e9d5e5ed",
+    "details": {
+      "parent_model": "",
+      "format": "safetensors",
+      "family": "",
+      "families": null,
+      "parameter_size": "",
+      "quantization_level": "nvfp4"
+    },
+    "capabilities": [
+      "completion",
+      "vision",
+      "thinking",
+      "tools"
+    ]
+  },
+  "options": {
+    "think": false,
+    "temperature": 0,
+    "seed": 912,
+    "num_ctx": 8192
+  },
+  "note": "Existing local weights. No new paid calls, no user credentials read. Model digest identifies local weights; training-data contamination cannot be ruled out."
+}

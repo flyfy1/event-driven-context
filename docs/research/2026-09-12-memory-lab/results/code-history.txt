@@ -1,0 +1,62 @@
+9df0366 2026-09-12T08:35:09+08:00 Add isolated chronological memory experiment and synthetic scenarios
+
+ .gitignore                    |    4 +
+ AGENTS.md                     |    2 +
+ configs/main.json             |    1 +
+ data/product_expected.json    |  545 +++++++
+ data/product_histories.json   | 3185 +++++++++++++++++++++++++++++++++++++++++
+ data/product_questions.json   | 1190 +++++++++++++++
+ data/public_selection.json    |   86 ++
+ sources/downloads.json        |   37 +
+ sources/product-snapshot.json |   17 +
+ src/core.py                   |  154 ++
+ src/make_product.py           |   75 +
+ src/prepare_public.py         |   70 +
+ src/run.py                    |   96 ++
+ 13 files changed, 5462 insertions(+)
+4191c20 2026-09-12T08:37:15+08:00 Freeze equal-budget main protocol and add isolation checks
+
+ configs/main.json |  2 +-
+ src/core.py       |  2 ++
+ src/run.py        | 15 +++++++++------
+ src/verify.py     | 26 ++++++++++++++++++++++++++
+ 4 files changed, 38 insertions(+), 7 deletions(-)
+40cfc1d 2026-09-12T08:37:57+08:00 Set bounded build windows before main benchmark run
+
+ configs/main.json | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+04d0fa9 2026-09-12T08:48:13+08:00 Expose identical metadata and separate source visibility from ID existence
+
+ docs/sources.md       | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ requirements-lock.txt |  8 ++++++++
+ sources/model.json    | 34 ++++++++++++++++++++++++++++++++++
+ src/core.py           |  3 ++-
+ src/run.py            |  5 +++--
+ 5 files changed, 92 insertions(+), 3 deletions(-)
+6bfb086 2026-09-12T08:57:08+08:00 Add adversarial probes, state auditing and explicit benchmark chronology
+
+ src/analyze.py         | 65 +++++++++++++++++++++++++++++++++++++++++++++
+ src/download.py        | 12 +++++++++
+ src/export_examples.py | 32 +++++++++++++++++++++++
+ src/prepare_public.py  |  4 ++-
+ src/stress.py          | 71 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 183 insertions(+), 1 deletion(-)
+4edc991 2026-09-12T09:04:47+08:00 Document evidence limits and add reproducible sensitivity probes
+
+ README.md                   |   72 ++
+ data/product_scenarios.md   |  607 +++++++++++
+ docs/review.md              |   18 +
+ docs/sources.md             |    7 +
+ docs/structure.md           |  117 +++
+ examples/edc-events.json    | 1030 +++++++++++++++++++
+ examples/edc-state-put.json |  380 +++++++
+ examples/events.json        | 1029 +++++++++++++++++++
+ examples/evolution.md       |  140 +++
+ examples/states.json        | 2388 +++++++++++++++++++++++++++++++++++++++++++
+ sources/LoCoMo-LICENSE.txt  |  408 ++++++++
+ sources/downloads.json      |    7 +
+ src/audit_integrity.py      |   30 +
+ src/compact_summary.py      |    6 +
+ src/export_examples.py      |    4 +
+ src/scale_probe.py          |   24 +
+ 16 files changed, 6267 insertions(+)

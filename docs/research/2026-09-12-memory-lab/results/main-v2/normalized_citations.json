@@ -1,0 +1,86 @@
+[
+  {
+    "benchmark": "locomo",
+    "method": "A",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": 0.0,
+    "bracket_format_fraction": 0.06666666666666667
+  },
+  {
+    "benchmark": "locomo",
+    "method": "B",
+    "normalized_citation_exists": 0.8181818181818182,
+    "normalized_gold_recall": 0.1875,
+    "bracket_format_fraction": 0.0
+  },
+  {
+    "benchmark": "locomo",
+    "method": "C",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": 0.6458333333333334,
+    "bracket_format_fraction": 0.16
+  },
+  {
+    "benchmark": "locomo",
+    "method": "D",
+    "normalized_citation_exists": 0.96875,
+    "normalized_gold_recall": 0.5208333333333334,
+    "bracket_format_fraction": 0.25
+  },
+  {
+    "benchmark": "mab",
+    "method": "A",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": null,
+    "bracket_format_fraction": 1.0
+  },
+  {
+    "benchmark": "mab",
+    "method": "B",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": null,
+    "bracket_format_fraction": 0.2857142857142857
+  },
+  {
+    "benchmark": "mab",
+    "method": "C",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": null,
+    "bracket_format_fraction": 0.9375
+  },
+  {
+    "benchmark": "mab",
+    "method": "D",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": null,
+    "bracket_format_fraction": 0.8235294117647058
+  },
+  {
+    "benchmark": "product",
+    "method": "A",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": 0.7619047619047619,
+    "bracket_format_fraction": 0.463768115942029
+  },
+  {
+    "benchmark": "product",
+    "method": "B",
+    "normalized_citation_exists": 0.9666666666666667,
+    "normalized_gold_recall": 0.8095238095238095,
+    "bracket_format_fraction": 0.20270270270270271
+  },
+  {
+    "benchmark": "product",
+    "method": "C",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": 0.9841269841269841,
+    "bracket_format_fraction": 0.4722222222222222
+  },
+  {
+    "benchmark": "product",
+    "method": "D",
+    "normalized_citation_exists": 1.0,
+    "normalized_gold_recall": 1.0,
+    "bracket_format_fraction": 0.4142857142857143
+  }
+]

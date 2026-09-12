@@ -1,0 +1,128 @@
+{
+  "events": [
+    {
+      "id": "3705e29a-c5aa-557a-a026-467622fa03c9",
+      "project": "lineage-project",
+      "sequence": 1,
+      "time": "2026-02-01T00:00:00Z",
+      "text": "用户明确陈述：预算为 30000 元。",
+      "type": "note",
+      "speaker": "user",
+      "source": {
+        "channel": "app"
+      },
+      "metadata": {
+        "kind": "decision",
+        "topic": "budget"
+      },
+      "refs": []
+    },
+    {
+      "id": "0c516a9b-a7d2-5e8c-81ad-9c063bd9f1a3",
+      "project": "lineage-project",
+      "sequence": 2,
+      "time": "2026-02-01T01:00:00Z",
+      "text": "我推测预算应该降到 10000 元，但没有用户确认。",
+      "type": "note",
+      "speaker": "agent",
+      "source": {
+        "channel": "skill"
+      },
+      "metadata": {
+        "kind": "decision",
+        "topic": "budget"
+      },
+      "refs": [
+        {
+          "rel": "replies_to",
+          "id": "3705e29a-c5aa-557a-a026-467622fa03c9"
+        }
+      ]
+    },
+    {
+      "id": "be209c7f-34d2-5cef-b4e7-0a036036932d",
+      "project": "lineage-project",
+      "sequence": 3,
+      "time": "2026-02-01T02:00:00Z",
+      "text": "插件摘要：预算为 10000 元。",
+      "type": "derived",
+      "speaker": "summary-plugin",
+      "source": {
+        "channel": "plugin"
+      },
+      "metadata": {
+        "kind": "summary",
+        "topic": "budget"
+      },
+      "refs": [
+        {
+          "rel": "derived_from",
+          "id": "0c516a9b-a7d2-5e8c-81ad-9c063bd9f1a3"
+        },
+        {
+          "rel": "supersedes",
+          "id": "3705e29a-c5aa-557a-a026-467622fa03c9"
+        }
+      ]
+    },
+    {
+      "id": "1da41a86-8e8b-58d4-a9f6-b485854868c6",
+      "project": "lineage-project",
+      "sequence": 4,
+      "time": "2026-02-01T03:00:00Z",
+      "text": "再次插件摘要：预算为 10000 元。",
+      "type": "derived",
+      "speaker": "summary-plugin",
+      "source": {
+        "channel": "plugin"
+      },
+      "metadata": {
+        "kind": "summary",
+        "topic": "budget"
+      },
+      "refs": [
+        {
+          "rel": "derived_from",
+          "id": "be209c7f-34d2-5cef-b4e7-0a036036932d"
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "current-budget",
+      "question": "用户明确确认的预算是多少？",
+      "gold": "30000 元",
+      "evidence": [
+        "3705e29a-c5aa-557a-a026-467622fa03c9"
+      ]
+    },
+    {
+      "id": "independent-evidence",
+      "question": "两次插件摘要能算作两条独立的用户确认吗？",
+      "gold": "不能；它们都源于同一次未确认的 agent 推断。",
+      "evidence": [
+        "0c516a9b-a7d2-5e8c-81ad-9c063bd9f1a3",
+        "be209c7f-34d2-5cef-b4e7-0a036036932d",
+        "1da41a86-8e8b-58d4-a9f6-b485854868c6"
+      ]
+    }
+  ],
+  "expected_memory": {
+    "human_budget_source": "3705e29a-c5aa-557a-a026-467622fa03c9",
+    "plugin_roots": [
+      "0c516a9b-a7d2-5e8c-81ad-9c063bd9f1a3"
+    ],
+    "unconfirmed_sources": [
+      "0c516a9b-a7d2-5e8c-81ad-9c063bd9f1a3",
+      "be209c7f-34d2-5cef-b4e7-0a036036932d",
+      "1da41a86-8e8b-58d4-a9f6-b485854868c6"
+    ]
+  },
+  "cell_basis": {
+    "3705e29a-c5aa-557a-a026-467622fa03c9": "user_assertion",
+    "0c516a9b-a7d2-5e8c-81ad-9c063bd9f1a3": "agent_unconfirmed",
+    "be209c7f-34d2-5cef-b4e7-0a036036932d": "plugin_summary",
+    "1da41a86-8e8b-58d4-a9f6-b485854868c6": "plugin_summary"
+  }
+}

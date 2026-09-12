@@ -1,0 +1,17 @@
+{
+  "seed": 912,
+  "model": "qwen3.5:35b-a3b-nvfp4",
+  "endpoint": "http://127.0.0.1:11439",
+  "context_budget": 1536,
+  "summary_budget": 1536,
+  "summary_max_tokens": 2048,
+  "build_batch_budget": 4200,
+  "answer_max_tokens": 256,
+  "methods": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "max_model_calls": 1000
+}

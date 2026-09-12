@@ -1,0 +1,99 @@
+{
+  "answer": {
+    "answer": "19 June, 2023",
+    "citations": [
+      "e00275"
+    ],
+    "status": "known"
+  },
+  "answer_completion_tokens": 37,
+  "answer_prompt_tokens": 1911,
+  "answer_s": 1.3129557089996524,
+  "benchmark": "locomo",
+  "cache_hit": false,
+  "call_key": "8594bc28268d7173d6d0179b6a8509a2b86c0f2f05b609b96d3332223ca576e9",
+  "category": "2",
+  "context": "[e00016] time=4:04 pm on 20 January, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nWoah, that pic's from when my dance crew took home first in a local comp last year. It was amazing up on that stage! I'm super keen to spread that intensity with other peeps. Gina, you ever been in any dance comps or shows?\n\n[e00015] time=4:04 pm on 20 January, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nWow! What did you get?\n\n[e00017] time=4:04 pm on 20 January, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nI used to compete in a few dance competitions and shows - my fav memory was when my team won first place at a regionals at age fifteen. It was an awesome feeling of accomplishment! [Public image caption: a photography of a couple of people standing next to each other]\n\n[e00268] time=9:38 pm on 16 June, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nWay to go, Jon! Don't quit, remember, failures lead you closer to success. Here's a pic from when I was dancing - it was a tough road, but it was worth it! [Public image caption: a photo of a group of young women posing for a picture]\n\n[e00267] time=9:38 pm on 16 June, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nThanks! I won't quit, no matter what. Your encouragement really motivates me to keep going.\n\n[e00135] time=7:28 pm on 23 March, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nBelieve in yourself. Even when it's tough, you got this! Keep going!\n\n[e00134] time=7:28 pm on 23 March, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nThanks, Gina! I won't quit - your words motivate me to keep going!\n\n[e00239] time=8:29 pm on 13 June, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nYour one-on-one mentoring and training will really push dancers to reach their goals. I totally get it, I had a mentor too when I was learning how to dance. [Public image caption: a photo of a group of people in a dance class]\n\n[e00238] time=8:29 pm on 13 June, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nBesides the dance classes and workshops, I'm offering one-on-one mentoring and training to help dancers reach their full potential.\n\n[e00183] time=11:24 am on 25 April, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nI've been feeling kinda low on confidence lately. It's hard to run a business when you don't have faith in yourself. Any tips on how you stay confident in your business?\n\n[e00182] time=11:24 am on 25 April, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nYeah Jon! Challenges are awesome for learning and growth. To stay motivated, I think of the big goal and why I'm doing it. I also get help from people who support me. And of course, I dance it out. Do you need advice on anything in particular?\n\n[e00336] time=5:44 pm on 21 July, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nThanks, Jon! Appreciate the kind words. Sorry to hear about the studio, but glad to see the positivity. Not easy facing setbacks but I believe in you. Finding investors can be tough, but you've got the passion and experience to make it happen. Rome wasn't built in a day so keep pushing on!\n\n[e00335] time=5:44 pm on 21 July, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nHey Gina, congrats on the clothing store! The dance studio is on tenuous grounds right now, but I'm staying positive. I got a temp job to help cover expenses while I look for investors. It's tough, but I'm sure it'll be worth it.\n\n[e00275] time=10:04 am on 19 June, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nHey Gina, hope you're doing great! Still working on my biz. Took a short trip last week to Rome to clear my mind a little.\n\n[e00278] time=10:04 am on 19 June, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nWhen are you opening the studio?\n\n[e00277] time=10:04 am on 19 June, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nThanks, Gina. Still working on opening a dance studio.\n\n[e00039] time=2:32 pm on 29 January, 2023 speaker=Gina type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nBelieve in yourself, Jon! The process may be tough, but you got this. Push through and it'll be worth it. Don't forget to take breaks and dance it out when you need to destress!\n\n[e00038] time=2:32 pm on 29 January, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nYeah, can't wait to see it done! Looking for the right place and getting everything ready has been a mix of exciting and nerve-wracking, but I'm determined to make it work. It'll be worth it!\n\n[e00250] time=8:29 pm on 13 June, 2023 speaker=Jon type=log source={\"channel\": \"hook\", \"message_role\": \"user\"} basis=user_assertion status=active topic=\nThanks!",
+  "context_tokens": 1536,
+  "cutoff": 369,
+  "done_reason": "stop",
+  "gold": {
+    "answers": [
+      "June 2023"
+    ],
+    "benchmark": "locomo",
+    "category": "2",
+    "cutoff": 369,
+    "evidence": [
+      "e00275"
+    ],
+    "forbidden": [],
+    "group": "locomo-1",
+    "history": "locomo-1",
+    "id": "locomo-1/q28",
+    "question": "When was Jon in Rome?",
+    "status": "known",
+    "upstream_question_index": 28
+  },
+  "history": "locomo-1",
+  "id": "locomo-1/q28",
+  "method": "D",
+  "question": "When was Jon in Rome?",
+  "retrieval_s": 0.1237249159894418,
+  "scores": {
+    "answer_match": 1,
+    "citation_complete": 1,
+    "citation_id_exists": 1.0,
+    "citation_precision_gold": 1.0,
+    "citation_recall_gold": 1.0,
+    "citation_source_visible": 1.0,
+    "conflict_question": false,
+    "f1": 0.8,
+    "forbidden_hit": 0,
+    "retrieval_recall_gold": 1.0,
+    "retrieval_session_recall": null,
+    "status_correct": 1,
+    "strict_answer": 1,
+    "unanswerable": false
+  },
+  "selected_ids": [
+    "e00016",
+    "e00015",
+    "e00017",
+    "e00268",
+    "e00267",
+    "e00135",
+    "e00134",
+    "e00239",
+    "e00238",
+    "e00183",
+    "e00182",
+    "e00336",
+    "e00335",
+    "e00275",
+    "e00278",
+    "e00277",
+    "e00039",
+    "e00038",
+    "e00250"
+  ],
+  "source_events": [
+    {
+      "id": "e00275",
+      "sequence": 275,
+      "project": "locomo-1",
+      "time": "10:04 am on 19 June, 2023",
+      "text": "Hey Gina, hope you're doing great! Still working on my biz. Took a short trip last week to Rome to clear my mind a little.",
+      "type": "log",
+      "speaker": "Jon",
+      "session": "s15",
+      "source": {
+        "channel": "hook",
+        "message_role": "user"
+      },
+      "metadata": {},
+      "refs": []
+    }
+  ],
+  "selection": "Diagnostic case chosen after results; not a random accuracy sample"
+}

@@ -1,0 +1,421 @@
+{
+  "key": "project-brief/current",
+  "expected_version": 9,
+  "based_on_sequence": 54,
+  "content": {
+    "format": "markdown",
+    "text": "- (goal; active; user_assertion; 发言者=林) 海桥项目目标：在三月底前验证离线录音转文字闭环。〔5b3dbe88-78a7-530e-badb-1b1f5bcb9b67〕\n- (constraint; active; user_assertion; 发言者=林) 海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。〔93457c14-bc05-57cf-b2f5-dd592e4e8cd3〕\n- (preference; active; user_assertion; 发言者=林) 海桥项目偏好：评审材料用中文，术语可保留英文。〔259ae6c6-707f-59fe-8e29-0d152863215c〕\n- (todo; active; user_assertion; 发言者=林) 录音原型验收失败，重新打开提交录音原型待办。〔b788b78a-de94-5330-90e9-73492f15aa84〕\n- (todo; active; user_assertion; 发言者=林) 取消海桥印刷宣传册待办，不再需要宣传册。〔2b48dc17-6025-5bb3-81fc-756590709e2c〕\n- (decision; conflict; user_assertion; 发言者=林) 海桥上线日期定为 4 月 10 日。〔6aae9390-02d0-539c-9ca2-a351abc3922e〕\n- (decision; conflict; user_assertion; 发言者=陈) 海桥上线日期定为 4 月 20 日。〔b5531fcd-dd0e-53e7-9108-70e34ab3cc6d〕\n- (decision; active; agent_unconfirmed; 发言者=agent) 我推测用户愿意为海桥购买付费云端转录服务，但尚未询问用户。〔172b7eeb-0fc1-535b-be15-22ad006720cb〕\n- (fact; active; user_assertion; 发言者=林) 海桥目标设备数量为 12 台。〔d5919e15-980f-5522-a879-b1b75412efd9〕\n- (fact; active; user_assertion; 发言者=林) 我澄清录音：海桥交付负责人是小宁。〔3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0〕\n- (question; active; user_assertion; 发言者=林) 海桥尚未选择具体转录引擎，准确率也没有测试数据。〔5df82780-fc67-5a6b-9c3f-eb60a73f494e〕\n- (decision; active; user_assertion; 发言者=林) 再次修改海桥预算为 25000 元。〔5b5f22a4-138c-51df-99c6-1089aeade28b〕\n- (progress; active; user_assertion; 发言者=林) 补记：上周海桥在办公室讨论过离线测试，发生时间早于今天。〔12aea57b-bfaa-52ac-9832-8c20c96c14a5〕"
+  },
+  "data": {
+    "schema_version": 1,
+    "items": [
+      {
+        "id": "5b3dbe88-78a7-530e-badb-1b1f5bcb9b67/0",
+        "kind": "goal",
+        "subject_id": "product-0",
+        "topic": "goal",
+        "text": "海桥项目目标：在三月底前验证离线录音转文字闭环。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "5b3dbe88-78a7-530e-badb-1b1f5bcb9b67",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 72
+            }
+          }
+        ],
+        "relations": []
+      },
+      {
+        "id": "93457c14-bc05-57cf-b2f5-dd592e4e8cd3/0",
+        "kind": "constraint",
+        "subject_id": "product-0",
+        "topic": "privacy",
+        "text": "海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "93457c14-bc05-57cf-b2f5-dd592e4e8cd3",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 87
+            }
+          }
+        ],
+        "relations": []
+      },
+      {
+        "id": "259ae6c6-707f-59fe-8e29-0d152863215c/0",
+        "kind": "preference",
+        "subject_id": "product-0",
+        "topic": "language",
+        "text": "海桥项目偏好：评审材料用中文，术语可保留英文。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "259ae6c6-707f-59fe-8e29-0d152863215c",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 69
+            }
+          }
+        ],
+        "relations": []
+      },
+      {
+        "id": "b788b78a-de94-5330-90e9-73492f15aa84/0",
+        "kind": "todo",
+        "subject_id": "product-0",
+        "topic": "task-prototype",
+        "text": "录音原型验收失败，重新打开提交录音原型待办。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "b788b78a-de94-5330-90e9-73492f15aa84",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 66
+            }
+          }
+        ],
+        "relations": [
+          {
+            "rel": "supersedes",
+            "id": "11eb3d29-64e4-5a92-95c3-621dd1861b14"
+          }
+        ]
+      },
+      {
+        "id": "2b48dc17-6025-5bb3-81fc-756590709e2c/0",
+        "kind": "todo",
+        "subject_id": "product-0",
+        "topic": "task-brochure",
+        "text": "取消海桥印刷宣传册待办，不再需要宣传册。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "2b48dc17-6025-5bb3-81fc-756590709e2c",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 60
+            }
+          }
+        ],
+        "relations": [
+          {
+            "rel": "retracts",
+            "id": "927db03f-d685-50f2-8d1e-ff7934017401"
+          }
+        ]
+      },
+      {
+        "id": "6aae9390-02d0-539c-9ca2-a351abc3922e/0",
+        "kind": "decision",
+        "subject_id": "product-0",
+        "topic": "release",
+        "text": "海桥上线日期定为 4 月 10 日。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "conflict",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "6aae9390-02d0-539c-9ca2-a351abc3922e",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 40
+            }
+          }
+        ],
+        "relations": []
+      },
+      {
+        "id": "b5531fcd-dd0e-53e7-9108-70e34ab3cc6d/0",
+        "kind": "decision",
+        "subject_id": "product-0",
+        "topic": "release",
+        "text": "海桥上线日期定为 4 月 20 日。",
+        "asserted_by": {
+          "speaker_label": "陈",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "conflict",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "b5531fcd-dd0e-53e7-9108-70e34ab3cc6d",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 40
+            }
+          }
+        ],
+        "relations": []
+      },
+      {
+        "id": "172b7eeb-0fc1-535b-be15-22ad006720cb/0",
+        "kind": "decision",
+        "subject_id": "product-0",
+        "topic": "cloud",
+        "text": "我推测用户愿意为海桥购买付费云端转录服务，但尚未询问用户。",
+        "asserted_by": {
+          "speaker_label": "agent",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "agent_unconfirmed",
+        "confirmation": "unconfirmed",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "172b7eeb-0fc1-535b-be15-22ad006720cb",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 87
+            }
+          }
+        ],
+        "relations": []
+      },
+      {
+        "id": "d5919e15-980f-5522-a879-b1b75412efd9/0",
+        "kind": "fact",
+        "subject_id": "product-0",
+        "topic": "devices",
+        "text": "海桥目标设备数量为 12 台。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "d5919e15-980f-5522-a879-b1b75412efd9",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 37
+            }
+          }
+        ],
+        "relations": []
+      },
+      {
+        "id": "3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0/0",
+        "kind": "fact",
+        "subject_id": "product-0",
+        "topic": "owner",
+        "text": "我澄清录音：海桥交付负责人是小宁。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 51
+            }
+          }
+        ],
+        "relations": [
+          {
+            "rel": "supersedes",
+            "id": "2f0e0625-44d1-5c7b-8840-a497a2779a59"
+          }
+        ]
+      },
+      {
+        "id": "5df82780-fc67-5a6b-9c3f-eb60a73f494e/0",
+        "kind": "question",
+        "subject_id": "product-0",
+        "topic": "engine",
+        "text": "海桥尚未选择具体转录引擎，准确率也没有测试数据。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "5df82780-fc67-5a6b-9c3f-eb60a73f494e",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 72
+            }
+          }
+        ],
+        "relations": []
+      },
+      {
+        "id": "5b5f22a4-138c-51df-99c6-1089aeade28b/0",
+        "kind": "decision",
+        "subject_id": "product-0",
+        "topic": "budget",
+        "text": "再次修改海桥预算为 25000 元。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "5b5f22a4-138c-51df-99c6-1089aeade28b",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 40
+            }
+          }
+        ],
+        "relations": [
+          {
+            "rel": "supersedes",
+            "id": "75afa1b7-9569-5b63-9980-54af3b564777"
+          }
+        ]
+      },
+      {
+        "id": "12aea57b-bfaa-52ac-9832-8c20c96c14a5/0",
+        "kind": "progress",
+        "subject_id": "product-0",
+        "topic": "test",
+        "text": "补记：上周海桥在办公室讨论过离线测试，发生时间早于今天。",
+        "asserted_by": {
+          "speaker_label": "林",
+          "identity_basis": "synthetic_source_declaration",
+          "authenticated_actor_id": null
+        },
+        "lifecycle": "active",
+        "epistemic_basis": "user_assertion",
+        "confirmation": "asserted",
+        "valid_from": null,
+        "valid_to": null,
+        "sources": [
+          {
+            "event_id": "12aea57b-bfaa-52ac-9832-8c20c96c14a5",
+            "span": {
+              "unit": "utf8-byte",
+              "start": 0,
+              "end": 84
+            }
+          }
+        ],
+        "relations": []
+      }
+    ],
+    "coverage": {
+      "pending_audio": [],
+      "truncated": false
+    },
+    "extractor": {
+      "version": "lab-extractive-v1"
+    }
+  },
+  "refs": [
+    "5b3dbe88-78a7-530e-badb-1b1f5bcb9b67",
+    "93457c14-bc05-57cf-b2f5-dd592e4e8cd3",
+    "259ae6c6-707f-59fe-8e29-0d152863215c",
+    "b788b78a-de94-5330-90e9-73492f15aa84",
+    "2b48dc17-6025-5bb3-81fc-756590709e2c",
+    "6aae9390-02d0-539c-9ca2-a351abc3922e",
+    "b5531fcd-dd0e-53e7-9108-70e34ab3cc6d",
+    "172b7eeb-0fc1-535b-be15-22ad006720cb",
+    "d5919e15-980f-5522-a879-b1b75412efd9",
+    "3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0",
+    "5df82780-fc67-5a6b-9c3f-eb60a73f494e",
+    "5b5f22a4-138c-51df-99c6-1089aeade28b",
+    "12aea57b-bfaa-52ac-9832-8c20c96c14a5"
+  ],
+  "as_plugin_id": "project-brief"
+}

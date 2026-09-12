@@ -1,0 +1,18 @@
+{
+  "archived_at": "2026-09-12T02:39:31.631363+00:00",
+  "source_directory": "/Users/songyy/Documents/edc-memory-lab-20260912",
+  "destination": "/Users/songyy/Documents/event-driven-context/docs/research/2026-09-12-memory-lab",
+  "experiment_commit": "e9aae2f50e487105d4f16ad7892518b52edcf861",
+  "copied_files": 933,
+  "copied_files_sha256_match": true,
+  "git_bundle_verified": true,
+  "excluded": [
+    "rebuildable .venv",
+    "transient .runtime (server log copied under results/runtime)",
+    "Python __pycache__",
+    "live .git (complete committed history in experiment-history.bundle)"
+  ],
+  "public_upstream_included": true,
+  "parent_repository_index_changed": false,
+  "note": "All experiment process logs/results are local. Archive is a new product docs directory authorized by the user; no production or product code changes."
+}

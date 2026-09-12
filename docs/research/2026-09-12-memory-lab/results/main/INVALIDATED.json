@@ -1,0 +1,4 @@
+{
+  "reason": "Stopped before answers. Raw render omitted metadata exposed by D; equal-input repair required. This run is excluded from all quality results. Successful partial model calls count toward overall resource use. The interrupted in-flight call has unknown token count.",
+  "at": "2026-09-12T00:48:12.936180+00:00"
+}

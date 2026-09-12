@@ -1,0 +1,1029 @@
+[
+  {
+    "id": "5b3dbe88-78a7-530e-badb-1b1f5bcb9b67",
+    "sequence": 1,
+    "project": "product-0",
+    "time": "2026-01-01T01:00:00+00:00",
+    "text": "海桥项目目标：在三月底前验证离线录音转文字闭环。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "goal",
+      "topic": "goal"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "73452f84-280c-57b0-8212-5ad8182dd1e8",
+    "sequence": 2,
+    "project": "product-0",
+    "time": "2026-01-01T02:00:00+00:00",
+    "text": "海桥项目预算确定为 50000 元。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "decision",
+      "topic": "budget"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "93457c14-bc05-57cf-b2f5-dd592e4e8cd3",
+    "sequence": 3,
+    "project": "product-0",
+    "time": "2026-01-01T03:00:00+00:00",
+    "text": "海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "constraint",
+      "topic": "privacy"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "259ae6c6-707f-59fe-8e29-0d152863215c",
+    "sequence": 4,
+    "project": "product-0",
+    "time": "2026-01-01T04:00:00+00:00",
+    "text": "海桥项目偏好：评审材料用中文，术语可保留英文。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "preference",
+      "topic": "language"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "26693cc2-a8a3-5f94-9869-e28d72a7be46",
+    "sequence": 5,
+    "project": "product-0",
+    "time": "2026-01-01T05:00:00+00:00",
+    "text": "闲聊：最近在看一部科幻电影。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "851bb202-556d-54d6-bb2c-9f6fa8c4425b",
+    "sequence": 6,
+    "project": "product-0",
+    "time": "2026-01-01T06:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "2347da57-2300-55a6-aceb-421f844a65c4",
+    "sequence": 7,
+    "project": "product-0",
+    "time": "2026-01-01T07:00:00+00:00",
+    "text": "午餐点了面条，周末准备读小说。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "dcbd5abd-e272-53b4-9e4d-c19434a5dd66",
+    "sequence": 8,
+    "project": "product-0",
+    "time": "2026-01-01T08:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "d20f22b2-f803-547e-8591-21c79eb0fddb",
+    "sequence": 9,
+    "project": "product-0",
+    "time": "2026-01-01T09:00:00+00:00",
+    "text": "闲聊：最近在看一部科幻电影。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "a31768c9-b945-504b-81e4-ee6204f12c13",
+    "sequence": 10,
+    "project": "product-0",
+    "time": "2026-01-01T10:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "97be4216-bec7-5f7a-a593-a2b062cbfc8b",
+    "sequence": 11,
+    "project": "product-0",
+    "time": "2026-01-01T11:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "927375a1-731c-577a-9d8c-8a382bcc1e84",
+    "sequence": 12,
+    "project": "product-0",
+    "time": "2026-01-01T12:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "5ff64d54-d86d-52f4-8424-f7c914d2334f",
+    "sequence": 13,
+    "project": "product-0",
+    "time": "2026-01-01T13:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "3c7a4fc4-5dd9-5b1e-a02a-741f1e7a90eb",
+    "sequence": 14,
+    "project": "product-0",
+    "time": "2026-01-01T14:00:00+00:00",
+    "text": "午餐点了面条，周末准备读小说。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "263276fa-bf47-5059-8e87-8ebcf602a699",
+    "sequence": 15,
+    "project": "product-0",
+    "time": "2026-01-01T15:00:00+00:00",
+    "text": "闲聊：最近在看一部科幻电影。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "c0f8a61c-4d0d-5865-9169-922306a2d2d1",
+    "sequence": 16,
+    "project": "product-0",
+    "time": "2026-01-01T16:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "cd213a93-10f0-5915-936b-e6973566209c",
+    "sequence": 17,
+    "project": "product-0",
+    "time": "2026-01-01T17:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "a8c4c185-cdd4-5d92-a9cc-54e96e3647cb",
+    "sequence": 18,
+    "project": "product-0",
+    "time": "2026-01-01T18:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "75afa1b7-9569-5b63-9980-54af3b564777",
+    "sequence": 19,
+    "project": "product-0",
+    "time": "2026-01-01T19:00:00+00:00",
+    "text": "海桥项目预算改为 30000 元，取代此前预算。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "decision",
+      "topic": "budget"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": [
+      {
+        "rel": "supersedes",
+        "id": "73452f84-280c-57b0-8212-5ad8182dd1e8"
+      }
+    ]
+  },
+  {
+    "id": "e0ecfe1f-4a03-5930-be54-0c0fe94c1767",
+    "sequence": 20,
+    "project": "product-0",
+    "time": "2026-01-01T20:00:00+00:00",
+    "text": "待办：由我在周五前提交海桥录音原型。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "todo",
+      "topic": "task-prototype"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "11eb3d29-64e4-5a92-95c3-621dd1861b14",
+    "sequence": 21,
+    "project": "product-0",
+    "time": "2026-01-01T21:00:00+00:00",
+    "text": "海桥录音原型已提交，这项待办完成。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "progress",
+      "topic": "task-prototype"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": [
+      {
+        "rel": "resolves",
+        "id": "e0ecfe1f-4a03-5930-be54-0c0fe94c1767"
+      }
+    ]
+  },
+  {
+    "id": "b788b78a-de94-5330-90e9-73492f15aa84",
+    "sequence": 22,
+    "project": "product-0",
+    "time": "2026-01-01T22:00:00+00:00",
+    "text": "录音原型验收失败，重新打开提交录音原型待办。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "todo",
+      "topic": "task-prototype"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": [
+      {
+        "rel": "supersedes",
+        "id": "11eb3d29-64e4-5a92-95c3-621dd1861b14"
+      }
+    ]
+  },
+  {
+    "id": "927db03f-d685-50f2-8d1e-ff7934017401",
+    "sequence": 23,
+    "project": "product-0",
+    "time": "2026-01-01T23:00:00+00:00",
+    "text": "待办：安排海桥印刷宣传册。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "todo",
+      "topic": "task-brochure"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "2b48dc17-6025-5bb3-81fc-756590709e2c",
+    "sequence": 24,
+    "project": "product-0",
+    "time": "2026-01-02T00:00:00+00:00",
+    "text": "取消海桥印刷宣传册待办，不再需要宣传册。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "todo",
+      "topic": "task-brochure"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": [
+      {
+        "rel": "retracts",
+        "id": "927db03f-d685-50f2-8d1e-ff7934017401"
+      }
+    ]
+  },
+  {
+    "id": "6aae9390-02d0-539c-9ca2-a351abc3922e",
+    "sequence": 25,
+    "project": "product-0",
+    "time": "2026-01-02T01:00:00+00:00",
+    "text": "海桥上线日期定为 4 月 10 日。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "decision",
+      "topic": "release"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "b5531fcd-dd0e-53e7-9108-70e34ab3cc6d",
+    "sequence": 26,
+    "project": "product-0",
+    "time": "2026-01-02T02:00:00+00:00",
+    "text": "海桥上线日期定为 4 月 20 日。",
+    "type": "note",
+    "speaker": "陈",
+    "metadata": {
+      "kind": "decision",
+      "topic": "release"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "172b7eeb-0fc1-535b-be15-22ad006720cb",
+    "sequence": 27,
+    "project": "product-0",
+    "time": "2026-01-02T03:00:00+00:00",
+    "text": "我推测用户愿意为海桥购买付费云端转录服务，但尚未询问用户。",
+    "type": "note",
+    "speaker": "agent",
+    "metadata": {
+      "kind": "decision",
+      "topic": "cloud"
+    },
+    "source": {
+      "channel": "skill"
+    },
+    "refs": []
+  },
+  {
+    "id": "d5919e15-980f-5522-a879-b1b75412efd9",
+    "sequence": 28,
+    "project": "product-0",
+    "time": "2026-01-02T04:00:00+00:00",
+    "text": "海桥目标设备数量为 12 台。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "fact",
+      "topic": "devices"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "82b19adf-b194-5af9-95ef-1798027d43b9",
+    "sequence": 29,
+    "project": "product-0",
+    "time": "2026-01-02T05:00:00+00:00",
+    "text": "[合成音频占位：海桥交付负责人，原始字节不在此文本实验中。]",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "audio",
+      "topic": "owner"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "2f0e0625-44d1-5c7b-8840-a497a2779a59",
+    "sequence": 30,
+    "project": "product-0",
+    "time": "2026-01-02T06:00:00+00:00",
+    "text": "海桥交付负责人是 [小林/小宁，听不清]。",
+    "type": "derived",
+    "speaker": "audio-transcribe",
+    "metadata": {
+      "kind": "transcript",
+      "topic": "owner"
+    },
+    "source": {
+      "channel": "plugin"
+    },
+    "refs": [
+      {
+        "rel": "derived_from",
+        "id": "82b19adf-b194-5af9-95ef-1798027d43b9"
+      }
+    ]
+  },
+  {
+    "id": "3c2e04f8-938f-5ae7-af59-1d96ce4d7bf0",
+    "sequence": 31,
+    "project": "product-0",
+    "time": "2026-01-02T07:00:00+00:00",
+    "text": "我澄清录音：海桥交付负责人是小宁。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "fact",
+      "topic": "owner"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": [
+      {
+        "rel": "supersedes",
+        "id": "2f0e0625-44d1-5c7b-8840-a497a2779a59"
+      }
+    ]
+  },
+  {
+    "id": "207b9c52-8a14-5d52-bcd5-e544e3a498f8",
+    "sequence": 32,
+    "project": "product-0",
+    "time": "2026-01-02T08:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "bd25a587-4005-531a-8cef-9e3335ed98aa",
+    "sequence": 33,
+    "project": "product-0",
+    "time": "2026-01-02T09:00:00+00:00",
+    "text": "午餐点了面条，周末准备读小说。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "bb4b3e51-8472-5122-8a28-659246bbfb55",
+    "sequence": 34,
+    "project": "product-0",
+    "time": "2026-01-02T10:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "3233cf4d-feb9-522f-a303-d72de8721944",
+    "sequence": 35,
+    "project": "product-0",
+    "time": "2026-01-02T11:00:00+00:00",
+    "text": "午餐点了面条，周末准备读小说。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "9da6fe37-41e8-50b5-aa25-4735798590be",
+    "sequence": 36,
+    "project": "product-0",
+    "time": "2026-01-02T12:00:00+00:00",
+    "text": "闲聊：最近在看一部科幻电影。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "923ae0ac-d869-501e-8fc8-5f09d07ae6b1",
+    "sequence": 37,
+    "project": "product-0",
+    "time": "2026-01-02T13:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "7fc9fcd6-41f4-51af-b050-b27419e7d264",
+    "sequence": 38,
+    "project": "product-0",
+    "time": "2026-01-02T14:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "2e780874-06e6-5da5-9c06-14a82f4130bb",
+    "sequence": 39,
+    "project": "product-0",
+    "time": "2026-01-02T15:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "49ce72c6-7b84-5cfc-88d7-c1c97489eeb7",
+    "sequence": 40,
+    "project": "product-0",
+    "time": "2026-01-02T16:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "952f7e59-01e2-56e7-bf7f-74fd62da65bf",
+    "sequence": 41,
+    "project": "product-0",
+    "time": "2026-01-02T17:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "7228d0c9-02d8-5f44-8640-2cd23aceb56b",
+    "sequence": 42,
+    "project": "product-0",
+    "time": "2026-01-02T18:00:00+00:00",
+    "text": "午餐点了面条，周末准备读小说。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "e9d5e788-24be-5d5d-9859-402f174b3c7d",
+    "sequence": 43,
+    "project": "product-0",
+    "time": "2026-01-02T19:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "20bf70b5-baef-587c-bb72-97f1272e27e8",
+    "sequence": 44,
+    "project": "product-0",
+    "time": "2026-01-02T20:00:00+00:00",
+    "text": "闲聊：最近在看一部科幻电影。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "2b9ee228-c503-5e66-8764-afb91fc99f0c",
+    "sequence": 45,
+    "project": "product-0",
+    "time": "2026-01-02T21:00:00+00:00",
+    "text": "闲聊：最近在看一部科幻电影。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "c189c574-33b2-5891-88aa-2e122f300631",
+    "sequence": 46,
+    "project": "product-0",
+    "time": "2026-01-02T22:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "58ebb971-8437-5cfc-8cdc-6ccb6ed0185e",
+    "sequence": 47,
+    "project": "product-0",
+    "time": "2026-01-02T23:00:00+00:00",
+    "text": "今天咖啡很香，午后去散步。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "6c8f57d3-2cf4-583c-86af-cd5e1560d488",
+    "sequence": 48,
+    "project": "product-0",
+    "time": "2026-01-03T00:00:00+00:00",
+    "text": "闲聊：最近在看一部科幻电影。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "9945ed63-0c36-5acc-99c4-2f95669053cd",
+    "sequence": 49,
+    "project": "product-0",
+    "time": "2026-01-03T01:00:00+00:00",
+    "text": "闲聊：最近在看一部科幻电影。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "72c1f208-7c40-578d-aaf1-66c43809563b",
+    "sequence": 50,
+    "project": "product-0",
+    "time": "2026-01-03T02:00:00+00:00",
+    "text": "午餐点了面条，周末准备读小说。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "7c0c9b0f-50a7-56dc-a481-0d1536d6d426",
+    "sequence": 51,
+    "project": "product-0",
+    "time": "2026-01-03T03:00:00+00:00",
+    "text": "测试日志：临时缓存被清理，天气晴朗。",
+    "type": "log",
+    "speaker": "林",
+    "metadata": {
+      "kind": "chat",
+      "topic": "",
+      "ephemeral": true
+    },
+    "source": {
+      "channel": "hook"
+    },
+    "refs": []
+  },
+  {
+    "id": "5df82780-fc67-5a6b-9c3f-eb60a73f494e",
+    "sequence": 52,
+    "project": "product-0",
+    "time": "2026-01-03T04:00:00+00:00",
+    "text": "海桥尚未选择具体转录引擎，准确率也没有测试数据。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "question",
+      "topic": "engine"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  },
+  {
+    "id": "5b5f22a4-138c-51df-99c6-1089aeade28b",
+    "sequence": 53,
+    "project": "product-0",
+    "time": "2026-01-03T05:00:00+00:00",
+    "text": "再次修改海桥预算为 25000 元。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "decision",
+      "topic": "budget"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": [
+      {
+        "rel": "supersedes",
+        "id": "75afa1b7-9569-5b63-9980-54af3b564777"
+      }
+    ]
+  },
+  {
+    "id": "12aea57b-bfaa-52ac-9832-8c20c96c14a5",
+    "sequence": 54,
+    "project": "product-0",
+    "time": "2026-01-03T06:00:00+00:00",
+    "text": "补记：上周海桥在办公室讨论过离线测试，发生时间早于今天。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "progress",
+      "topic": "test"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": [],
+    "occurred_at": "2025-12-26T09:00:00Z"
+  },
+  {
+    "id": "fc282a12-6d7c-58dd-8e36-57cd445dc37b",
+    "sequence": 55,
+    "project": "product-0",
+    "time": "2026-01-03T07:00:00+00:00",
+    "text": "作为 agent，我建议将预算升到 99000 元；用户尚未确认。",
+    "type": "note",
+    "speaker": "agent",
+    "metadata": {
+      "kind": "decision",
+      "topic": "budget"
+    },
+    "source": {
+      "channel": "skill"
+    },
+    "refs": [
+      {
+        "rel": "supersedes",
+        "id": "5b5f22a4-138c-51df-99c6-1089aeade28b"
+      }
+    ]
+  },
+  {
+    "id": "4071c563-4ce9-5b7e-b386-626fa2d451a1",
+    "sequence": 56,
+    "project": "product-0",
+    "time": "2026-01-03T08:00:00+00:00",
+    "text": "海桥开放问题：离线词表纠错是否需要先标注十段录音？尚未决定。",
+    "type": "note",
+    "speaker": "林",
+    "metadata": {
+      "kind": "question",
+      "topic": "vocabulary"
+    },
+    "source": {
+      "channel": "app"
+    },
+    "refs": []
+  }
+]

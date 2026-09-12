@@ -1,0 +1,311 @@
+[
+  {
+    "id": "product-0/query_only",
+    "question": "明天可以沿用供应商默认流程开始试验吗？",
+    "mode": "query_only",
+    "new_event": {
+      "id": "a44ec320-ce82-53c6-8435-c193fa5695ac",
+      "sequence": 57,
+      "project": "product-0",
+      "time": "2026-01-04T12:00:00Z",
+      "text": "已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+      "type": "note",
+      "speaker": "项目负责人",
+      "metadata": {
+        "kind": "progress",
+        "topic": "supplier-workflow"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "constraint_source": {
+      "id": "93457c14-bc05-57cf-b2f5-dd592e4e8cd3",
+      "sequence": 3,
+      "project": "product-0",
+      "time": "2026-01-01T03:00:00+00:00",
+      "text": "海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。",
+      "type": "note",
+      "speaker": "林",
+      "metadata": {
+        "kind": "constraint",
+        "topic": "privacy"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "context": "[a44ec320-ce82-53c6-8435-c193fa5695ac] time=2026-01-04T12:00:00Z speaker=项目负责人 type=note metadata={\"kind\": \"progress\", \"topic\": \"supplier-workflow\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=supplier-workflow\n已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+    "context_tokens": 135,
+    "constraint_body_present": false,
+    "answer": {
+      "answer": "是",
+      "status": "known",
+      "citations": [
+        "a44ec320-ce82-53c6-8435-c193fa5695ac"
+      ]
+    },
+    "gold": "不可以沿用上传原始录音到供应商云端的默认流程；须改为本地处理或取得明确约束更正。",
+    "call_key": "87c2d06ea6f652b0d948a262fb40736f8b75a124ecab15907a0c3c0a93017699"
+  },
+  {
+    "id": "product-0/pinned_constraints",
+    "question": "明天可以沿用供应商默认流程开始试验吗？",
+    "mode": "pinned_constraints",
+    "new_event": {
+      "id": "a44ec320-ce82-53c6-8435-c193fa5695ac",
+      "sequence": 57,
+      "project": "product-0",
+      "time": "2026-01-04T12:00:00Z",
+      "text": "已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+      "type": "note",
+      "speaker": "项目负责人",
+      "metadata": {
+        "kind": "progress",
+        "topic": "supplier-workflow"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "constraint_source": {
+      "id": "93457c14-bc05-57cf-b2f5-dd592e4e8cd3",
+      "sequence": 3,
+      "project": "product-0",
+      "time": "2026-01-01T03:00:00+00:00",
+      "text": "海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。",
+      "type": "note",
+      "speaker": "林",
+      "metadata": {
+        "kind": "constraint",
+        "topic": "privacy"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "context": "[5b3dbe88-78a7-530e-badb-1b1f5bcb9b67] time=2026-01-01T01:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"goal\", \"topic\": \"goal\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=goal\n海桥项目目标：在三月底前验证离线录音转文字闭环。\n\n[93457c14-bc05-57cf-b2f5-dd592e4e8cd3] time=2026-01-01T03:00:00+00:00 speaker=林 type=note metadata={\"kind\": \"constraint\", \"topic\": \"privacy\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=privacy\n海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。\n\n[a44ec320-ce82-53c6-8435-c193fa5695ac] time=2026-01-04T12:00:00Z speaker=项目负责人 type=note metadata={\"kind\": \"progress\", \"topic\": \"supplier-workflow\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=supplier-workflow\n已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+    "context_tokens": 348,
+    "constraint_body_present": true,
+    "answer": {
+      "answer": "不能",
+      "status": "conflict",
+      "citations": [
+        "a44ec320-ce82-53c6-8435-c193fa5695ac",
+        "93457c14-bc05-57cf-b2f5-dd592e4e8cd3"
+      ]
+    },
+    "gold": "不可以沿用上传原始录音到供应商云端的默认流程；须改为本地处理或取得明确约束更正。",
+    "call_key": "51e70349ce4114a6120ae3bbc5fd1470b76dfd3a321ce82b09885c11f7f188f7"
+  },
+  {
+    "id": "product-1/query_only",
+    "question": "明天可以沿用供应商默认流程开始试验吗？",
+    "mode": "query_only",
+    "new_event": {
+      "id": "86e5d10f-0d73-55f2-b29e-8df0b0aae321",
+      "sequence": 57,
+      "project": "product-1",
+      "time": "2026-01-04T12:00:00Z",
+      "text": "已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+      "type": "note",
+      "speaker": "项目负责人",
+      "metadata": {
+        "kind": "progress",
+        "topic": "supplier-workflow"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "constraint_source": {
+      "id": "ccecded6-07e3-5422-b664-4908768fb1c1",
+      "sequence": 3,
+      "project": "product-1",
+      "time": "2026-01-01T03:00:00+00:00",
+      "text": "海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。",
+      "type": "note",
+      "speaker": "周",
+      "metadata": {
+        "kind": "constraint",
+        "topic": "privacy"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "context": "[86e5d10f-0d73-55f2-b29e-8df0b0aae321] time=2026-01-04T12:00:00Z speaker=项目负责人 type=note metadata={\"kind\": \"progress\", \"topic\": \"supplier-workflow\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=supplier-workflow\n已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+    "context_tokens": 143,
+    "constraint_body_present": false,
+    "answer": {
+      "answer": "是",
+      "status": "known",
+      "citations": [
+        "86e5d10f-0d73-55f2-b29e-8df0b0aae321"
+      ]
+    },
+    "gold": "不可以沿用上传原始录音到供应商云端的默认流程；须改为本地处理或取得明确约束更正。",
+    "call_key": "382570625cf31bcebe95dc0d813b90febe5e2eb8b7cb8b43860496a51ee84507"
+  },
+  {
+    "id": "product-1/pinned_constraints",
+    "question": "明天可以沿用供应商默认流程开始试验吗？",
+    "mode": "pinned_constraints",
+    "new_event": {
+      "id": "86e5d10f-0d73-55f2-b29e-8df0b0aae321",
+      "sequence": 57,
+      "project": "product-1",
+      "time": "2026-01-04T12:00:00Z",
+      "text": "已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+      "type": "note",
+      "speaker": "项目负责人",
+      "metadata": {
+        "kind": "progress",
+        "topic": "supplier-workflow"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "constraint_source": {
+      "id": "ccecded6-07e3-5422-b664-4908768fb1c1",
+      "sequence": 3,
+      "project": "product-1",
+      "time": "2026-01-01T03:00:00+00:00",
+      "text": "海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。",
+      "type": "note",
+      "speaker": "周",
+      "metadata": {
+        "kind": "constraint",
+        "topic": "privacy"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "context": "[08c25003-5e43-552e-85c4-9d133828fa46] time=2026-01-01T01:00:00+00:00 speaker=周 type=note metadata={\"kind\": \"goal\", \"topic\": \"goal\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=goal\n海桥项目目标：在三月底前验证离线录音转文字闭环。\n\n[ccecded6-07e3-5422-b664-4908768fb1c1] time=2026-01-01T03:00:00+00:00 speaker=周 type=note metadata={\"kind\": \"constraint\", \"topic\": \"privacy\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=privacy\n海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。\n\n[86e5d10f-0d73-55f2-b29e-8df0b0aae321] time=2026-01-04T12:00:00Z speaker=项目负责人 type=note metadata={\"kind\": \"progress\", \"topic\": \"supplier-workflow\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=supplier-workflow\n已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+    "context_tokens": 350,
+    "constraint_body_present": true,
+    "answer": {
+      "answer": "不能。虽然已具备试验条件，但供应商默认流程要求上传原始录音至云端，这违反了项目约束（所有录音只保存在本地设备）。",
+      "status": "conflict",
+      "citations": [
+        "86e5d10f-0d73-55f2-b29e-8df0b0aae321",
+        "ccecded6-07e3-5422-b664-4908768fb1c1"
+      ]
+    },
+    "gold": "不可以沿用上传原始录音到供应商云端的默认流程；须改为本地处理或取得明确约束更正。",
+    "call_key": "a2b0d66284ede99a0b74d5f844a0f6909fac49360496fe12c82c4473094fa785"
+  },
+  {
+    "id": "product-2/query_only",
+    "question": "明天可以沿用供应商默认流程开始试验吗？",
+    "mode": "query_only",
+    "new_event": {
+      "id": "7d3824a5-72e6-5f39-9c56-13ef08892170",
+      "sequence": 57,
+      "project": "product-2",
+      "time": "2026-01-04T12:00:00Z",
+      "text": "已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+      "type": "note",
+      "speaker": "项目负责人",
+      "metadata": {
+        "kind": "progress",
+        "topic": "supplier-workflow"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "constraint_source": {
+      "id": "c95cfc69-236f-54cf-8ec3-bc745ddf2e53",
+      "sequence": 3,
+      "project": "product-2",
+      "time": "2026-01-01T03:00:00+00:00",
+      "text": "海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。",
+      "type": "note",
+      "speaker": "江",
+      "metadata": {
+        "kind": "constraint",
+        "topic": "privacy"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "context": "[7d3824a5-72e6-5f39-9c56-13ef08892170] time=2026-01-04T12:00:00Z speaker=项目负责人 type=note metadata={\"kind\": \"progress\", \"topic\": \"supplier-workflow\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=supplier-workflow\n已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+    "context_tokens": 141,
+    "constraint_body_present": false,
+    "answer": {
+      "answer": "是",
+      "status": "known",
+      "citations": [
+        "7d3824a5-72e6-5f39-9c56-13ef08892170"
+      ]
+    },
+    "gold": "不可以沿用上传原始录音到供应商云端的默认流程；须改为本地处理或取得明确约束更正。",
+    "call_key": "87e45da12fa7bc0db4ecdf2bf42d1ef07393399da39c05af973ed11707c223e7"
+  },
+  {
+    "id": "product-2/pinned_constraints",
+    "question": "明天可以沿用供应商默认流程开始试验吗？",
+    "mode": "pinned_constraints",
+    "new_event": {
+      "id": "7d3824a5-72e6-5f39-9c56-13ef08892170",
+      "sequence": 57,
+      "project": "product-2",
+      "time": "2026-01-04T12:00:00Z",
+      "text": "已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+      "type": "note",
+      "speaker": "项目负责人",
+      "metadata": {
+        "kind": "progress",
+        "topic": "supplier-workflow"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "constraint_source": {
+      "id": "c95cfc69-236f-54cf-8ec3-bc745ddf2e53",
+      "sequence": 3,
+      "project": "product-2",
+      "time": "2026-01-01T03:00:00+00:00",
+      "text": "海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。",
+      "type": "note",
+      "speaker": "江",
+      "metadata": {
+        "kind": "constraint",
+        "topic": "privacy"
+      },
+      "source": {
+        "channel": "app"
+      },
+      "refs": []
+    },
+    "context": "[51297383-af16-536c-b6aa-d78f783b3ac7] time=2026-01-01T01:00:00+00:00 speaker=江 type=note metadata={\"kind\": \"goal\", \"topic\": \"goal\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=goal\n海桥项目目标：在三月底前验证离线录音转文字闭环。\n\n[c95cfc69-236f-54cf-8ec3-bc745ddf2e53] time=2026-01-01T03:00:00+00:00 speaker=江 type=note metadata={\"kind\": \"constraint\", \"topic\": \"privacy\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=privacy\n海桥项目约束：所有原始录音只保存在本地设备，不上传第三方。\n\n[7d3824a5-72e6-5f39-9c56-13ef08892170] time=2026-01-04T12:00:00Z speaker=项目负责人 type=note metadata={\"kind\": \"progress\", \"topic\": \"supplier-workflow\"} source={\"channel\": \"app\"} basis=user_assertion status=active topic=supplier-workflow\n已完成转录引擎选择与准确率验收，具备试验条件。供应商默认流程是把原始录音上传到供应商云端空间，随后返回转录结果。",
+    "context_tokens": 346,
+    "constraint_body_present": true,
+    "answer": {
+      "answer": "不可以。虽然已具备试验条件，但供应商默认流程要求上传原始录音至云端，这违反了项目约束（所有录音只保存在本地设备）。",
+      "status": "conflict",
+      "citations": [
+        "7d3824a5-72e6-5f39-9c56-13ef08892170",
+        "c95cfc69-236f-54cf-8ec3-bc745ddf2e53"
+      ]
+    },
+    "gold": "不可以沿用上传原始录音到供应商云端的默认流程；须改为本地处理或取得明确约束更正。",
+    "call_key": "87c4335db7a8db5ff8083ea6b6898d1a7a0836dc38d5a3872caa047619e602f7"
+  }
+]

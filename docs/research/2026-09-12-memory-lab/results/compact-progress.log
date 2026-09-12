@@ -1,0 +1,83 @@
+built product-0 4 summary_tokens 88
+built product-0 19 summary_tokens 95
+built product-0 20 summary_tokens 21
+built product-0 21 summary_tokens 22
+built product-0 22 summary_tokens 27
+built product-0 24 summary_tokens 84
+built product-0 26 summary_tokens 77
+built product-0 27 summary_tokens 44
+built product-0 28 summary_tokens 77
+built product-0 30 summary_tokens 126
+built product-0 31 summary_tokens 51
+built product-0 52 summary_tokens 345
+built product-0 53 summary_tokens 44
+built product-0 54 summary_tokens 48
+built product-0 55 summary_tokens 163
+built product-0 56 summary_tokens 41
+answered product-0/budget_initial B 1
+answered product-0/budget_updated B 1
+answered product-0/todo_open B 1
+answered product-0/todo_done B 1
+answered product-0/todo_reopen B 1
+answered product-0/todo_cancel B 1
+answered product-0/member_conflict B 0
+answered product-0/agent_unconfirmed B 1
+answered product-0/duplicate_once B 1
+answered product-0/audio_unclear B 0
+answered product-0/audio_corrected B 0
+answered product-0/unknown B 0
+answered product-0/old_goal B 0
+answered product-0/irrelevant_constraint B 0
+answered product-0/preference B 0
+answered product-0/lag B 1
+answered product-0/historical B 0
+answered product-0/late_arrival B 1
+answered product-0/untrusted_update B 0
+answered product-0/openquestion B 0
+answered product-0/isolation B 0
+built locomo-0 419 summary_tokens 215
+answered locomo-0/q24 B 0
+answered locomo-0/q25 B 0
+answered locomo-0/q73 B 0
+answered locomo-0/q76 B 0
+answered locomo-0/q88 B 0
+Traceback (most recent call last):
+  File "/Users/songyy/Documents/edc-memory-lab-20260912/src/compact_summary.py", line 6, in <module>
+    if __name__=='__main__':run.main()
+                            ^^^^^^^^^^
+  File "/Users/songyy/Documents/edc-memory-lab-20260912/src/run.py", line 92, in main
+    text,u=model.call('answer/'+q['id']+'/'+method,messages,conf['answer_max_tokens'],ANSWER_SCHEMA)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/songyy/Documents/edc-memory-lab-20260912/src/core.py", line 35, in call
+    data=json.load(urllib.request.urlopen(urllib.request.Request(self.endpoint+'/api/chat',jdump(req).encode(),{'Content-Type':'application/json'}),timeout=240))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/urllib/request.py", line 515, in open
+    response = self._open(req, data)
+               ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/urllib/request.py", line 532, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/urllib/request.py", line 1373, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/urllib/request.py", line 1348, in do_open
+    r = h.getresponse()
+        ^^^^^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/http/client.py", line 1450, in getresponse
+    response.begin()
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/http/client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/http/client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/songyy/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib/python3.12/socket.py", line 720, in readinto
+    return self._sock.recv_into(b)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
