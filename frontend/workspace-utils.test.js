@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { PRODUCTION_API, resolveAPI, sessionStorageKey, bytesToBase64, audioMediaType, pathWithLocale, uuidV7 } = require("./workspace-utils.js");
+const { PRODUCTION_API, resolveAPI, sessionStorageKey, bytesToBase64, audioMediaType, contextFileKind, fileTitle, buildMetadata, pathWithLocale, uuidV7 } = require("./workspace-utils.js");
 
 test("production pages ignore API overrides", () => {
   assert.equal(resolveAPI("context.integ.life", "https://example.com"), PRODUCTION_API);
@@ -26,6 +26,29 @@ test("audio types are restricted and normalized", () => {
   assert.equal(audioMediaType("memo.m4a", ""), "audio/mp4");
   assert.equal(audioMediaType("memo.bin", "audio/x-wav"), "audio/wav");
   assert.equal(audioMediaType("memo.ogg", "audio/ogg"), "");
+});
+
+test("context capture accepts images and supported audio", () => {
+  assert.equal(contextFileKind("photo.jpg", ""), "image");
+  assert.equal(contextFileKind("scan", "image/png"), "image");
+  assert.equal(contextFileKind("memo.m4a", ""), "audio");
+  assert.equal(contextFileKind("photo.heic", "image/heic"), "");
+  assert.equal(contextFileKind("notes.pdf", "application/pdf"), "");
+  assert.equal(fileTitle("IMG_2026-09-12.jpg"), "IMG 2026 09 12");
+});
+
+test("friendly metadata keeps useful values without JSON editing", () => {
+  assert.deepEqual(buildMetadata("  Customer call ", " Follow-up notes ", "research, customer, research\nurgent", [
+    { key: "source", value: "interview" },
+    { key: "", value: "" }
+  ]), {
+    title: "Customer call",
+    description: "Follow-up notes",
+    tags: ["research", "customer", "urgent"],
+    source: "interview"
+  });
+  assert.throws(() => buildMetadata("Title", "", "", [{ key: "title", value: "Other" }]), /metadata_key_duplicate/);
+  assert.throws(() => buildMetadata("", "", "", [{ key: "", value: "missing key" }]), /metadata_key_required/);
 });
 
 test("changing the workspace locale preserves other URL state", () => {

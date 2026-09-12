@@ -80,18 +80,42 @@
               <form id="record-form" class="form-card record-card">
                 <div class="card-title"><h3 data-i18n="recordTitle">Append a record</h3><span class="append-only" data-i18n="appendOnly">APPEND ONLY</span></div>
                 <label><span data-i18n="eventType">Record type</span><select id="event-type"><option value="note" data-i18n="noteType">Note</option><option value="log" data-i18n="logType">Log</option></select></label>
-                <div class="segmented" role="group" aria-label="Content type" data-i18n-aria-label="contentType"><button class="selected" type="button" data-content-mode="text" data-i18n="text">Text</button><button type="button" data-content-mode="file" data-i18n="file">File</button><button type="button" data-content-mode="audio" data-i18n="audio">Audio</button></div>
+                <div class="segmented" role="group" aria-label="Content type" data-i18n-aria-label="contentType"><button class="selected" type="button" data-content-mode="text" data-i18n="text">Text</button><button type="button" data-content-mode="media" data-i18n="imageOrAudio">Image or audio</button></div>
                 <label id="text-input-label"><span data-i18n="content">Content</span><textarea id="event-text" rows="6" maxlength="1048576" placeholder="Record a decision, observation, source material…" data-i18n-placeholder="contentPlaceholder"></textarea></label>
-                <label id="file-input-label" class="hidden"><span data-i18n="file">File</span><input id="event-file" type="file" /></label>
-                <div id="audio-input-panel" class="audio-input-panel hidden">
-                  <label><span data-i18n="recordOrChooseAudio">Record or choose audio</span><input id="audio-file" type="file" accept="audio/mp4,audio/wav,audio/mpeg,.m4a,.wav,.mp3" capture /></label>
-                  <p class="muted" data-i18n="audioLimitsV2">M4A, WAV, or MP3 · up to 50 MiB.</p>
-                  <p id="audio-local-status" class="local-status" aria-live="polite" data-i18n="audioNotSelected">No audio selected on this device.</p>
+                <div id="media-input-panel" class="media-input-panel hidden">
+                  <label id="media-dropzone" class="media-dropzone">
+                    <input id="media-file" class="visually-hidden" type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png,audio/mp4,audio/wav,audio/mpeg,.m4a,.wav,.mp3" aria-label="Choose image or audio" data-i18n-aria-label="chooseMedia" />
+                    <span class="media-drop-icon" aria-hidden="true">＋</span>
+                    <strong data-i18n="dropMediaTitle">Drop an image or audio here</strong>
+                    <span data-i18n="dropMediaHint">or choose one from this device</span>
+                    <span class="media-choose-action" data-i18n="chooseMedia">Choose image or audio</span>
+                    <small data-i18n="supportedMediaHint">JPG, PNG, M4A, WAV, or MP3 · up to 50 MiB</small>
+                  </label>
+                  <div id="media-selection" class="media-selection hidden" aria-live="polite">
+                    <div id="media-preview" class="media-preview"></div>
+                    <div class="media-selection-copy"><strong id="media-filename"></strong><span id="media-summary" class="muted"></span></div>
+                    <button id="remove-media" class="quiet" type="button" data-i18n="removeMedia">Remove</button>
+                  </div>
                 </div>
-                <label><span data-i18n="metadataLabel">Metadata</span> <span class="label-note" data-i18n="metadataNote">JSON object, optional</span><textarea id="event-metadata" rows="3" spellcheck="false" placeholder='{"kind":"decision","topic":"launch"}'>{}</textarea></label>
-                <label><span data-i18n="referencesLabel">References</span> <span class="label-note" data-i18n="referencesHint">JSON array, optional</span><textarea id="event-refs" rows="2" spellcheck="false" placeholder='[{"rel":"supersedes","id":"EVENT_UUID"}]'>[]</textarea></label>
-                <label><span data-i18n="occurredAt">Occurred at</span> <span class="label-note" data-i18n="optional">Optional</span><input id="event-occurred-at" type="datetime-local" /></label>
-                <button class="primary" type="submit" data-i18n="appendEvent">Append event</button>
+                <fieldset class="metadata-editor">
+                  <legend data-i18n="metadataLabel">Metadata</legend>
+                  <p class="muted" data-i18n="metadataEditorHint">Add only what will help you find this context later.</p>
+                  <label><span data-i18n="metadataTitleLabel">Title</span> <span class="label-note" data-i18n="optional">Optional</span><input id="metadata-title-input" maxlength="500" placeholder="A short, recognizable name" data-i18n-placeholder="metadataTitlePlaceholder" /></label>
+                  <label><span data-i18n="metadataDescriptionLabel">Description</span> <span class="label-note" data-i18n="optional">Optional</span><textarea id="metadata-description-input" rows="2" maxlength="4000" placeholder="What should someone know about this context?" data-i18n-placeholder="metadataDescriptionPlaceholder"></textarea></label>
+                  <label><span data-i18n="metadataTagsLabel">Tags</span> <span class="label-note" data-i18n="metadataTagsHint">Separate with commas</span><input id="metadata-tags-input" placeholder="research, customer, idea" data-i18n-placeholder="metadataTagsPlaceholder" /></label>
+                  <details id="metadata-more" class="metadata-more">
+                    <summary data-i18n="moreMetadata">More metadata</summary>
+                    <p class="muted" data-i18n="customMetadataHint">Add simple key and value fields only when you need them.</p>
+                    <div id="metadata-custom-fields" class="metadata-custom-fields"></div>
+                    <button id="add-metadata-field" class="quiet" type="button" data-i18n="addMetadataField">Add field</button>
+                  </details>
+                </fieldset>
+                <details class="record-advanced">
+                  <summary data-i18n="advancedRecordOptions">References and time</summary>
+                  <label><span data-i18n="referencesLabel">References</span> <span class="label-note" data-i18n="referencesHint">JSON array, optional</span><textarea id="event-refs" rows="2" spellcheck="false" placeholder='[{"rel":"supersedes","id":"EVENT_UUID"}]'>[]</textarea></label>
+                  <label><span data-i18n="occurredAt">Occurred at</span> <span class="label-note" data-i18n="optional">Optional</span><input id="event-occurred-at" type="datetime-local" /></label>
+                </details>
+                <button class="primary" type="submit" data-i18n="addContext">Add context</button>
                 <p id="record-message" class="message" aria-live="polite"></p>
               </form>
               <section class="metadata-card"><div class="card-title"><h3 data-i18n="metadataTitle">Available metadata</h3><button id="metadata-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div><div id="metadata-list" class="metadata-list"><p class="muted" data-i18n="metadataNone">No metadata has been recorded yet.</p></div></section>
