@@ -188,9 +188,19 @@ func (c *Client) ListProjects(ctx context.Context) (out core.Projects, err error
 }
 
 func (c *Client) AddMember(ctx context.Context, projectID, username string) (out core.User, err error) {
-	err = c.doJSON(ctx, http.MethodPost, projectPath(projectID, "/members"), struct {
-		Username string `json:"username"`
-	}{username}, &out)
+	return c.AddMemberInput(ctx, projectID, core.MemberInput{Username: username})
+}
+
+func (c *Client) AddMemberByEmail(ctx context.Context, projectID, email string) (out core.User, err error) {
+	return c.AddMemberInput(ctx, projectID, core.MemberInput{Email: email})
+}
+
+func (c *Client) AddMemberInput(ctx context.Context, projectID string, in core.MemberInput) (out core.User, err error) {
+	body := struct {
+		Username string `json:"username,omitempty"`
+		Email    string `json:"email,omitempty"`
+	}{Username: in.Username, Email: in.Email}
+	err = c.doJSON(ctx, http.MethodPost, projectPath(projectID, "/members"), body, &out)
 	return
 }
 

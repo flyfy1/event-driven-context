@@ -40,14 +40,8 @@ assert.match(app, /event_context_locale/);
 assert.match(app, /Domain=\.integ\.life/);
 assert.match(app, /pathWithLocale\(window\.location\.href, state\.locale\)/);
 
-// Production may serve workspace.html directly as index.html without bundling
-// the separate landing assets.
-if (!/data-copy="/.test(index)) {
-  assert.match(index, /id="auth-form"/);
-  assert.match(index, /id="workspace"/);
-  console.log("frontend i18n checks passed for direct workspace entry");
-  process.exit(0);
-}
+// The public root must remain the landing page in every release.
+assert.match(index, /data-copy="hero1"/);
 
 // The public page and workspace must retain the same locale contract.
 const vm = require("node:vm");

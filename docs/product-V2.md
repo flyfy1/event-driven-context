@@ -638,7 +638,7 @@ edc host run
 | `POST /v1/projects` | 创建项目，可传 IANA `timezone` | `create_project` |
 | `PATCH /v1/projects/{project_id}` | 任一项目 owner 修改 `timezone` | — |
 | `GET /v1/projects/{project_id}/members` | 列出成员及 `member` / `owner` 角色 | `list_members` |
-| `POST /v1/projects/{project_id}/members` | 任一 owner 添加成员 | `add_member` |
+| `POST /v1/projects/{project_id}/members` | 任一 owner 以 username 或 email 精确添加成员 | `add_member` |
 | `PATCH /v1/projects/{project_id}/members/{user_id}` | owner 提升或降级其他成员；至少保留一位 owner | — |
 | `POST /v1/projects/{project_id}/events` | 追加 1–100 条事件，逐条返回结果 | `record_events` |
 | `POST /v1/projects/{project_id}/events/query` | 查询事件 | `query_events` |
@@ -726,7 +726,7 @@ Web 是当前优先交付入口。项目与当前分区进入 URL：`?project=<p
 | 页面 | 核心操作 |
 |---|---|
 | 项目记录 | 按 `log`、`note`、`derived` 和来源筛选；查看 actor、记录时间、渠道、原文、文件和引用链 |
-| 项目成员 | 任一 owner 按注册用户名添加成员并管理其他人的 owner 角色；所有成员查看成员和角色，进入同一项目读写 context |
+| 项目成员 | 任一 owner 按注册 username 或 email 添加成员并管理其他人的 owner 角色；所有成员查看成员和角色，进入同一项目读写 context |
 | 项目状态 | 查看各插件发布的 State、版本历史、落后程度，跳转到来源记录 |
 | 接入 | 绑定项目与 `edc setup` 指引、hook 状态、最近推送时间 |
 | 插件 | 安装、配置提示词、暂停、重跑、卸载；查看权限、版本和最近运行结果 |

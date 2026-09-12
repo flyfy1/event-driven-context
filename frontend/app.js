@@ -159,6 +159,7 @@ function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => { element.placeholder = t(element.dataset.i18nPlaceholder); });
   document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => { element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel)); });
   $("#language-select").value = state.locale;
+  updateHomeLink();
 }
 function setLocale(locale, persist) {
   state.locale = normalizeLocale(locale) || "en";
@@ -178,14 +179,20 @@ function setLocale(locale, persist) {
   renderIntegration();
   renderAudioStatus();
 }
+function updateHomeLink() {
+  const href = window.ContextNavigation.homeURL(location.href, state.locale, true);
+  $("#about-link").href = href;
+  $(".brand").href = href;
+}
 function syncRoute(mode = "replace") {
-  if (mode === "none") return;
+  if (mode === "none") { updateHomeLink(); return; }
   const target = new URL(location.href);
   if (state.routeProjectID) target.searchParams.set("project", state.routeProjectID);
   else target.searchParams.delete("project");
   target.hash = state.view;
   const path = target.pathname + target.search + target.hash;
   if (path !== location.pathname + location.search + location.hash) history[mode === "push" ? "pushState" : "replaceState"](null, "", path);
+  updateHomeLink();
 }
 function restoreRoute() {
   const id = new URLSearchParams(location.search).get("project") || "";
@@ -746,7 +753,16 @@ $("#auth-submit").addEventListener("click", () => {
   location.assign(start.toString());
 });
 $("#logout-button").addEventListener("click", async () => {
-  try { await request("/v1/auth/logout", { method: "POST" }); } finally { clearSession(); updateIdentity(); renderProjects(); renderProject(); }
+  const button = $("#logout-button");
+  button.disabled = true;
+  try {
+    await request("/v1/auth/logout", { method: "POST" });
+    clearSession();
+    location.replace(window.ContextNavigation.homeURL(location.href, state.locale));
+  } catch (error) {
+    // Keep the live session on failure so a cookie cannot silently sign back in.
+    $("#connection-status").textContent = error.message;
+  } finally { button.disabled = false; }
 });
 function showProjectForm(show) { $("#project-form").classList.toggle("hidden", !show); }
 $("#new-project-button").addEventListener("click", () => showProjectForm(true));
@@ -812,10 +828,11 @@ $("#add-member-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!state.project) return;
   const form = event.currentTarget, button = form.querySelector("button[type=submit]");
-  const username = $("#member-username").value.trim(), projectID = state.project.id, version = state.projectVersion;
+  const identity = $("#member-identity").value.trim(), projectID = state.project.id, version = state.projectVersion;
+  const body = identity.includes("@") ? { email: identity } : { username: identity };
   setBusy(button, true, "addMember"); setMessage("#members-message");
   try {
-    const member = await request(projectPath("/members"), { method: "POST", body: { username } });
+    const member = await request(projectPath("/members"), { method: "POST", body });
     if (!activeProject(version, projectID)) return;
     form.reset(); await loadMembers();
     setMessage("#members-message", t("memberAdded", { username: member.username }), true);
@@ -888,14 +905,20 @@ async function boot() {
   const expectedSession = Boolean(state.token || state.user || returnedFromCentralAuth);
   const epoch = state.sessionEpoch, token = state.token;
   try {
-    const user = await request("/v1/me");
+    const user = await window.ContextNavigation.readSession({ api: API, fetcher: window.fetch.bind(window), storage: localStorage, tokenKey: TOKEN_KEY, userKey: USER_KEY });
     if (!activeSession(epoch, token)) return;
+    if (!user) {
+      clearSession(); updateIdentity();
+      if (expectedSession) setMessage("#auth-message", t("sessionExpired"));
+      return;
+    }
+    state.token = localStorage.getItem(TOKEN_KEY);
     state.user = user; localStorage.setItem(USER_KEY, JSON.stringify(user)); updateIdentity(); await loadProjects();
   } catch (error) {
     if (error.status === 401 || error.code === "unauthenticated") {
       clearSession(); updateIdentity();
       if (expectedSession) setMessage("#auth-message", t("sessionExpired"));
-    } else setMessage("#auth-message", error.message);
+    } else setMessage("#auth-message", t("networkError"));
   }
 }
 boot();

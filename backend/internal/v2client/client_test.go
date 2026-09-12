@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"event-driven-context/internal/core"
 	"event-driven-context/internal/v2"
 )
 
@@ -44,6 +45,26 @@ func TestStructuredErrorDoesNotExposeToken(t *testing.T) {
 	}
 	if strings.Contains(err.Error(), "secret-token") {
 		t.Fatalf("token leaked in error: %v", err)
+	}
+}
+
+func TestAddMemberByEmailSendsOnlyEmailIdentifier(t *testing.T) {
+	c := testClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/projects/prj_one/members" {
+			t.Fatalf("request = %s %s", r.Method, r.URL.Path)
+		}
+		var body map[string]string
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatal(err)
+		}
+		if body["email"] != "person@example.invalid" || body["username"] != "" || len(body) != 1 {
+			t.Fatalf("body = %#v", body)
+		}
+		_ = json.NewEncoder(w).Encode(core.User{ID: "usr_one", Username: "person"})
+	})
+	out, err := c.AddMemberByEmail(context.Background(), "prj_one", "person@example.invalid")
+	if err != nil || out.Username != "person" {
+		t.Fatalf("result = %#v, error = %v", out, err)
 	}
 }
 

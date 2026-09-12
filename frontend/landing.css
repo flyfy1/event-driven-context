@@ -997,3 +997,6 @@ footer p {
 .skill-source>summary { display:list-item; cursor:pointer; width:fit-content; }
 .skill-source>summary:focus-visible { outline:3px solid #897aff; outline-offset:3px; }
 #skill-source { white-space:pre-wrap; overflow-wrap:anywhere; }
+
+.session-status { color: #69677e; font-size: 14px; }
+.session-status:empty { display: none; }

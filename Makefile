@@ -9,7 +9,7 @@ test:
 check:
 	go -C backend vet ./...
 	go -C backend test -race ./...
-	node --test frontend/i18n.test.js frontend/workspace-utils.test.js
+	node --test frontend/i18n.test.js frontend/workspace-utils.test.js frontend/navigation.test.js
 run:
 	go -C backend run ./cmd/edc-server -skill-root skills
 deploy-prod:

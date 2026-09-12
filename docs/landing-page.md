@@ -1,46 +1,43 @@
-# Landing page
+# Landing page · V2 integration
 
-## Scope
+## 本轮范围
 
-- Target user: an individual moving a project forward across multiple AI conversations.
-- User job: understand Context’s value, inspect a concrete example, and enter the existing workspace.
-- Riskiest assumption: readers can distinguish the existing recording foundation from the planned context and skill workflows.
-- P1 loop: product introduction → switch an illustrative question → inspect its source → open the workspace in the selected language.
-- Success proof: this path works in the browser on desktop and narrow mobile layouts.
-- No-gos: implementing the product roadmap, adding real generated results, pricing promises, new authentication, or production deployment.
-- Appetite: one static landing page using the existing frontend, with no new dependencies.
+目标用户是在多个 AI 工具中推进同一项目的人。本轮完成的路径是：未登录访问首页 → 了解产品 → 进入中心登录与工作区；已登录访问根地址进入工作区，并可往返产品介绍。主要风险是导航丢失项目、分区或语言，或旧令牌覆盖中心登录身份。
 
-## Design and implementation
+保留现有视觉设计、工作区、接入说明和四种语言；不扩建产品能力，不修改中心认证服务，不执行生产部署。
 
-The page follows the product document’s central promise: a new conversation should not require repeating the project’s background. A light surface, violet emphasis, and a dark conversation example make the transition from original records to task-specific context visible.
+## 与 product-V2.md 的对照
 
-The example is explicitly illustrative. Three question buttons change the answer and highlight the relevant original records. Links jump to the corresponding source. Existing capabilities, the next validation loop, and later exploration are labeled separately.
+| V1 首页内容 | V2 对齐结果 |
+|---|---|
+| 以手动文本记录为主 | 跨工具项目上下文层；hook 自动日志、skill 主动 note、CLI/API 推送与网页文件记录 |
+| 按问题提取背景 | 插件发布有版本、有来源和覆盖范围的项目概况 State，agent 按需读原始事件 |
+| 安装 skill 获得后台服务 | 区分 skill、插件和 processor host；核心只保存、查询与授权，不调用模型 |
+| 回顾进入收件箱 | 每日回顾发布为按日期命名的 State；Web 优先，移动端继续验证 |
+| record_event、query_context、idempotency-key | V2 record_events、list_state/get_state、UUID、push、outbox 和明确 refs |
+| 手写旧版 event-context skill | 使用 backend/skills/edc-recorder/SKILL.md 的当前内容，展示与下载保持一致 |
+| 仅独立静态展示 | 接入已有 Session、中心登录回跳、退出与项目分区路由 |
 
-`frontend/index.html` is the public entry point. The previous page is preserved in `frontend/workspace.html`, with its original scripts and styles. Landing content lives in `landing-copy.js`; language resolution and the preference key are shared with the workspace. Workspace links explicitly carry locale and any local API override.
+概念示例仍明确标注为示例，不执行后台推理、不写记录。页面避免把完整 V2 方向宣称为全部上线能力。
 
-## Local validation
+## 入口与登录规则
 
-- Browser interactions at 1440px and 390px for English, Simplified Chinese, Malay, and Hindi: language switching, example selection, reload persistence, workspace navigation, and localized empty-login validation.
-- All four locales checked at 320px without horizontal overflow.
-- Source link navigates to the corresponding original record.
-- Desktop and mobile visual inspection; no browser warnings or errors observed.
-- JavaScript syntax, locale resource coverage, local asset references, and `git diff --check` pass.
+- `/` 与 `/index.html` 是公开入口。验证 `/v1/me` 后，未登录保留介绍页；已登录跳转到 `workspace.html`。
+- `/?page=about` 是明确查看介绍的入口，已登录也不强制跳走，按钮显示“返回工作区”。
+- 工作区的品牌和“产品介绍”链接保留 project、当前分区、locale 与本地 API 参数；首页返回按钮恢复同一项目和分区。
+- 原有根地址上的 `?project=...#state` 等深链，以及 `auth=complete` 中心登录回跳，转交工作区处理，保留目的地与权限检查。
+- 成功退出后回到没有项目参数的首页。退出请求失败则保留会话并显示错误，不假装已经退出。
+- 先验证中心 Cookie Session，再在 401 时兼容旧 Bearer；中心身份有效时清除旧缓存令牌。网络故障不清除登录信息、不循环跳转。
+- API 地址和本地会话键复用 workspace-utils，避免将生产令牌发送给任意查询参数指定的服务器。
 
-This validates the landing page and its workspace entry, not registration, authenticated project actions, OAuth, backend availability, or the planned product capabilities. No production deployment was performed.
+## 本轮验证
 
-## CLI, MCP and Agent Skill setup
+`node --test frontend/i18n.test.js frontend/workspace-utils.test.js frontend/navigation.test.js`：19 项通过。
 
-- Target user: someone connecting their terminal or agent to their own Context project.
-- User job: install the CLI, authenticate, connect MCP, then reuse project context through an Agent Skill.
-- Riskiest assumption: copied examples match the current CLI and MCP implementation and let both tools access the same project.
-- P1 loop: homepage setup link → CLI record/query → MCP project discovery/read → Skill-guided read, followed by an explicitly requested append.
-- Success proof: real local CLI/MCP round trip plus desktop and narrow-mobile setup interactions.
-- Scope: onboarding content, accessible disclosure sections, copy controls and a downloadable Agent Skill. No deployment or changes to personal agent configuration.
+覆盖四语资源一致性、静态资源、V2 Skill 同步、访客首页、已登录自动跳转、已登录查看介绍、中心回跳、原项目与分区恢复、过期会话、Cookie 与旧 Bearer 优先级、网络失败，以及实际 landing.js 控制器在隔离环境中的启动行为。JavaScript 语法和 diff 检查通过。
 
-The `#connect` section has direct links to `#connect-cli`, `#connect-mcp` and `#connect-skill`. Opening a step link expands its instructions. Code blocks can be copied, with visible status and manual-selection fallback if the Clipboard API fails. Existing four-language support is retained. The Skill download lives in `frontend/skills/event-context/SKILL.md`; its inline preview must match the downloadable file.
+这些是本地自动化验证；本轮未进行真实浏览器中心登录验收或生产部署，不替代 V2 完整链路验收。上一版的桌面与窄屏视觉记录不作为本轮登录集成的新证据。
 
-Examples start with a self-hosted loopback server, explicitly select a local login config, and reuse that config in the stdio MCP process. Remote HTTPS/Bearer and OAuth requirements are explained separately, without assuming availability of the maintainer's public endpoint. The Agent Skill is separate from the fixed server automation packages.
+## 发布约束
 
-Validation: built the current CLI and server in a temporary directory; registered and logged in with a temporary account; executed the page's record/query example; launched stdio with the page's JSON configuration and no EDC environment overrides; discovered tools, listed the project, queried events/context, appended through MCP, and read the saved event back through CLI. Temporary backend processes and data were cleaned up. Frontend checks and Skill validation pass. Browser checks cover step links, copying JSON and the localized prompt, Skill download, and all four locales at 390px and 320px without page overflow. This verifies local integration and onboarding, not production availability or an actual model's Skill selection.
-
-Codex client instructions were checked against the [official MCP documentation](https://learn.chatgpt.com/docs/extend/mcp?surface=cli) and [Skill documentation](https://learn.chatgpt.com/docs/build-skills).
+保留 `frontend/index.html` 为产品首页并一起发布 landing、navigation 和 workspace 资源。不得再用工作区覆盖首页；语言测试已移除允许这种覆盖的旁路。现有 `scripts/deploy-frontend.sh` 会同步完整目录并为本地 JS/CSS 引用添加版本号。

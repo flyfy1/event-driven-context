@@ -73,7 +73,7 @@ func (b remoteMCPBackend) ListMembers(ctx context.Context, in mcpserver.V2Projec
 	return remoteResult(b.client.ListMembers(ctx, in.ProjectID))
 }
 func (b remoteMCPBackend) AddMember(ctx context.Context, in mcpserver.V2AddMemberInput) (core.User, error) {
-	return remoteResult(b.client.AddMember(ctx, in.ProjectID, in.Username))
+	return remoteResult(b.client.AddMemberInput(ctx, in.ProjectID, core.MemberInput{Username: in.Username, Email: in.Email}))
 }
 func (b remoteMCPBackend) RecordEvents(ctx context.Context, in mcpserver.V2RecordEventsInput) (v2.RecordEventsResult, error) {
 	out, err := b.client.RecordEvents(ctx, in.ProjectID, v2.RecordEventsInput{Events: in.Events})

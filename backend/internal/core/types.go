@@ -88,7 +88,8 @@ type ProjectRef struct {
 }
 type MemberInput struct {
 	ProjectID string `json:"project_id"`
-	Username  string `json:"username"`
+	Username  string `json:"username,omitempty"`
+	Email     string `json:"email,omitempty"`
 }
 type MemberRoleInput struct {
 	ProjectID string `json:"project_id"`

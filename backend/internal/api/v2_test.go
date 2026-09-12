@@ -161,6 +161,34 @@ func TestV2AdminOverviewAndMembershipBoundary(t *testing.T) {
 	}
 }
 
+func TestV2HTTPAddsMemberByExactEmail(t *testing.T) {
+	f := newV2APIFixture(t)
+	carol, err := f.store.Register(context.Background(), core.Credentials{Username: "carol-v2", Email: "carol-v2@example.invalid", Password: "password-123"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := f.request(t, http.MethodPost, "/v1/projects/"+f.project.ID+"/members", f.token, "application/json", v2JSONBody(t, map[string]string{"email": " CAROL-V2@EXAMPLE.INVALID "}))
+	added := decodeV2Response[core.User](t, w)
+	if w.Code != http.StatusOK || added.ID != carol.ID || added.Username != carol.Username || added.Email != "" {
+		t.Fatalf("add by email: %d %#v", w.Code, added)
+	}
+	w = f.request(t, http.MethodGet, "/v1/projects/"+f.project.ID+"/members", f.token, "", nil)
+	members := decodeV2Response[core.Members](t, w)
+	carolFound := false
+	for _, member := range members.Members {
+		if member.ID == carol.ID && member.Role == "member" {
+			carolFound = true
+		}
+	}
+	if w.Code != http.StatusOK || len(members.Members) != 2 || !carolFound {
+		t.Fatalf("members after email add: %d %#v", w.Code, members)
+	}
+	w = f.request(t, http.MethodPost, "/v1/projects/"+f.project.ID+"/members", f.token, "application/json", v2JSONBody(t, map[string]string{"username": carol.Username, "email": "carol-v2@example.invalid"}))
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("two identifiers: %d %s", w.Code, w.Body.String())
+	}
+}
+
 func TestV2HTTPProjectMemberEventQueryMetadataAndActorBoundary(t *testing.T) {
 	f := newV2APIFixture(t)
 	w := f.request(t, http.MethodGet, "/v1/projects", f.token, "", nil)
