@@ -14,7 +14,9 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 readonly SOURCE_REVISION="$(git rev-parse --short=12 HEAD)"
 git clone --quiet --branch gh-pages "git@github.com:${REPOSITORY}.git" "$TEMP_DIR/site"
-rsync -a --delete --exclude '.git' --exclude '.DS_Store' frontend/ "$TEMP_DIR/site/"
+# The admin dashboard is published into the same Pages branch by its own
+# repository. Keep that independently owned subtree when replacing this site.
+rsync -a --delete --exclude '.git' --exclude '.DS_Store' --exclude 'admin/' frontend/ "$TEMP_DIR/site/"
 
 # GitHub Pages serves JavaScript and CSS with long browser/CDN cache lifetimes.
 # Give every local asset reference a release-specific URL so returning browsers
