@@ -34,6 +34,7 @@ const state = {
   locale: resolveLocalePreference(requestedLocale, sharedLocale(), localStorage.getItem(LOCALE_KEY), navigator.languages || [navigator.language]),
   authMode: "login",
   view: VIEWS.has(location.hash.slice(1)) ? location.hash.slice(1) : "records",
+  routeProjectID: new URLSearchParams(location.search).get("project") || "", routeError: false,
   projects: [], project: null, projectsStatus: "idle", projectsError: "", projectsRequest: 0,
   sessionEpoch: 0, projectVersion: 0,
   contentMode: "text", pendingEventID: "",
@@ -163,7 +164,25 @@ function setLocale(locale, persist) {
   renderIntegration();
   renderAudioStatus();
 }
-function setView(view) {
+function syncRoute(mode = "replace") {
+  if (mode === "none") return;
+  const target = new URL(location.href);
+  if (state.routeProjectID) target.searchParams.set("project", state.routeProjectID);
+  else target.searchParams.delete("project");
+  target.hash = state.view;
+  const path = target.pathname + target.search + target.hash;
+  if (path !== location.pathname + location.search + location.hash) history[mode === "push" ? "pushState" : "replaceState"](null, "", path);
+}
+function restoreRoute() {
+  const id = new URLSearchParams(location.search).get("project") || "";
+  setView(location.hash.slice(1), "none");
+  state.routeProjectID = id;
+  if (state.projectsStatus !== "ready") return;
+  const target = id || (state.projects[0] && state.projects[0].id) || "";
+  if (target !== (state.project && state.project.id)) selectProject(target, "none");
+  if (!id && target) { state.routeProjectID = target; syncRoute(); }
+}
+function setView(view, historyMode = "replace") {
   state.view = VIEWS.has(view) ? view : "records";
   document.querySelectorAll("[data-workspace-view]").forEach((button) => {
     const selected = button.dataset.workspaceView === state.view;
@@ -171,7 +190,7 @@ function setView(view) {
     button.setAttribute("aria-selected", String(selected));
   });
   document.querySelectorAll("[data-workspace-panel]").forEach((panel) => panel.classList.toggle("hidden", panel.dataset.workspacePanel !== state.view));
-  history.replaceState(history.state, "", location.pathname + location.search + "#" + state.view);
+  syncRoute(historyMode);
 }
 
 function saveSession(login) {
@@ -218,9 +237,8 @@ async function loadProjects(selectID) {
     if (!activeSession(epoch, token) || requestVersion !== state.projectsRequest) return;
     state.projects = projects; state.projectsStatus = "ready";
     renderProjects();
-    const project = projects.find((item) => item.id === selectID) || projects.find((item) => item.id === (state.project && state.project.id)) || projects[0];
-    if (project) await selectProject(project.id);
-    else { state.project = null; state.projectVersion += 1; renderProject(); }
+    const requestedID = selectID || new URLSearchParams(location.search).get("project") || "";
+    await selectProject(requestedID || (projects[0] && projects[0].id) || "", selectID ? "push" : "replace");
   } catch (error) {
     if (!activeSession(epoch, token) || requestVersion !== state.projectsRequest) return;
     state.projectsStatus = "error"; state.projectsError = error.message; renderProjects(); renderProject();
@@ -241,8 +259,11 @@ function renderProjects() {
     button.append(name, description); button.addEventListener("click", () => selectProject(project.id)); list.append(button);
   }
 }
-async function selectProject(id) {
+async function selectProject(id, historyMode = "push") {
+  state.routeProjectID = id;
   state.project = state.projects.find((project) => project.id === id) || null;
+  state.routeError = Boolean(id && !state.project);
+  syncRoute(historyMode);
   state.projectVersion += 1;
   setMessage("#record-message");
   setMessage("#members-message");
@@ -255,12 +276,12 @@ async function selectProject(id) {
 }
 function renderProject() {
   const open = Boolean(state.project);
-  const unavailable = !open && (state.projectsStatus === "loading" || state.projectsStatus === "error");
-  const empty = !open && state.projectsStatus === "ready" && !state.projects.length;
+  const unavailable = !open && (state.routeError || state.projectsStatus === "loading" || state.projectsStatus === "error");
+  const empty = !open && !state.routeError && state.projectsStatus === "ready" && !state.projects.length;
   $("#empty-project").classList.toggle("hidden", !empty);
   $("#project-unavailable").classList.toggle("hidden", !unavailable);
   $("#project-view").classList.toggle("hidden", !open);
-  if (unavailable) $("#project-unavailable-message").textContent = state.projectsStatus === "loading" ? t("loadingProjects") : t("projectsLoadFailed", { error: state.projectsError });
+  if (unavailable) $("#project-unavailable-message").textContent = state.routeError ? t("projectRouteUnavailable") : state.projectsStatus === "loading" ? t("loadingProjects") : t("projectsLoadFailed", { error: state.projectsError });
   if (!open) return;
   $("#project-title").textContent = state.project.name;
   $("#project-description-display").textContent = state.project.description || t("noProjectDescription");
@@ -482,11 +503,11 @@ async function sha256Hex(file) {
   const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
-async function uploadFile(file) {
+async function uploadFile(file, projectID) {
   if (!file || file.size > MAX_FILE_BYTES) throw new Error(t("fileTooLargeV2"));
   const form = new FormData(), hash = await sha256Hex(file);
   form.set("sha256", hash); form.set("file", file, file.name);
-  const uploaded = await request(projectPath("/files"), { method: "POST", form });
+  const uploaded = await request("/v1/projects/" + encodeURIComponent(projectID) + "/files", { method: "POST", form });
   if (uploaded.sha256 !== hash || uploaded.size_bytes !== file.size) throw new Error(t("fileIntegrityFailed"));
   return uploaded;
 }
@@ -505,44 +526,49 @@ async function submitRecord(form) {
     const metadata = jsonLiteral($("#event-metadata").value, "metadataLabel", false);
     const refs = jsonLiteral($("#event-refs").value, "referencesLabel", true).parsed;
     if (!state.pendingEventID) state.pendingEventID = uuidV7();
+    const eventID = state.pendingEventID, contentMode = state.contentMode;
+    const eventType = $("#event-type").value, occurredAt = $("#event-occurred-at").value;
+    const targetPath = "/v1/projects/" + encodeURIComponent(projectID);
     let content;
-    if (state.contentMode === "text") {
+    if (contentMode === "text") {
       const text = $("#event-text").value;
       if (!text) throw new Error(t("enterContent"));
       content = { kind: "text", text };
     } else {
-      let file = state.contentMode === "audio" ? $("#audio-file").files[0] : $("#event-file").files[0];
+      let file = contentMode === "audio" ? $("#audio-file").files[0] : $("#event-file").files[0];
       if (!file) throw new Error(t("selectFile"));
-      if (state.contentMode === "audio") {
+      if (contentMode === "audio") {
         const mediaType = audioMediaType(file.name, file.type);
         if (!mediaType) throw new Error(t("invalidAudioType"));
         if (file.type !== mediaType) file = new File([file], file.name, { type: mediaType, lastModified: file.lastModified });
         setAudioStatus("audioUploading");
       }
-      const uploaded = await uploadFile(file);
+      const uploaded = await uploadFile(file, projectID);
       content = { kind: "file", file_id: uploaded.file_id, media_type: uploaded.media_type, filename: uploaded.filename, size_bytes: uploaded.size_bytes, sha256: uploaded.sha256 };
     }
     const eventBase = {
-      id: state.pendingEventID,
-      type: $("#event-type").value,
+      id: eventID,
+      type: eventType,
       content,
       source: { channel: "api", client: "web" }
     };
-    const occurredAt = $("#event-occurred-at").value;
     if (occurredAt) eventBase.occurred_at = new Date(occurredAt).toISOString();
-    const result = await request(projectPath("/events"), { method: "POST", rawBody: recordBody(eventBase, metadata.raw, refs) });
+    const result = await request(targetPath + "/events", { method: "POST", rawBody: recordBody(eventBase, metadata.raw, refs) });
     const outcome = result && result.results && result.results[0];
     if (!outcome || !["created", "duplicate"].includes(outcome.status)) {
       const error = outcome && outcome.error;
       throw new Error(error && error.message || t("eventWriteFailed"));
     }
     if (!activeProject(version, projectID)) return;
-    const savedEvent = await request(projectPath("/events/" + encodeURIComponent(outcome.id)));
+    const savedEvent = await request(targetPath + "/events/" + encodeURIComponent(outcome.id));
+    if (!activeProject(version, projectID)) return;
     state.eventCache.set(savedEvent.id, savedEvent);
     state.events = [savedEvent].concat(state.events.filter((item) => item.id !== savedEvent.id));
     state.eventsStatus = "ready";
-    form.reset(); $("#event-metadata").value = "{}"; $("#event-refs").value = "[]"; state.pendingEventID = "";
-    setAudioStatus("audioNotSelected");
+    if (state.pendingEventID === eventID) {
+      form.reset(); $("#event-metadata").value = "{}"; $("#event-refs").value = "[]"; state.pendingEventID = "";
+      setAudioStatus("audioNotSelected");
+    }
     setMessage("#record-message", t(outcome.status === "duplicate" ? "eventDuplicate" : "eventAppended") + " · " + outcome.id, true);
     renderEvents();
     await Promise.allSettled([loadMetadata(), loadStates()]);
@@ -692,7 +718,7 @@ async function loadPlugins() {
 }
 
 document.querySelectorAll("[data-auth-mode]").forEach((button) => button.addEventListener("click", () => { state.authMode = button.dataset.authMode; setAuthMode(); }));
-document.querySelectorAll("[data-workspace-view]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.workspaceView)));
+document.querySelectorAll("[data-workspace-view]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.workspaceView, "push")));
 document.querySelectorAll("[data-content-mode]").forEach((button) => button.addEventListener("click", () => { state.contentMode = button.dataset.contentMode; resetRecordID(); setContentMode(); }));
 document.querySelectorAll("[data-copy-command]").forEach((button) => button.addEventListener("click", async () => {
   try { await navigator.clipboard.writeText($("#" + button.dataset.copyCommand).textContent); setMessage("#integration-message", t("commandCopied"), true); }
@@ -826,8 +852,11 @@ $("#copy-plugin-token").addEventListener("click", async () => {
 $("#dismiss-plugin-token").addEventListener("click", () => {
   state.pluginToken = ""; $("#plugin-token").textContent = ""; $("#plugin-token-panel").classList.add("hidden");
 });
-$("#refresh-button").addEventListener("click", () => loadProjects(state.project && state.project.id));
+$("#refresh-button").addEventListener("click", () => loadProjects());
 $("#project-unavailable-retry").addEventListener("click", () => loadProjects());
+
+window.addEventListener("popstate", restoreRoute);
+window.addEventListener("hashchange", restoreRoute);
 
 async function boot() {
   populateTimezones($("#project-timezone"), BROWSER_TIMEZONE);
