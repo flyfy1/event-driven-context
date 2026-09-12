@@ -92,7 +92,7 @@ function renderUsers() {
 
 function statPill(text) { return element("span", "stat-pill", text); }
 function projectSearchText(project) {
-  return [project.name, project.id, project.owner?.username, project.owner?.email, ...project.members.flatMap((member) => [member.username, member.email])].join(" ").toLocaleLowerCase();
+  return [project.name, project.id, ...project.members.flatMap((member) => [member.username, member.email])].join(" ").toLocaleLowerCase();
 }
 function renderProjects() {
   const root = $("#project-list"); root.replaceChildren();
@@ -112,10 +112,14 @@ function renderProjects() {
     for (const member of project.members) {
       const row = element("div", "member-row");
       const identity = element("div", "member-identity"); identity.append(element("strong", "", userLabel(member)), element("small", "", `@${member.username} · ${shortID(member.id)}`));
-      row.append(identity, element("span", "role-badge", member.owner ? "Owner" : "成员"));
-      if (!member.owner) {
+      const role = member.role === "owner" ? "owner" : "member";
+      const roleSelect = document.createElement("select"); roleSelect.className = "role-control"; roleSelect.setAttribute("aria-label", `设置 ${userLabel(member)} 在 ${project.name} 的角色`);
+      for (const [value, label] of [["owner", "Owner"], ["member", "成员"]]) { const option = element("option", "", label); option.value = value; roleSelect.append(option); }
+      roleSelect.value = role; roleSelect.addEventListener("change", () => changeAccess(project, member, roleSelect.value, roleSelect, role));
+      row.append(identity, roleSelect);
+      if (role !== "owner") {
         const remove = element("button", "quiet", "移除权限"); remove.type = "button";
-        remove.addEventListener("click", () => changeAccess(project, member, "none", remove)); row.append(remove);
+        remove.addEventListener("click", () => changeAccess(project, member, "none", remove, role)); row.append(remove);
       }
       memberList.append(row);
     }
@@ -170,14 +174,16 @@ function applyFilter() {
   document.querySelectorAll(".admin-project").forEach((card) => card.classList.toggle("filtered", Boolean(query) && !card.dataset.search.includes(query)));
 }
 
-async function changeAccess(project, user, access, button) {
+async function changeAccess(project, user, access, control, previousAccess = "none") {
   if (access === "none" && !confirm(`移除 ${userLabel(user)} 对“${project.name}”的访问权限？`)) return;
-  const idle = button.textContent; button.disabled = true; button.textContent = "处理中…"; setMessage("");
+  const isButton = control.tagName === "BUTTON", idle = control.textContent;
+  control.disabled = true; if (isButton) control.textContent = "处理中…"; setMessage("");
   try {
     await request(`/v1/admin/projects/${encodeURIComponent(project.id)}/members/${encodeURIComponent(user.id)}`, { method: "PATCH", body: { access } });
     await loadOverview();
-    setMessage(access === "member" ? `已授予 ${userLabel(user)} 项目成员权限。` : `已移除 ${userLabel(user)} 的项目权限。`, true);
-  } catch (error) { setMessage(error.message); button.disabled = false; button.textContent = idle; }
+    const action = access === "owner" ? "已设为 Owner" : access === "member" ? "已设为成员" : "已移除项目权限";
+    setMessage(`${userLabel(user)} ${action}。`, true);
+  } catch (error) { setMessage(error.message); control.disabled = false; if (isButton) control.textContent = idle; else control.value = previousAccess; }
 }
 
 async function loadOverview() {
