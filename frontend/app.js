@@ -583,8 +583,15 @@ async function submitRecord(form) {
 
 function renderIntegration() {
   if (!state.project) return;
-  $("#integration-project-id").textContent = state.project.id;
-  $("#link-command").textContent = "edc link " + state.project.id;
+  const projectID = state.project.id;
+  const guideURL = new URL("./agent-setup.md", window.location.href);
+  guideURL.searchParams.set("project", projectID);
+  guideURL.searchParams.set("locale", state.locale);
+  const skillURL = new URL("./skills/edc-recorder/SKILL.md", window.location.href).href;
+  $("#integration-project-id").textContent = projectID;
+  $("#agent-setup-guide-link").href = guideURL.href;
+  $("#agent-setup-prompt").textContent = t("agentSetupPrompt", { guide_url: guideURL.href, project_id: projectID, skill_url: skillURL });
+  $("#chatgpt-verify-prompt").textContent = t("chatGPTVerifyPrompt", { project_id: projectID });
 }
 async function loadMembers() {
   if (!state.project) return;
