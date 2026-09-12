@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"event-driven-context/internal/capture"
+	"event-driven-context/internal/updater"
 )
 
 const hookTimeout = 4 * time.Second
@@ -117,7 +118,14 @@ func (a *app) status(args []string) error {
 		return err
 	}
 	status, err := manager.Status(binding.Directory, a.server, binding.AccountID)
-	return a.result(status, err)
+	if err != nil {
+		return err
+	}
+	cliStatus := a.cachedUpdateStatus()
+	return a.result(struct {
+		capture.Status
+		CLI updater.Status `json:"cli"`
+	}{Status: status, CLI: cliStatus}, nil)
 }
 
 func (a *app) hook(args []string) error {

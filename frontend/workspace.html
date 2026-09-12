@@ -211,13 +211,23 @@
             <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="pluginsEyebrow">PLUGINS</p><h3 id="plugins-title" data-i18n="pluginsTitle">Project plugins</h3><p class="muted" data-i18n="pluginsHint">Review each manifest and permission set before installing, then manage configuration and status.</p></div><button id="plugins-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
             <p id="plugins-message" class="message" aria-live="polite"></p>
             <form id="plugin-install-form" class="form-card plugin-install-form">
-              <h4 data-i18n="installPlugin">Install from a manifest</h4>
-              <p class="muted" data-i18n="manifestCatalogUnavailable">A trusted plugin catalog is not part of the current public API. Paste and review the complete manifest supplied with the plugin.</p>
-              <label><span data-i18n="pluginManifest">Plugin manifest</span> <span class="label-note" data-i18n="jsonObjectRequiredShort">JSON object</span><textarea id="plugin-manifest" rows="10" spellcheck="false" placeholder='{"id":"project-brief","version":"0.1.0",...}' required></textarea></label>
+              <h4 data-i18n="installPlugin">Choose a system plugin</h4>
+              <p class="muted" data-i18n="systemPluginsHint">Select a plugin shipped with this server, review its purpose and permissions, then install it for this project.</p>
+              <label><span data-i18n="systemPlugin">System plugin</span><select id="plugin-select" required></select></label>
+              <div id="plugin-catalog-preview" class="plugin-catalog-preview hidden" aria-live="polite">
+                <div class="card-title"><strong id="plugin-catalog-name"></strong><span id="plugin-catalog-version" class="status-badge pending"></span></div>
+                <p id="plugin-catalog-description"></p>
+                <details><summary data-i18n="permissionsTitle">Permissions</summary><pre id="plugin-catalog-permissions" class="event-json"></pre></details>
+              </div>
               <label><span data-i18n="pluginConfig">Initial configuration</span> <span class="label-note" data-i18n="jsonObjectOptional">JSON object, optional</span><textarea id="plugin-config" rows="4" spellcheck="false">{}</textarea></label>
-              <button id="plugin-install-submit" class="primary" type="submit" data-i18n="installPluginAction">Review and install</button>
+              <section id="plugin-config-help" class="plugin-config-help hidden" aria-labelledby="plugin-config-help-title">
+                <h5 id="plugin-config-help-title" data-i18n="configReference">Configuration reference</h5>
+                <p id="plugin-config-none" class="muted hidden" data-i18n="noConfigFields">This plugin has no configuration fields. It will install with an empty JSON object.</p>
+                <dl id="plugin-config-fields"></dl>
+              </section>
+              <button id="plugin-install-submit" class="primary" type="submit" data-i18n="installPluginAction" disabled>Install selected plugin</button>
             </form>
-            <div id="plugin-token-panel" class="token-panel hidden" aria-live="polite"><strong data-i18n="pluginTokenOnce">Copy this plugin token now. It will not be shown again.</strong><code id="plugin-token"></code><div class="actions"><button id="copy-plugin-token" class="quiet" type="button" data-i18n="copyToken">Copy token</button><button id="dismiss-plugin-token" class="quiet" type="button" data-i18n="dismiss">Dismiss</button></div></div>
+            <div id="plugin-token-panel" class="token-panel hidden" aria-live="polite"><strong data-i18n="pluginTokenOnce">Copy this plugin token now. It will not be shown again.</strong><code id="plugin-token"></code><a id="external-plugin-guide" href="https://github.com/flyfy1/event-driven-context/blob/main/docs/external-plugin.md" target="_blank" rel="noopener" data-i18n="externalPluginGuide">How to run this Plugin on your machine ↗</a><div class="actions"><button id="copy-plugin-token" class="quiet" type="button" data-i18n="copyToken">Copy token</button><button id="dismiss-plugin-token" class="quiet" type="button" data-i18n="dismiss">Dismiss</button></div></div>
             <div id="plugins-list" class="plugins-list" aria-live="polite"></div>
           </section>
         </section>
@@ -230,6 +240,7 @@
     <script src="./vendor/code-editor.js" defer></script>
     <script src="./file-tree.js" defer></script>
     <script src="./workspace-files.js" defer></script>
+    <script src="./workspace-plugin-config.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>

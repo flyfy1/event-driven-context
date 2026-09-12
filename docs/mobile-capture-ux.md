@@ -1,103 +1,105 @@
-# 手机 App：自动采集链路与页面流程
+# Mobile App: Automatic Capture Pipeline and Screen Flows
 
-日期：2026-09-12 · 当前交付平台为 Android，代码独立放在 `app/android/`。实施范围已改为 [product-V2.md](product-V2.md)：照片/文件采集复用 File 与 note 队列，图片分析执行仍不在 P1。已经完成的 iOS 原型保留，其构建及测试结果只作为历史记录。本文保留原手机交互草图；具体同步与回顾协议以 V2 的 File → UUID Event、daily-review State 为准，不以旧 inbox 方案验收。
+English | [简体中文](mobile-capture-ux.cn.md)
 
-本次用户方向优先于旧桌面草图的手动文件上传入口。保留旧版用于对比；[产品设计](product.md)、[技术设计 4.4](technical-design.md)已同步调整。
+Date: 2026-09-12 · Android is the current delivery platform, with its code kept separately under `app/android/`. The implementation scope has moved to [product-V2.md](product-V2.md): photo and file capture reuse the File and note queues, while image-analysis execution remains outside P1. The completed iOS prototype is retained, but its build and test results serve only as historical records. This document preserves the original mobile interaction sketches; the specific synchronization and review protocols follow V2's File → UUID Event and daily-review State models, not the old inbox approach, which is no longer an acceptance criterion.
 
-## 1. 产品形态
+This user direction takes priority over the manual file-upload entry point in the older desktop sketches. The older version is retained for comparison; the [product design](product.md) and [technical design, section 4.4](technical-design.md) have been updated accordingly.
 
-手机 App 是日常入口：打开即可录音，结束后自动保存、上传和处理，内容随后可被对话调用与每日回顾使用。网页承担较复杂的项目管理、MCP 接入和规则配置。
+## 1. Product Form
 
-借鉴得到大脑的低负担记录体验。其[官网](https://www.biji.com/)将多种方式记录、AI 自动整理和多端使用作为产品能力。这里借鉴采集方式，具体页面、状态和后端契约按我们自己的 context 与 skill 设计确定。
+The mobile app is the everyday entry point: open it and start recording; when the recording ends, it is automatically saved, uploaded, and processed. The resulting content can then be used in conversations and daily reviews. The web app handles more complex project management, MCP integrations, and rule configuration.
 
-当前对“自动”的默认解释：用户决定何时开始和结束录音，后续操作自动接续。持续环境录音、自动识别会议开始或全天被动监听不在本轮默认范围。
+This draws inspiration from Biji's low-friction capture experience. Its [official website](https://www.biji.com/) presents multimodal capture, automatic AI organization, and cross-device access as product capabilities. We borrow the capture patterns, while defining the specific screens, states, and backend contracts according to our own context and skill designs.
 
-## 2. 整体流程
+The current default meaning of “automatic” is that the user decides when to start and stop recording, after which all subsequent operations proceed automatically. Continuous ambient recording, automatic detection of meeting starts, and all-day passive listening are outside the default scope of this iteration.
+
+## 2. End-to-End Flow
 
 ~~~mermaid
 flowchart TD
-    A["打开 App"] --> B["点击录音"]
-    B --> C["录音中：暂停 / 结束"]
-    C --> D["结束后自动保存到手机"]
-    D --> E{"可联网且登录有效？"}
-    E -->|是| F["自动上传"]
-    E -->|否| G["等待网络或登录，原文件在手机"]
-    G -->|恢复后自动继续| F
-    F --> H["服务端已确认：已同步"]
-    H --> I["自动转录 / 按规则整理"]
-    I --> J["记录详情：原始媒体 + 整理结果"]
-    J --> K["对话按需引用"]
-    J --> L["每日回顾 Skill 定时使用"]
+    A["Open the app"] --> B["Tap Record"]
+    B --> C["Recording: Pause / Stop"]
+    C --> D["Automatically save to the phone when stopped"]
+    D --> E{"Network available and login valid?"}
+    E -->|Yes| F["Upload automatically"]
+    E -->|No| G["Wait for network or login; original file remains on phone"]
+    G -->|Resume automatically after recovery| F
+    F --> H["Server confirmed: Synced"]
+    H --> I["Automatic transcription / rule-based organization"]
+    I --> J["Record details: Original media + organized results"]
+    J --> K["Referenced by conversations as needed"]
+    J --> L["Used on schedule by the Daily Review Skill"]
 ~~~
 
-用户不需要导出录音、切换应用、挑选文件、填 MIME 或点击第二次上传。默认项目与来源提前设置，结束录音时直接复用。
+Users do not need to export recordings, switch apps, choose files, enter MIME types, or tap a second upload button. The default project and source are configured in advance and reused directly when a recording ends.
 
-## 3. 手机信息架构
+## 3. Mobile Information Architecture
 
 ~~~mermaid
 flowchart LR
-    A["手机 App"] --> B["记录"]
-    A --> C["回顾"]
-    A --> D["我的"]
-    B --> B1["突出操作：开始录音"]
-    B --> B2["补充入口：拍照 / 相册 / 文件"]
-    B --> B3["最近记录与同步状态"]
-    C --> C1["每日回顾 / 提醒 / 建议"]
-    D --> D1["默认私人项目 / 账户"]
-    D --> D2["Skill 与来源规则"]
-    D --> D3["对话接入 / 执行环境 / 同步设置"]
+    A["Mobile app"] --> B["Capture"]
+    A --> C["Review"]
+    A --> D["Me"]
+    B --> B1["Primary action: Start recording"]
+    B --> B2["Additional entry points: Camera / Photo library / Files"]
+    B --> B3["Recent records and sync status"]
+    C --> C1["Daily review / Reminders / Suggestions"]
+    D --> D1["Default private project / Account"]
+    D --> D2["Skill and source rules"]
+    D --> D3["Conversation integrations / Execution environment / Sync settings"]
 ~~~
 
-手机底部是“记录、回顾、我的”。录音是首屏最突出的动作，不和规则、运行任务等管理入口竞争。网页原来的“记录、对话取用、插件、收件箱”结构可以保留，两端按使用频率组织同一组能力。
+The mobile bottom navigation contains “Capture,” “Review,” and “Me.” Recording is the most prominent action on the first screen and does not compete with administrative entry points such as rules and running tasks. The web app's existing “Capture, Use in Conversations, Plugins, Inbox” structure can remain; both clients organize the same set of capabilities according to how frequently they are used.
 
-## 4. 用户看到的页面
+## 4. Screens Users See
 
-| 页面 | 主要内容 | 用户动作 | 自动发生的事 |
+| Screen | Main content | User action | What happens automatically |
 |---|---|---|---|
-| 首次设置 | 登录；默认“我的记录”，仅自己可见 | 选定默认位置 | 复用到后续录音，不每次再问 |
-| 记录首页 | 突出的录音按钮、最近记录、待同步数量 | 开始录音 | 采用已配置的采集来源与规则 |
-| 权限说明 | 为什么需要麦克风；拒绝后仍可导入文件 | 使用录音时授权 | 授权成功后进入录音 |
-| 录音中 | 明显的录音状态、时长、暂停、结束、归属 | 说话、暂停或结束 | 持续写本机文件 |
-| 已存本机 | “录音已保存到这台手机” | 可以离开页面 | 自动加入上传队列 |
-| 上传中 | 当前上传状态；本机原文仍可用 | 通常不用操作 | 服务端确认后更新为已同步 |
-| 等待网络 | “录音在手机里，联网后继续上传” | 可以继续录下一条 | 运行条件满足后自动补传 |
-| 等待登录 | “登录过期，录音仍在此设备” | 重新登录原账户 | 恢复该账户的待传队列 |
-| 整理中 | “已同步，正在转录”；先用时间作临时标题 | 可查看原始录音 | 处理完成后产生标题、转录和标签建议 |
-| 记录详情 | 整理结果、原始音频、引用来源、处理状态 | 查看原文或追加纠正 | 成为后续 context 候选 |
-| 回顾 | 当天进展、决定、缺口与建议 | 查看依据、采纳建议 | 由已安装 skill 到时生成 |
+| Initial setup | Sign in; default to “My Records,” visible only to the user | Choose the default location | Reuse it for subsequent recordings instead of asking each time |
+| Capture home | Prominent record button, recent records, and pending-sync count | Start recording | Use the configured capture source and rules |
+| Permission explanation | Why microphone access is needed; file import remains available if access is denied | Grant permission when using recording | Enter the recording screen once permission is granted |
+| Recording | Clear recording status, duration, Pause, Stop, and destination | Speak, pause, or stop | Continuously write to a local file |
+| Saved locally | “Recording saved on this phone” | Leave the screen if desired | Add it to the upload queue automatically |
+| Uploading | Current upload status; the local original remains available | Usually no action required | Change the status to Synced after server confirmation |
+| Waiting for network | “Recording is on your phone and will continue uploading when online” | Continue recording another item | Upload automatically when the required conditions are restored |
+| Waiting for login | “Your session has expired; the recording remains on this device” | Sign back in to the original account | Resume that account's pending upload queue |
+| Organizing | “Synced, transcribing”; use the time as a temporary title | View the original recording | Generate a title, transcript, and tag suggestions when processing completes |
+| Record details | Organized results, original audio, citation sources, and processing status | View the original or append a correction | Become a candidate for future context |
+| Review | The day's progress, decisions, gaps, and suggestions | View supporting evidence and accept suggestions | Generate at the scheduled time through the installed skill |
 
-“可离开页面”不表示手机操作系统保证永不暂停应用。后台或锁屏时的实际行为需真机验证；恢复前台后应继续可靠处理待传任务。
+“Leave the screen” does not mean that the mobile operating system guarantees the app will never be suspended. Actual behavior while backgrounded or locked must be validated on a physical device; after returning to the foreground, the app should continue processing pending uploads reliably.
 
-## 5. 不让配置打断记录
+## 5. Keep Configuration from Interrupting Capture
 
-来源、媒体类型、时间、设备采集 ID 由 App 或服务端填入。私人默认项目始终显示，用户可以在下次录制前更改。系统可以发现主题、生成标签，但不自动把私人信息移到共享项目。
+The app or server fills in the source, media type, time, and device capture ID. The default private project is always visible, and the user can change it before the next recording. The system may discover topics and generate tags, but it must not automatically move private information into a shared project.
 
-转录设置只配置一次，如“会议录音 → 原话转录”和“语音随手记 → 原话转录后提取想法”。图片也可按“白板 → 总结决定”“账单 → 提取金额”等规则处理。
+Transcription settings are configured once, such as “Meeting recording → Verbatim transcript” and “Voice note → Verbatim transcript, then extract ideas.” Images can likewise be processed using rules such as “Whiteboard → Summarize decisions” and “Bill → Extract amount.”
 
-处理后的标题、摘要和主题是有出处的衍生信息，不能回写替换原始 event 的 metadata。用户追加纠正后，后续调用采用明确更新的结果，原始媒体仍能查看。
+Processed titles, summaries, and topics are derived information with provenance. They must not be written back to replace the original event's metadata. After the user adds a correction, subsequent use should rely on the explicitly updated result, while the original media remains available for inspection.
 
-## 6. 失败时也知道东西在哪里
+## 6. Make It Clear Where Content Is Even When Something Fails
 
 ~~~mermaid
 flowchart TD
-    A["本机原始媒体"] --> B{"同步状态"}
-    B --> C["未上传：手机可恢复，其他设备不可见"]
-    B --> D["已同步：服务端确认收到"]
-    D --> E{"处理状态"}
-    E --> F["处理成功：可引用转录 / 分析"]
-    E --> G["处理失败：保留原文，可重试"]
-    C --> H["网络恢复 / 原账户重新登录"]
+    A["Original media on device"] --> B{"Sync status"}
+    B --> C["Not uploaded: Recoverable on phone; unavailable on other devices"]
+    B --> D["Synced: Server confirmed receipt"]
+    D --> E{"Processing status"}
+    E --> F["Processing succeeded: Transcript / analysis can be referenced"]
+    E --> G["Processing failed: Original retained; retry available"]
+    C --> H["Network restored / Original account signed in again"]
     H --> D
 ~~~
 
-上传失败不要求用户再录一次，处理失败不要求重复上传。回执丢失可以自动重试上传，但用同一个采集 ID 避免生成重复事件。
+An upload failure must not require the user to record again, and a processing failure must not require another upload. If an acknowledgment is lost, the upload can be retried automatically, but it must reuse the same capture ID to avoid creating duplicate events.
 
-发生中断时提示已保留的部分；不要只显示一个失败标记。退出账户或切换账户时，待同步媒体仍绑定原账户，不能静默上传到新账户。未获得服务端确认的文件不可自动清理。
+When an interruption occurs, show which parts have been preserved rather than displaying only a failure indicator. If the user signs out or switches accounts, pending media remains bound to the original account and must not be silently uploaded to the new one. Files without server confirmation must not be cleaned up automatically.
 
-## 7. 修订后的最小闭环
+## 7. Revised Minimum End-to-End Loop
 
-在 Android 上做通：真实录音 → 本机持久化 → 自动上传 → 真实 Skill 转录 → 新对话引用 → 手机查看每日回顾。短录音限制需要在开始前说明，先不承诺无限时长会议、全平台同时上线或持续环境录制。
+Make the following work on Android: real recording → local persistence → automatic upload → transcription by a real Skill → reference in a new conversation → view the daily review on mobile. Any short-recording limit must be explained before recording begins. For now, do not promise meetings of unlimited duration, simultaneous availability on every platform, or continuous ambient recording.
 
-必须验证：录制权限、录音中断、断网后结束录音、重启恢复、原账户登录恢复、重复上传幂等、服务端确认与分析状态分离。能在手机浏览器点击“选择已有音频文件”不能替代 App 录音链路验收。
+Required validation: recording permission; recording interruption; ending a recording while offline; recovery after restart; signing back in to the original account; idempotency for repeated uploads; and separation of server confirmation from analysis status. Tapping “Choose an existing audio file” in a mobile browser is not a substitute for validating the app's recording pipeline.
 
-本次对话中的手机草图用于演示首页、录音、自动保存/上传/整理、离线补传和回顾；不会申请麦克风权限、创建真实录音或向服务器上传。
+The mobile sketches in this conversation demonstrate the home screen, recording, automatic saving/uploading/organization, offline recovery, and review. They do not request microphone permission, create a real recording, or upload anything to the server.

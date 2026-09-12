@@ -36,6 +36,18 @@
     "language": "auto",
     "prompt": "Keep the brief compact and emphasize current decisions and unfinished work."
   },
+  "config_fields": [
+    {
+      "key": "language",
+      "type": "string",
+      "description": "Use auto to follow the project records, or set the preferred language for the generated brief."
+    },
+    {
+      "key": "prompt",
+      "type": "string",
+      "description": "Additional instructions that shape the brief while the fixed plugin Skill and evidence rules remain in control."
+    }
+  ],
   "permissions": {
     "read_events": [
       "note",

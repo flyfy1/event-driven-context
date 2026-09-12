@@ -19,6 +19,7 @@ import (
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/transcription"
 	"event-driven-context/internal/v2"
+	"event-driven-context/plugins"
 	"github.com/google/uuid"
 )
 
@@ -51,6 +52,11 @@ func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.Servic
 	writeSubject := func(next http.Handler) http.Handler {
 		return v2SubjectAuthenticated(store, service, config, core.ScopeWrite, next)
 	}
+	mux.Handle("GET /v1/plugins", readUser(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		respond(w, http.StatusOK, struct {
+			Plugins []v2.Manifest `json:"plugins"`
+		}{Plugins: plugins.Catalog()})
+	})))
 
 	mux.Handle("GET /v1/projects", readUser(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		out, err := store.ListProjects(r.Context(), core.Empty{})
@@ -211,8 +217,21 @@ func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.Servic
 			Plugins []v2.Installation `json:"plugins"`
 		}{Plugins: plugins}, err)
 	})))
-	mux.Handle("POST /v1/projects/{project_id}/plugins", writeUser(jsonEndpointV2(http.StatusCreated, func(ctx context.Context, in v2.InstallPluginInput) (v2.InstallPluginResult, error) {
-		return service.InstallPlugin(ctx, v2ProjectID(ctx), in)
+	mux.Handle("POST /v1/projects/{project_id}/plugins", writeUser(jsonEndpointV2(http.StatusCreated, func(ctx context.Context, in v2PluginInstall) (v2.InstallPluginResult, error) {
+		if (in.PluginID == "") == (in.Manifest == nil) {
+			return v2.InstallPluginResult{}, v2Invalid("provide exactly one of plugin_id or manifest")
+		}
+		manifest := v2.Manifest{}
+		if in.PluginID != "" {
+			var ok bool
+			manifest, ok = plugins.Lookup(in.PluginID)
+			if !ok {
+				return v2.InstallPluginResult{}, v2Invalid("unknown system plugin")
+			}
+		} else {
+			manifest = *in.Manifest
+		}
+		return service.InstallPlugin(ctx, v2ProjectID(ctx), v2.InstallPluginInput{Manifest: manifest, Config: in.Config})
 	})))
 	mux.Handle("PATCH /v1/projects/{project_id}/plugins/{plugin_id}", writeUser(jsonEndpointV2(http.StatusOK, func(ctx context.Context, in v2PluginPatch) (v2.Installation, error) {
 		switch in.Action {
@@ -355,6 +374,12 @@ type v2PluginPatch struct {
 	Action           string          `json:"action"`
 	ExpectedRevision *int64          `json:"expected_revision,omitempty"`
 	Config           json.RawMessage `json:"config,omitempty"`
+}
+
+type v2PluginInstall struct {
+	PluginID string          `json:"plugin_id,omitempty"`
+	Manifest *v2.Manifest    `json:"manifest,omitempty"`
+	Config   json.RawMessage `json:"config,omitempty"`
 }
 
 func v2UserAuthenticated(store *core.Store, config Config, requiredScope string, next http.Handler) http.Handler {

@@ -28,6 +28,17 @@ func validateManifest(m Manifest) (Manifest, error) {
 	if len(m.Processor) > MaxStateBytes || len(m.Config) > MaxStateBytes {
 		return m, v2err("too_large", "plugin manifest data too large")
 	}
+	configFields := make(map[string]bool, len(m.ConfigFields))
+	for i := range m.ConfigFields {
+		field := &m.ConfigFields[i]
+		field.Key = strings.TrimSpace(field.Key)
+		field.Type = strings.TrimSpace(field.Type)
+		field.Description = strings.TrimSpace(field.Description)
+		if field.Key == "" || len(field.Key) > 64 || field.Type == "" || len(field.Type) > 64 || field.Description == "" || len(field.Description) > 1000 || configFields[field.Key] {
+			return m, v2err("invalid_input", "invalid plugin config field documentation")
+		}
+		configFields[field.Key] = true
+	}
 	for _, t := range append(append([]string{}, m.Permissions.ReadEvents...), m.Permissions.WriteEvents...) {
 		if t != "log" && t != "note" && t != "derived" {
 			return m, v2err("invalid_input", "invalid event permission")

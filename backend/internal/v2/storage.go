@@ -223,6 +223,7 @@ func cloneManifest(in Manifest) Manifest {
 	in.SessionContext = append([]string(nil), in.SessionContext...)
 	in.Processor = cloneRawMessage(in.Processor)
 	in.Config = cloneRawMessage(in.Config)
+	in.ConfigFields = append([]ConfigField(nil), in.ConfigFields...)
 	in.Permissions = clonePermissions(in.Permissions)
 	return in
 }

@@ -195,9 +195,15 @@ type Manifest struct {
 	SessionContext []string           `json:"session_context,omitempty" yaml:"session_context"`
 	// Processor and Config are declarative manifest data. Core stores and
 	// returns them but never executes commands, schedules, or prompts.
-	Processor   json.RawMessage `json:"processor,omitempty" yaml:"processor"`
-	Config      json.RawMessage `json:"config,omitempty" yaml:"config"`
-	Permissions Permissions     `json:"permissions" yaml:"permissions"`
+	Processor    json.RawMessage `json:"processor,omitempty" yaml:"processor"`
+	Config       json.RawMessage `json:"config,omitempty" yaml:"config"`
+	ConfigFields []ConfigField   `json:"config_fields,omitempty" yaml:"config_fields"`
+	Permissions  Permissions     `json:"permissions" yaml:"permissions"`
+}
+type ConfigField struct {
+	Key         string `json:"key" yaml:"key"`
+	Type        string `json:"type" yaml:"type"`
+	Description string `json:"description" yaml:"description"`
 }
 type StateDeclaration struct {
 	Key string `json:"key" yaml:"key"`
