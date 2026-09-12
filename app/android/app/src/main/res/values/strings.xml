@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Event-driven Context</string>
+    <string name="login_title">Sign in</string>
+    <string name="endpoint">HTTPS server</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Sign in</string>
+    <string name="record">Record</string>
+    <string name="review">Review</string>
+    <string name="me">Me</string>
+    <string name="start_recording">Start recording</string>
+    <string name="pause">Pause</string>
+    <string name="resume">Resume</string>
+    <string name="finish">Finish</string>
+    <string name="take_photo">Take photo</string>
+    <string name="choose_file">Choose file</string>
+    <string name="refresh">Refresh</string>
+    <string name="play">Play original</string>
+    <string name="transcript">Transcript: %1$s</string>
+    <string name="recording_now">Recording…</string>
+    <string name="recording_paused">Recording paused</string>
+    <string name="saved_locally">Saved locally</string>
+    <string name="waiting_sync">Waiting for network or sign-in</string>
+    <string name="uploading">Uploading</string>
+    <string name="synced">Synced; waiting to be organized</string>
+    <string name="interrupted">Interrupted recording; review before retry</string>
+    <string name="failed">Needs attention</string>
+    <string name="retry">Retry</string>
+    <string name="current_project">Project: %1$s</string>
+    <string name="no_project">No accessible project</string>
+    <string name="no_records">No local captures yet.</string>
+    <string name="no_reviews">No daily reviews yet.</string>
+    <string name="plugins">Plugins</string>
+    <string name="logout">Sign out</string>
+    <string name="microphone_denied">Microphone access is needed to record. No capture was created.</string>
+    <string name="notification_denied">Recording can continue only while the app remains visible because notifications are disabled.</string>
+    <string name="invalid_https">Enter an HTTPS server URL.</string>
+    <string name="login_failed">Sign-in failed: %1$s</string>
+    <string name="load_failed">Could not load: %1$s</string>
+    <string name="capture_failed">Could not save capture: %1$s</string>
+    <string name="account">Account: %1$s</string>
+    <string name="server">Server: %1$s</string>
+    <string name="queue_count">Pending captures: %1$d</string>
+    <string name="recording_notification">Recording audio</string>
+    <string name="stop_recording">Stop recording</string>
+    <string name="review_coverage">Version %1$d · through event %2$d · lag %3$d</string>
+</resources>
