@@ -293,6 +293,10 @@ function renderProject() {
   if (unavailable) $("#project-unavailable-message").textContent = state.routeError ? t("projectRouteUnavailable") : state.projectsStatus === "loading" ? t("loadingProjects") : t("projectsLoadFailed", { error: state.projectsError });
   if (!open) return;
   $("#project-title").textContent = state.project.name;
+  $("#project-name-input").value = state.project.name;
+  $("#project-name-form").classList.add("hidden");
+  $("#edit-project-name").classList.toggle("hidden", !currentUserIsOwner());
+  setMessage("#project-name-message");
   $("#project-description-display").textContent = state.project.description || t("noProjectDescription");
   $("#project-owner").textContent = t("owners", { ids: projectOwnerIDs(state.project).join(", ") });
   $("#project-timezone-display").textContent = state.project.timezone || "UTC";
@@ -976,6 +980,36 @@ $("#add-member-form").addEventListener("submit", async (event) => {
   } finally { setBusy(button, false, "addMember"); }
 });
 $("#plugins-refresh").addEventListener("click", loadPlugins);
+$("#edit-project-name").addEventListener("click", () => {
+  if (!state.project || !currentUserIsOwner()) return;
+  $("#project-name-input").value = state.project.name;
+  setMessage("#project-name-message");
+  $("#project-name-form").classList.remove("hidden");
+  $("#edit-project-name").classList.add("hidden");
+  $("#project-name-input").focus();
+  $("#project-name-input").select();
+});
+$("#cancel-project-name").addEventListener("click", () => {
+  $("#project-name-form").classList.add("hidden");
+  $("#edit-project-name").classList.toggle("hidden", !currentUserIsOwner());
+  setMessage("#project-name-message");
+});
+$("#project-name-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!state.project || !currentUserIsOwner()) return;
+  const form = event.currentTarget, button = form.querySelector("button[type=submit]"), name = $("#project-name-input").value.trim();
+  const projectID = state.project.id, version = state.projectVersion;
+  if (!name || byteLength(name) > 200) { setMessage("#project-name-message", t("invalidProject")); return; }
+  setBusy(button, true, "saveProjectName"); setMessage("#project-name-message");
+  try {
+    const updated = await request(projectPath(""), { method: "PATCH", body: { name } });
+    if (!activeProject(version, projectID)) return;
+    state.project = updated;
+    state.projects = state.projects.map((project) => project.id === updated.id ? updated : project);
+    renderProjects(); renderProject(); setMessage("#project-name-message", t("projectNameSaved"), true);
+  } catch (error) { setMessage("#project-name-message", error.message); }
+  finally { setBusy(button, false, "saveProjectName"); }
+});
 $("#edit-project-timezone").addEventListener("click", () => {
   populateTimezones($("#project-timezone-select"), state.project && state.project.timezone || "UTC");
   setMessage("#project-timezone-message");

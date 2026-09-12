@@ -568,18 +568,37 @@ func (s *Store) ListProjects(ctx context.Context, _ Empty) (Projects, error) {
 	return out, nil
 }
 
-func (s *Store) UpdateProjectTimezone(ctx context.Context, projectID, timezone string) (Project, error) {
+func (s *Store) UpdateProject(ctx context.Context, projectID string, in ProjectUpdateInput) (Project, error) {
 	if err := s.RequireProjectOwner(ctx, projectID); err != nil {
 		return Project{}, err
 	}
-	timezone, err := normalizeProjectTimezone(timezone, false)
+	if in.Name == nil && in.Timezone == nil {
+		return Project{}, Invalid("name or timezone required")
+	}
+	project, err := s.projectByID(ctx, projectID)
 	if err != nil {
 		return Project{}, err
 	}
-	if _, err = s.db.ExecContext(ctx, "UPDATE projects SET timezone=? WHERE id=?", timezone, projectID); err != nil {
+	if in.Name != nil {
+		project.Name = strings.TrimSpace(*in.Name)
+		if project.Name == "" || len(project.Name) > 200 {
+			return Project{}, Invalid("name required (max 200 bytes)")
+		}
+	}
+	if in.Timezone != nil {
+		project.Timezone, err = normalizeProjectTimezone(*in.Timezone, false)
+		if err != nil {
+			return Project{}, err
+		}
+	}
+	if _, err = s.db.ExecContext(ctx, "UPDATE projects SET name=?,timezone=? WHERE id=?", project.Name, project.Timezone, projectID); err != nil {
 		return Project{}, err
 	}
 	return s.projectByID(ctx, projectID)
+}
+
+func (s *Store) UpdateProjectTimezone(ctx context.Context, projectID, timezone string) (Project, error) {
+	return s.UpdateProject(ctx, projectID, ProjectUpdateInput{Timezone: &timezone})
 }
 
 func (s *Store) projectByID(ctx context.Context, projectID string) (Project, error) {
