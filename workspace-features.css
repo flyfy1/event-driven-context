@@ -314,6 +314,16 @@ button.danger { border-color: var(--danger); color: var(--danger); }
 .project-item > span { display: block; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
 .project-item > small { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .project-heading > div, .card-title > div { min-width: 0; }
+.project-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.project-title-row h2 { margin: 0; overflow-wrap: anywhere; }
+.project-title-row button { padding: 5px 8px; }
+.project-name-form { max-width: 420px; margin-top: 12px; }
+.project-name-form .actions { justify-content: start; }
 .project-timezone {
   display: flex;
   align-items: center;

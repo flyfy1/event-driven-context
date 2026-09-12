@@ -124,9 +124,7 @@ function apiError(payload, statusCode) {
     conflict: "conflict", invalid_input: "invalidInput", too_large: "fileTooLargeV2",
     invalid_ref: "invalidRef", unsupported_media_type: "unsupportedMediaType",
     state_version_mismatch: "stateVersionMismatch", forbidden_namespace: "forbiddenNamespace",
-    plugin_paused: "pluginPaused", rate_limited: "rateLimited",
-    service_unavailable: "serviceUnavailable", processing_failed: "processingFailed",
-    storage_unavailable: "storageUnavailable"
+    plugin_paused: "pluginPaused", rate_limited: "rateLimited"
   }[code];
   const error = new Error(key ? t(key) : (serviceMessage || t("requestFailed", { status: statusCode })));
   error.status = statusCode;
@@ -293,6 +291,10 @@ function renderProject() {
   if (unavailable) $("#project-unavailable-message").textContent = state.routeError ? t("projectRouteUnavailable") : state.projectsStatus === "loading" ? t("loadingProjects") : t("projectsLoadFailed", { error: state.projectsError });
   if (!open) return;
   $("#project-title").textContent = state.project.name;
+  $("#project-name-input").value = state.project.name;
+  $("#project-name-form").classList.add("hidden");
+  $("#edit-project-name").classList.toggle("hidden", !currentUserIsOwner());
+  setMessage("#project-name-message");
   $("#project-description-display").textContent = state.project.description || t("noProjectDescription");
   $("#project-owner").textContent = t("owners", { ids: projectOwnerIDs(state.project).join(", ") });
   $("#project-timezone-display").textContent = state.project.timezone || "UTC";
@@ -348,12 +350,6 @@ function eventNode(event, compact) {
     const file = document.createElement("button"); file.type = "button"; file.className = "quiet source-download";
     file.textContent = t("downloadFile", { filename: event.content.filename || event.content.file_id, mediaType: event.content.media_type || "" });
     file.addEventListener("click", () => downloadFile(event.content)); article.append(file);
-    if (!compact && ["audio/mp4", "audio/mpeg", "audio/wav", "audio/ogg"].includes(event.content.media_type)) {
-      const transcribe = document.createElement("button"); transcribe.type = "button"; transcribe.className = "quiet transcribe-audio";
-      transcribe.textContent = t("transcribeAudio");
-      transcribe.addEventListener("click", () => transcribeAudio(event.id, transcribe, "#events-message"));
-      article.append(transcribe);
-    }
   }
   if (event.refs && event.refs.length) {
     const refs = document.createElement("div"); refs.className = "reference-list";
@@ -600,30 +596,6 @@ async function uploadFile(file, projectID) {
   return uploaded;
 }
 
-async function transcribeAudio(sourceEventID, button, messageSelector) {
-  if (!state.project) return null;
-  const projectID = state.project.id, version = state.projectVersion;
-  if (button) setBusy(button, true, "transcribeAudio");
-  if (messageSelector) setMessage(messageSelector, t("audioTranscribing"));
-  try {
-    const result = await request(projectPath("/transcriptions"), { method: "POST", body: { source_event_id: sourceEventID } });
-    if (!activeProject(version, projectID)) return null;
-    const transcript = result && result.transcript_event;
-    if (!transcript) throw new Error(t("audioTranscriptionFailed"));
-    state.eventCache.set(transcript.id, transcript);
-    state.events = [transcript].concat(state.events.filter((item) => item.id !== transcript.id));
-    state.eventsStatus = "ready";
-    renderEvents();
-    if (messageSelector) setMessage(messageSelector, t("audioTranscriptionReady"), true);
-    return transcript;
-  } catch (error) {
-    if (activeProject(version, projectID) && messageSelector) setMessage(messageSelector, t("audioTranscriptionFailedWithReason", { error: error.message }));
-    return null;
-  } finally {
-    if (button && button.isConnected) setBusy(button, false, "transcribeAudio");
-  }
-}
-
 function resetRecordID() { state.pendingEventID = ""; }
 function recordBody(eventBase, metadata, refs) {
   return JSON.stringify({ events: [Object.assign({}, eventBase, { metadata, refs })] });
@@ -637,7 +609,7 @@ async function submitRecord(form) {
     const metadata = metadataForRecord();
     const refs = referencesForRecord();
     if (!state.pendingEventID) state.pendingEventID = uuidV7();
-    const eventID = state.pendingEventID, contentMode = state.contentMode, captureKind = state.captureKind;
+    const eventID = state.pendingEventID, contentMode = state.contentMode;
     const eventType = $("#event-type").value, occurredAt = $("#event-occurred-at").value;
     const targetPath = "/v1/projects/" + encodeURIComponent(projectID);
     let content;
@@ -681,11 +653,6 @@ async function submitRecord(form) {
     }
     setMessage("#record-message", t(outcome.status === "duplicate" ? "eventDuplicate" : "eventAppended") + " · " + outcome.id, true);
     renderEvents();
-    if (captureKind === "audio") {
-      const transcript = await transcribeAudio(savedEvent.id, null, "#record-message");
-      if (!activeProject(version, projectID)) return;
-      if (transcript) await loadPlugins();
-    }
     await Promise.allSettled([loadMetadata(), loadStates()]);
   } catch (error) {
     if (activeProject(version, projectID)) {
@@ -976,6 +943,36 @@ $("#add-member-form").addEventListener("submit", async (event) => {
   } finally { setBusy(button, false, "addMember"); }
 });
 $("#plugins-refresh").addEventListener("click", loadPlugins);
+$("#edit-project-name").addEventListener("click", () => {
+  if (!state.project || !currentUserIsOwner()) return;
+  $("#project-name-input").value = state.project.name;
+  setMessage("#project-name-message");
+  $("#project-name-form").classList.remove("hidden");
+  $("#edit-project-name").classList.add("hidden");
+  $("#project-name-input").focus();
+  $("#project-name-input").select();
+});
+$("#cancel-project-name").addEventListener("click", () => {
+  $("#project-name-form").classList.add("hidden");
+  $("#edit-project-name").classList.toggle("hidden", !currentUserIsOwner());
+  setMessage("#project-name-message");
+});
+$("#project-name-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!state.project || !currentUserIsOwner()) return;
+  const form = event.currentTarget, button = form.querySelector("button[type=submit]"), name = $("#project-name-input").value.trim();
+  const projectID = state.project.id, version = state.projectVersion;
+  if (!name || byteLength(name) > 200) { setMessage("#project-name-message", t("invalidProject")); return; }
+  setBusy(button, true, "saveProjectName"); setMessage("#project-name-message");
+  try {
+    const updated = await request(projectPath(""), { method: "PATCH", body: { name } });
+    if (!activeProject(version, projectID)) return;
+    state.project = updated;
+    state.projects = state.projects.map((project) => project.id === updated.id ? updated : project);
+    renderProjects(); renderProject(); setMessage("#project-name-message", t("projectNameSaved"), true);
+  } catch (error) { setMessage("#project-name-message", error.message); }
+  finally { setBusy(button, false, "saveProjectName"); }
+});
 $("#edit-project-timezone").addEventListener("click", () => {
   populateTimezones($("#project-timezone-select"), state.project && state.project.timezone || "UTC");
   setMessage("#project-timezone-message");

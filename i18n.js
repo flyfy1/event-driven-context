@@ -7,10 +7,10 @@
 
   const translations = {
     en: {
-      documentTitle: "Context · Integ.Life",
+      documentTitle: "Event Driven Context",
       metaDescription: "Append and query immutable context with your team.",
       aboutProduct: "About Context",
-      brandHome: "Context home",
+      brandHome: "Event Driven Context home",
       languageLabel: "Language",
       signedOut: "Signed out",
       signedInAs: "Signed in: {username}",
@@ -96,10 +96,10 @@
       contentKindFile: "file"
     },
     "zh-CN": {
-      documentTitle: "Context · Integ.Life",
+      documentTitle: "Event Driven Context",
       metaDescription: "为团队追加、查询不可修改的原始 context。",
       aboutProduct: "产品介绍",
-      brandHome: "Context 首页",
+      brandHome: "Event Driven Context 首页",
       languageLabel: "语言",
       signedOut: "未登录",
       signedInAs: "已登录：{username}",
@@ -185,10 +185,10 @@
       contentKindFile: "文件"
     },
     ms: {
-      documentTitle: "Context · Integ.Life",
+      documentTitle: "Event Driven Context",
       metaDescription: "Tambah dan cari konteks kekal bersama pasukan anda.",
       aboutProduct: "Tentang Context",
-      brandHome: "Laman utama Context",
+      brandHome: "Laman utama Event Driven Context",
       languageLabel: "Bahasa",
       signedOut: "Belum log masuk",
       signedInAs: "Log masuk: {username}",
@@ -274,10 +274,10 @@
       contentKindFile: "fail"
     },
     hi: {
-      documentTitle: "Context · Integ.Life",
+      documentTitle: "Event Driven Context",
       metaDescription: "अपनी टीम के साथ अपरिवर्तनीय context जोड़ें और खोजें।",
       aboutProduct: "Context के बारे में",
-      brandHome: "Context मुखपृष्ठ",
+      brandHome: "Event Driven Context मुखपृष्ठ",
       languageLabel: "भाषा",
       signedOut: "साइन इन नहीं किया गया",
       signedInAs: "साइन इन: {username}",
@@ -744,7 +744,7 @@
 
   Object.assign(translations.en, {
     authTitle: "Sign in to Context", authHint: "Use your Integ.Life account to keep one verified identity across shared projects.", continueWithGoogle: "Continue with Google", centralAuthNote: "Google is the default sign-in option. The central Integ.Life page also supports verified email.",
-    projectTimezone: "Project time zone", changeTimezone: "Change", saveTimezone: "Save time zone", timezoneSaved: "Project time zone saved.", dailyReviewDate: "Daily review · {date}",
+    renameProject: "Rename", saveProjectName: "Save name", projectNameSaved: "Project name saved.", projectTimezone: "Project time zone", changeTimezone: "Change", saveTimezone: "Save time zone", timezoneSaved: "Project time zone saved.", dailyReviewDate: "Daily review · {date}",
     eventDetails: "Record details", membersTitle: "Project members", membersHint: "Everyone listed here can read and append this project's shared context.", membersLoading: "Loading project members…", membersEmpty: "No project members were returned.",
     addMemberTitle: "Add a registered member", memberIdentityPlaceholder: "registered username or email", addMember: "Add member", memberAdded: "@{username} is now a project member.", memberNotFound: "No registered account has that username or email.", memberID: "User ID · {id}", projectOwner: "Owner", projectMember: "Member", owners: "OWNERS · {ids}", makeOwner: "Make owner", makeMember: "Make member", memberRoleUpdated: "@{username} is now a {role}.", lastOwnerRequired: "A project must retain at least one owner.", onlyOwnerCanManage: "Only project owners can add members or manage owners.",
     projectSections: "Project sections", recordsTab: "Records", stateTab: "State", integrationTab: "Connect", pluginsTab: "Plugins",
@@ -756,7 +756,7 @@
     fileTooLargeV2: "Files must be no larger than 50 MiB.", fileIntegrityFailed: "The uploaded file did not match the local file.", selectFile: "Choose a file first.",
     eventWriteFailed: "The event was not accepted.", eventDuplicate: "This record was already saved.", unknownActor: "Unknown actor", unknownSource: "Unknown source",
     openReferencedEvent: "Open {relation} record", invalidRef: "A referenced record is invalid or unavailable.", unsupportedMediaType: "This file type is not supported.",
-    stateVersionMismatch: "The State changed before this update.", forbiddenNamespace: "This plugin cannot use that State name.", pluginPaused: "This plugin is paused.", rateLimited: "Too many requests. Try again later.", storageUnavailable: "Server storage is temporarily full. Please try again later.", transcribeAudio: "Transcribe audio", audioTranscribing: "Audio saved. Transcribing with OpenAI…", audioTranscriptionReady: "Transcript ready and linked to the original recording.", audioTranscriptionFailed: "The original recording is saved, but transcription failed. Use Transcribe audio to retry.", audioTranscriptionFailedWithReason: "The original recording is saved, but transcription failed: {error}", serviceUnavailable: "Audio transcription is not configured on this server.", processingFailed: "OpenAI could not transcribe this audio. The original recording is still saved.",
+    stateVersionMismatch: "The State changed before this update.", forbiddenNamespace: "This plugin cannot use that State name.", pluginPaused: "This plugin is paused.", rateLimited: "Too many requests. Try again later.",
     stateEyebrow: "PROJECT STATE", stateTitle: "Published State", stateHint: "Read plugin-published views, inspect lag and versions, and open every referenced source.",
     stateLoading: "Loading project State…", stateEmpty: "No State has been published for this project.", versionLabel: "Version {version}", laggingLabel: "{count} records behind", upToDate: "Up to date",
     stateProducer: "{plugin} {version} · updated {date}", structuredData: "Structured data", viewVersion: "View version", invalidStateKey: "This State key cannot be opened.", stateVersionLoaded: "Version {version} loaded.",
@@ -773,7 +773,7 @@
   });
   Object.assign(translations["zh-CN"], {
     authTitle: "登录 Context", authHint: "使用 Integ.Life 账号，以同一个已验证身份参与共享项目。", continueWithGoogle: "使用 Google 继续", centralAuthNote: "默认使用 Google 登录；也可以在 Integ.Life 中心登录页使用已验证邮箱。",
-    projectTimezone: "项目时区", changeTimezone: "修改", saveTimezone: "保存时区", timezoneSaved: "项目时区已保存。", dailyReviewDate: "每日回顾 · {date}",
+    renameProject: "改名", saveProjectName: "保存名称", projectNameSaved: "项目名称已保存。", projectTimezone: "项目时区", changeTimezone: "修改", saveTimezone: "保存时区", timezoneSaved: "项目时区已保存。", dailyReviewDate: "每日回顾 · {date}",
     eventDetails: "记录详情", membersTitle: "项目成员", membersHint: "这里列出的每位成员都能读取并追加该项目的团队 context。", membersLoading: "正在加载项目成员…", membersEmpty: "没有返回项目成员。",
     addMemberTitle: "添加已注册成员", memberIdentityPlaceholder: "已注册的用户名或邮箱", addMember: "添加成员", memberAdded: "@{username} 已加入项目。", memberNotFound: "找不到这个用户名或邮箱对应的已注册账号。", memberID: "用户 ID · {id}", projectOwner: "所有者", projectMember: "成员", owners: "所有者 · {ids}", makeOwner: "设为所有者", makeMember: "改为普通成员", memberRoleUpdated: "@{username} 现在是{role}。", lastOwnerRequired: "项目必须至少保留一位所有者。", onlyOwnerCanManage: "只有项目所有者可以添加成员或管理所有者。",
     projectSections: "项目分区", recordsTab: "记录", stateTab: "项目状态", integrationTab: "接入", pluginsTab: "插件",
@@ -785,7 +785,7 @@
     fileTooLargeV2: "文件不能超过 50 MiB。", fileIntegrityFailed: "服务端文件与本机文件不一致。", selectFile: "请先选择文件。",
     eventWriteFailed: "事件未被服务端接受。", eventDuplicate: "这条记录已经保存过。", unknownActor: "未知写入者", unknownSource: "未知来源",
     openReferencedEvent: "打开 {relation} 记录", invalidRef: "引用的记录无效或不可访问。", unsupportedMediaType: "不支持这种文件类型。",
-    stateVersionMismatch: "项目状态在提交前已变化。", forbiddenNamespace: "该插件不能使用这个 State 名称。", pluginPaused: "该插件已暂停。", rateLimited: "请求过多，请稍后重试。", storageUnavailable: "服务器存储空间暂时不足，请稍后重试。", transcribeAudio: "转成文字", audioTranscribing: "录音已保存，正在通过 OpenAI 转写……", audioTranscriptionReady: "文字已生成，并已关联原始录音。", audioTranscriptionFailed: "原始录音已保存，但转写失败。可点击“转成文字”重试。", audioTranscriptionFailedWithReason: "原始录音已保存，但转写失败：{error}", serviceUnavailable: "服务器尚未配置音频转写。", processingFailed: "OpenAI 未能转写这段音频；原始录音仍已保存。",
+    stateVersionMismatch: "项目状态在提交前已变化。", forbiddenNamespace: "该插件不能使用这个 State 名称。", pluginPaused: "该插件已暂停。", rateLimited: "请求过多，请稍后重试。",
     stateEyebrow: "项目状态", stateTitle: "已发布的 State", stateHint: "查看插件发布的结果、版本和落后程度，并打开每条来源记录。",
     stateLoading: "正在加载项目 State…", stateEmpty: "这个项目尚未发布 State。", versionLabel: "版本 {version}", laggingLabel: "落后 {count} 条记录", upToDate: "已是最新",
     stateProducer: "{plugin} {version} · 更新于 {date}", structuredData: "结构化数据", viewVersion: "查看版本", invalidStateKey: "无法打开这个 State key。", stateVersionLoaded: "已加载版本 {version}。",
@@ -802,7 +802,7 @@
   });
   Object.assign(translations.ms, {
     authTitle: "Log masuk ke Context", authHint: "Gunakan akaun Integ.Life anda untuk satu identiti disahkan dalam projek kongsi.", continueWithGoogle: "Teruskan dengan Google", centralAuthNote: "Google ialah pilihan log masuk lalai. Halaman pusat Integ.Life turut menyokong e-mel yang disahkan.",
-    projectTimezone: "Zon waktu projek", changeTimezone: "Ubah", saveTimezone: "Simpan zon waktu", timezoneSaved: "Zon waktu projek disimpan.", dailyReviewDate: "Ulasan harian · {date}",
+    renameProject: "Tukar nama", saveProjectName: "Simpan nama", projectNameSaved: "Nama projek disimpan.", projectTimezone: "Zon waktu projek", changeTimezone: "Ubah", saveTimezone: "Simpan zon waktu", timezoneSaved: "Zon waktu projek disimpan.", dailyReviewDate: "Ulasan harian · {date}",
     eventDetails: "Butiran rekod", membersTitle: "Ahli projek", membersHint: "Setiap orang dalam senarai ini boleh membaca dan menambah context kongsi projek.", membersLoading: "Memuatkan ahli projek…", membersEmpty: "Tiada ahli projek dikembalikan.",
     addMemberTitle: "Tambah ahli berdaftar", memberIdentityPlaceholder: "nama pengguna atau e-mel berdaftar", addMember: "Tambah ahli", memberAdded: "@{username} kini ahli projek.", memberNotFound: "Tiada akaun berdaftar dengan nama pengguna atau e-mel itu.", memberID: "ID pengguna · {id}", projectOwner: "Pemilik", projectMember: "Ahli", owners: "PEMILIK · {ids}", makeOwner: "Jadikan pemilik", makeMember: "Jadikan ahli", memberRoleUpdated: "@{username} kini {role}.", lastOwnerRequired: "Projek mesti mempunyai sekurang-kurangnya seorang pemilik.", onlyOwnerCanManage: "Hanya pemilik projek boleh menambah ahli atau mengurus pemilik.",
     projectSections: "Bahagian projek", recordsTab: "Rekod", stateTab: "State", integrationTab: "Sambung", pluginsTab: "Plugin",
@@ -814,7 +814,7 @@
     fileTooLargeV2: "Fail mestilah tidak melebihi 50 MiB.", fileIntegrityFailed: "Fail pelayan tidak sepadan dengan fail setempat.", selectFile: "Pilih fail dahulu.",
     eventWriteFailed: "Event tidak diterima.", eventDuplicate: "Rekod ini sudah disimpan.", unknownActor: "Pelaku tidak diketahui", unknownSource: "Sumber tidak diketahui",
     openReferencedEvent: "Buka rekod {relation}", invalidRef: "Rekod rujukan tidak sah atau tidak tersedia.", unsupportedMediaType: "Jenis fail ini tidak disokong.",
-    stateVersionMismatch: "State berubah sebelum kemas kini ini.", forbiddenNamespace: "Plugin ini tidak boleh menggunakan nama State itu.", pluginPaused: "Plugin ini dijeda.", rateLimited: "Terlalu banyak permintaan. Cuba lagi kemudian.", storageUnavailable: "Storan pelayan penuh buat sementara waktu. Cuba lagi kemudian.", transcribeAudio: "Transkripsikan audio", audioTranscribing: "Audio disimpan. Sedang ditranskripsi dengan OpenAI…", audioTranscriptionReady: "Transkrip sedia dan dipautkan kepada rakaman asal.", audioTranscriptionFailed: "Rakaman asal disimpan, tetapi transkripsi gagal. Cuba lagi dari rekod audio.", audioTranscriptionFailedWithReason: "Rakaman asal disimpan, tetapi transkripsi gagal: {error}", serviceUnavailable: "Transkripsi audio belum dikonfigurasi pada pelayan ini.", processingFailed: "OpenAI tidak dapat mentranskripsi audio ini. Rakaman asal masih disimpan.",
+    stateVersionMismatch: "State berubah sebelum kemas kini ini.", forbiddenNamespace: "Plugin ini tidak boleh menggunakan nama State itu.", pluginPaused: "Plugin ini dijeda.", rateLimited: "Terlalu banyak permintaan. Cuba lagi kemudian.",
     stateEyebrow: "STATE PROJEK", stateTitle: "State diterbitkan", stateHint: "Baca paparan plugin, semak ketinggalan dan versi, serta buka setiap sumber.",
     stateLoading: "Memuatkan State projek…", stateEmpty: "Belum ada State diterbitkan untuk projek ini.", versionLabel: "Versi {version}", laggingLabel: "Ketinggalan {count} rekod", upToDate: "Terkini",
     stateProducer: "{plugin} {version} · dikemas kini {date}", structuredData: "Data berstruktur", viewVersion: "Lihat versi", invalidStateKey: "Kunci State ini tidak dapat dibuka.", stateVersionLoaded: "Versi {version} dimuatkan.",
@@ -831,7 +831,7 @@
   });
   Object.assign(translations.hi, {
     authTitle: "Context में साइन इन करें", authHint: "साझा प्रोजेक्ट में एक सत्यापित पहचान रखने के लिए अपने Integ.Life खाते का उपयोग करें।", continueWithGoogle: "Google से जारी रखें", centralAuthNote: "Google डिफ़ॉल्ट साइन-इन विकल्प है। केंद्रीय Integ.Life पेज सत्यापित ईमेल भी स्वीकार करता है।",
-    projectTimezone: "प्रोजेक्ट का समय क्षेत्र", changeTimezone: "बदलें", saveTimezone: "समय क्षेत्र सेव करें", timezoneSaved: "प्रोजेक्ट का समय क्षेत्र सेव हो गया।", dailyReviewDate: "दैनिक समीक्षा · {date}",
+    renameProject: "नाम बदलें", saveProjectName: "नाम सेव करें", projectNameSaved: "प्रोजेक्ट का नाम सेव हो गया।", projectTimezone: "प्रोजेक्ट का समय क्षेत्र", changeTimezone: "बदलें", saveTimezone: "समय क्षेत्र सेव करें", timezoneSaved: "प्रोजेक्ट का समय क्षेत्र सेव हो गया।", dailyReviewDate: "दैनिक समीक्षा · {date}",
     eventDetails: "रिकॉर्ड का विवरण", membersTitle: "प्रोजेक्ट सदस्य", membersHint: "यहाँ सूचीबद्ध हर सदस्य इस प्रोजेक्ट का साझा context पढ़ और जोड़ सकता है।", membersLoading: "प्रोजेक्ट सदस्य लोड हो रहे हैं…", membersEmpty: "कोई प्रोजेक्ट सदस्य नहीं मिला।",
     addMemberTitle: "रजिस्टर्ड सदस्य जोड़ें", memberIdentityPlaceholder: "रजिस्टर्ड यूज़रनेम या ईमेल", addMember: "सदस्य जोड़ें", memberAdded: "@{username} अब प्रोजेक्ट सदस्य हैं।", memberNotFound: "इस यूज़रनेम या ईमेल का कोई रजिस्टर्ड खाता नहीं मिला।", memberID: "उपयोगकर्ता ID · {id}", projectOwner: "मालिक", projectMember: "सदस्य", owners: "मालिक · {ids}", makeOwner: "मालिक बनाएँ", makeMember: "सदस्य बनाएँ", memberRoleUpdated: "@{username} अब {role} हैं।", lastOwnerRequired: "प्रोजेक्ट में कम से कम एक मालिक रहना चाहिए।", onlyOwnerCanManage: "केवल प्रोजेक्ट मालिक सदस्य जोड़ या मालिकों को प्रबंधित कर सकते हैं।",
     projectSections: "प्रोजेक्ट अनुभाग", recordsTab: "रिकॉर्ड", stateTab: "State", integrationTab: "कनेक्ट", pluginsTab: "प्लगइन",
@@ -843,7 +843,7 @@
     fileTooLargeV2: "फ़ाइल 50 MiB से बड़ी नहीं हो सकती।", fileIntegrityFailed: "सर्वर फ़ाइल स्थानीय फ़ाइल से मेल नहीं खाती।", selectFile: "पहले फ़ाइल चुनें।",
     eventWriteFailed: "Event स्वीकार नहीं किया गया।", eventDuplicate: "यह रिकॉर्ड पहले से सहेजा गया है।", unknownActor: "अज्ञात लेखक", unknownSource: "अज्ञात स्रोत",
     openReferencedEvent: "{relation} रिकॉर्ड खोलें", invalidRef: "संदर्भित रिकॉर्ड अमान्य या अनुपलब्ध है।", unsupportedMediaType: "यह फ़ाइल प्रकार समर्थित नहीं है।",
-    stateVersionMismatch: "अपडेट से पहले State बदल गया।", forbiddenNamespace: "यह प्लगइन उस State नाम का उपयोग नहीं कर सकता।", pluginPaused: "यह प्लगइन रुका हुआ है।", rateLimited: "बहुत अधिक अनुरोध। बाद में फिर प्रयास करें।", storageUnavailable: "सर्वर स्टोरेज अस्थायी रूप से भर गया है। बाद में फिर प्रयास करें।", transcribeAudio: "ऑडियो ट्रांसक्राइब करें", audioTranscribing: "ऑडियो सेव है। OpenAI से ट्रांसक्राइब हो रहा है…", audioTranscriptionReady: "ट्रांसक्रिप्ट तैयार है और मूल रिकॉर्डिंग से जुड़ा है।", audioTranscriptionFailed: "मूल रिकॉर्डिंग सेव है, लेकिन ट्रांसक्रिप्शन विफल हुआ। रिकॉर्ड से फिर कोशिश करें।", audioTranscriptionFailedWithReason: "मूल रिकॉर्डिंग सेव है, लेकिन ट्रांसक्रिप्शन विफल हुआ: {error}", serviceUnavailable: "इस सर्वर पर ऑडियो ट्रांसक्रिप्शन कॉन्फ़िगर नहीं है।", processingFailed: "OpenAI इस ऑडियो को ट्रांसक्राइब नहीं कर सका। मूल रिकॉर्डिंग अभी भी सेव है।",
+    stateVersionMismatch: "अपडेट से पहले State बदल गया।", forbiddenNamespace: "यह प्लगइन उस State नाम का उपयोग नहीं कर सकता।", pluginPaused: "यह प्लगइन रुका हुआ है।", rateLimited: "बहुत अधिक अनुरोध। बाद में फिर प्रयास करें।",
     stateEyebrow: "प्रोजेक्ट STATE", stateTitle: "प्रकाशित State", stateHint: "प्लगइन के परिणाम, पिछड़ाव और संस्करण देखें तथा हर स्रोत रिकॉर्ड खोलें।",
     stateLoading: "प्रोजेक्ट State लोड हो रहा है…", stateEmpty: "इस प्रोजेक्ट के लिए कोई State प्रकाशित नहीं है।", versionLabel: "संस्करण {version}", laggingLabel: "{count} रिकॉर्ड पीछे", upToDate: "अप-टू-डेट",
     stateProducer: "{plugin} {version} · {date} को अपडेट", structuredData: "संरचित डेटा", viewVersion: "संस्करण देखें", invalidStateKey: "यह State key नहीं खोली जा सकती।", stateVersionLoaded: "संस्करण {version} लोड हुआ।",
