@@ -151,8 +151,15 @@ func TestProjectSupportsMultipleOwnersAndProtectsLastOwner(t *testing.T) {
 	if _, err = s.SetMemberRole(alice, MemberRoleInput{ProjectID: project.ID, UserID: UserID(bob), Role: "owner"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = s.AddMember(bob, MemberInput{ProjectID: project.ID, Username: "owner-charlie"}); err != nil {
+	if added, addErr := s.AddMember(bob, MemberInput{ProjectID: project.ID, Email: " OWNER-CHARLIE@EXAMPLE.INVALID "}); addErr != nil || added.Username != "owner-charlie" {
+		err = addErr
 		t.Fatalf("second owner could not manage members: %v", err)
+	}
+	if _, err = s.AddMember(bob, MemberInput{ProjectID: project.ID}); err == nil {
+		t.Fatal("empty member identifier was accepted")
+	}
+	if _, err = s.AddMember(bob, MemberInput{ProjectID: project.ID, Username: "owner-charlie", Email: "owner-charlie@example.invalid"}); err == nil {
+		t.Fatal("two member identifiers were accepted")
 	}
 	if _, err = s.SetMemberRole(bob, MemberRoleInput{ProjectID: project.ID, UserID: UserID(charlie), Role: "owner"}); err != nil {
 		t.Fatalf("second owner could not promote another member: %v", err)
@@ -223,10 +230,10 @@ func TestSharedProjectAppendOnlyAndIsolation(t *testing.T) {
 	}
 	_, err = s.RecordEvent(bob, textRecord(p.ID, "not a member"))
 	requireError(t, err, ErrNotFound)
-	if _, err = s.AddMember(alice, MemberInput{p.ID, "bob"}); err != nil {
+	if _, err = s.AddMember(alice, MemberInput{ProjectID: p.ID, Username: "bob"}); err != nil {
 		t.Fatal(err)
 	}
-	_, err = s.AddMember(bob, MemberInput{p.ID, "outsider"})
+	_, err = s.AddMember(bob, MemberInput{ProjectID: p.ID, Username: "outsider"})
 	requireError(t, err, ErrForbidden)
 	e, err := s.RecordEvent(bob, textRecord(p.ID, "Bob 的记录"))
 	if err != nil {

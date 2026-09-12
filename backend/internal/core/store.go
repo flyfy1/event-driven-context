@@ -636,8 +636,23 @@ func (s *Store) AddMember(ctx context.Context, in MemberInput) (User, error) {
 	if err := s.RequireProjectOwner(ctx, in.ProjectID); err != nil {
 		return User{}, err
 	}
+	in.Username = strings.ToLower(strings.TrimSpace(in.Username))
+	in.Email = strings.TrimSpace(in.Email)
+	if (in.Username == "") == (in.Email == "") {
+		return User{}, Invalid("exactly one of username or email is required")
+	}
+	query := "SELECT id,username,'',created_at FROM users WHERE username=?"
+	queryArg := in.Username
+	if in.Email != "" {
+		email, err := normalizeEmail(in.Email)
+		if err != nil {
+			return User{}, err
+		}
+		query = "SELECT id,username,'',created_at FROM users WHERE email=?"
+		queryArg = email
+	}
 	var u User
-	err := s.db.QueryRowContext(ctx, "SELECT id,username,'',created_at FROM users WHERE username=?", strings.ToLower(strings.TrimSpace(in.Username))).Scan(&u.ID, &u.Username, &u.Email, &u.CreatedAt)
+	err := s.db.QueryRowContext(ctx, query, queryArg).Scan(&u.ID, &u.Username, &u.Email, &u.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return User{}, ErrNotFound
 	}

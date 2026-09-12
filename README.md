@@ -93,8 +93,9 @@ make build
 ./bin/edc --config "$HOME/.config/event-driven-context/bob.json" register --username bob --email bob@example.invalid
 ./bin/edc --config "$HOME/.config/event-driven-context/bob.json" login --username bob
 
-# 任一 owner 添加已注册成员；网页可继续把成员提升为 owner。
+# 任一 owner 可按已注册 username 或 email 添加成员；网页可继续把成员提升为 owner。
 ./bin/edc project add-member --project PROJECT_ID --username bob
+./bin/edc project add-member --project PROJECT_ID --email bob@example.invalid
 ./bin/edc project members --project PROJECT_ID
 
 # Bob 追加文本；作者从 Bob 的登录身份取得。
@@ -188,9 +189,9 @@ make build
 | `POST /v1/projects` | `{name,description?}`，创建项目 |
 | `GET /v1/projects` | 当前用户的项目 |
 | `GET /v1/projects/{project_id}/members` | 列出成员及其 `member` / `owner` 角色 |
-| `POST /v1/projects/{project_id}/members` | owner 添加已注册成员 |
+| `POST /v1/projects/{project_id}/members` | owner 以 `{username}` 或 `{email}` 精确添加已注册成员；两者必须且只能提供一个 |
 | `PATCH /v1/projects/{project_id}/members/{user_id}` | owner 以 `{role:"owner"}` 或 `{role:"member"}` 管理其他成员角色；至少保留一位 owner |
-| `POST /v1/members` | `{project_id,username}`，添加成员 |
+| `POST /v1/members` | `{project_id,username}` 或 `{project_id,email}`，精确添加成员 |
 | `POST /v1/members/query` | `{project_id}`，列出成员 |
 | `POST /v1/events` | `{project_id,content,metadata?,occurred_at?,idempotency_key?}` |
 | `POST /v1/media-events` | 20 MiB 内 M4A/MP3/WAV 的 multipart 原子上传 |

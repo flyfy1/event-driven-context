@@ -828,10 +828,11 @@ $("#add-member-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!state.project) return;
   const form = event.currentTarget, button = form.querySelector("button[type=submit]");
-  const username = $("#member-username").value.trim(), projectID = state.project.id, version = state.projectVersion;
+  const identity = $("#member-identity").value.trim(), projectID = state.project.id, version = state.projectVersion;
+  const body = identity.includes("@") ? { email: identity } : { username: identity };
   setBusy(button, true, "addMember"); setMessage("#members-message");
   try {
-    const member = await request(projectPath("/members"), { method: "POST", body: { username } });
+    const member = await request(projectPath("/members"), { method: "POST", body });
     if (!activeProject(version, projectID)) return;
     form.reset(); await loadMembers();
     setMessage("#members-message", t("memberAdded", { username: member.username }), true);

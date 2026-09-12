@@ -111,7 +111,7 @@
               <div class="card-title"><div><h4 id="members-title" data-i18n="membersTitle">Project members</h4><p class="muted" data-i18n="membersHint">Everyone listed here can read and append this project's shared context.</p></div><button id="members-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
               <div id="members-list" class="members-list" aria-live="polite"></div>
               <form id="add-member-form" class="add-member-form hidden">
-                <label><span data-i18n="addMemberTitle">Add a registered member</span><input id="member-username" required autocomplete="off" placeholder="registered username" data-i18n-placeholder="memberUsernamePlaceholder" /></label>
+                <label><span data-i18n="addMemberTitle">Add a registered member</span><input id="member-identity" required autocomplete="off" inputmode="email" placeholder="registered username or email" data-i18n-placeholder="memberIdentityPlaceholder" /></label>
                 <button class="primary" type="submit" data-i18n="addMember">Add member</button>
               </form>
               <p id="member-owner-note" class="muted hidden" data-i18n="onlyOwnerCanManage">Only project owners can add members or manage owners.</p>
