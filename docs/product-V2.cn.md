@@ -171,9 +171,9 @@ App 底部导航为“记录、回顾、我的”：录音是“记录”页的�
 
 所有 hook 调用同一个命令 `edc hook <client>`。它从标准输入读取客户端提供的 hook 数据，按会话工作目录找到绑定项目（未绑定时不推送），转换成 `log` 推送。
 
-首个适配客户端为 Claude Code。其他客户端按其 hook 能力适配；本地 Codex / Claude Code 均由 skill 直接调用已登录的 CLI，不配置 MCP。
+Codex 与 Claude Code 都已完成客户端适配；二者都通过项目级 hook 与 skill 直接调用已登录的 CLI，不配置 MCP。
 
-Claude Code 的默认映射如下，具体字段以客户端当前 hook 文档为准：
+Codex 与 Claude Code 使用以下默认映射，具体字段以各客户端当前 hook 文档为准：
 
 | 客户端事件 | 推送的 log（`metadata.kind`） | 附加动作 |
 |---|---|---|
@@ -588,9 +588,9 @@ MCP 面向对话 agent。插件安装、暂停等管理操作在 App、网页和
 示例：
 
 ```sh
-# 绑定目录并接入 Claude Code
+# 绑定目录并接入 Codex（Claude Code 使用 claude-code）
 edc link prj_example
-edc setup claude-code
+edc setup codex
 
 # 随手记一条决定
 edc push --type note --meta kind=decision "预算调整为 3 万"
@@ -611,16 +611,16 @@ edc state get project-brief/current
 edc host run
 ```
 
-`edc setup claude-code` 生成的 hook 配置示例（实际写入 `edc` 的绝对路径）：
+`edc setup codex` 生成的 hook 配置示例（实际写入 `edc` 与私密配置文件的绝对路径）：
 
 ```json
 {
   "hooks": {
-    "SessionStart":     [{"hooks": [{"type": "command", "command": "edc hook claude-code"}]}],
-    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "edc hook claude-code"}]}],
-    "Stop":             [{"hooks": [{"type": "command", "command": "edc hook claude-code"}]}],
-    "PreCompact":       [{"hooks": [{"type": "command", "command": "edc hook claude-code"}]}],
-    "SessionEnd":       [{"hooks": [{"type": "command", "command": "edc hook claude-code"}]}]
+    "SessionStart":     [{"hooks": [{"type": "command", "command": "edc hook codex", "timeout": 3}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "edc hook codex", "timeout": 3}]}],
+    "Stop":             [{"hooks": [{"type": "command", "command": "edc hook codex", "timeout": 3}]}],
+    "PreCompact":       [{"hooks": [{"type": "command", "command": "edc hook codex", "timeout": 3}]}],
+    "SessionEnd":       [{"hooks": [{"type": "command", "command": "edc hook codex", "timeout": 3}]}]
   }
 }
 ```
@@ -796,7 +796,7 @@ Web 是当前优先交付入口。项目与当前分区进入 URL：`?project=<p
 
 准备一个真实项目，在 Claude Code、另一个 AI 客户端和手机 App 中工作若干天。过程中出现：目标、早期预算、明确的预算变更、一条待办及其完成、一条 agent 推断、两个人互相矛盾的说法、一段无关闲聊、一条语音随手记。验收前写出期望的项目概况、回顾及来源。
 
-1. **接入**：从零执行 `edc link` 和 `edc setup claude-code`，写入前用户看到配置变更并确认；之后每轮对话产生对应的 log。
+1. **接入**：从零执行 `edc link` 和 `edc setup codex` 或 `edc setup claude-code`，写入前用户看到配置变更并确认；之后每轮对话产生对应的 log。
 2. **去重与离线**：同一 hook 输入重复执行、CLI 断网后恢复、App 断网录音后恢复，服务端每条记录只有一条，待发队列清空。
 3. **主动写入**：出现决定、修改、待办时 agent 写 note；修改带 `supersedes`，完成带 `resolves`；闲聊不写成 note。记录漏记和误记数量。
 4. **团队共享与作者**：用两个真实用户加入同一项目；成员 B 追加一条 Event，owner A 能从另一入口读取，返回和界面中的 `actor.id`、`actor.username`、`recorded_at` 均属于 B；B 也能读取 A 的既有记录。提交的 source 或 metadata 不能改变 actor。Agent 整理两人说法时保留原 Event 引用和必要的成员归属。

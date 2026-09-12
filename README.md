@@ -261,12 +261,16 @@ Run `edc login` privately in a terminal. A local Agent then runs `edc` commands 
 
 Add `--config /absolute/path/to/config.json` to these commands when a fixed configuration path is needed. The CLI loads the access token and sends it as an HTTP Bearer credential; do not copy it into prompts, repositories, or Agent configuration.
 
-Recording Skills live at `.agents/skills/edc-recorder/SKILL.md` for Codex and `.claude/skills/edc-recorder/SKILL.md` for Claude Code. Claude Code can preview and then apply the hook and Skill:
+Recording Skills live at `.agents/skills/edc-recorder/SKILL.md` for Codex and `.claude/skills/edc-recorder/SKILL.md` for Claude Code. Both clients can preview and then apply their project-local hooks and Skill:
 
 ```sh
+edc setup codex
+edc setup --apply codex
 edc setup claude-code
 edc setup --apply claude-code
 ```
+
+Codex setup merges the five capture events into `.codex/hooks.json`; Claude Code setup uses `.claude/settings.local.json`. The generated command contains the absolute `edc` and private config paths but no access token or project ID. The CLI resolves the destination project from the session working directory's local `edc link` binding. If the project has multiple members, applying automatic logs also requires `--enable-shared-hooks` because every member can read them.
 
 Setup does not add MCP. If the project's `.mcp.json` contains a legacy `event-driven-context` or `event-context` entry, setup removes that entry while preserving other MCP services.
 

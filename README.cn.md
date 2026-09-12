@@ -250,12 +250,16 @@ V2 服务通过无需认证的 `GET /.well-known/edc-cli` 公布当前推荐版�
 
 需要固定配置路径时，在这些命令上加 `--config /absolute/path/to/config.json`。access token 由 CLI 加载并作为 HTTP Bearer 凭据发送；不应复制到 prompt、仓库或 Agent 配置。
 
-记录 Skill 分别放在 `.agents/skills/edc-recorder/SKILL.md`（Codex）或 `.claude/skills/edc-recorder/SKILL.md`（Claude Code）。Claude Code 可先预览、再应用 hook 与 Skill：
+记录 Skill 分别放在 `.agents/skills/edc-recorder/SKILL.md`（Codex）或 `.claude/skills/edc-recorder/SKILL.md`（Claude Code）。两个客户端都可以先预览、再应用项目级 hook 与 Skill：
 
 ```sh
+edc setup codex
+edc setup --apply codex
 edc setup claude-code
 edc setup --apply claude-code
 ```
+
+Codex setup 把五个采集事件合并到 `.codex/hooks.json`；Claude Code setup 使用 `.claude/settings.local.json`。生成的命令包含 `edc` 与私密配置文件的绝对路径，但不包含 access token 或项目 ID。CLI 根据会话工作目录对应的本机 `edc link` 绑定解析目标项目。如果项目有多位成员，应用自动日志时还必须添加 `--enable-shared-hooks`，因为所有成员都能读取这些日志。
 
 setup 不会添加 MCP；如果项目 `.mcp.json` 中存在旧的 `event-driven-context` 或 `event-context` 条目，会在保留其他 MCP 服务的前提下删除该旧条目。
 

@@ -18,9 +18,6 @@ import (
 var setupHookEvents = []string{"SessionStart", "UserPromptSubmit", "Stop", "PreCompact", "SessionEnd"}
 
 func (m *Manager) SetupPreview(options SetupOptions) (SetupPreview, error) {
-	if options.Client != ClaudeCode {
-		return SetupPreview{}, fmt.Errorf("unsupported setup client %q", options.Client)
-	}
 	directory, err := canonicalDirectory(options.Directory)
 	if err != nil {
 		return SetupPreview{}, err
@@ -37,19 +34,39 @@ func (m *Manager) SetupPreview(options SetupOptions) (SetupPreview, error) {
 	if err != nil {
 		return SetupPreview{}, fmt.Errorf("setup requires a linked project: %w", err)
 	}
-	command := shellQuote(edcPath) + " --config " + shellQuote(configPath) + " hook " + ClaudeCode
+	if options.Client != ClaudeCode && options.Client != Codex {
+		return SetupPreview{}, fmt.Errorf("unsupported setup client %q", options.Client)
+	}
+	command := shellQuote(edcPath) + " --config " + shellQuote(configPath) + " hook " + options.Client
 	preview := SetupPreview{Directory: directory, Client: options.Client, Command: command}
 
-	settingsPath := filepath.Join(directory, ".claude", "settings.local.json")
-	settingsBefore, err := readOptionalProjectFile(directory, settingsPath)
-	if err != nil {
-		return SetupPreview{}, err
+	skillPath := ""
+	switch options.Client {
+	case ClaudeCode:
+		settingsPath := filepath.Join(directory, ".claude", "settings.local.json")
+		settingsBefore, readErr := readOptionalProjectFile(directory, settingsPath)
+		if readErr != nil {
+			return SetupPreview{}, readErr
+		}
+		settingsAfter, mergeErr := mergeHookConfig(settingsBefore, command, options.DisableHooks, "Claude Code settings")
+		if mergeErr != nil {
+			return SetupPreview{}, mergeErr
+		}
+		preview.Changes = append(preview.Changes, fileChange(directory, settingsPath, settingsBefore, settingsAfter, 0o600))
+		skillPath = filepath.Join(directory, ".claude", "skills", "edc-recorder", "SKILL.md")
+	case Codex:
+		hooksPath := filepath.Join(directory, ".codex", "hooks.json")
+		hooksBefore, readErr := readOptionalProjectFile(directory, hooksPath)
+		if readErr != nil {
+			return SetupPreview{}, readErr
+		}
+		hooksAfter, mergeErr := mergeHookConfig(hooksBefore, command, options.DisableHooks, "Codex hooks")
+		if mergeErr != nil {
+			return SetupPreview{}, mergeErr
+		}
+		preview.Changes = append(preview.Changes, fileChange(directory, hooksPath, hooksBefore, hooksAfter, 0o600))
+		skillPath = filepath.Join(directory, ".agents", "skills", "edc-recorder", "SKILL.md")
 	}
-	settingsAfter, err := mergeClaudeSettings(settingsBefore, command, options.DisableHooks)
-	if err != nil {
-		return SetupPreview{}, err
-	}
-	preview.Changes = append(preview.Changes, fileChange(directory, settingsPath, settingsBefore, settingsAfter, 0o600))
 
 	// Local Codex and Claude Code integrations use the authenticated edc CLI
 	// directly. Remove the MCP entry written by older versions of this setup,
@@ -68,7 +85,6 @@ func (m *Manager) SetupPreview(options SetupOptions) (SetupPreview, error) {
 		preview.Warnings = append(preview.Warnings, "the legacy Event-driven Context MCP entry will be removed; local agents use the authenticated edc CLI")
 	}
 
-	skillPath := filepath.Join(directory, ".claude", "skills", "edc-recorder", "SKILL.md")
 	skillBefore, err := readOptionalProjectFile(directory, skillPath)
 	if err != nil {
 		return SetupPreview{}, err
@@ -121,10 +137,10 @@ func (m *Manager) ApplySetup(preview SetupPreview, approved bool) error {
 	return nil
 }
 
-func mergeClaudeSettings(before []byte, command string, disable bool) ([]byte, error) {
+func mergeHookConfig(before []byte, command string, disable bool, label string) ([]byte, error) {
 	root, err := decodeJSONObject(before)
 	if err != nil {
-		return nil, fmt.Errorf("read Claude Code settings: %w", err)
+		return nil, fmt.Errorf("read %s: %w", label, err)
 	}
 	hooks, _ := root["hooks"].(map[string]any)
 	if hooks == nil {
@@ -133,14 +149,14 @@ func mergeClaudeSettings(before []byte, command string, disable bool) ([]byte, e
 	for _, event := range setupHookEvents {
 		groups, err := objectSlice(hooks[event])
 		if err != nil {
-			return nil, fmt.Errorf("Claude Code hooks.%s must be an array", event)
+			return nil, fmt.Errorf("%s hooks.%s must be an array", label, event)
 		}
 		filtered := groups[:0]
 		found := false
 		for _, group := range groups {
 			handlers, handlerErr := objectSlice(group["hooks"])
 			if handlerErr != nil {
-				return nil, fmt.Errorf("Claude Code hooks.%s group has invalid hooks", event)
+				return nil, fmt.Errorf("%s hooks.%s group has invalid hooks", label, event)
 			}
 			kept := handlers[:0]
 			for _, handler := range handlers {
@@ -158,7 +174,11 @@ func mergeClaudeSettings(before []byte, command string, disable bool) ([]byte, e
 			}
 		}
 		if !disable && !found {
-			filtered = append(filtered, map[string]any{"hooks": []any{map[string]any{"type": "command", "command": command, "timeout": json.Number("5")}}})
+			timeout := json.Number("5")
+			if label == "Codex hooks" {
+				timeout = json.Number("3")
+			}
+			filtered = append(filtered, map[string]any{"hooks": []any{map[string]any{"type": "command", "command": command, "timeout": timeout}}})
 		}
 		if len(filtered) == 0 {
 			delete(hooks, event)

@@ -106,6 +106,52 @@ func TestNormalizeClaudeCodeStableIDRedactionAndUTF8Truncation(t *testing.T) {
 	}
 }
 
+func TestNormalizeCodexUsesTurnIDAndCurrentWireFields(t *testing.T) {
+	dir := t.TempDir()
+	in := HookInput{
+		SessionID:     "session-1",
+		TurnID:        "turn-1",
+		CWD:           dir,
+		HookEventName: "UserPromptSubmit",
+		Prompt:        "ship with api_key=ordinary-secret-value",
+		Model:         "gpt-test",
+	}
+	one, err := NormalizeCodex(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	two, err := NormalizeCodex(in)
+	if err != nil || one.Event.ID != two.Event.ID || !one.StableID {
+		t.Fatalf("stable Codex normalization failed: %v %#v %#v", err, one, two)
+	}
+	if one.Event.Content.Text != "ship with api_key= [REDACTED]" {
+		t.Fatalf("Codex prompt was not redacted: %q", one.Event.Content.Text)
+	}
+	if string(one.Event.Source["client"]) != `"codex"` || string(one.Event.Metadata["kind"]) != `"user_message"` {
+		t.Fatalf("Codex source or metadata mismatch: %#v %#v", one.Event.Source, one.Event.Metadata)
+	}
+
+	stop := in
+	stop.HookEventName = "Stop"
+	stop.Prompt = ""
+	stop.LastAssistantMessage = "done"
+	normalizedStop, err := NormalizeCodex(stop)
+	if err != nil || normalizedStop.Event.ID == one.Event.ID || !normalizedStop.Reminder {
+		t.Fatalf("Codex Stop normalization failed: %v %#v", err, normalizedStop)
+	}
+	stop.LastAssistantMessage = ""
+	missingMessage, err := NormalizeCodex(stop)
+	if err != nil || string(missingMessage.Event.Metadata["message_missing"]) != "true" {
+		t.Fatalf("Codex nullable Stop message failed: %v %#v", err, missingMessage)
+	}
+
+	start := HookInput{SessionID: "session-1", CWD: dir, HookEventName: "SessionStart", Source: "startup"}
+	normalizedStart, err := NormalizeCodex(start)
+	if err != nil || normalizedStart.StableID || !normalizedStart.LoadContext {
+		t.Fatalf("Codex SessionStart normalization failed: %v %#v", err, normalizedStart)
+	}
+}
+
 func TestDecodeCurrentClaudeHookToleratesDocumentedExtraFields(t *testing.T) {
 	raw := `{"session_id":"s","prompt_id":"p","transcript_path":"/tmp/t","cwd":"/tmp","scratchpad_dir":"/tmp/s","permission_mode":"default","effort":{"level":"high"},"hook_event_name":"Stop","stop_hook_active":false,"last_assistant_message":"done","background_tasks":[],"session_crons":[]}`
 	if _, err := DecodeHookInput(strings.NewReader(raw)); err != nil {
@@ -378,6 +424,75 @@ func TestSetupWithoutLegacyMCPDoesNotCreateMCPConfig(t *testing.T) {
 	}
 	if _, err = os.Stat(filepath.Join(project, ".mcp.json")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("MCP config created: %v", err)
+	}
+}
+
+func TestCodexSetupPreservesExistingHooksAndInstallsRecorder(t *testing.T) {
+	project := t.TempDir()
+	edc := filepath.Join(t.TempDir(), "edc")
+	if err := os.WriteFile(edc, []byte("binary"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	hooksPath := filepath.Join(project, ".codex", "hooks.json")
+	if err := os.MkdirAll(filepath.Dir(hooksPath), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(hooksPath, []byte(`{"description":"keep","hooks":{"Stop":[{"hooks":[{"type":"command","command":"keep-me"}]}]}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	m := newTestManager(t, &fakeSender{})
+	binding, err := m.Link(context.Background(), project, "project", "https://context.example", "alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	preview, err := m.SetupPreview(SetupOptions{Directory: project, Client: Codex, EDCPath: edc, ConfigPath: filepath.Join(t.TempDir(), "config.json"), Server: binding.Server, AccountID: binding.AccountID})
+	firstPath := ""
+	if len(preview.Changes) > 0 {
+		firstPath = preview.Changes[0].Path
+	}
+	if err != nil || len(preview.Changes) != 3 || !strings.HasSuffix(firstPath, filepath.Join(".codex", "hooks.json")) {
+		t.Fatalf("Codex preview changes=%d first=%q err=%v", len(preview.Changes), firstPath, err)
+	}
+	if err = m.ApplySetup(preview, true); err != nil {
+		t.Fatal(err)
+	}
+	hooks, err := os.ReadFile(hooksPath)
+	if err != nil || !bytes.Contains(hooks, []byte("keep-me")) || !bytes.Contains(hooks, []byte("hook codex")) || !bytes.Contains(hooks, []byte(`"timeout": 3`)) {
+		t.Fatalf("Codex hooks were not merged safely: %s err=%v", hooks, err)
+	}
+	skill, err := os.ReadFile(filepath.Join(project, ".agents", "skills", "edc-recorder", "SKILL.md"))
+	if err != nil || !bytes.Equal(skill, edcrecorder.Content) {
+		t.Fatalf("Codex recorder install mismatch: %v", err)
+	}
+	status, err := m.Status(project, binding.Server, binding.AccountID)
+	if err != nil || !status.HooksEnabled || !status.HookClients[Codex] || status.HookClients[ClaudeCode] {
+		t.Fatalf("Codex status mismatch: %#v err=%v", status, err)
+	}
+}
+
+func TestHandleCodexHookQueuesAndDelivers(t *testing.T) {
+	sender := &fakeSender{}
+	m := newTestManager(t, sender)
+	dir := t.TempDir()
+	binding, err := m.Link(context.Background(), dir, "project", "https://context.example", "alice")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = writeJSONAtomic(m.captureScopePath(binding, Codex), captureScope{Version: 1, Client: Codex, Enabled: true}, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	payload, _ := json.Marshal(map[string]any{
+		"session_id":      "session",
+		"turn_id":         "turn",
+		"cwd":             dir,
+		"hook_event_name": "UserPromptSubmit",
+		"prompt":          "Codex hook text",
+		"permission_mode": "default",
+	})
+	result, err := m.HandleHook(context.Background(), Codex, binding.Server, binding.AccountID, bytes.NewReader(payload), &bytes.Buffer{})
+	if err != nil || !result.Delivered || len(sender.events) != 1 || sender.events[0].Content.Text != "Codex hook text" {
+		t.Fatalf("Codex hook result=%#v events=%#v err=%v", result, sender.events, err)
 	}
 }
 

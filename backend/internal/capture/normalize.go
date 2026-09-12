@@ -37,13 +37,101 @@ func DecodeHookInput(r io.Reader) (HookInput, error) {
 	decoder := json.NewDecoder(bytes.NewReader(b))
 	var in HookInput
 	if err = decoder.Decode(&in); err != nil {
-		return HookInput{}, fmt.Errorf("decode Claude Code hook input: %w", err)
+		return HookInput{}, fmt.Errorf("decode hook input: %w", err)
 	}
 	var extra any
 	if err = decoder.Decode(&extra); err != io.EOF {
 		return HookInput{}, fmt.Errorf("hook input contains trailing data")
 	}
 	return in, nil
+}
+
+func NormalizeCodex(in HookInput) (normalizedHook, error) {
+	in.SessionID = strings.TrimSpace(in.SessionID)
+	in.TurnID = strings.TrimSpace(in.TurnID)
+	in.CWD = strings.TrimSpace(in.CWD)
+	if in.SessionID == "" || in.CWD == "" {
+		return normalizedHook{}, fmt.Errorf("Codex hook requires session_id and cwd")
+	}
+	if len(in.SessionID) > 512 || len(in.TurnID) > 512 || len(in.HookEventName) > 64 {
+		return normalizedHook{}, fmt.Errorf("Codex hook identifier is too large")
+	}
+
+	kind, text, stablePart := "", "", ""
+	result := normalizedHook{Input: in}
+	metadata := map[string]json.RawMessage{
+		"client_event": mustJSON(in.HookEventName),
+	}
+	if in.Model != "" {
+		model, _ := truncateUTF8(redactText(in.Model), MaxHookField)
+		metadata["model"] = mustJSON(model)
+	}
+	switch in.HookEventName {
+	case "SessionStart":
+		if !oneOf(in.Source, "startup", "resume", "clear", "compact") {
+			return normalizedHook{}, fmt.Errorf("invalid Codex SessionStart source")
+		}
+		kind, text = "session_started", "Codex session started ("+in.Source+")."
+		result.LoadContext = true
+		metadata["source"] = mustJSON(in.Source)
+	case "UserPromptSubmit":
+		if in.TurnID == "" || in.Prompt == "" {
+			return normalizedHook{}, fmt.Errorf("Codex UserPromptSubmit requires turn_id and prompt")
+		}
+		kind, text, stablePart = "user_message", in.Prompt, in.TurnID
+	case "Stop":
+		if in.TurnID == "" {
+			return normalizedHook{}, fmt.Errorf("Codex Stop requires turn_id")
+		}
+		kind, text, stablePart = "assistant_message", in.LastAssistantMessage, in.TurnID
+		if text == "" {
+			text = "Codex turn stopped without an assistant message."
+			metadata["message_missing"] = mustJSON(true)
+		}
+		result.Reminder = !in.StopHookActive
+		metadata["stop_hook_active"] = mustJSON(in.StopHookActive)
+	case "PreCompact":
+		if in.TurnID == "" || !oneOf(in.Trigger, "manual", "auto") {
+			return normalizedHook{}, fmt.Errorf("Codex PreCompact requires turn_id and a valid trigger")
+		}
+		kind, text, stablePart = "context_compacting", "Codex context compaction requested ("+in.Trigger+").", in.TurnID+"\x00"+in.Trigger
+		metadata["trigger"] = mustJSON(in.Trigger)
+	case "SessionEnd":
+		if in.Reason != "other" {
+			return normalizedHook{}, fmt.Errorf("invalid Codex SessionEnd reason")
+		}
+		kind, text = "session_ended", "Codex session ended (other)."
+		metadata["reason"] = mustJSON(in.Reason)
+	default:
+		return normalizedHook{}, fmt.Errorf("unsupported Codex hook event %q", in.HookEventName)
+	}
+
+	text = redactText(text)
+	var truncated bool
+	text, truncated = truncateUTF8(text, MaxHookField)
+	metadata["kind"] = mustJSON(kind)
+	if truncated {
+		metadata["truncated"] = mustJSON([]string{"content.text"})
+	}
+	source := map[string]json.RawMessage{
+		"channel":    mustJSON("hook"),
+		"client":     mustJSON(Codex),
+		"session_id": mustJSON(in.SessionID),
+	}
+	event := v2.EventInput{Type: "log", Content: v2.EventContent{Kind: "text", Text: text}, Metadata: metadata, Source: source}
+	if stablePart != "" {
+		key := Codex + "\x00" + in.SessionID + "\x00" + in.HookEventName + "\x00" + stablePart + "\x00" + eventDigest(event)
+		event.ID = uuid.NewSHA1(captureNamespace, []byte(key)).String()
+		result.StableID = true
+	} else {
+		id, err := uuid.NewV7()
+		if err != nil {
+			return normalizedHook{}, err
+		}
+		event.ID = id.String()
+	}
+	result.Event = event
+	return result, nil
 }
 
 func NormalizeClaudeCode(in HookInput) (normalizedHook, error) {

@@ -37,7 +37,7 @@ Commands:
   sync --project ID --output DIR [--files all]
   plugin install | list | config | pause | resume | rerun | remove
   pull --after SEQUENCE
-  hook CLIENT | setup CLIENT [--apply]
+  hook CLIENT | setup [--apply] CLIENT
   outbox [list|flush]
   host run --plugin ID --plugin-dir PATH --plugin-token-file PATH (--once | --watch)
   mcp

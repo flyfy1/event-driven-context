@@ -13,17 +13,22 @@ import (
 )
 
 // HandleHook normalizes one hook invocation, durably queues it before network
-// delivery, and emits only Claude Code hook output. Delivery errors are
+// delivery, and emits client-compatible hook output. Delivery errors are
 // non-blocking once the event is safely queued; local persistence errors return.
 func (m *Manager) HandleHook(ctx context.Context, client, server, accountID string, input io.Reader, output io.Writer) (HookResult, error) {
-	if client != ClaudeCode {
-		return HookResult{}, fmt.Errorf("unsupported hook client %q", client)
-	}
 	in, err := DecodeHookInput(input)
 	if err != nil {
 		return HookResult{}, err
 	}
-	normalized, err := NormalizeClaudeCode(in)
+	var normalized normalizedHook
+	switch client {
+	case ClaudeCode:
+		normalized, err = NormalizeClaudeCode(in)
+	case Codex:
+		normalized, err = NormalizeCodex(in)
+	default:
+		return HookResult{}, fmt.Errorf("unsupported hook client %q", client)
+	}
 	if err != nil {
 		return HookResult{}, err
 	}

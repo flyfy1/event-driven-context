@@ -11,6 +11,7 @@ import (
 
 const (
 	ClaudeCode       = "claude-code"
+	Codex            = "codex"
 	MaxHookInput     = 1 << 20
 	MaxHookField     = 16 << 10
 	maxContextOutput = 64 << 10
@@ -34,9 +35,10 @@ type Binding struct {
 }
 
 type Status struct {
-	Binding       Binding `json:"binding"`
-	HooksEnabled  bool    `json:"hooks_enabled"`
-	OutboxPending int     `json:"outbox_pending"`
+	Binding       Binding         `json:"binding"`
+	HooksEnabled  bool            `json:"hooks_enabled"`
+	HookClients   map[string]bool `json:"hook_clients"`
+	OutboxPending int             `json:"outbox_pending"`
 }
 
 type OutboxItem struct {
@@ -57,6 +59,7 @@ type HookResult struct {
 
 type HookInput struct {
 	SessionID            string          `json:"session_id"`
+	TurnID               string          `json:"turn_id,omitempty"`
 	PromptID             string          `json:"prompt_id,omitempty"`
 	TranscriptPath       string          `json:"transcript_path,omitempty"`
 	CWD                  string          `json:"cwd"`

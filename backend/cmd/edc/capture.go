@@ -14,7 +14,7 @@ import (
 	"event-driven-context/internal/updater"
 )
 
-const hookTimeout = 4 * time.Second
+const hookTimeout = 2500 * time.Millisecond
 
 func (a *app) captureManager() (*capture.Manager, error) {
 	configPath, err := filepath.Abs(a.configPath)

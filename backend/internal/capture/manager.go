@@ -125,7 +125,11 @@ func (m *Manager) Status(cwd, server, accountID string) (Status, error) {
 	if err != nil {
 		return Status{}, err
 	}
-	return Status{Binding: binding, HooksEnabled: m.captureEnabled(binding, ClaudeCode), OutboxPending: len(items)}, nil
+	clients := map[string]bool{
+		ClaudeCode: m.captureEnabled(binding, ClaudeCode),
+		Codex:      m.captureEnabled(binding, Codex),
+	}
+	return Status{Binding: binding, HooksEnabled: clients[ClaudeCode] || clients[Codex], HookClients: clients, OutboxPending: len(items)}, nil
 }
 
 func (m *Manager) readBindingsLocked() (bindingsFile, error) {
