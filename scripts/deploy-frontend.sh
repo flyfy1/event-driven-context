@@ -14,7 +14,14 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 readonly SOURCE_REVISION="$(git rev-parse --short=12 HEAD)"
 git clone --quiet --branch gh-pages "git@github.com:${REPOSITORY}.git" "$TEMP_DIR/site"
-rsync -a --delete --exclude '.git' --exclude '.DS_Store' frontend/ "$TEMP_DIR/site/"
+# The admin dashboard and standalone agent guide are published independently
+# on gh-pages, so a workspace release must not remove them.
+rsync -a --delete \
+  --exclude '.git' \
+  --exclude '.DS_Store' \
+  --exclude '/admin/' \
+  --exclude '/agent-setup.md' \
+  frontend/ "$TEMP_DIR/site/"
 
 # GitHub Pages serves JavaScript and CSS with long browser/CDN cache lifetimes.
 # Give every local asset reference a release-specific URL so returning browsers
