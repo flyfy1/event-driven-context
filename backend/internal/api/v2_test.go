@@ -41,11 +41,11 @@ func newV2APIFixture(t *testing.T) *v2APIFixture {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = store.Close() })
-	alice, err := store.Register(context.Background(), core.Credentials{Username: "alice-v2", Password: "password-123"})
+	alice, err := store.Register(context.Background(), core.Credentials{Username: "alice-v2", Email: "api-v2-alice@example.invalid", Password: "password-123"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	bob, err := store.Register(context.Background(), core.Credentials{Username: "bob-v2", Password: "password-123"})
+	bob, err := store.Register(context.Background(), core.Credentials{Username: "bob-v2", Email: "api-v2-bob@example.invalid", Password: "password-123"})
 	if err != nil {
 		t.Fatal(err)
 	}

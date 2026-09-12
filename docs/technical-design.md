@@ -15,7 +15,7 @@ P1 必须形成一条完整路径：
 1. App、CLI、hook、MCP 或 HTTP 向同一项目追加 Event；文件先作为 File 上传。
 2. 插件处理器按 sequence 增量读取，在自己的权限内追加 derived Event 或发布 State。
 3. 新会话读取项目概况，需要时查询原始证据，并把新决定作为 Event 写回。
-4. Android App 展示同步状态、转录和按日期发布的回顾 State。
+4. Web 先完成共享项目、可恢复路由和中心登录主链；Android 随后展示同步状态、转录和按日期发布的回顾 State。
 
 核心语义检索、向量库、图片分析执行、外部发布、提醒推荐、跨项目和插件市场不进入 P1。
 
@@ -50,6 +50,8 @@ flowchart LR
 Project 是 Event、File、State、插件和成员权限的边界，并保存用于日期与计划运行解释的 IANA 时区。创建时可省略 `timezone`，服务端默认使用 `UTC`；owner 可用 `PATCH /v1/projects/{project_id}` 更新，成功直接返回 Project。插件自省返回当前 `project_timezone`，让每次处理使用与项目一致的时间语义；本次不增加 MCP 修改工具。
 
 Project 同时是团队 context 的共享边界。owner 按注册用户名添加成员；项目列表按当前登录用户的成员关系返回。加入后，成员通过 HTTP、MCP、CLI、网页或 App 读取同一份 Event、File 和公开 State，并可向同一项目追加 Event。
+
+Web 用 `?project=<project_id>#<view>` 表达当前项目与分区，并可把该 URL 作为成员间的共享链接。服务端成员权限仍是访问边界；未知或无权 project 不能回退到列表中的其他项目。
 
 ### Event
 
@@ -90,7 +92,7 @@ State 是插件发布的可重建项目视图，不是原始记录。key 使用 
 
 | 功能 | HTTP | MCP | CLI / App 使用方式 |
 |---|---|---|---|
-| 身份 | register、login、logout、me | 不暴露 | CLI 保存私有 token；网页与 App 使用各自认证流程 |
+| 身份 | Integ.Life start/callback、logout、me；CLI 兼容 register/login | 不暴露 | Web 使用 Context HttpOnly Session；CLI、hook 与 MCP 保存私有 Bearer token |
 | 项目与成员 | projects、project timezone、project members | list/create projects，list/add members | owner 添加注册成员；成员在各入口看到并读写同一项目；Project 响应始终带 timezone |
 | 追加记录 | project events 批量写入 | `record_events` | `edc push`、hook、App 共享 UUID 与逐项结果规则 |
 | 查询与原文 | events query、event get、metadata | `query_events`、`get_event`、`list_metadata` | 网页、skill、`edc query/get/pull` 使用同一筛选和游标 |
@@ -145,6 +147,10 @@ Agent 或处理器整理团队记录时以 `actor` 判断写入者，以 refs �
 
 用户令牌按项目成员身份工作，并受 OAuth scope 限制。插件令牌固定到一个安装、项目、版本和权限集合；每次操作都重新检查暂停、卸载与修订状态。
 
+Web 默认从 Context 后端进入 Integ.Life 中心 Google 登录。产品后端生成并校验 PKCE/state、读取中心确认的 email，再签发自己的 host-only HttpOnly Session；浏览器所有 API 和文件请求携带该 cookie，中心 token 不进入前端 URL 或存储。`return_to` 只接受产品同源相对路径，并保留 project query、当前 view hash 与 locale。CLI Bearer 登录继续兼容。
+
+本地用户以 `(issuer, sub)` 唯一绑定。新用户缺少中心确认 email 时拒绝创建；旧用户首次绑定可按人工确认的 email 命中原 ID，随后固定 sub。`songyy` 与 `cwhy` 均绑定原 ID，其既有 Project、成员关系和 Event actor 不迁移、不重建；实际邮箱只保存在受控迁移证据和工作日志中。
+
 - 普通用户不能通过请求字段冒充插件写 `derived` 或 producer。
 - 插件只能读取清单允许的事件、引用可读事件，并写自己的 State 命名空间。
 - 项目 owner 代表已安装插件发布 State 时仍要通过显式的 `as_plugin_id` 授权检查。
@@ -163,11 +169,11 @@ Agent 或处理器整理团队记录时以 `actor` 判断写入者，以 refs �
 - 团队 Event 视图显示 actor username（必要时 ID）、recorded_at 和 source channel；项目成员入口显示当前成员，并允许 owner 添加已注册用户名。
 - 四种目标语言覆盖同一流程、校验、错误、空状态和跨页选择；生成内容语言由插件配置决定，转录保留原语言。
 
-网页提供项目记录、项目状态、接入和插件管理。Android 提供记录、回顾、我的，并复用相同项目、插件和 State 接口。界面优先显示用户可理解的名称与结果，ID 用于来源和诊断。
+网页先提供项目记录、项目状态、接入、成员共享、可恢复 URL 路由和插件管理。Android 在 Web 主链之后继续提供记录、回顾、我的，并复用相同项目、插件和 State 接口。界面优先显示用户可理解的名称与结果，ID 用于来源和诊断。
 
 ## 9. 实施顺序与当前边界
 
-验收按产品第 10.2 节的依赖推进：① 数据和公开接口；② CLI/hook/setup/outbox；③ 项目概况与第二客户端；④ processor host 与转录；⑤ Android 可靠采集；⑥ 实际定时回顾；⑦ 网页与四语言。
+验收按产品第 10.2 节的依赖推进；当前平台优先级调整为先完成 Web 共享、路由与中心登录，再继续 Android 设备验收。已完成的 Android 代码与模拟器证据保留，不作为 Web 尚未上线能力的完成证明。
 
 根据用户要求，公开契约已定义的功能可由不同 Agent 并行开发，GPT-6 持续审核；后一步不能用未验收的前置能力作完成证明。当前每项状态以 `v2-implementation.md` 为准；旧 P1 代码与测试只能作为历史参考。
 

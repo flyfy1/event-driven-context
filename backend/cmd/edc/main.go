@@ -25,7 +25,7 @@ const help = `edc — append-only project context
 Usage: edc [--server URL] [--config PATH] COMMAND
 
 Commands:
-  register | login | logout | whoami
+  register --username NAME --email ADDRESS | login | logout | whoami
   project create | list | members | add-member
   link [PROJECT_ID] | status
   push [TEXT] | --file PATH | --json | --jsonl
@@ -302,6 +302,10 @@ func writePrivateNewFile(path string, contents []byte) error {
 func (a *app) auth(command string, args []string) error {
 	f := a.flags(command)
 	username := f.String("username", "", "username")
+	var email *string
+	if command == "register" {
+		email = f.String("email", "", "email address")
+	}
 	fromStdin := f.Bool("password-stdin", false, "read password from stdin")
 	if err := parse(f, args); err != nil {
 		return err
@@ -309,12 +313,16 @@ func (a *app) auth(command string, args []string) error {
 	if *username == "" {
 		return fmt.Errorf("--username is required")
 	}
+	if command == "register" && strings.TrimSpace(*email) == "" {
+		return fmt.Errorf("--email is required for register")
+	}
 	password, err := a.password(*fromStdin)
 	if err != nil {
 		return err
 	}
 	credentials := core.Credentials{Username: *username, Password: password}
 	if command == "register" {
+		credentials.Email = strings.TrimSpace(*email)
 		out, err := a.client.Register(a.ctx, credentials)
 		return a.result(out, err)
 	}

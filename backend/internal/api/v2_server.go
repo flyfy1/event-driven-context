@@ -28,12 +28,16 @@ func V2HandlerWithConfig(store *core.Store, service v2.ServiceAPI, config Config
 	mux.Handle("POST /v1/auth/register", gate.wrap(jsonEndpoint(http.StatusCreated, store.Register)))
 	mux.Handle("POST /v1/auth/login", gate.wrap(jsonEndpoint(http.StatusOK, store.Login)))
 	mux.Handle("POST /v1/auth/logout", authenticated(store, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if err := store.Logout(r.Context(), bearer(r)); err != nil {
+		if err := store.Logout(r.Context(), requestSessionToken(r)); err != nil {
 			failV2(w, err)
 			return
 		}
+		clearSessionCookies(w)
 		respond(w, http.StatusOK, core.Empty{})
 	})))
+	if config.IntegAuth.ClientID != "" {
+		registerIntegAuthHandlers(mux, store, config.IntegAuth, config.PublicBaseURL)
+	}
 	mux.Handle("GET /v1/me", v2UserAuthenticated(store, config, core.ScopeRead, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		out, err := store.Me(r.Context())
 		v2RespondResult(w, http.StatusOK, out, err)
@@ -75,6 +79,7 @@ func v2HTTPMiddleware(next http.Handler, config Config) http.Handler {
 			}
 			if originAllowed {
 				logged.Header().Set("Access-Control-Allow-Origin", origin)
+				logged.Header().Set("Access-Control-Allow-Credentials", "true")
 				logged.Header().Set("Access-Control-Expose-Headers", "Content-Disposition, X-EDC-File-ID, X-EDC-SHA256, X-Request-ID")
 				logged.Header().Set("Vary", "Origin")
 				if r.Method == http.MethodOptions {

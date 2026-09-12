@@ -38,7 +38,7 @@ func TestDailyScheduledWindowPublishesOnce(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	credentials := core.Credentials{Username: "daily-host-test", Password: "daily-host-password"}
+	credentials := core.Credentials{Username: "daily-host-test", Email: "daily-host-test@example.invalid", Password: "daily-host-password"}
 	if _, err = client.Register(ctx, credentials); err != nil {
 		t.Fatal(err)
 	}
