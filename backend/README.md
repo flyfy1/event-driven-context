@@ -9,7 +9,7 @@ This directory is the Go module for the Event-driven Context V2 API, CLI, MCP se
 - `internal/v2`: append-only Event, File, versioned State, and plugin authorization rules.
 - `internal/v2client`: typed client for the public V2 HTTP routes.
 - `internal/capture`: directory bindings, setup previews, hook normalization, and the durable outbox.
-- `internal/processorhost`: explicit one-pass host execution for installed agent and command processors.
+- `internal/processorhost`: one-pass and watched host execution for installed agent and command processors.
 - `internal/api`: HTTP and OAuth adapters plus real-route integration tests.
 - `internal/mcpserver`: the 13 public V2 conversation-agent tools.
 - `internal/core`: user, token, project, and membership identity storage.
@@ -50,8 +50,13 @@ Save the one-time plugin credential directly to a new private file, then run one
 ```sh
 edc plugin install --manifest backend/plugins/project-brief/manifest.json --token-file /private/path/project-brief.token
 edc host run --plugin project-brief --plugin-dir backend/plugins --plugin-token-file /private/path/project-brief.token --agent-command /path/to/codex --once
+edc host run --plugin project-brief --plugin-dir backend/plugins --plugin-token-file /private/path/project-brief.token --agent-command /path/to/codex --watch --interval 30s
 ```
 
-The host reads the installation and configuration with the plugin credential, pulls Events after the plugin `_cursor`, publishes validated output, and advances `_cursor` only after the output succeeds. Command processors can use `--command` to select a local executable; no scheduler or background daemon is included in this build.
+The host reads the installation and configuration with the plugin credential, pulls Events after the plugin `_cursor`, publishes validated output, and advances `_cursor` only after the output succeeds. `--watch` checks immediately and then at the requested interval; SIGINT or SIGTERM cancels the active bounded child process, cleans its temporary directory, and exits normally. It works for cursor-driven `audio-transcribe` and `project-brief` processors as well as the fixed daily schedule.
+
+`daily-review` uses the project's current IANA timezone. Its `config.time` overrides the manifest's default `21:00` using `HH:MM` local time. Each tick selects the latest due date and preserves the exact `[previous scheduled time, scheduled time)` recorded-at window in the dated State's `data`. A successfully published date is not generated again. After multiple offline days only the latest due period runs; skipped dates are retained in `_cursor` and the dated State. `limits.max_runs_per_day` bounds execution attempts, while network failures during event reads do not consume an attempt. Watch output is JSONL with `scheduled_date`, `scheduled_at`, `window_from`, `window_to`, `timezone`, State/cursor versions, no-op reason, and skipped dates.
+
+Command processors can use `--command` to select a local executable. This build does not provide a general scheduler or consume manual-run requests.
 
 The repository-level `Makefile` builds the binaries into `bin/`.

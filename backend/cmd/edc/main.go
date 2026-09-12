@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"event-driven-context/internal/core"
 	"event-driven-context/internal/processorhost"
@@ -35,7 +36,7 @@ Commands:
   pull --after SEQUENCE
   hook CLIENT | setup CLIENT [--apply]
   outbox [list|flush]
-  host run --plugin ID --plugin-dir PATH --plugin-token-file PATH --once
+  host run --plugin ID --plugin-dir PATH --plugin-token-file PATH (--once | --watch)
   mcp
 
 Global flags precede COMMAND. Commands use the current directory binding when
@@ -197,14 +198,16 @@ func (a *app) host(args []string) error {
 	command := f.String("command", "", "executable override for command processors")
 	timeout := f.Duration("timeout", 0, "processor timeout override (default from manifest)")
 	once := f.Bool("once", false, "run one processor pass")
+	watch := f.Bool("watch", false, "keep checking the processor schedule and event cursor")
+	interval := f.Duration("interval", 30*time.Second, "watch check interval")
 	if err := parse(f, args[1:]); err != nil {
 		return err
 	}
 	if err := a.requiredProject(projectID); err != nil {
 		return err
 	}
-	if *pluginID == "" || *pluginDir == "" || !*once {
-		return fmt.Errorf("--plugin, --plugin-dir and --once are required")
+	if *pluginID == "" || *pluginDir == "" || *once == *watch {
+		return fmt.Errorf("--plugin, --plugin-dir and exactly one of --once or --watch are required")
 	}
 	pluginToken := os.Getenv("EDC_PLUGIN_TOKEN")
 	if *pluginTokenFile != "" {
@@ -220,12 +223,26 @@ func (a *app) host(args []string) error {
 	if pluginToken == "" {
 		return fmt.Errorf("--plugin-token-file or EDC_PLUGIN_TOKEN is required")
 	}
-	result, err := processorhost.RunOnce(a.ctx, a.client, processorhost.Options{
+	opts := processorhost.Options{
 		ProjectID: *projectID, PluginID: *pluginID, PluginDir: *pluginDir,
 		PluginToken: pluginToken, AgentCommand: *agentCommand, Command: *command,
-		Once: *once, Timeout: *timeout,
-	})
-	return a.result(result, err)
+		Once: *once, Watch: *watch, Interval: *interval, Timeout: *timeout,
+	}
+	if *once {
+		result, err := processorhost.RunOnce(a.ctx, a.client, opts)
+		return a.result(result, err)
+	}
+	opts.OnResult = func(result processorhost.Result, runErr error) {
+		if runErr == nil {
+			_ = json.NewEncoder(a.io.out).Encode(result)
+			return
+		}
+		_ = json.NewEncoder(a.io.err).Encode(struct {
+			Result processorhost.Result `json:"result"`
+			Error  string               `json:"error"`
+		}{Result: result, Error: runErr.Error()})
+	}
+	return processorhost.Run(a.ctx, a.client, opts)
 }
 
 func readPrivateTokenFile(path string) (string, error) {

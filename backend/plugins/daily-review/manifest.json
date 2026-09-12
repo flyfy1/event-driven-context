@@ -28,7 +28,7 @@
     },
     "schedule": {
       "time": "21:00",
-      "timezone": "config"
+      "timezone": "project"
     },
     "limits": {
       "timeout_seconds": 120,
@@ -36,7 +36,7 @@
     }
   },
   "config": {
-    "timezone": "Asia/Singapore",
+    "time": "21:00",
     "language": "auto",
     "prompt": "Keep progress, decisions, todos, questions, and suggestions distinct."
   },
