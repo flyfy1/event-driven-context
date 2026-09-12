@@ -11,8 +11,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/textproto"
+	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -31,6 +33,24 @@ type v2APIFixture struct {
 	token    string
 	bobToken string
 	project  core.Project
+}
+
+func TestFailV2ReportsInsufficientStorage(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	failV2(recorder, &os.PathError{Op: "write", Path: "/data/v2/files/.tmp", Err: syscall.ENOSPC})
+
+	if recorder.Code != http.StatusInsufficientStorage {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusInsufficientStorage)
+	}
+	var payload struct {
+		Error v2.Error `json:"error"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload.Error.Code != "storage_unavailable" {
+		t.Fatalf("error code = %q, want storage_unavailable", payload.Error.Code)
+	}
 }
 
 func newV2APIFixture(t *testing.T) *v2APIFixture {

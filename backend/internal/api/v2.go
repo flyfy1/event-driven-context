@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"unicode/utf8"
 
 	"event-driven-context/internal/core"
@@ -603,6 +604,9 @@ func failV2(w http.ResponseWriter, err error) {
 		var coreErr *core.Error
 		if errors.As(err, &coreErr) {
 			appErr = &v2.Error{Code: coreErr.Code, Message: coreErr.Message}
+		} else if errors.Is(err, syscall.ENOSPC) || errors.Is(err, syscall.EDQUOT) {
+			slog.Error("V2 storage operation failed", "error", err)
+			appErr = &v2.Error{Code: "storage_unavailable", Message: "server storage is temporarily unavailable; retry later"}
 		} else {
 			slog.Error("V2 API operation failed", "error", err)
 			appErr = &v2.Error{Code: "internal", Message: "internal server error"}
@@ -628,6 +632,8 @@ func failV2(w http.ResponseWriter, err error) {
 		status = http.StatusTooManyRequests
 	case "service_unavailable":
 		status = http.StatusServiceUnavailable
+	case "storage_unavailable":
+		status = http.StatusInsufficientStorage
 	case "processing_failed":
 		status = http.StatusBadGateway
 	}

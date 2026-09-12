@@ -151,6 +151,22 @@ if [[ -z "$healthy" ]]; then
   exit 1
 fi
 if [[ -n "$notes_was_active" ]]; then systemctl start event-context-notes.service; fi
+
+# Keep rollback capacity without allowing immutable releases to fill the
+# production boot disk. Always retain the active target even if clock skew
+# makes it fall outside the five newest directories.
+current_target="$(readlink -f "$remote_root/current")"
+mapfile -t releases < <(find "$remote_root/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' | sort -nr | awk '{print $2}')
+for index in "${!releases[@]}"; do
+  candidate="${releases[$index]}"
+  if [[ "$index" -lt 5 || "$candidate" == "$current_target" ]]; then
+    continue
+  fi
+  case "$candidate" in
+    "$remote_root/releases/"*) rm -rf -- "$candidate" ;;
+    *) echo "refusing to prune unexpected release path: $candidate" >&2; exit 1 ;;
+  esac
+done
 REMOTE_SCRIPT
 
 echo "Deployed $SERVICE release $RELEASE_ID"
