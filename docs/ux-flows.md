@@ -1,238 +1,240 @@
-# Event-driven Context：用户旅程与页面流程
+# Event-driven Context: User Journeys and Page Flows
 
-日期：2026-09-12 · 状态：交互设计草案，使用示例数据，不代表已实现页面。
+English | [简体中文](ux-flows.cn.md)
 
-依据：[产品设计](product.md)、[技术设计](technical-design.md)。这里补充用户看到的入口、文案、操作和反馈，不改变原有数据与授权约束。交互草图在本次对话中展示。
+Date: 2026-09-12 · Status: Interaction design draft using sample data; it does not represent implemented pages.
 
-> 后续修订：日常采集主入口已改为手机 App 的“开始/结束录音 → 自动上传与整理”，见[手机采集流程](mobile-capture-ux.md)。本文保留旧版桌面草图作对比，其中首次使用和手动选择录音的路径不再代表手机端主流程。
+Based on the [Product Design](product.md) and [Technical Design](technical-design.md). This document adds the entry points, copy, actions, and feedback that users see without changing the existing data and authorization constraints. The interaction mockup is shown in this conversation.
 
-## 1. 信息架构
+> Later revision: The main entry point for daily capture has changed to “start/stop recording → automatic upload and organization” in the mobile app. See the [Mobile Capture Flow](mobile-capture-ux.md). This document retains the earlier desktop mockup for comparison; its first-use path and manual recording-selection path no longer represent the main mobile flow.
 
-建议一级导航只保留四项。用户先选择项目，内容均遵守该项目边界；个人收件箱是结果入口，不改变结果所属项目的可见性。
+## 1. Information Architecture
+
+The recommended primary navigation has only four items. Users choose a project first, and all content respects that project's boundary. The personal inbox is an entry point to results; it does not change the visibility of the project to which a result belongs.
 
 ~~~mermaid
 flowchart TD
-    A["公开首页 / 注册 / 登录"] --> B["创建或选择项目"]
-    B --> C["记录 · 默认首页"]
-    B --> D["对话取用"]
-    B --> E["插件"]
-    B --> F["收件箱"]
-    C --> C1["新建记录：文字 / 音频 / 图片"]
-    C --> C2["记录详情：原始内容 / 处理结果 / 追加纠正"]
-    D --> D1["连接对话工具 / 选择项目范围"]
-    D --> D2["试提取 / 来源详情"]
-    E --> E1["可安装的 Skill / 已安装"]
-    E1 --> E2["处理规则 / 定时安排 / 分析要求"]
-    E2 --> E3["执行环境 / 运行记录"]
-    F --> F1["回顾 / 提醒 / 建议 / 分享草稿"]
+    A["Public home page / Sign up / Sign in"] --> B["Create or select a project"]
+    B --> C["Records · Default home"]
+    B --> D["Use in Conversations"]
+    B --> E["Plugins"]
+    B --> F["Inbox"]
+    C --> C1["New record: Text / Audio / Image"]
+    C --> C2["Record details: Original content / Processing results / Append correction"]
+    D --> D1["Connect a conversation tool / Select project scope"]
+    D --> D2["Test retrieval / Source details"]
+    E --> E1["Installable Skills / Installed"]
+    E1 --> E2["Processing rules / Schedules / Analysis instructions"]
+    E2 --> E3["Execution environment / Run history"]
+    F --> F1["Reviews / Reminders / Suggestions / Share drafts"]
     F1 --> C2
 ~~~
 
-“规则”和“运行详情”不必成为首屏的并列管理模块。它们可从插件或某条处理结果进入。项目切换、成员可见性、语言入口放在应用顶栏；执行器详情放在插件内部。
+“Rules” and “Run Details” do not need to be peer-level management modules on the first screen. They can be opened from a plugin or a processing result. Put the project switcher, member visibility, and language entry point in the application top bar; put runner details inside each plugin.
 
-桌面采用左侧导航和右侧工作区。窄屏采用顶栏项目入口、正文与四项底部导航；底栏在本草图中随文档流展示，真实产品需处理安全区和输入键盘。来源详情在桌面可为侧栏，窄屏进入独立详情并保留返回位置。
+On desktop, use left-side navigation and a right-side workspace. On narrow screens, use a top-bar project entry point, the main content, and four-item bottom navigation. In this mockup, the bottom bar appears in the document flow; the real product must account for the safe area and on-screen keyboard. Source details can appear in a side panel on desktop; on narrow screens, open a dedicated details page and preserve the user's return position.
 
-## 2. 旅程一：第一次使用，先留下记录
+## 2. Journey One: First Use—Save Some Context
 
-用户目标：把一个项目的背景留在这里，下次还能接着用。
+User goal: Save a project's background here so they can continue from it next time.
 
 ~~~mermaid
 flowchart LR
-    A["首页：开始记录"] --> B["注册 / 登录"]
-    B --> C["创建项目：名称 + 可见性"]
-    C --> D["空项目：记下第一条背景"]
-    D --> E["原始记录已保存"]
-    E --> F["继续记录"]
-    E --> G["可选：连接对话工具"]
-    E --> H["可选：安装处理插件"]
+    A["Home: Start recording"] --> B["Sign up / Sign in"]
+    B --> C["Create project: Name + Visibility"]
+    C --> D["Empty project: Save the first piece of context"]
+    D --> E["Original record saved"]
+    E --> F["Keep recording"]
+    E --> G["Optional: Connect a conversation tool"]
+    E --> H["Optional: Install a processing plugin"]
 ~~~
 
-| 页面 | 用户看到什么 | 主操作 | 操作后的反馈 |
+| Page | What the user sees | Primary action | Feedback after the action |
 |---|---|---|---|
-| 账户入口 | 用户名、密码要求、登录切换、语言入口 | 创建账户 / 登录 | 进入项目设置；错误留在原页 |
-| 创建项目 | 名称；“仅你可见”；共享需添加成员 | 创建项目 | 显示项目名和可见性 |
-| 空项目 | “先留下一条背景”；文字、音频、图片入口 | 记录第一条 | 打开记录输入 |
-| 第一条记录 | 原文、记录时间、来源、后续入口 | 继续记录 | 不强迫先配模型、插件或 cron |
+| Account entry | Username, password requirements, sign-in switch, language entry point | Create account / Sign in | Proceed to project setup; errors remain on the current page |
+| Create project | Name; “Only visible to you”; sharing requires adding members | Create project | Show project name and visibility |
+| Empty project | “Save some context first”; text, audio, and image entry points | Create first record | Open record input |
+| First record | Original content, recorded time, source, and next-step entry points | Keep recording | Do not force users to configure a model, plugin, or cron first |
 
-用户没有执行器也可以写入和读取原始信息。音频/图片可先保存，未配置处理时明确展示“尚未设置自动处理”。
+Users can write and read original information even without a runner. Audio and images can be saved first; when no processing is configured, clearly show “Automatic processing has not been set up.”
 
-## 3. 旅程二：上传录音，得到能被引用的内容
+## 3. Journey Two: Upload a Recording and Get Citable Content
 
-用户目标：保存刚刚说过的话，让未来的对话可以用上。
+User goal: Save what they just said so future conversations can use it.
 
 ~~~mermaid
 flowchart TD
-    A["记录 → 新建 → 音频"] --> B["选择文件 / 来源 / 可选说明"]
-    B --> C{"原始文件保存成功？"}
-    C -->|否| D["未保存：保留表单，说明错误，可重试"]
-    C -->|是| E["已保存原始录音"]
-    E --> F{"匹配到处理规则？"}
-    F -->|否| G["仅保存；可设置自动转录"]
-    F -->|是| H["等待处理 / 转录中"]
-    H -->|成功| I["转录结果 + 原始录音"]
-    H -->|失败或离线| J["原始录音已保存；处理未完成"]
-    J --> K["重连执行环境 / 重试本次处理"]
+    A["Records → New → Audio"] --> B["Select file / Source / Optional note"]
+    B --> C{"Was the original file saved?"}
+    C -->|No| D["Not saved: Preserve the form, explain the error, allow retry"]
+    C -->|Yes| E["Original recording saved"]
+    E --> F{"Did it match a processing rule?"}
+    F -->|No| G["Saved only; automatic transcription can be configured"]
+    F -->|Yes| H["Waiting for processing / Transcribing"]
+    H -->|Success| I["Transcript + Original recording"]
+    H -->|Failed or offline| J["Original recording saved; processing incomplete"]
+    J --> K["Reconnect execution environment / Retry this processing run"]
     K --> H
-    I --> L["追加纠正"]
-    L --> M["新版本可引用；原始记录与旧版本保留"]
+    I --> L["Append correction"]
+    L --> M["New version is citable; original record and old versions retained"]
 ~~~
 
-| 页面 | 关键内容 | 主操作 | 次操作 |
+| Page | Key content | Primary action | Secondary action |
 |---|---|---|---|
-| 录音输入 | 文件名、大小、项目；来源可选；将采用哪条规则 | 保存录音 | 改来源 / 查看处理要求 |
-| 已保存 | “原始录音已保存”；单独的“等待转录”状态 | 返回记录 | 查看处理进度 |
-| 转录详情 | 逐字转录与原始文件入口；模型生成标识；出处 | 用在对话中 | 追加纠正 / 查看旧版本 |
-| 处理失败 | “录音没有丢失”；具体原因与最后一次运行 | 重试处理或重新连接 | 查看原始录音 |
-| 纠正完成 | 用户纠正、关联的旧结果、当前默认版本 | 返回记录 | 查看版本历史 |
+| Recording input | File name, size, and project; optional source; which rule will apply | Save recording | Change source / View processing requirements |
+| Saved | “Original recording saved”; a separate “Waiting for transcription” status | Return to records | View processing progress |
+| Transcript details | Verbatim transcript and original file entry point; model-generated label; provenance | Use in conversation | Append correction / View old versions |
+| Processing failed | “Your recording was not lost”; the specific reason and latest run | Retry processing or reconnect | View original recording |
+| Correction complete | User correction, linked previous result, and current default version | Return to record | View version history |
 
-这里不出现“编辑原始日志”按钮。用户可以在编辑器里修改待提交的纠正草稿，点击“追加纠正”后保存成新记录。配置提示词变化也不直接覆盖旧转录。
+There is no “Edit original log” button here. Users can edit a pending correction draft in the editor; clicking “Append correction” saves it as a new record. Changes to a configured prompt also do not directly overwrite an old transcript.
 
-保存失败和分析失败使用不同文案。前者不声称数据已保存；后者始终展示原始文件的可用入口。运行详情是次级入口，不用错误码替代可操作提示。
+Use different copy for a save failure and an analysis failure. The former does not claim that data was saved; the latter always provides a working entry point to the original file. Run details are a secondary entry point; do not substitute error codes for actionable guidance.
 
-## 4. 旅程三：换一个对话，继续推进
+## 4. Journey Three: Continue in a New Conversation
 
-用户目标：不用重讲项目背景，得到基于现状的回答。
+User goal: Get an answer based on the current state without repeating the project's background.
 
 ~~~mermaid
 flowchart TD
-    A["首次：对话取用 → 连接工具"] --> B["登录与授权：当前用户 / 读取能力"]
-    B --> C["选择本次对话可用的项目范围"]
-    C --> D["返回外部对话工具"]
-    D --> E["提出问题：这周先做什么？"]
-    E --> F["读取相关 context"]
-    F --> G["回答 + 来源引用 + 未解决问题"]
-    G --> H["点击来源 → 查看原始记录"]
-    F --> I["没有足够背景 / 音频尚未处理"]
-    I --> J["补充记录 / 调整查询范围"]
+    A["First time: Use in Conversations → Connect tool"] --> B["Sign-in and authorization: Current user / Read capability"]
+    B --> C["Select the project scope available to this conversation"]
+    C --> D["Return to the external conversation tool"]
+    D --> E["Ask: What should we do first this week?"]
+    E --> F["Read relevant context"]
+    F --> G["Answer + Source citations + Unresolved questions"]
+    G --> H["Click source → View original record"]
+    F --> I["Insufficient context / Audio not yet processed"]
+    I --> J["Add a record / Adjust query scope"]
     J --> E
 ~~~
 
-| 页面 / 所在位置 | 用户看到什么 | 主要动作 |
+| Page / Location | What the user sees | Primary actions |
 |---|---|---|
-| 对话取用 / 本产品 | 连接说明、最近一次验证状态、可试提取的问题框 | 连接对话工具 |
-| 授权与范围 / 本产品或客户端授权页 | 账户、项目、读取范围；写入单独展示 | 允许读取选定项目 |
-| 新对话 / 外部工具 | 用户的问题；模型回答；可点击的依据 | 提问、查看来源 |
-| 来源详情 / 本产品 | 原文、作者、时间、当前状态、被取代的历史 | 返回对话 / 追加纠正 |
-| 无结果 / 对话或试提取页 | “目前没有足够信息”；实际查询范围与缺口 | 补充记录或缩小问题 |
+| Use in Conversations / This product | Connection instructions, latest verification status, and a question box for test retrieval | Connect a conversation tool |
+| Authorization and scope / This product or the client's authorization page | Account, project, and read scope; write access shown separately | Allow access to the selected projects |
+| New conversation / External tool | User's question; model's answer; clickable evidence | Ask a question, view sources |
+| Source details / This product | Original content, author, time, current status, and superseded history | Return to conversation / Append correction |
+| No results / Conversation or test-retrieval page | “There is not enough information yet”; actual query scope and gaps | Add a record or narrow the question |
 
-草图里的对话区域标注“外部对话工具示意”，不把它当成要另建一个聊天产品。连接成功和“对话确实调用过 context”分开显示；仅建立 MCP 连接不显示“所有未来对话已自动获得记忆”。
+Label the conversation area in the mockup “External conversation tool illustration” rather than treating it as another chat product to build. Show a successful connection separately from “the conversation actually called context.” Establishing an MCP connection alone does not warrant showing “All future conversations now automatically have memory.”
 
-例子：旧预算 5 万，用户随后明确改为 3 万。回答显示当前预算 3 万并引用更新记录；存在未关联的冲突则保留不确定性。模型给出的“建议周五联系供应商”标为建议，不列为用户已承诺的任务。
+Example: The old budget was 50,000, and the user later explicitly changed it to 30,000. The answer shows the current budget of 30,000 and cites the update record; if an unlinked conflict exists, retain the uncertainty. Label the model's “Contact the supplier on Friday” as a suggestion rather than listing it as a task the user has committed to.
 
-## 5. 旅程四：安装一项持续服务
+## 5. Journey Four: Install an Ongoing Service
 
-用户目标：让系统在合适的时间替自己整理，而不用先学习自动化基础设施。
+User goal: Have the system organize things for them at the appropriate time without first learning automation infrastructure.
 
 ~~~mermaid
 flowchart TD
-    A["插件 → 添加 Skill"] --> B["选择用途：录音转文字 / 每日回顾"]
-    B --> C["什么时候运行：新记录 / 每日时间"]
-    C --> D["处理什么：项目 / 来源 / 文件类型"]
-    D --> E["怎么处理：分析要求 / system prompt"]
-    E --> F["结果去哪：项目 + 个人收件箱"]
-    F --> G["选择执行环境并运行示例"]
-    G -->|可用| H["查看样例结果 → 启用"]
-    G -->|离线或不支持| I["保存配置；重新连接或更换执行环境"]
+    A["Plugins → Add Skill"] --> B["Choose purpose: Recording to text / Daily review"]
+    B --> C["When to run: New record / Daily time"]
+    C --> D["What to process: Project / Source / File type"]
+    D --> E["How to process: Analysis instructions / system prompt"]
+    E --> F["Where results go: Project + Personal inbox"]
+    F --> G["Select an execution environment and run an example"]
+    G -->|Available| H["Review sample result → Enable"]
+    G -->|Offline or unsupported| I["Save configuration; reconnect or change execution environment"]
     I --> G
-    H --> J["已启用：下次运行时间 / 修改 / 暂停"]
+    H --> J["Enabled: Next run time / Edit / Pause"]
 ~~~
 
-配置页使用四句自然语言作为分组标题：
+The configuration page uses four plain-language questions as group headings:
 
-1. **什么时候帮我做？** 新音频到达时，或每天 21:00，显示时区。
-2. **用哪些信息？** 当前项目、自己的新输入或授权历史、来源和类型。
-3. **怎么帮我处理？** 可编辑提示词；高级设置里查看完整 skill。
-4. **把结果放在哪里？** 项目与产品内收件箱；对外分享另行配置。
+1. **When should I help?** When new audio arrives, or every day at 21:00, with the time zone displayed.
+2. **What information should I use?** The current project, the user's own new inputs or authorized history, source, and type.
+3. **How should I help process it?** An editable prompt; the complete skill is available in Advanced Settings.
+4. **Where should I put the results?** The project and the in-product inbox; external sharing is configured separately.
 
-| 页面 | 关键内容 | 主操作 |
+| Page | Key content | Primary action |
 |---|---|---|
-| 选择 Skill | 用途、版本、需要的工具、处理示例 | 配置这项服务 |
-| 配置 | 触发、范围、提示词、输出；执行环境状态 | 运行一次示例 |
-| 样例结果 | 生成结果、来源、执行是否完成；“还未启用定时任务” | 启用 |
-| 已启用 | 下一次运行、本次规则、最近结果、暂停入口 | 查看结果 / 修改 |
-| 执行环境异常 | 离线、需登录或能力不支持的区别 | 重新连接并验证 |
+| Choose Skill | Purpose, version, required tools, and processing example | Configure this service |
+| Configure | Trigger, scope, prompt, and output; execution environment status | Run an example |
+| Sample result | Generated result, sources, and whether execution completed; “Scheduled task not enabled yet” | Enable |
+| Enabled | Next run, current rule, recent results, and pause entry point | View results / Edit |
+| Execution environment issue | Distinguish offline, sign-in required, and unsupported capability | Reconnect and verify |
 
-默认只影响未来记录；用户选择历史重跑时明确显示范围。升级 skill 固定版本时展示变化，新增权限重新授权。规则匹配预览解释“为什么处理了这条记录”，不在普通页面铺开 YAML。
+By default, the configuration affects only future records; when users choose to reprocess history, clearly show the scope. When upgrading a pinned skill version, show what changed and request authorization again for new permissions. The rule-match preview explains “why this record was processed” without exposing YAML throughout ordinary pages.
 
-## 6. 旅程五：一天结束，收到回顾并回应
+## 6. Journey Five: Receive and Respond to an End-of-Day Review
 
-用户目标：看到今天已经推进了什么，发现遗漏，决定下一步。
+User goal: See what moved forward today, identify omissions, and decide the next step.
 
 ~~~mermaid
 flowchart TD
-    A["到达用户设定时间"] --> B["每日回顾 Skill 运行"]
-    B --> C["收件箱出现一条回顾"]
-    C --> D["打开：进展 / 决定 / 未解决事项 / 建议"]
-    D --> E["点击依据 → 查看原始记录"]
-    D --> F["接受建议 → 确认具体内容"]
-    F --> G["追加用户确认记录"]
-    D --> H["忽略建议"]
-    D --> I["调整 / 暂停每日回顾"]
-    I --> J["暂停后不再启动新任务，历史保留"]
-    B --> K["失败或需重新登录 → 运行问题入口"]
+    A["User's configured time arrives"] --> B["Daily Review Skill runs"]
+    B --> C["A review appears in the inbox"]
+    C --> D["Open: Progress / Decisions / Unresolved items / Suggestions"]
+    D --> E["Click evidence → View original record"]
+    D --> F["Accept suggestion → Confirm specific content"]
+    F --> G["Append user-confirmation record"]
+    D --> H["Ignore suggestion"]
+    D --> I["Adjust / Pause daily review"]
+    I --> J["After pausing, no new tasks start; history is retained"]
+    B --> K["Failure or sign-in required → Run issue entry point"]
 ~~~
 
-| 页面 | 关键内容 | 主操作 / 后果 |
+| Page | Key content | Primary action / Consequence |
 |---|---|---|
-| 收件箱 | 标题、日期、所属项目、是否未读 | 打开回顾；已读仅表示读过 |
-| 回顾详情 | 进展、决定和建议分区；每项来源 | 查看依据；接受或忽略建议 |
-| 确认反馈 | “将‘周五联系供应商’记录为你的计划” | 明确确认后追加记录 |
-| 已接受 | “已记录为你的计划”；原始建议仍有模型来源 | 查看新增记录 |
-| 暂停状态 | 当前插件已暂停；下一次运行已取消 | 重新启用 / 返回收件箱 |
+| Inbox | Title, date, owning project, and unread status | Open review; read status means only that it was read |
+| Review details | Separate progress, decisions, and suggestions; sources for each item | View evidence; accept or ignore suggestions |
+| Confirm feedback | “Record ‘Contact the supplier on Friday’ as your plan” | Append a record only after explicit confirmation |
+| Accepted | “Recorded as your plan”; the original suggestion remains labeled as model-generated | View the new record |
+| Paused | The current plugin is paused; the next run has been canceled | Re-enable / Return to inbox |
 
-没有值得提醒的内容时，提醒插件保持安静。每日回顾可按用户约定生成，但也应说明“今天没有新记录”或“有录音待处理”，不虚构进展。
+When there is nothing worth surfacing, the reminder plugin stays quiet. A daily review can still be generated according to the user's arrangement, but it should say “There were no new records today” or “A recording is waiting to be processed” rather than inventing progress.
 
-通知抵达、阅读、采纳和任务完成是四件不同的事。稍后提醒只改变通知时间，不自动修改用户承诺。
+Notification delivery, reading, acceptance, and task completion are four different events. Remind later changes only the notification time; it does not automatically change the user's commitment.
 
-## 7. 旅程六：图片理解与可选分享
+## 7. Journey Six: Image Understanding and Optional Sharing
 
-这是完整产品方向的延伸流程，草图覆盖体验，但不扩大既有下一轮音频 MVP 的实现范围。
+This is an extension of the full product direction. The mockup covers the experience without expanding the scope of the existing next-round audio MVP.
 
 ~~~mermaid
 flowchart TD
-    A["上传白板图片"] --> B["按来源匹配图片分析 Skill"]
-    B --> C["分析结果：决策 / 待确认 / 原图"]
-    C --> D["生成分享草稿"]
-    D --> E["预览图片和文案，选择已连接目的地"]
-    E --> F["确认发布内容与可见范围"]
-    F --> G["发送"]
-    G -->|有明确回执| H["已发送：回执与目的地"]
-    G -->|结果不明| I["发送待核对，避免重复发送"]
-    I --> J["检查渠道回执"]
+    A["Upload whiteboard image"] --> B["Match Image Analysis Skill by source"]
+    B --> C["Analysis result: Decisions / Needs confirmation / Original image"]
+    C --> D["Generate share draft"]
+    D --> E["Preview image and copy; choose a connected destination"]
+    E --> F["Confirm published content and visibility"]
+    F --> G["Send"]
+    G -->|Explicit receipt| H["Sent: Receipt and destination"]
+    G -->|Uncertain result| I["Delivery awaiting verification; avoid sending twice"]
+    I --> J["Check channel receipt"]
     J --> H
-    C --> K["仅保留私人分析"]
+    C --> K["Keep analysis private"]
 ~~~
 
-图片分析的 prompt 示例：“总结白板上的决策和待确认事项，看不清的文字标出来。”分析页同时保留原图，不把 OCR 或模型推测伪装成原图文字。
+Example image-analysis prompt: “Summarize the decisions and items awaiting confirmation on the whiteboard. Mark any text that is illegible.” The analysis page also retains the original image and does not present OCR output or model inferences as text from the image.
 
-分享入口默认“生成草稿”，草稿允许在提交前编辑。确认页明确：将发送什么、到哪里、谁能看到。首个分享路径按次确认；自动分享属于安装时额外启用的规则，不能由图片内容中的文字授权。
+The sharing entry point defaults to “Generate draft,” and the draft can be edited before submission. The confirmation page clearly states what will be sent, where it will go, and who can see it. The first sharing path requires confirmation each time; automatic sharing is a rule that must be enabled separately during installation and cannot be authorized by text within an image.
 
-发送失败只重试投递；发送结果不明时先查回执。卸载插件不等于撤回已对外发送的内容。草图所有发送按钮仅切换演示状态，不访问外部渠道。
+A failed send retries only delivery; when the send result is uncertain, check the receipt first. Uninstalling a plugin does not retract content that has already been sent externally. Every send button in the mockup changes only the demonstration state and does not access an external channel.
 
-## 8. 页面共用规则
+## 8. Shared Page Rules
 
-| 用户可感知状态 | 文案方向 | 可执行动作 |
+| User-visible state | Copy direction | Available action |
 |---|---|---|
-| 空项目 | “先记下一条你希望下次对话知道的背景” | 新建记录 |
-| 已保存，未安装处理 | “原始文件已保存，尚未设置自动转录” | 设置转录 / 继续记录 |
-| 执行器离线 | “录音已保存，等待你的执行环境上线” | 查看环境 / 恢复后重试 |
-| 分析失败 | “这次转录未完成，原始录音仍可读取” | 重试本次 |
-| 无检索结果 | “在所选项目中没有找到足够依据” | 补充记录 / 调整范围 |
-| 结论冲突 | “两条记录说法不同，目前无法确定” | 分别查看来源 / 追加说明 |
-| 建议未采纳 | “系统建议” | 接受 / 忽略 |
-| 暂停 | “已暂停，历史结果保留” | 重新启用 |
-| 发送不明 | “尚无法确认是否送达” | 检查回执 |
+| Empty project | “Save something you want your next conversation to know” | New record |
+| Saved, no processing installed | “Original file saved; automatic transcription has not been set up” | Set up transcription / Keep recording |
+| Runner offline | “Recording saved; waiting for your execution environment to come online” | View environment / Retry after recovery |
+| Analysis failed | “This transcription did not complete; the original recording is still available” | Retry this run |
+| No retrieval results | “Not enough evidence was found in the selected projects” | Add a record / Adjust scope |
+| Conflicting conclusions | “Two records disagree; it is not currently possible to determine which is correct” | View each source / Append clarification |
+| Suggestion not accepted | “System suggestion” | Accept / Ignore |
+| Paused | “Paused; historical results are retained” | Re-enable |
+| Delivery uncertain | “Delivery cannot be confirmed yet” | Check receipt |
 
-所有提交按钮需要清楚区分正在提交和已经成功，失败保留可复用输入，防止用户靠重复点击猜测状态。重要状态不能只靠颜色表达。键盘可完成表单与操作，窄屏按钮可点击，错误提示与其字段关联。
+Every submit button needs to distinguish clearly between submitting and successfully submitted. Preserve reusable input after a failure so users do not have to infer state by clicking repeatedly. Important states cannot be conveyed by color alone. Forms and actions must be keyboard-accessible, buttons must be tappable on narrow screens, and error messages must be associated with their fields.
 
-语言沿用产品文档的完整链路约束：公开页、授权、工作区、状态和外部跳回保持用户所选 locale。本轮中文草图只证明中文信息架构与交互，不作为四语言实现或验收证据；不得放一个无功能语言下拉框冒充完成。
+Language behavior follows the end-to-end constraints in the product document: public pages, authorization, the workspace, status, and external return flows retain the user's selected locale. This round's Chinese mockup demonstrates only the Chinese information architecture and interaction. It is not evidence of four-language implementation or acceptance; do not present a nonfunctional language dropdown as completed work.
 
-## 9. 本轮交互草图的审阅方式
+## 9. How to Review This Round's Interaction Mockup
 
-对话中的草图有六个旅程入口，每个旅程上方可切换主要页面，关键异常提供单独入口。页面主按钮推动对应流程；项目名称、查询与提示词等输入可在演示范围内修改。所有数据与连接均为样例，不触发真实写入、安装、登录、调度或发布。
+The mockup in this conversation has six journey entry points. Above each journey, reviewers can switch among its main pages; key exceptions have dedicated entry points. Each page's primary button advances the corresponding flow. Inputs such as project name, query, and prompt can be edited within the demonstration's scope. All data and connections are samples and do not trigger real writes, installation, sign-in, scheduling, or publishing.
 
-建议优先讨论：四个一级入口是否符合直觉；记录详情是否清楚地区分原文和处理结果；安装步骤是否过重；对话引用和建议确认是否清晰；每日回顾是否值得用户打开。
+Suggested priorities for discussion: whether the four primary entry points feel intuitive; whether record details clearly distinguish original content from processing results; whether installation is too burdensome; whether conversation citations and suggestion confirmation are clear; and whether users would find the daily review worth opening.
 
-实现验收仍以产品文档为准。草图中的正常状态用于讨论预期体验，不是后端能力已上线的证明。
+Implementation acceptance remains governed by the product document. Normal states in the mockup are for discussing the expected experience, not proof that backend capabilities are live.
 
-本轮检查：交互草图包含 31 个页面/状态。已在本地浏览器通过实际点击覆盖六条旅程及关键异常，验证输入修改、来源条件匹配/不匹配、暂停与恢复、建议接受和分享回执反馈；390px 视口下检查插件配置、回顾、对话、录音输入、运行详情、图片和草稿，未发现横向溢出或控件越界。浏览器未报告脚本错误；这些仅是草图验证，不替代真实后端、agent 或四语言验收。
+Checks for this round: The interaction mockup contains 31 pages/states. Local-browser testing covered all six journeys and key exceptions through actual clicks, verifying input changes, source-condition matches and mismatches, pause and resume, suggestion acceptance, and share-receipt feedback. At a 390px viewport, plugin configuration, review, conversation, recording input, run details, image, and draft views showed no horizontal overflow or controls extending beyond their bounds. The browser reported no script errors. These checks validate only the mockup; they do not replace acceptance of the real backend, agent, or four-language implementation.

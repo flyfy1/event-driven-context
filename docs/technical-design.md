@@ -1,25 +1,27 @@
-# Event-driven Context V2 技术设计
+# Event-driven Context V2 Technical Design
 
-版本：2.0 · 日期：2026-09-12 · 状态：目标设计，按步骤实现与验收
+English | [简体中文](technical-design.cn.md)
 
-本文把 [产品设计 V2](product-V2.md) 的功能映射到统一的数据和公开接口。公开字段和行为以产品 V2 第 7 节为准；内部存储布局、运行参数和框架选择由开发 Agent 根据现有代码确定，并用同一组契约测试验证。当前进度与证据记录在 [V2 实施与审查](v2-implementation.md)；本文不把设计目标描述成已完成能力。
+Version: 2.0 · Date: 2026-09-12 · Status: Target design, to be implemented and validated step by step
 
-旧版设计完整保留在 [technical-design-v1.md](archive/technical-design-v1.md)。V2 不以旧版 `query_context`、后端任务协调器或 inbox 改名代替 Event、File、State 与插件模型。
+This document maps the capabilities in [Product Design V2](product-V2.md) to a unified data model and public interfaces. Public fields and behavior follow Section 7 of Product Design V2; the development agent determines the internal storage layout, runtime parameters, and framework choices based on the existing code, and validates them with the same set of contract tests. Current progress and evidence are recorded in [V2 Implementation and Review](v2-implementation.md); this document does not describe design targets as completed capabilities.
 
-## 1. 设计目标
+The previous design is preserved in full in [technical-design-v1.md](archive/technical-design-v1.md). V2 does not substitute renamed versions of the previous `query_context`, backend task coordinator, or inbox for the Event, File, State, and plugin model.
 
-系统让同一项目的对话、随手记和录音形成可追溯的追加记录，并让不同客户端看到一致的项目状态。核心只提供事实存储、权限和并发边界；转录、概况、证据检索和每日回顾由可替换插件提供。
+## 1. Design Goals
 
-P1 必须形成一条完整路径：
+The system turns conversations, quick notes, and recordings within the same project into a traceable append-only record and lets different clients see consistent project state. The core provides only factual storage, authorization, and concurrency boundaries; transcription, briefs, evidence retrieval, and daily reviews are provided by replaceable plugins.
 
-1. App、CLI、hook、远程 MCP 或 HTTP 向同一项目追加 Event；文件先作为 File 上传。
-2. 插件处理器按 sequence 增量读取，在自己的权限内追加 derived Event 或发布 State。
-3. 新会话读取项目概况，需要时查询原始证据，并把新决定作为 Event 写回。
-4. Web 先完成共享项目、可恢复路由和中心登录主链；Android 随后展示同步状态、转录和按日期发布的回顾 State。
+P1 must form one complete path:
 
-核心语义检索、向量库、图片分析执行、外部发布、提醒推荐、跨项目和插件市场不进入 P1。
+1. The App, CLI, hook, remote MCP, or HTTP appends an Event to the same project; files are uploaded as Files first.
+2. Plugin processors read incrementally by sequence and, within their own permissions, append derived Events or publish State.
+3. A new session reads the project brief, queries original evidence when needed, and writes new decisions back as Events.
+4. The Web first completes the primary flow for shared projects, restorable routing, and central login; Android then displays sync status, transcripts, and review State published by date.
 
-## 2. 系统职责
+Core semantic search, vector databases, image-analysis execution, external publishing, reminder recommendations, cross-project features, and a plugin marketplace are not included in P1.
+
+## 2. System Responsibilities
 
 ```mermaid
 flowchart LR
@@ -39,160 +41,160 @@ flowchart LR
     Host --> States
 ```
 
-- **Core service**：认证项目身份，追加与查询 Event，保存 File 和 State，管理插件安装与最小权限。它不运行模型或插件业务逻辑。
-- **HTTP 与 MCP**：是同一服务能力的传输适配器，必须返回相同的 UUID、sequence、版本、权限结果和错误含义。本地 Codex / Claude Code 经 `edc` CLI 使用 HTTP；HTTPS MCP 只用于 ChatGPT 等远程客户端。
-- **CLI、网页与 Android**：只通过公开接口工作，不读取服务端数据目录；客户端可声明 source，actor、producer 和插件权限由服务端认证确定。
-- **Hook**：捕获客户端会话事件并调用 CLI；共享项目启用前必须明确确认。
-- **Processor host**：持插件令牌运行处理器。失败时不推进游标，不把请求受理当作处理成功。
+- **Core service**: Authenticates project identity, appends and queries Events, stores Files and State, and manages plugin installation and least privilege. It does not run models or plugin business logic.
+- **HTTP and MCP**: These are transport adapters for the same service capabilities and must return the same UUIDs, sequences, versions, authorization results, and error semantics. Local Codex / Claude Code uses HTTP through the `edc` CLI; HTTPS MCP is only for remote clients such as ChatGPT.
+- **CLI, Web, and Android**: Work only through public interfaces and do not read the server data directory; clients may declare source, while actor, producer, and plugin permissions are determined by server authentication.
+- **Hook**: Captures client session events and invokes the CLI; explicit confirmation is required before it is enabled for a shared project.
+- **Processor host**: Runs processors with plugin tokens. It does not advance the cursor on failure or treat request acceptance as successful processing.
 
-## 3. 统一数据模型
+## 3. Unified Data Model
 
 ### Project
 
-Project 是 Event、File、State、插件和成员权限的边界，并保存用于日期与计划运行解释的 IANA 时区。创建时可省略 `timezone`，服务端默认使用 `UTC`；owner 可用 `PATCH /v1/projects/{project_id}` 更新，成功直接返回 Project。插件自省返回当前 `project_timezone`，让每次处理使用与项目一致的时间语义；本次不增加 MCP 修改工具。
+A Project is the boundary for Events, Files, State, plugins, and member permissions, and stores the IANA time zone used to interpret dates and scheduled runs. `timezone` may be omitted at creation, in which case the server defaults to `UTC`; an owner can update it with `PATCH /v1/projects/{project_id}`, which directly returns the Project on success. Plugin introspection returns the current `project_timezone` so every processing run uses time semantics consistent with the project; no MCP mutation tool is added in this iteration.
 
-Project 同时是团队 context 的共享边界。项目可以有多位 owner；任一 owner 可按已注册 username 或 email 精确添加成员，也可把其他成员提升为 owner 或降为普通 member。添加接口必须且只能提供一个标识，不提供模糊搜索，也不向调用方返回目标邮箱。服务端在事务中保证项目至少保留一位 owner。项目列表按当前登录用户的成员关系返回，并通过 `owner_user_ids` 返回完整 owner 集合；`owner_user_id` 暂时保留为旧客户端的原始 owner 字段。加入后，成员通过 HTTP、MCP、CLI、网页或 App 读取同一份 Event、File 和公开 State，并可向同一项目追加 Event。
+A Project is also the sharing boundary for team context. A project can have multiple owners; any owner can add a member by an exact registered username or email, and can promote another member to owner or demote one to an ordinary member. The add interface must provide exactly one identifier, offers no fuzzy search, and does not return the target email to the caller. The server guarantees transactionally that a project retains at least one owner. The project list is returned according to the current signed-in user's memberships and returns the complete owner set through `owner_user_ids`; `owner_user_id` is temporarily retained as the original-owner field for legacy clients. After joining, members can use HTTP, MCP, CLI, Web, or the App to read the same Events, Files, and public State, and can append Events to the same project.
 
-Web 用 `?project=<project_id>#<view>` 表达当前项目与分区，并可把该 URL 作为成员间的共享链接。服务端成员权限仍是访问边界；未知或无权 project 不能回退到列表中的其他项目。
+The Web represents the current project and section with `?project=<project_id>#<view>` and can use that URL as a share link among members. Server-side membership permissions remain the access boundary; an unknown or unauthorized project must not fall back to another project in the list.
 
 ### Event
 
-Event 是不可覆盖的项目记录，分为 `log`、`note`、`derived`。写入方提供 UUID；服务端补充 sequence、recorded_at 和经过认证的 actor。
+An Event is an immutable project record and has one of three types: `log`, `note`, or `derived`. The writer supplies the UUID; the server adds the sequence, recorded_at, and authenticated actor.
 
-- 用户 Event 的 actor 固定为当前登录用户的 `type=user`、用户 ID 和 username；插件 Event 固定为 `type=plugin`、插件 ID 和 `on_behalf_of`。EventInput 不提供可由调用者指定的 actor 字段。
-- 同项目同 UUID、同规范内容返回 `duplicate`；内容不同返回 `conflict`。
-- metadata 与 source 是写入方声明，不能改变 actor、权限或可信级别。
-- refs 只能指向同项目已有 Event，用于表达取代、撤回、完成、派生和回复。
-- `derived` 只允许插件身份写入，并受安装清单约束。
-- 批量写入逐条返回结果；局部失败不能回滚已成功项，也不能被客户端报告为整批成功。
+- The actor of a user Event is fixed to the current signed-in user's `type=user`, user ID, and username; the actor of a plugin Event is fixed to `type=plugin`, the plugin ID, and `on_behalf_of`. EventInput does not expose an actor field that the caller can set.
+- The same UUID and same canonical content within a project returns `duplicate`; different content returns `conflict`.
+- metadata and source are declarations by the writer and cannot change the actor, permissions, or trust level.
+- refs can only point to existing Events in the same project and express supersession, retraction, completion, derivation, and replies.
+- Only a plugin identity may write `derived`, subject to the installation manifest.
+- Batch writes return a result for each item; partial failure must not roll back successful items or be reported by the client as whole-batch success.
 
 ### File
 
-File 保存 Event 引用的原始字节。上传按“项目 + SHA-256”去重，读取始终重新检查项目权限，不生成长期公开链接。
+A File stores the original bytes referenced by an Event. Uploads are deduplicated by “project + SHA-256,” and reads always recheck project permissions and never generate long-lived public links.
 
-- 客户端先上传 File，再用返回的 `file_id` 追加 Event。
-- 服务端和客户端都核对大小、摘要和允许的媒体类型。
-- 未引用文件可按保留策略清理；已被 Event 引用的文件不能因并发清理丢失。
-- HTTP 支持较大文件流式传输；MCP 只承载限定大小的 base64 小文件。
+- The client uploads a File first, then appends an Event using the returned `file_id`.
+- Both server and client verify the size, digest, and allowed media type.
+- Unreferenced files may be removed according to the retention policy; files referenced by Events must not be lost to concurrent cleanup.
+- HTTP supports streaming transfer for larger files; MCP only carries size-limited small files encoded as base64.
 
 ### State
 
-State 是插件发布的可重建项目视图，不是原始记录。key 使用 `<plugin_id>/<name>`，每次发布产生新版本并保留历史。
+State is a rebuildable project view published by a plugin, not an original record. Its key uses `<plugin_id>/<name>`; every publish creates a new version and preserves history.
 
-- `expected_version` 提供乐观并发控制；不匹配返回版本冲突且不覆盖旧版本。
-- `based_on_sequence` 与项目最新 sequence 形成 lag，所有客户端用同一含义展示“已是最新”或“仍有记录未处理”。
-- refs 指向形成该状态的 Event，界面可由 State 回到原文。
-- 名称以 `_` 开头的 State 仅所属插件可读，用于游标和处理器内部状态。
+- `expected_version` provides optimistic concurrency control; a mismatch returns a version conflict without overwriting the old version.
+- `based_on_sequence` and the project's latest sequence define lag, which every client uses with the same meaning to show “up to date” or “records still awaiting processing.”
+- refs point to the Events that produced the State, allowing the interface to navigate from State back to the original content.
+- State whose name begins with `_` is readable only by its owning plugin and is used for cursors and internal processor state.
 
 ### Plugin
 
-插件清单固定版本、skill、State、处理器入口、配置与权限。安装生成项目和插件限定的令牌；修改配置产生修订，暂停或卸载立即阻止后续读写，既有 Event 与 State 保留。
+A plugin manifest fixes the version, skill, State, processor entry point, configuration, and permissions. Installation creates a token scoped to the project and plugin; changing configuration creates a revision, while pausing or uninstalling immediately blocks subsequent reads and writes. Existing Events and State remain intact.
 
-插件只扩展三种能力：追加 derived Event、发布自己的 State、向 agent 提供 skill。P1 插件不能注册额外 HTTP 路由或 MCP 工具。
+Plugins extend only three capabilities: appending derived Events, publishing their own State, and providing skills to agents. P1 plugins cannot register additional HTTP routes or MCP tools.
 
-## 4. 功能与接口映射
+## 4. Capability-to-Interface Mapping
 
-| 功能 | HTTP | MCP | CLI / App 使用方式 |
+| Capability | HTTP | MCP | CLI / App Usage |
 |---|---|---|---|
-| 身份 | Integ.Life start/callback、logout、me；CLI 兼容 register/login | 不暴露 | Web 使用 Context HttpOnly Session；CLI 与 hook 使用 CLI 私有 Bearer token；远程 MCP 使用 OAuth 或私有 Bearer token |
-| 项目与成员 | projects、project timezone、project members | list/create projects，list/add members | owner 以 username 或 email 精确添加注册成员；成员在各入口看到并读写同一项目；Project 响应始终带 timezone |
-| 追加记录 | project events 批量写入 | `record_events` | `edc push`、hook、App 共享 UUID 与逐项结果规则 |
-| 查询与原文 | events query、event get、metadata | `query_events`、`get_event`、`list_metadata` | 网页、skill、`edc query/get/pull` 使用同一筛选和游标 |
-| 文件 | multipart upload、认证原始下载 | `upload_file`、`get_file` | Android 与 `edc push --file` 先传 File 再写 Event |
-| State | list、按 key/version get、put | `list_state`、`get_state`、`put_state` | App 回顾、会话背景、网页状态与 CLI 使用同一版本和 lag |
-| 插件管理 | install、list、patch、run、delete | 不暴露 | 网页、App 与 CLI 管理安装；处理器只持插件令牌 |
-| 对话接入 | 本地 Agent 经 CLI 调用 HTTP；远程 Agent 使用 `/mcp` | 远程标准工具集 | 本地 Codex / Claude Code 直接执行 `edc`；不注册 MCP；`edc mcp` 仅保留兼容能力 |
+| Identity | Integ.Life start/callback, logout, me; CLI-compatible register/login | Not exposed | The Web uses the Context HttpOnly Session; the CLI and hook use the CLI's private Bearer token; remote MCP uses OAuth or a private Bearer token |
+| Projects and members | projects, project timezone, project members | list/create projects, list/add members | An owner adds a registered member by exact username or email; members see and read/write the same project through every entry point; Project responses always include timezone |
+| Append records | Batch writes to project events | `record_events` | `edc push`, the hook, and the App share UUID and per-item result rules |
+| Queries and original content | events query, event get, metadata | `query_events`, `get_event`, `list_metadata` | The Web, skills, and `edc query/get/pull` use the same filters and cursors |
+| Files | multipart upload, authenticated original download | `upload_file`, `get_file` | Android and `edc push --file` upload a File before writing an Event |
+| State | list, get by key/version, put | `list_state`, `get_state`, `put_state` | App reviews, session context, Web state, and CLI use the same version and lag |
+| Plugin management | install, list, patch, run, delete | Not exposed | The Web, App, and CLI manage installations; processors hold only plugin tokens |
+| Conversation integration | Local agents invoke HTTP through the CLI; remote agents use `/mcp` | Standard remote toolset | Local Codex / Claude Code executes `edc` directly; it does not register MCP; `edc mcp` is retained only for compatibility |
 
-项目、事件、文件、State 和插件的标识必须同时出现在路径或认证边界内。适配器不得仅相信请求体中的项目、actor、producer 或 plugin ID；响应也要防止把另一个项目的数据当成成功结果。
+Project, Event, File, State, and plugin identifiers must also appear in the path or authentication boundary. Adapters must not trust only the project, actor, producer, or plugin ID in a request body; responses must also prevent data from another project from being treated as a successful result.
 
-查询条件全部按 AND 组合，默认结果按 sequence 升序；调用方可显式请求降序，网页记录列表用降序展示最新内容。分页 cursor 固定第一页快照与顺序，`after_sequence` 用于 pull 与处理器增量读取。HTTP、MCP 和 CLI 对相同输入必须观察到相同的事件内容与顺序。
+All query conditions are combined with AND, and results default to ascending sequence order; callers may explicitly request descending order, which the Web record list uses to display the newest content first. A pagination cursor fixes the first-page snapshot and ordering, while `after_sequence` is used for pulls and incremental processor reads. HTTP, MCP, and CLI must observe identical Event content and ordering for identical input.
 
-## 5. 关键端到端流程
+## 5. Critical End-to-End Flows
 
-### 文本、会话与批量写入
+### Text, Sessions, and Batch Writes
 
-CLI、hook 和 skill 在写入前生成稳定 UUID。重试复用原 UUID；JSONL 的每一项保留自己的成功、重复或失败结果。目录绑定、hook 安装和持久 outbox 已接入这条路径；网络失败保留输入，后续恢复发送。
+The CLI, hook, and skill generate stable UUIDs before writing. Retries reuse the original UUID; every JSONL item retains its own success, duplicate, or failure result. Directory binding, hook installation, and the persistent outbox are already integrated into this path; input is retained after network failure and sent when connectivity recovers.
 
-SessionStart 由 hook 读取插件声明的 `session_context` State。后续证据查询仍读取 Event；State 不能替代原文或掩盖 lag。
+On SessionStart, the hook reads the `session_context` State declared by the plugin. Subsequent evidence queries still read Events; State cannot replace original content or conceal lag.
 
-### Android 录音
+### Android Recording
 
-Android 在录制开始时生成稳定 capture UUID，并把账户、项目、文件和待上传状态持久化。本机文件关闭且可读取后进入队列：
+Android generates a stable capture UUID when recording starts and persists the account, project, file, and pending-upload state. Once the local file is closed and readable, it enters the queue:
 
-1. 上传 File 并校验服务端返回的大小和 SHA-256。
-2. 使用 capture UUID 追加引用该 `file_id` 的 note Event。
-3. 只有 Event 成功或 duplicate 后才标记服务端同步完成。
-4. 登录过期、断网、进程中断或回执丢失时保留同一队列项并重试。
+1. Upload the File and verify the size and SHA-256 returned by the server.
+2. Use the capture UUID to append a note Event referencing that `file_id`.
+3. Mark server synchronization complete only after the Event succeeds or returns duplicate.
+4. On expired login, loss of connectivity, process interruption, or a lost acknowledgment, retain the same queue item and retry it.
 
-文件上传成功但 Event 未确认时仍是待同步状态。账号切换不能发送旧账号队列，转录失败也不能删除或阻止播放原录音。
+A successfully uploaded File remains pending synchronization until its Event is confirmed. Switching accounts must not send the old account's queue, and transcription failure must neither delete nor prevent playback of the original recording.
 
-### 插件处理
+### Plugin Processing
 
-Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉取输入。当前转录输出 UUID 由项目、插件、输入 Event 和输出槽位稳定决定；发布 State 时带 expected_version。输出成功后更新游标，失败不跳过输入。历史重转录的新 generation 尚未实现。
+The processor host stores its cursor in plugin-private State and pulls input using `after_sequence`. The current transcription-output UUID is determined stably by the project, plugin, input Event, and output slot; State is published with expected_version. The cursor is updated after successful output, and a failed input is not skipped. A new generation for historical retranscription is not yet implemented.
 
-Agent 或处理器整理团队记录时以 `actor` 判断写入者，以 refs 保留原 Event。`source.channel` 只说明进入渠道；导入旧会话时，执行导入的账号仍是 actor，原会话角色应留在 source 或 metadata，不能冒充为经过认证的成员发言。概况、冲突和回顾若需要区分成员说法，应显示成员 username 并允许打开原 Event。
+When an agent or processor organizes team records, it uses `actor` to determine the writer and preserves the original Event through refs. `source.channel` identifies only the ingestion channel; when an old conversation is imported, the account performing the import remains the actor, while the original conversation role belongs in source or metadata and must not impersonate an authenticated member's speech. When briefs, conflicts, and reviews need to distinguish members' statements, they should display each member's username and allow the original Event to be opened.
 
-手动 run 接口只表示请求已持久接受。实际执行、重试、错误状态和用量由 host 与插件状态呈现，不由 Core 假装同步完成。
+The manual run interface means only that a request has been durably accepted. Actual execution, retries, error status, and usage are presented by the host and plugin state; the Core does not pretend that synchronous completion occurred.
 
-## 6. P1 四个插件
+## 6. Four P1 Plugins
 
-| 插件 | 输入与输出 | 一致性要求 |
+| Plugin | Input and Output | Consistency Requirements |
 |---|---|---|
-| `audio-transcribe` | 音频 File Event → 引用原录音的 derived 转录 | 保留原语言；失败不推进游标；历史重跑 generation 待实现 |
-| `project-brief` | Event → `project-brief/current` State | 决定、约束、待办、问题均带来源；冲突不按时间自动选边 |
-| `daily-review` | 计划时间范围内的 Event → 日期 State | 进展、决定、待办、问题、建议分开；待转录录音可见；错过运行按产品规则处理 |
-| `evidence` | agent 读取概况并查询 Event | 返回来源、冲突、缺口与查询范围，不把 State 或摘要伪装成独立原始证据 |
+| `audio-transcribe` | Audio File Event → derived transcript referencing the original recording | Preserve the original language; do not advance the cursor on failure; generation for historical reruns remains to be implemented |
+| `project-brief` | Event → `project-brief/current` State | Decisions, constraints, tasks, and questions all include sources; conflicts are not automatically resolved in favor of the latest entry |
+| `daily-review` | Events within the scheduled time range → dated State | Separate progress, decisions, tasks, questions, and suggestions; recordings awaiting transcription remain visible; missed runs follow product rules |
+| `evidence` | An agent reads the brief and queries Events | Return sources, conflicts, gaps, and query scope; do not present State or a summary as independent original evidence |
 
-网页、Android、CLI 和对话 agent 读取的是这些相同产物。用户纠正通过追加带 refs 的 note 生效，不直接编辑 State。
+The Web, Android, CLI, and conversational agents read these same outputs. User corrections take effect by appending notes with refs, not by editing State directly.
 
-## 7. 身份、权限与错误
+## 7. Identity, Permissions, and Errors
 
-用户令牌按项目成员身份工作，并受 OAuth scope 限制。插件令牌固定到一个安装、项目、版本和权限集合；每次操作都重新检查暂停、卸载与修订状态。
+User tokens operate according to project membership and are restricted by OAuth scopes. A plugin token is fixed to one installation, project, version, and permission set; every operation rechecks pause, uninstall, and revision status.
 
-Web 默认从 Context 后端进入 Integ.Life 中心 Google 登录。产品后端生成并校验 PKCE/state、读取中心确认的 email，再签发自己的 host-only HttpOnly Session；浏览器所有 API 和文件请求携带该 cookie，中心 token 不进入前端 URL 或存储。`return_to` 只接受产品同源相对路径，并保留 project query、当前 view hash 与 locale。CLI Bearer 登录继续兼容。
+By default, the Web enters the central Integ.Life Google login from the Context backend. The product backend generates and validates PKCE/state, reads the centrally confirmed email, and then issues its own host-only HttpOnly Session; all browser API and file requests carry that cookie, and the central token never enters a frontend URL or storage. `return_to` accepts only same-origin relative paths for the product and preserves the project query, current view hash, and locale. CLI Bearer login remains compatible.
 
-本地用户以 `(issuer, sub)` 唯一绑定。新用户缺少中心确认 email 时拒绝创建；旧用户首次绑定可按人工确认的 email 命中原 ID，随后固定 sub。`songyy` 与 `cwhy` 均绑定原 ID，其既有 Project、成员关系和 Event actor 不迁移、不重建；实际邮箱只保存在受控迁移证据和工作日志中。
+Local users are uniquely bound by `(issuer, sub)`. Creation is rejected when a new user lacks a centrally confirmed email; on an existing user's first binding, a manually confirmed email can match the original ID, after which the sub is fixed. Both `songyy` and `cwhy` are bound to their original IDs; their existing Projects, memberships, and Event actors are neither migrated nor recreated. Actual email addresses are retained only in controlled migration evidence and worklogs.
 
-- 普通用户不能通过请求字段冒充插件写 `derived` 或 producer。
-- 插件只能读取清单允许的事件、引用可读事件，并写自己的 State 命名空间。
-- 项目 owner 代表已安装插件发布 State 时仍要通过显式的 `as_plugin_id` 授权检查。
-- 日志不得包含 token、原始音视频或完整模型输出。
+- Ordinary users cannot impersonate a plugin through request fields to write `derived` or producer.
+- A plugin can read only Events allowed by its manifest, reference readable Events, and write to its own State namespace.
+- When a project owner publishes State on behalf of an installed plugin, the request must still pass an explicit `as_plugin_id` authorization check.
+- Logs must not contain tokens, original audio/video, or complete model output.
 
-所有入口使用同一稳定错误含义：认证失败、禁止、找不到、冲突、过大、非法引用、不支持媒体、State 版本冲突、命名空间禁止和插件暂停。UI 将错误码映射成当前语言；未知错误保留可诊断信息，但不能显示 token 或把失败状态改写成成功。
+Every entry point uses the same stable error semantics: unauthenticated, forbidden, not found, conflict, too large, invalid reference, unsupported media, State version conflict, forbidden namespace, and plugin paused. The UI maps error codes to the current language; unknown errors retain diagnostic information but must not display tokens or rewrite failure as success.
 
-## 8. 产品状态一致性
+## 8. Product-State Consistency
 
-同一事实在网页、Android 与 CLI 上使用一致状态：
+The same facts use consistent states across the Web, Android, and CLI:
 
-- 本机已保存、File 已上传、Event 已同步、插件处理中、State 已更新是不同阶段。
-- duplicate 是成功确认；conflict 和批次局部失败需要保留原输入并提示处理。
-- State lag、插件暂停、处理失败、输出截断和查询范围不足必须明确展示。
-- source 与 actor 分开显示；agent note、用户原话、插件 derived 和 State 不能互相冒充。
-- 团队 Event 视图显示 actor username（必要时 ID）、recorded_at 和 source channel；项目成员入口显示当前成员，并允许 owner 添加已注册用户名。
-- 四种目标语言覆盖同一流程、校验、错误、空状态和跨页选择；生成内容语言由插件配置决定，转录保留原语言。
+- Saved locally, File uploaded, Event synchronized, plugin processing, and State updated are distinct stages.
+- duplicate is successful confirmation; conflict and partial batch failure require retaining the original input and prompting for resolution.
+- State lag, plugin pause, processing failure, truncated output, and insufficient query scope must be shown explicitly.
+- source and actor are displayed separately; agent notes, a user's original words, plugin-derived content, and State must not impersonate one another.
+- The team Event view displays the actor username (and ID when needed), recorded_at, and source channel; the project-members entry point displays current members and allows an owner to add a registered username.
+- All four target languages cover the same flows, validation, errors, empty states, and cross-page selection; generated-content language is controlled by plugin configuration, while transcription preserves the original language.
 
-网页先提供项目记录、项目状态、接入、成员共享、可恢复 URL 路由和插件管理。Android 在 Web 主链之后继续提供记录、回顾、我的，并复用相同项目、插件和 State 接口。界面优先显示用户可理解的名称与结果，ID 用于来源和诊断。
+The Web first provides project records, project state, integration, member sharing, restorable URL routing, and plugin management. After the primary Web flow, Android continues to provide Record, Review, and Mine, reusing the same project, plugin, and State interfaces. The interface prioritizes names and results that users can understand; IDs are used for provenance and diagnosis.
 
-## 9. 实施顺序与当前边界
+## 9. Implementation Order and Current Boundaries
 
-验收按产品第 10.2 节的依赖推进；当前平台优先级调整为先完成 Web 共享、路由与中心登录，再继续 Android 设备验收。已完成的 Android 代码与模拟器证据保留，不作为 Web 尚未上线能力的完成证明。
+Validation proceeds according to the dependencies in Product Section 10.2; the current platform priority has been adjusted to complete Web sharing, routing, and central login before continuing Android device validation. Completed Android code and emulator evidence are retained but do not prove completion of Web capabilities that are not yet live.
 
-根据用户要求，公开契约已定义的功能可由不同 Agent 并行开发，GPT-6 持续审核；后一步不能用未验收的前置能力作完成证明。当前每项状态以 `v2-implementation.md` 为准；旧 P1 代码与测试只能作为历史参考。
+At the user's request, features with defined public contracts may be developed in parallel by different agents, with continuous review by GPT-6; a later step cannot use an unvalidated prerequisite as proof of completion. The status of each current item is defined by `v2-implementation.md`; old P1 code and tests are historical reference only.
 
-当前 processor host 支持 `edc host run --once` 单次处理和 `--watch` 持续检查。它持插件令牌读取当前 Installation、项目时区与配置，经公共接口发布转录 derived、项目概况或每日回顾 State；CLI、网页、Android 与 MCP 读取同一份内容、版本和来源。
+The current processor host supports one-time processing with `edc host run --once` and continuous checks with `--watch`. With a plugin token, it reads the current Installation, project time zone, and configuration, then publishes a transcript-derived Event, project brief, or daily-review State through public interfaces; the CLI, Web, Android, and MCP read the same content, versions, and sources.
 
-`daily-review` 按项目时区和配置时间（默认 21:00）处理最近到期的计划窗口，以 `recorded_at` 筛选相邻计划点之间的记录，发布 `daily-review/YYYY-MM-DD`。启动延迟不移动窗口；已发布日期保持不变，重试可从 State 恢复完成状态。离线错过多期时仅补最近一期并记录跳过日期，空日也发布说明；迟到转录进入下一期。窗口信息随日期 State 保存，App 与网页按 key 的日期展示并可打开 refs。
+`daily-review` processes the most recently due scheduled window in the project's time zone at the configured time (21:00 by default), filters records between adjacent schedule points by `recorded_at`, and publishes `daily-review/YYYY-MM-DD`. A delayed startup does not shift the window; published dates remain unchanged, and retries can recover completed status from State. When multiple periods are missed offline, it catches up only the most recent period and records the skipped dates; it also publishes an explanation for an empty day. Late transcripts enter the next period. Window information is stored with the dated State, and the App and Web display it by the date in its key and can open refs.
 
-生产已验证真实定时发布与重复 tick 不改写，以及网页和 Android 模拟器的日期回顾来源导航。插件私有 `_requests` 的消费、手动重转录 generation 和物理手机验收仍未完成；manual run 接口目前只持久接受请求。
-## 10. 契约验收
+Production has verified real scheduled publishing, no rewrites from duplicate ticks, and dated-review source navigation in the Web and Android emulator. Consumption of the plugin-private `_requests`, generation for manual retranscription, and physical-phone validation are still incomplete; the manual run interface currently only accepts requests durably.
+## 10. Contract Validation
 
-当前按用户最新决定，MVP 验收优先正常闭环、实际产出和跨客户端可读。安全加固与极端输入测试暂不作为发布门槛。以下保留为后续完整契约检查范围，已有证据不必重复执行：
+Under the user's latest decision, MVP validation prioritizes the normal end-to-end loop, actual outputs, and cross-client readability. Security hardening and extreme-input tests are not currently release gates. The following scope is retained for later complete contract checks, and existing evidence need not be rerun:
 
-- Event UUID 去重与冲突、批量局部结果、refs 同项目校验、快照分页；
-- File 先传后引用、摘要去重、跨项目隔离、下载字节与摘要一致；
-- State 历史版本、expected_version 冲突、lag 与私有命名空间；
-- 插件令牌最小权限、暂停和卸载即时失效、管理身份不可伪造；
-- 同一数据经 HTTP、MCP 和 CLI 往返后 UUID、sequence、内容、版本和错误一致。
-- 两个真实成员从不同入口读写同一项目，成员 B 的 Event 由成员 A 读取时仍保留 B 的 actor ID、username 和服务端 recorded_at；网页显示同一作者，Agent 输出保留来源和必要归属。
+- Event UUID deduplication and conflicts, per-item batch results, same-project refs validation, and snapshot pagination;
+- File-before-reference, digest deduplication, cross-project isolation, and matching download bytes and digests;
+- State version history, expected_version conflicts, lag, and private namespaces;
+- Plugin-token least privilege, immediate invalidation on pause and uninstall, and non-forgeable management identity;
+- Matching UUIDs, sequences, content, versions, and errors after round trips of the same data through HTTP, MCP, and CLI.
+- Two real members read and write the same project through different entry points; when member A reads member B's Event, it still retains member B's actor ID, username, and server-side recorded_at; the Web displays the same author, and agent output preserves the source and required attribution.
 
-已有真实 Claude hook 注入、Codex 第二客户端检索与 recorder 写回、ASR/概况处理和实际定时回顾证据。完整 P1 仍需补齐手动处理闭环、物理手机与剩余四语言/OAuth 场景，以及持续真实使用；既有合成验收不能替代这些证据。
+There is already evidence of real Claude hook injection, retrieval by Codex as a second client, recorder write-back, ASR/brief processing, and actual scheduled reviews. Complete P1 still requires the manual-processing loop, a physical phone, the remaining four-language/OAuth scenarios, and sustained real-world use; existing synthetic validation cannot substitute for this evidence.

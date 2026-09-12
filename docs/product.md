@@ -1,280 +1,282 @@
-# Event-driven Context 产品设计
+# Event-driven Context Product Design
 
-> 历史产品设计：用户已指定 [product-V2.md](product-V2.md) 为当前开发与验收依据。本文保留原讨论与旧版范围，不用于缩减 V2 的要求。
+English | [简体中文](product.cn.md)
 
-版本：0.1 · 日期：2026-09-12 · 状态：讨论后的设计草案，未实现能力不构成交付承诺。
+> Historical product design: the user has designated [product-V2.md](product-V2.md) as the current basis for development and acceptance. This document preserves the original discussion and earlier scope; it must not be used to reduce the V2 requirements.
 
-配套文档：[技术设计](technical-design.md)；[既有第一版范围](mvp.md)。本文第 10 节是下一轮最小验证的范围来源，其他章节描述完整产品方向。
+Version: 0.1 · Date: 2026-09-12 · Status: post-discussion design draft; unimplemented capabilities do not constitute delivery commitments.
 
-## 1. 产品定位与目标
+Companion documents: [Technical Design](technical-design.md); [Existing First-Version Scope](mvp.md). Section 10 of this document is the source of scope for the next minimum validation; the other sections describe the full product direction.
 
-Event-driven Context 是一个持续接收原始记录、在需要时提取上下文，并允许用户安装 skill 来处理信息和获得主动服务的产品。
+## 1. Product Positioning and Goals
 
-用户在不同工具和对话中积累的信息，以 append-only event 保存。对话中的 agent 根据当前问题提取相关背景；用户安装的插件则在新记录到达或指定时间触发，由选定的 agent 执行 skill，产生转录、分析、回顾、提醒或推荐。
+Event-driven Context is a product that continuously receives raw records, retrieves context when needed, and lets users install skills to process information and receive proactive services.
 
-2026-09-12 补充：日常记录的主入口调整为简单的手机 App。用户开始、结束录音后，App 自动保存和上传，后端自动接续转录与整理；选择已有文件上传仍是补充入口。交互参考得到大脑的轻量记录方式，产品后续价值继续落在跨对话 context 与可配置 skill 上。
+Information that users accumulate across different tools and conversations is stored as append-only events. An agent in a conversation retrieves relevant background based on the current question; user-installed plugins are triggered when new records arrive or at specified times, and a selected agent executes the skill to produce transcriptions, analyses, reviews, reminders, or recommendations.
 
-2026-09-12 平台决定：后续 App 开发与本轮交付只面向 Android，使用独立目录 `app/android/`。已经完成的 iOS 原型保留，不再作为本轮继续开发或验收的目标；iOS 测试证据不能替代 Android 验收。
+2026-09-12 addition: the primary entry point for everyday recording is now a simple mobile app. After a user starts and stops a recording, the app automatically saves and uploads it, and the backend automatically continues with transcription and organization; selecting and uploading an existing file remains a supplementary entry point. The interaction takes inspiration from the lightweight capture workflow of Dedao Brain (得到大脑), while the product's subsequent value remains centered on cross-conversation context and configurable skills.
 
-核心价值：用户换一次对话、工具或 agent，不必重新交代已经记录过的背景；系统能利用已有信息帮助用户推进事情，并保留可检查的依据。
+2026-09-12 platform decision: subsequent app development and this delivery target Android only, in the dedicated `app/android/` directory. The completed iOS prototype is retained but is no longer a target for continued development or acceptance in this iteration; iOS test evidence cannot substitute for Android acceptance.
 
-目标用户首先是持续推进项目、在多个 AI 对话中工作的人；支持个人使用，并沿用现有项目成员共同读写的模型。产品暂不以通用企业数据平台、聊天客户端或任务管理器替代品为目标。
+Core value: when users switch conversations, tools, or agents, they do not need to restate background that has already been recorded. The system can use existing information to help them move work forward while preserving inspectable evidence.
 
-## 2. 已明确的方向与默认假设
+The initial target users are people who continuously advance projects while working across multiple AI conversations. The product supports personal use and retains the existing model in which project members can jointly read and write. For now, it is not intended to be a replacement for a general-purpose enterprise data platform, chat client, or task manager.
 
-### 2.1 本次讨论已明确
+## 2. Confirmed Direction and Default Assumptions
 
-- 通过多种入口持续写入事件，MCP 是主要接入方式之一。
-- 原始事件和 metadata 只能追加，不在原记录上编辑或删除。
-- context 主要在每次调用时根据当前任务获取，不要求用户维护固定的完整背景文档。
-- 被动整理、提醒和推荐由用户选择安装的插件提供。
-- 插件处理逻辑可以采用 skill，定时任务可以唤起用户选择的 agent 执行。
-- 用户可以根据来源和类型配置输入处理，包括图片分析提示词、音频转录等。
-- 图片等内容可进一步进入分享流程，是否分享由配置决定。
-- 手机 App 是首要媒体采集入口，录音后的上传和处理尽量自动进行，降低每次填写项目、类型和 metadata 的负担。
+### 2.1 Confirmed in This Discussion
 
-### 2.2 为完成设计采用的默认值
+- Events are continuously written through multiple entry points; MCP is one of the primary integration methods.
+- Raw events and metadata are append-only and cannot be edited or deleted in place.
+- Context is primarily retrieved for the current task on each invocation; users are not required to maintain a fixed, comprehensive background document.
+- Passive organization, reminders, and recommendations are provided by plugins that users choose to install.
+- Plugin processing logic may use a skill, and scheduled tasks may wake an agent selected by the user to execute it.
+- Users can configure input processing by source and type, including image-analysis prompts, audio transcription, and more.
+- Images and other content may proceed into a sharing workflow; configuration determines whether they are shared.
+- The mobile app is the primary media-capture entry point. Upload and processing after recording should be as automatic as possible, minimizing the need to enter a project, type, and metadata every time.
 
-以下为可调整的设计决定，不冒充用户已经逐项确认的要求。
+### 2.2 Defaults Adopted to Complete the Design
 
-| 项目 | 默认决定 | 理由 |
+The following are adjustable design decisions, not requirements presented as though the user had confirmed each one individually.
+
+| Item | Default Decision | Rationale |
 |---|---|---|
-| 数据边界 | 沿用 Project；个人信息可放在仅自己加入的项目 | 复用现有授权，避免默认聚合所有项目 |
-| 执行位置 | 优先用户控制的 runner，连接其已配置的 agent | 符合使用自己 agent 环境的设想 |
-| 执行账户 | 凭据留在执行端；逐个验证非交互运行与工具能力 | 不假定所有订阅账户都支持自动化 |
-| 输入处理 | 原始记录先保存，分析异步进行 | 处理失败不丢原文 |
-| 手机录音 | 用户主动开始/结束；结束即进入自动上传队列 | 此处“自动”默认指采集后的链路，持续环境录音尚未纳入范围 |
-| 默认归属 | 首次使用创建或选择私人项目“我的记录”，之后复用并始终显示 | 不要求每次分类，也不自动把私人媒体送入共享项目 |
-| 手机未联网 | 先落本机持久化队列；可运行且联网时自动重试 | 本机保存与服务端确认是不同状态 |
-| 配置方式 | 常用条件用表单；skill 和高级配置支持文件导入 | 普通用户不必先理解 cron 或 YAML |
-| 定时结果 | 默认写入同一项目，并进入安装者的产品内收件箱 | 不需要首版就连接外部消息渠道 |
-| 外部分享 | 默认草稿；用户明确配置目的地和自动发布后才执行 | 分享权限与读取、分析分开 |
-| 原始记录与推断 | 明确标记，保留来源引用 | 避免把模型建议变成用户承诺 |
-| 配置生效 | 对未来记录生效；历史重跑由用户选择 | 避免改一次提示词就处理全部历史 |
-| 运行规模 | 单后端写入者、单 runner 串行执行起步 | 先证明价值，再处理并行和规模 |
+| Data boundary | Retain Project; personal information can go in a project that only the user has joined | Reuses existing authorization and avoids aggregating all projects by default |
+| Execution location | Prefer a user-controlled runner connected to an agent they have already configured | Matches the concept of using the user's own agent environment |
+| Execution account | Credentials remain at the execution endpoint; non-interactive execution and tool capabilities are verified individually | Does not assume every subscription account supports automation |
+| Input processing | Save the raw record first and process it asynchronously | A processing failure does not lose the original content |
+| Mobile recording | The user explicitly starts and stops recording; stopping immediately places it in the automatic upload queue | “Automatic” here means the post-capture pipeline by default; continuous ambient recording is not yet in scope |
+| Default destination | On first use, create or select a private project named “My Records”; reuse it thereafter and always show it | Avoids requiring classification each time and does not automatically send private media into a shared project |
+| Mobile offline behavior | First persist to an on-device queue; automatically retry when the app can run and the device is online | On-device storage and server confirmation are distinct states |
+| Configuration method | Use forms for common conditions; support file import for skills and advanced configuration | Ordinary users should not need to understand cron or YAML first |
+| Scheduled output | Write to the same project by default and place it in the installer's in-product inbox | The first version does not need to connect to external messaging channels |
+| External sharing | Default to a draft; execute only after the user explicitly configures a destination and automatic publishing | Sharing permissions are separate from reading and analysis |
+| Raw records and inferences | Label them explicitly and retain source citations | Prevents turning model suggestions into user commitments |
+| Configuration effect | Applies to future records; the user chooses whether to rerun history | Avoids processing all history after a single prompt change |
+| Operating scale | Start with one backend writer and serial execution on one runner | Prove value before addressing parallelism and scale |
 
-目前没有阻止文档完成的待确认项。具体 agent/转录工具、执行主机、外部渠道和资源预算，应在对应实现或启用时确定；不会在本文中假定已授权部署、配置真实 cron 或发布内容。
+There are currently no unresolved questions that prevent completion of the documentation. The specific agent/transcription tool, execution host, external channels, and resource budget should be determined when the corresponding implementation is built or enabled; this document does not assume authorization to deploy, configure real cron jobs, or publish content.
 
-### 2.3 能力声明必须覆盖完整用户链路
+### 2.3 Capability Claims Must Cover the Complete User Journey
 
-产品不能因为某个独立页面或接口实现了一项能力，就对外宣称整个产品已经支持该能力。尤其是多语言，一种语言只有覆盖用户实际完成任务所经过的全部界面和反馈后，才能列为“已支持”；只翻译 OAuth 授权页不构成产品多语言支持。
+The product cannot claim that it supports a capability merely because an isolated page or endpoint implements it. This is especially true for multilingual support: a language can be listed as “supported” only after it covers every interface and item of feedback that users encounter while completing real tasks. Translating only the OAuth authorization page does not constitute product-wide multilingual support.
 
-当前多语言完成范围至少包括：公开首页、注册、登录、退出、项目与记录工作区、上传与查询、插件、规则、运行详情、收件箱、OAuth 登录与授权确认，以及这些流程中的输入说明、校验、成功、空状态、加载、失败和权限提示。后续新增用户可见能力必须在同一交付中补齐已支持语言，不能长期依赖默认语言文案兜底。
+At a minimum, the current multilingual completion scope includes the public home page, registration, login, logout, project and record workspace, upload and query, plugins, rules, run details, inbox, OAuth login and authorization confirmation, as well as the input guidance, validation, success, empty, loading, failure, and permission states in these flows. Subsequent user-visible capabilities must add every supported language in the same delivery and cannot rely indefinitely on fallback copy in the default language.
 
-语言状态必须形成连续链路：首次访问可依据浏览器语言选择；页面提供可发现的手动切换；用户选择在刷新和登录后保留；从主站进入 OAuth 或从外部客户端发起 OAuth 时显式传递并保留 locale；切换语言不能丢失表单以外的有效流程状态、授权事务或回跳目标。没有用户选择且浏览器语言不受支持时回退 English，并明确保持一致，而不是在不同页面随机切换。
+Language state must form a continuous journey: the first visit may choose a language based on the browser language; pages provide a discoverable manual switcher; the user's choice persists across refreshes and logins; the locale is explicitly passed and preserved when navigating from the main site into OAuth or initiating OAuth from an external client; and switching languages must not lose valid process state outside a form, the authorization transaction, or the return destination. When the user has made no selection and the browser language is unsupported, the product falls back to English and remains consistently in English rather than switching languages unpredictably across pages.
 
-English、简体中文、Bahasa Melayu 和 हिन्दी 在完成上述范围并通过验收前，只能描述为“OAuth 页面已提供的语言”，不能描述为“产品已支持的语言”。
+Until English, Simplified Chinese, Bahasa Melayu, and हिन्दी cover the scope above and pass acceptance, they may only be described as “languages available on the OAuth pages,” not as “languages supported by the product.”
 
-## 3. 用户心智模型
+## 3. User Mental Model
 
-| 概念 | 用户如何理解 |
+| Concept | How Users Understand It |
 |---|---|
-| Event | 某个人、来源或 agent 在某个时间留下的一条记录 |
-| 原始记录 | 输入时保存的原文或原始文件，带身份、时间和 metadata |
-| 衍生记录 | 基于已有记录产生的转录、分析、摘要等，能回到原文 |
-| Context | 为当前问题选出的背景材料和依据，不是唯一的永久总摘要 |
-| Memory | 历史事件中可持续复用的事实、偏好、决定和约束；第一阶段不建立独立可编辑的 memory 库 |
-| Skill | 描述一类工作如何完成的说明和必要资源 |
-| 插件安装 | 为一个 skill 选择执行器、数据范围、配置和允许的输出 |
-| 规则 | 决定什么事件或时间会触发该插件 |
-| Run | 一次实际执行，有输入、版本、结果和状态 |
-| 收件箱 | 展示插件输出和需要用户处理的运行问题 |
+| Event | A record left by a person, source, or agent at a particular time |
+| Raw record | The original text or file saved at input time, with identity, time, and metadata |
+| Derived record | A transcription, analysis, summary, or other result produced from existing records that can be traced back to the original content |
+| Context | Background material and evidence selected for the current question, not a single permanent master summary |
+| Memory | Facts, preferences, decisions, and constraints in historical events that can be reused over time; the first phase does not establish a separate, editable memory repository |
+| Skill | Instructions and required resources that describe how to complete a type of work |
+| Plugin installation | A selection of an executor, data scope, configuration, and permitted outputs for a skill |
+| Rule | Determines which event or time triggers a plugin |
+| Run | One actual execution, with input, version, result, and status |
+| Inbox | Displays plugin output and run issues that require user attention |
 
-Skill 本身不负责计时、账户登录或消息投递。这些由 runner、调度和投递能力共同完成。用户看到的是一项可安装、可配置、可暂停的服务。
+A skill is not itself responsible for timing, account login, or message delivery. The runner, scheduler, and delivery capabilities jointly provide those functions. What the user sees is an installable, configurable, and pausable service.
 
-## 4. 三条主要使用链路
+## 4. Three Primary User Journeys
 
-### 4.1 记录与输入处理
+### 4.1 Recording and Input Processing
 
-1. 用户打开手机 App，点击录音；首次需要麦克风权限时在这里申请。默认私人项目与保存位置始终可见。
-2. 用户说完点击结束，App 立即把原始媒体和上传任务可靠保存到本机，无需再填写表单或点击上传。
-3. App 在具备网络、登录及系统运行条件时自动上传，收到服务端事件确认后标记“已同步”。断网、应用被中断或登录过期时保留本机队列。
-4. 服务端根据已绑定来源、媒体类型和预先配置的 metadata 规则匹配处理 skill。
-5. runner 使用固定版本的 skill 和用户提示词完成转录或分析，追加衍生事件并关联原始媒体。
-6. 用户在记录详情看到原始媒体、转录和后续整理；内容自动可用于 context 提取和已启用的每日回顾。
+1. The user opens the mobile app and taps record; if microphone permission is needed for the first time, request it here. The default private project and save location are always visible.
+2. When the user finishes speaking and taps stop, the app immediately and reliably saves the raw media and upload task on the device, without requiring another form submission or upload tap.
+3. When network connectivity, login, and system execution conditions are available, the app uploads automatically and marks the item “Synced” after receiving server-side event confirmation. If the device is offline, the app is interrupted, or the login has expired, the on-device queue is preserved.
+4. The server matches a processing skill using the bound source, media type, and preconfigured metadata rules.
+5. The runner uses a pinned skill version and the user's prompt to complete transcription or analysis, appends a derived event, and associates it with the original media.
+6. In the record details, the user sees the original media, transcription, and subsequent organization; the content automatically becomes available for context retrieval and enabled daily reviews.
 
-日常操作收敛为“开始录音 → 结束”。拍照、相册选择和文件导入沿用相同上传队列；网页、CLI、MCP 和其他来源保持可用。标题与标签可以在处理后自动建议，系统推断不改写原始 metadata。
+The everyday workflow converges on “start recording → stop.” Taking a photo, choosing from the photo library, and importing a file use the same upload queue; web, CLI, MCP, and other sources remain available. Titles and tags may be suggested automatically after processing; system inferences do not rewrite raw metadata.
 
-手机端必须区分“录音中”“已保存到本机”“等待网络/登录”“上传中”“已同步、待整理”“整理完成”。只有服务端确认提交后才声称同步完成。后台执行和锁屏录音需在选定手机平台实测，不承诺任何情况下都能持续录音或立即上传。
+The mobile client must distinguish “Recording,” “Saved on Device,” “Waiting for Network/Login,” “Uploading,” “Synced, Awaiting Processing,” and “Processing Complete.” It can claim that synchronization is complete only after the server confirms submission. Background execution and lock-screen recording must be tested on the selected mobile platform; the product does not promise continuous recording or immediate upload under all conditions.
 
-用户即使不安装任何插件，也应能记录和查询。没有匹配规则是正常状态，不是失败。
+Users must be able to record and query even without installing any plugin. Having no matching rule is a normal state, not a failure.
 
-同一种文件可以有不同用途：账单图片提取消费信息；白板图片整理方案；会议音频转录发言；语音随手记先保留逐字转录，再生成想法摘要。转录和润色应是两个可区分的结果，不能用润色文本冒充原话。
+The same file type can serve different purposes: extract expense information from a bill image; organize a plan from a whiteboard image; transcribe speech from meeting audio; or preserve a verbatim transcription of a voice note before generating a summary of its ideas. Transcription and rewriting must be distinguishable results; polished text cannot be presented as the user's original words.
 
-### 4.2 对话中的主动提取
+### 4.2 Active Retrieval in a Conversation
 
-1. 用户在新对话中提出当前任务。
-2. 对话 agent 通过 MCP 提交问题、明确的项目范围及输出预算。
-3. 系统选择相关原始记录和可用衍生记录，识别显式更新关系，并附上时间和出处。
-4. agent 结合这些证据回答问题；需要时再读取原文或文件。
-5. 需要保留的新决定由用户或已获写入授权的 agent 追加，不自动保存整段聊天。
+1. The user states the current task in a new conversation.
+2. Through MCP, the conversational agent submits the question, explicit project scope, and output budget.
+3. The system selects relevant raw records and available derived records, identifies explicit update relationships, and includes timestamps and provenance.
+4. The agent answers the question using this evidence and reads the original content or file when needed.
+5. A new decision that must be retained is appended by the user or by an agent authorized to write; the complete chat is not saved automatically.
 
-返回内容优先包含：与任务相关的目标、当前决定、约束、未完成事项及冲突。历史上相关但已被明确替代的内容保留为背景，不当成当前状态。
+Returned content prioritizes goals relevant to the task, current decisions, constraints, incomplete items, and conflicts. Historically relevant content that has been explicitly superseded remains as background and is not treated as current state.
 
-系统应能表达“没有找到”“存在冲突”“音频尚未转录”和“只检索了部分范围”。不能用一段看似完整的答案掩盖证据缺失。MCP 提供调用能力，具体客户端是否自动调用仍需通过接入约定和真实对话验证。
+The system must be able to express “not found,” “conflict exists,” “audio not yet transcribed,” and “only part of the scope was searched.” It must not conceal missing evidence behind an apparently complete answer. MCP provides invocation capabilities; whether a specific client invokes them automatically still requires integration agreements and validation in real conversations.
 
-### 4.3 定时整理、提醒与推荐
+### 4.3 Scheduled Organization, Reminders, and Recommendations
 
-1. 用户安装每日回顾等 skill 插件，选择项目、执行器、时间、时区和输出位置。
-2. cron 或其他调度器定期唤起 runner；runner 请求领取到期任务。
-3. 插件围绕自己的任务获取 context，执行整理或判断。
-4. 生成有依据的结果，写回项目，并按配置投递。
-5. 用户可查看来源、接受建议、纠正结论或暂停插件。
+1. The user installs a skill plugin such as Daily Review and selects the project, executor, time, time zone, and output location.
+2. A cron job or another scheduler periodically wakes the runner; the runner requests and claims due tasks.
+3. The plugin retrieves context for its own task and performs organization or evaluation.
+4. It generates an evidence-backed result, writes it back to the project, and delivers it according to the configuration.
+5. The user can inspect sources, accept a suggestion, correct a conclusion, or pause the plugin.
 
-每日回顾可以按约定产生；提醒和推荐应允许返回“无值得通知的内容”。系统应抑制重复提醒，保留已读、忽略、稍后提醒等反馈。具体任务是否已经完成，必须依据记录或用户反馈，不能把“读过提醒”解释为“完成任务”。
+A daily review may be produced on the agreed schedule; reminders and recommendations should be allowed to return “nothing worth notifying.” The system should suppress duplicate reminders and retain feedback such as read, dismissed, and remind later. Whether a particular task is actually complete must be based on records or user feedback; “read the reminder” cannot be interpreted as “completed the task.”
 
-## 5. 动态规则与插件配置
+## 5. Dynamic Rules and Plugin Configuration
 
-### 5.1 安装内容
+### 5.1 Installation Contents
 
-每次安装至少明确：skill 名称及版本、项目、安装者、执行器、允许读取的范围、允许产出的类型，以及是否启用。事件规则再选择来源、类型和 metadata；定时规则再选择时间和时区。
+Every installation specifies at least the skill name and version, project, installer, executor, permitted read scope, permitted output types, and whether it is enabled. Event rules additionally select sources, types, and metadata; scheduled rules additionally select a time and time zone.
 
-用户可修改分析提示词、配置、启用状态及规则。修改产生配置新版本；正在执行的任务保留启动时的版本，暂停或撤销权限则立即阻止后续领取、提交或投递。
+Users can modify the analysis prompt, configuration, enabled state, and rules. A modification creates a new configuration version; an in-progress task retains the version with which it started, while pausing or revoking permissions immediately prevents subsequent claiming, submission, or delivery.
 
-安装第三方 skill 时应能查看其说明及所需工具。升级固定版本前展示新增能力或权限，不静默扩大授权。第一轮只提供本地或随产品提供的 skill 包，不建设插件市场。
+When installing a third-party skill, users should be able to inspect its description and required tools. Before upgrading a pinned version, show any added capabilities or permissions rather than silently expanding authorization. The first iteration provides only local skill packages or packages distributed with the product; it does not build a plugin marketplace.
 
-### 5.2 匹配行为
+### 5.2 Matching Behavior
 
-- 条件默认 AND。来源可区分经认证集成绑定的来源和用户自己声明的标签。
-- 同一记录匹配不同用途的规则时可以分别运行，如转录和文件描述。
-- 同一安装的同一阶段若命中多个规则，优先级高者胜出，界面展示实际命中的规则。
-- 插件输出默认不会重新触发输入处理；需要“转录后摘要”等串联时显式配置下一阶段。
-- 修改提示词不自动重跑历史。手动重跑生成新版本，可查看旧版。
-- 重试尽量复用已保存的输入、结果和投递记录，避免重复输出。
+- Conditions use AND by default. Sources can distinguish between a source bound through an authenticated integration and a label declared by the user.
+- When the same record matches rules for different purposes, they may run separately, such as transcription and file description.
+- When multiple rules match the same stage of the same installation, the highest-priority rule wins, and the interface shows which rule actually matched.
+- Plugin output does not retrigger input processing by default; chaining such as “summarize after transcription” requires explicit configuration of the next stage.
+- Changing a prompt does not automatically rerun history. A manual rerun generates a new version, and the old version remains available.
+- Retries should reuse saved input, results, and delivery records whenever possible to avoid duplicate output.
 
-### 5.3 提示词与操作权限
+### 5.3 Prompts and Operational Permissions
 
-提示词描述用户希望如何分析，例如：“总结白板上的决策和待确认事项，不补写看不清的文字。”
+A prompt describes how the user wants the content analyzed, for example: “Summarize the decisions and open questions on the whiteboard. Do not invent text that is illegible.”
 
-可读项目、工具权限、定时规则、分享目的地和自动发布开关使用明确配置。日志或图片中出现的“忽略规则”“发到某地址”等文字属于待分析数据，不会改变这些配置。
+Readable projects, tool permissions, scheduled rules, sharing destinations, and the automatic publishing switch use explicit configuration. Text such as “ignore the rules” or “send this to an address” appearing in a log or image is data to be analyzed and does not change these settings.
 
-## 6. 记录、更新与可信度
+## 6. Records, Updates, and Trustworthiness
 
-### 6.1 记录类型与依据
+### 6.1 Record Types and Evidence
 
-原始输入、转录、事实候选、推断、建议、用户确认分别标记。衍生记录必须能定位输入记录、skill 版本和执行批次。来源可追溯并不代表内容必然正确；转录可能听错，图片也可能无法辨认。
+Raw input, transcriptions, candidate facts, inferences, suggestions, and user confirmations are labeled separately. A derived record must identify its input record, skill version, and execution batch. Traceable provenance does not guarantee that the content is correct; a transcription may mishear speech, and an image may be illegible.
 
-用户原始 metadata 保持自由 JSON。平台控制的身份、来源绑定、执行来源和关系独立保存，不能由普通 metadata 冒充。
+User-provided raw metadata remains free-form JSON. Platform-controlled identity, source bindings, execution provenance, and relationships are stored separately and cannot be impersonated through ordinary metadata.
 
-### 6.2 纠正与取代
+### 6.2 Corrections and Supersession
 
-用户通过追加纠正、撤回或确认记录来改变后续使用方式。明确指向旧结论的更新可以改变默认有效状态；互不关联的两条矛盾陈述不能仅凭“后写入”自动判断哪条正确。
+Users change how content is used subsequently by appending a correction, retraction, or confirmation record. An update that explicitly points to an earlier conclusion may change the default effective state; two unrelated contradictory statements cannot be judged automatically by simply treating the later one as correct.
 
-例如“昨天预算 5 万”和“预算改为 3 万，取代前条”可确定当前预算。两个人分别给出 3 万和 5 万但未说明取代关系时，应呈现冲突。
+For example, “Yesterday's budget was 50,000” and “The budget changed to 30,000, superseding the previous record” establish the current budget. If two people separately state 30,000 and 50,000 without specifying a supersession relationship, the system should present a conflict.
 
-用户接受某条建议，应追加具有用户身份的确认事件；系统生成的建议本身不会成为承诺。同一原始材料的多个摘要不能被当成多个独立证据强化结论。
+When a user accepts a suggestion, the system should append a confirmation event bearing the user's identity; a system-generated suggestion does not itself become a commitment. Multiple summaries of the same source material cannot be treated as independent pieces of evidence that strengthen a conclusion.
 
-### 6.3 Append-only 的范围
+### 6.3 Scope of Append-only
 
-原始事件、原始文件、已提交的衍生结果和运行审计追加保存。索引、缓存、任务当前状态和用户配置的当前指针可以更新或重建。
+Raw events, raw files, committed derived results, and run audit records are stored append-only. Indexes, caches, current task states, and current pointers to user configurations may be updated or rebuilt.
 
-撤回和默认检索排除不等于物理删除。第一轮保留现有“不提供普通事件删除”的契约；面向更广泛用户开放长期托管前，需要单独确定账号退出、数据保留和管理性清除政策。本文不把 append-only 解释成永久保留承诺。
+Retraction and exclusion from default retrieval do not constitute physical deletion. The first iteration retains the existing contract that ordinary events cannot be deleted; before long-term hosting is opened to a broader audience, account closure, data retention, and administrative erasure policies must be determined separately. This document does not interpret append-only as a commitment to permanent retention.
 
-## 7. 可见性、执行与投递
+## 7. Visibility, Execution, and Delivery
 
-### 7.1 项目与用户
+### 7.1 Projects and Users
 
-沿用“项目成员可读全部项目历史并追加”的基础模型。私人记录放入私人项目；不能因为用户安装了一个私人插件，就假定其写入共享项目的结果只对本人可见。
+Retain the foundational model in which project members can read the complete project history and append to it. Private records go into a private project; installing a private plugin does not imply that its output written to a shared project is visible only to the installer.
 
-成员可以管理自己的插件安装，默认只对自己的新输入触发。读取范围可包含其有权读取的项目历史。针对全部成员输入的共享自动化由项目创建者管理。个人安装不得修改其他成员的安装或共享规则。
+Members can manage their own plugin installations, which trigger only on their own new input by default. Read scope may include the project history they are authorized to access. Shared automation that responds to input from all members is managed by the project's creator. A personal installation cannot modify another member's installation or shared rules.
 
-单个 run 第一轮只访问一个项目，结果写回该项目。跨项目聚合和私人衍生空间留待后续单独设计，避免意外合并共享边界。
+In the first iteration, a single run accesses only one project and writes its result back to that project. Cross-project aggregation and a private derived-data space are deferred for separate design to avoid accidentally merging sharing boundaries.
 
-### 7.2 用户自己的执行环境
+### 7.2 The User's Own Execution Environment
 
-用户配置一个支持所需工具的 runner。runner 必须明确显示在线状态、最近成功执行时间、需要重新登录及能力不匹配等问题。
+The user configures a runner that supports the required tools. The runner must clearly show its online status, the time of its most recent successful execution, whether login is required again, and any capability mismatch.
 
-接入账户不等于该账户具备转录、视觉或无人值守能力。启用对应规则前执行一次小样本验证；缺少能力时给出可处理的错误，不静默换成付费 API 或其他账户。
+Connecting an account does not mean that the account has transcription, vision, or unattended-execution capabilities. Before enabling a corresponding rule, run a small-sample validation; if a capability is missing, provide an actionable error rather than silently switching to a paid API or a different account.
 
-### 7.3 分享与通知
+### 7.3 Sharing and Notifications
 
-产品内结果默认可用。外部通知、分享图片或发布文案属于单独配置的目的地与动作；默认保存草稿。自动发布需事先明确授权内容类型、范围和目的地，执行前重新检查授权。
+In-product results are available by default. External notifications, image sharing, and publishing copy are separately configured destinations and actions; they default to drafts. Automatic publishing requires prior, explicit authorization of the content type, scope, and destination, and authorization is checked again before execution.
 
-分享状态和生成状态分开：生成成功但发送失败时，只重试发送。对方是否收到无法确定时展示“待核对”，不反复盲发。
+Sharing state and generation state are separate: if generation succeeds but sending fails, retry only the send. If receipt by the destination cannot be determined, show “Verification Needed” rather than repeatedly sending without confirmation.
 
-暂停停止新执行并尽力终止运行中的任务；卸载撤销相关执行权限和后续投递，保留既有结果及历史。已发送到外部的内容不能因卸载而自动收回。
+Pausing stops new executions and makes a best effort to terminate running tasks; uninstalling revokes the associated execution permissions and subsequent delivery while preserving existing results and history. Content already sent externally cannot be retracted automatically by uninstalling.
 
-## 8. 产品界面
+## 8. Product Interface
 
-手机 App 承担日常采集：底部为“记录、回顾、我的”，录音是记录首页的突出主操作。默认归属、上传状态和原始媒体可用性应直接可见；Skill、来源规则和执行环境集中在“我的”中低频配置。回顾复用产品内收件箱，不新增独立的结果数据源。
+The mobile app handles everyday capture: its bottom navigation contains “Records,” “Review,” and “Me,” and recording is the prominent primary action on the Records home screen. The default destination, upload status, and availability of the original media should be directly visible; Skills, source rules, and execution environments are grouped under “Me” as infrequent configuration. Review reuses the in-product inbox rather than introducing a separate result data source.
 
-网页继续承担项目浏览、对话接入、较复杂的规则设置与排查，沿用现有项目页逐步增加必要入口：
+The web interface continues to handle project browsing, conversational integration, more complex rule configuration, and troubleshooting, gradually adding necessary entry points to the existing project page:
 
-| 界面 | 核心操作 |
+| Interface | Core Actions |
 |---|---|
-| 项目记录 | 上传、查看原文、查看衍生结果、查看处理状态 |
-| Context 试用 | 输入一个问题，查看提取依据、当前结论和缺口 |
-| 插件 | 安装、选择执行器、配置提示词与范围、启停、固定或升级版本 |
-| 规则 | 按来源和类型配置处理，配置定时任务，预览某条记录是否匹配 |
-| 运行详情 | 输入版本、状态、结果、错误、重试与重跑 |
-| 收件箱 | 查看回顾、提醒和建议，跳到证据，反馈或忽略 |
+| Project Records | Upload, view original content, view derived results, view processing status |
+| Context Trial | Enter a question and inspect retrieved evidence, current conclusions, and gaps |
+| Plugins | Install, select an executor, configure prompt and scope, enable or disable, pin or upgrade a version |
+| Rules | Configure processing by source and type, configure scheduled tasks, preview whether a record matches |
+| Run Details | Input version, status, result, error, retry, and rerun |
+| Inbox | View reviews, reminders, and suggestions; navigate to evidence; provide feedback or dismiss |
 
-界面优先表达用户效果，如“把会议录音转成文字”，技术参数放在高级设置。上传进度、已保存状态和分析进度分开展示。关键流程必须在桌面与窄屏上可操作，状态变化可被辅助技术读取。
+The interface prioritizes user outcomes, such as “Turn a meeting recording into text”; technical parameters go in advanced settings. Upload progress, saved status, and analysis progress are displayed separately. Critical flows must be operable on desktop and narrow screens, and state changes must be exposed to assistive technologies.
 
-所有用户可见文字都应进入统一的 locale 资源，包括动态状态、表单约束、后端错误映射、日期时间和数量表达。语言切换入口在公开页和登录后界面均可发现；OAuth 页复用同一支持语言清单和 locale 传递契约。代码中出现某种语言的硬编码界面文字，或某个流程切回另一语言，都属于未完成的多语言实现。
+All user-visible text should live in unified locale resources, including dynamic statuses, form constraints, backend error mappings, dates and times, and quantity expressions. The language switcher must be discoverable on both public pages and authenticated interfaces; OAuth pages reuse the same supported-language list and locale propagation contract. Hard-coded interface text in any language, or any flow that switches back to another language, means that the multilingual implementation is incomplete.
 
-## 9. 质量、成本与失败体验
+## 9. Quality, Cost, and Failure Experience
 
-- 写入成功以原始记录持久化为准，处理速度不阻塞写入确认。
-- 检索和生成都有预算，超出时说明处理范围，不静默截断或宣称完整。
-- 每条重要生成结论附来源；找不到依据时标记为建议或不确定。
-- 配置超时、重试上限和每日运行次数；支持提供商用量统计时展示，无法计量时显示未知。
-- runner 离线时保留任务；恢复后按补跑策略运行，避免把几天的提醒一次性全发出。
-- 凭据、原始音视频和完整模型输出不进入普通运维日志；任务详情遵守项目权限。
-- 暂停插件和撤销执行器授权后，不能继续读新数据、提交新结果或向外发送。
+- A successful write is defined by persistence of the raw record; processing speed does not block write confirmation.
+- Both retrieval and generation have budgets; when a budget is exceeded, the product explains the processed scope rather than silently truncating or claiming completeness.
+- Every important generated conclusion includes a source; when evidence cannot be found, label it as a suggestion or uncertain.
+- Configure timeouts, retry limits, and maximum daily run counts; show provider usage statistics when available and show unknown when usage cannot be measured.
+- Retain tasks while the runner is offline; after recovery, execute according to the backfill policy and avoid sending several days of reminders all at once.
+- Credentials, raw audio/video, and complete model outputs do not enter ordinary operations logs; task details follow project permissions.
+- After a plugin is paused or executor authorization is revoked, it cannot continue to read new data, submit new results, or send externally.
 
-## 10. 下一轮最小验证范围
+## 10. Minimum Validation Scope for the Next Iteration
 
-### 10.1 MVP 卡片
+### 10.1 MVP Card
 
-| 项目 | 定义 |
+| Item | Definition |
 |---|---|
-| 目标用户 | 在多个 AI 对话里持续推进一个项目的个人用户 |
-| 用户任务 | 记录语音和文字，换对话后接着推进，并获得每日回顾 |
-| 最危险假设 | 原始记录经处理后，能在新对话和主动服务中提供正确且有依据的背景，而非增加信息噪音 |
-| P1 闭环 | 手机 App 录音 → 本机保存与自动上传 → 可配置 skill 转录 → 追加转录 → MCP 按问题提取 → 新对话引用记录 → 定时回顾 → 手机回顾入口查看 |
-| 必须包含 | 简单 Android App、私人项目默认归属、可恢复上传队列、一个真实 runner、一种录制端与转录端共同支持的音频格式、两个固定版本 skill、事件和时间两种触发、提示词配置、失败重试、启停、引用与权限 |
-| 不包含 | 图片执行、外部发布、推荐排序、跨项目 memory、第三方市场、通用流程画布、并行集群、向量数据库 |
-| 投入边界 | 首先验证一个真实执行器的非交互运行和转录能力，再实现上述闭环；未通过则先解决该阻塞，不扩建框架。具体日历工期尚未估算 |
+| Target user | An individual who continuously advances one project across multiple AI conversations |
+| User task | Record voice and text, continue making progress after switching conversations, and receive a daily review |
+| Riskiest assumption | After raw records are processed, they can provide correct and evidence-backed background in new conversations and proactive services rather than adding information noise |
+| P1 loop | Mobile app recording → on-device storage and automatic upload → configurable skill transcription → append transcription → question-based retrieval through MCP → cite records in a new conversation → scheduled review → view through the mobile Review entry point |
+| Must include | Simple Android app, default private-project destination, recoverable upload queue, one real runner, one audio format supported by both the recorder and transcriber, two pinned-version skills, event and time triggers, prompt configuration, failure retry, enable/disable, citations, and permissions |
+| Excludes | Image execution, external publishing, recommendation ranking, cross-project memory, third-party marketplace, general-purpose workflow canvas, parallel cluster, vector database |
+| Effort boundary | First validate non-interactive execution and transcription capabilities with one real executor, then implement the loop above; if validation fails, resolve that blocker before expanding the framework. A specific calendar estimate has not yet been made |
 
-图片分析、提醒与推荐、外部分享属于完整设计覆盖的能力，但不作为这次最小闭环全部落地的要求。
+Image analysis, reminders and recommendations, and external sharing are capabilities covered by the complete design but are not all required for this minimum loop.
 
-### 10.2 最小技术切片
+### 10.2 Minimum Technical Slice
 
-复用现有 Go 服务、项目授权、文件事件、HTTP/MCP、CLI 和项目页。在 `app/android/` 实现轻量 Android 采集 App，提供录音、本机保存、可恢复的自动上传与记录/回顾查看；后端提供受限音频上传、带出处的衍生结果、一个文件化任务协调器、一个 runner 适配器、两个 skill 包，以及返回证据的 context 提取接口。既有 iOS 原型保留；网页窄屏预览与其他平台测试不能替代 Android 原生采集验证。
+Reuse the existing Go service, project authorization, file events, HTTP/MCP, CLI, and project page. Implement a lightweight Android capture app in `app/android/` that provides recording, on-device saving, recoverable automatic uploads, and Records/Review views; the backend provides constrained audio upload, provenance-bearing derived results, a file-based task coordinator, one runner adapter, two skill packages, and a context retrieval endpoint that returns evidence. Retain the existing iOS prototype; narrow-screen web previews and testing on other platforms cannot substitute for validation of native Android capture.
 
-主动提取首版由后端做确定性候选选择，调用方 agent 完成理解与表达；每日回顾由 runner 的 skill 完成。无需为每次检索在后台再唤起一个 agent。
+For the first version of active retrieval, the backend performs deterministic candidate selection and the calling agent performs comprehension and expression; Daily Review is completed by the runner's skill. There is no need to wake another agent in the background for every retrieval.
 
-### 10.3 验收证据
+### 10.3 Acceptance Evidence
 
-准备一个有真实录音与文字的项目：包含目标、早期预算、明确预算变更、一条未被用户接受的系统建议、一次来源不明的冲突和一个无关项目。验收前写出预期答案及来源。
+Prepare a project with real recordings and text containing a goal, an early budget, an explicit budget change, a system suggestion that the user did not accept, a conflict from an unknown source, and an unrelated project. Write down the expected answer and sources before acceptance.
 
-1. 在真实 Android 手机 App 中完成开始/结束录音，结束后无需额外点击上传；原始字节落本机、服务端提交后下载哈希一致。断网后结束录音，重新打开 App 并恢复网络时能自动补传；重复提交只生成一个逻辑事件。转录失败不影响原始媒体读取。
-2. 用户配置提示词后，真实 runner 生成可追溯转录；修改提示词并主动重跑后，旧结果仍可查，新结果成为该处理阶段的默认版本。
-3. 新对话通过 MCP 获取 context，回答使用明确更新后的预算，指出未解决冲突，不把建议当成承诺，并引用原文。
-4. 实际调度器在一个短测试时间点唤起 runner，回顾写回并出现在产品内收件箱；手动调用成功不能替代定时验证。
-5. 模拟任务中断及重复触发，不出现重复逻辑输出；暂停后不再提交或投递。
-6. 另一个无权身份不能通过原文、衍生记录、run、索引或收件箱访问项目数据。
-7. 在真实 Android 手机完成录音、自动上传、查看原文/结果和每日回顾；在网页桌面及窄屏完成规则配置与暂停。覆盖麦克风权限拒绝、录音中断、登录过期、队列重启恢复及 Android 允许的锁屏/后台行为；不仅检查截图或构建。模拟器用于补充验证，不替代真机行为证据。
-8. 分别使用 English、简体中文、Bahasa Melayu 和 हिन्दी，从公开首页完成注册或登录、进入项目、写入并查询记录，再进入 OAuth 授权确认；刷新、登录和跨页面跳转保持所选语言，成功、校验、空状态、失败和权限提示不回退到其他语言。每种语言至少完成一次真实桌面和窄屏交互；只验证翻译文件、单个 OAuth 页面或构建通过不算验收。
+1. Complete start/stop recording in the real Android mobile app; no extra upload tap is required after stopping. The raw bytes are written to the device, and the downloaded hash matches after server submission. Stop a recording while offline, reopen the app, and restore connectivity; it uploads automatically. Repeated submissions create only one logical event. A transcription failure does not prevent access to the raw media.
+2. After the user configures a prompt, a real runner generates a traceable transcription; after the prompt is changed and a rerun is explicitly initiated, the old result remains available and the new result becomes the default version for that processing stage.
+3. A new conversation retrieves context through MCP, answers using the explicitly updated budget, identifies the unresolved conflict, does not treat the suggestion as a commitment, and cites the original content.
+4. The actual scheduler wakes the runner at a short test time, writes the review back, and makes it appear in the in-product inbox; successful manual invocation cannot substitute for scheduled validation.
+5. Simulating an interrupted task and duplicate triggers does not produce duplicate logical output; after pausing, the task no longer submits or delivers.
+6. Another unauthorized identity cannot access project data through the original content, derived records, runs, indexes, or inbox.
+7. Complete recording, automatic upload, viewing the original content/results, and viewing the daily review on a real Android phone; configure and pause rules on the web interface at both desktop and narrow widths. Cover microphone-permission denial, interrupted recording, expired login, queue recovery after restart, and lock-screen/background behavior permitted by Android; do more than inspect screenshots or a build. Emulator testing supplements but does not replace evidence from a real device.
+8. In English, Simplified Chinese, Bahasa Melayu, and हिन्दी, complete registration or login from the public home page, enter a project, write and query a record, and then proceed through OAuth authorization confirmation. Refreshes, login, and cross-page navigation preserve the selected language; success, validation, empty, failure, and permission states do not fall back to another language. Complete at least one real desktop and narrow-screen interaction in each language; checking only translation files, a single OAuth page, or a successful build does not count as acceptance.
 
-同时记录：原始写入耗时、处理等待和执行耗时、提取耗时、实际用量（可获得时）、用户纠正次数。它们是实验数据，不宣称预先达到了某个性能水平。
+Also record raw-write latency, processing wait and execution time, retrieval latency, actual usage when available, and the number of user corrections. These are experimental data and do not claim that any particular performance level has been achieved in advance.
 
-### 10.4 停止与学习边界
+### 10.4 Stop and Learning Boundaries
 
-上述闭环通过后，先判断用户是否减少了重复解释、是否信任引用和回顾、是否愿意继续记录。检索遗漏或建议噪音未解决时，优先修正这些问题，不以增加插件数量代替验证。
+After the loop above passes, first determine whether users repeat themselves less, trust the citations and reviews, and are willing to keep recording. If retrieval omissions or noisy suggestions remain unresolved, prioritize correcting those problems instead of adding more plugins as a substitute for validation.
 
-## 11. 后续决策点
+## 11. Subsequent Decision Points
 
-| 决策 | 何时需要 | 当前处理 |
+| Decision | When Needed | Current Treatment |
 |---|---|---|
-| 具体 agent、语音工具及账号方式 | P1 能力验证 | 适配一个真实环境，不承诺所有订阅可用 |
-| 手机平台与录音能力 | 已确定 Android | Android 单独目录开发，实测录制格式、锁屏行为和上传恢复；保留既有 iOS 原型 |
-| 运行主机和时区 | 启用 runner 与定时规则 | 用户选择；本文不配置实际机器 |
-| 图片格式和分析能力 | 图片切片开始前 | 复用同一规则和结果契约 |
-| 外部消息渠道与分享目的地 | 开启外部投递前 | 产品内交付优先，外部默认草稿 |
-| 多人共享自动化政策 | 扩大团队试用前 | 个人安装和创建者管理的共享安装分开 |
-| 保留、清除和账号退出 | 更广泛托管前 | 不把逻辑撤回当成物理删除 |
-| 收费与资源承担 | 托管执行前 | 自有 runner 优先，无套餐或计费承诺 |
+| Specific agent, speech tool, and account method | P1 capability validation | Adapt one real environment; do not promise that every subscription is supported |
+| Mobile platform and recording capabilities | Android has been selected | Develop in a dedicated Android directory; test the recording format, lock-screen behavior, and upload recovery; retain the existing iOS prototype |
+| Execution host and time zone | When enabling the runner and scheduled rules | User-selected; this document does not configure an actual machine |
+| Image formats and analysis capabilities | Before beginning the image slice | Reuse the same rule and result contracts |
+| External messaging channels and sharing destinations | Before enabling external delivery | Prioritize in-product delivery; external output defaults to a draft |
+| Multi-user shared-automation policy | Before expanding team trials | Separate personal installations from shared installations managed by the creator |
+| Retention, erasure, and account closure | Before broader hosting | Do not treat logical retraction as physical deletion |
+| Pricing and resource responsibility | Before hosted execution | Prefer the user's own runner; no plan or billing commitment |
 
-这些决策有明确介入时点，不阻止当前设计和最小验证；默认值调整时同步修改两份文档。
+These decisions have explicit intervention points and do not block the current design or minimum validation. When defaults change, update both documents in sync.
