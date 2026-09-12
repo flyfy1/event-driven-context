@@ -119,7 +119,7 @@ function apiError(payload, statusCode) {
     state_version_mismatch: "stateVersionMismatch", forbidden_namespace: "forbiddenNamespace",
     plugin_paused: "pluginPaused", rate_limited: "rateLimited"
   }[code];
-  const error = new Error(key ? t(key) : (serviceMessage || t("requestFailed", { status: statusCode })));
+  const error = new Error(serviceMessage || (key ? t(key) : t("requestFailed", { status: statusCode })));
   error.status = statusCode;
   error.code = code || "";
   return error;
@@ -736,6 +736,10 @@ $("#local-login-button")?.addEventListener("click", async () => {
     setMessage("#auth-message", t("invalidInput"));
     return;
   }
+  if (password.length < 12) {
+    setMessage("#auth-message", "Password must be 12 to 72 characters long.");
+    return;
+  }
   const button = $("#local-login-button");
   setBusy(button, true, "login");
   try {
@@ -760,6 +764,10 @@ $("#local-register-button")?.addEventListener("click", async () => {
   const password = $("#local-password")?.value;
   if (!username || !password || !email) {
     setMessage("#auth-message", t("invalidInput"));
+    return;
+  }
+  if (password.length < 12) {
+    setMessage("#auth-message", "Password must be 12 to 72 characters long.");
     return;
   }
   const button = $("#local-register-button");
