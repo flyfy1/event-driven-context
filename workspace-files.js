@@ -23,7 +23,7 @@
           if (!doc) return;
           doc.content = content;
           renderStatus(); renderRows();
-        }, save);
+        }, save, t);
       }
     }
     function open(path) {
@@ -226,7 +226,7 @@
         if (load && session && !session.loaded) refresh();
       },
       show() { renderTree(); if (editor) editor.measure(); if (session && !session.loaded) refresh(); },
-      translate() { renderStatus(); renderRows(); },
+      translate() { renderStatus(); renderRows(); if (editor && editor.translate) editor.translate(); },
       clear() { epoch++; session = null; sessions.clear(); if (editor) { editor.destroy(); editor = null; } renderTree(); renderStatus(); }
     };
   };
