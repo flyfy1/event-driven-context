@@ -57,3 +57,7 @@ edc --server {{.APIURL}} state list --project {{.Project}}
 ```
 
 汇报实际项目名称、返回的 Event UUID，以及 State 的 lag 或覆盖限制。历史为空也是有效结果，不要编造 Event。真实 CLI 读取成功才算接入完成；未经明确要求不要写入测试 Event。
+
+## 可选：安装 Memory Recall
+
+需要检索已有信息时，阅读 `{{.RecallSkillURL}}`，保存为 `.agents/skills/memory-recall/SKILL.md`（Codex）或 `.claude/skills/memory-recall/SKILL.md`（Claude Code），保留已有修改。使用 `$memory-recall`，指定项目 `{{.Project}}` 和问题。它将已发布 Notes 同步到本地目录，按需读取相关文件，并通过 CLI 获取来源 Events。检索不会启用录制 hook 或写入远程记录。

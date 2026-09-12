@@ -50,11 +50,12 @@ func agentSetupHandler(config Config) http.HandlerFunc {
 			return
 		}
 		data := struct {
-			Project, APIURL, SkillURL string
-			HasProject                bool
+			Project, APIURL, SkillURL, RecallSkillURL string
+			HasProject                                bool
 		}{
 			Project: project, HasProject: project != "",
 			APIURL: apiBase, SkillURL: webBase + "/skills/edc-recorder/SKILL.md",
+			RecallSkillURL: webBase + "/skills/memory-recall/SKILL.md",
 		}
 		if !data.HasProject {
 			data.Project = "PROJECT_ID"
