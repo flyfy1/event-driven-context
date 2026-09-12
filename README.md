@@ -99,7 +99,7 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 ./bin/edc --config "$HOME/.config/event-driven-context/bob.json" register --username bob --email bob@example.invalid
 ./bin/edc --config "$HOME/.config/event-driven-context/bob.json" login --username bob
 
-# 创建者添加已注册成员。
+# 任一 owner 添加已注册成员；网页可继续把成员提升为 owner。
 ./bin/edc project add-member --project PROJECT_ID --username bob
 ./bin/edc project members --project PROJECT_ID
 
@@ -193,6 +193,9 @@ EDC_ADMIN_USERS=alice,owner@example.com ./bin/edc-server ...
 | `GET /v1/me` | 当前身份 |
 | `POST /v1/projects` | `{name,description?}`，创建项目 |
 | `GET /v1/projects` | 当前用户的项目 |
+| `GET /v1/projects/{project_id}/members` | 列出成员及其 `member` / `owner` 角色 |
+| `POST /v1/projects/{project_id}/members` | owner 添加已注册成员 |
+| `PATCH /v1/projects/{project_id}/members/{user_id}` | owner 以 `{role:"owner"}` 或 `{role:"member"}` 管理其他成员角色；至少保留一位 owner |
 | `POST /v1/members` | `{project_id,username}`，添加成员 |
 | `POST /v1/members/query` | `{project_id}`，列出成员 |
 | `POST /v1/events` | `{project_id,content,metadata?,occurred_at?,idempotency_key?}` |

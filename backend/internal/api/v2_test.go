@@ -169,8 +169,20 @@ func TestV2HTTPProjectMemberEventQueryMetadataAndActorBoundary(t *testing.T) {
 		t.Fatalf("add member: %d %s", w.Code, w.Body.String())
 	}
 	w = f.request(t, http.MethodGet, "/v1/projects/"+f.project.ID+"/members", f.bobToken, "", nil)
-	if members := decodeV2Response[core.Members](t, w); w.Code != http.StatusOK || len(members.Members) != 2 {
+	if members := decodeV2Response[core.Members](t, w); w.Code != http.StatusOK || len(members.Members) != 2 || members.Members[1].Role != "member" {
 		t.Fatalf("members: %d %#v", w.Code, members)
+	}
+	w = f.request(t, http.MethodPatch, "/v1/projects/"+f.project.ID+"/members/"+f.bob.ID, f.bobToken, "application/json", v2JSONBody(t, map[string]string{"role": "owner"}))
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("member promoted self: %d %s", w.Code, w.Body.String())
+	}
+	w = f.request(t, http.MethodPatch, "/v1/projects/"+f.project.ID+"/members/"+f.bob.ID, f.token, "application/json", v2JSONBody(t, map[string]string{"role": "owner"}))
+	if promoted := decodeV2Response[core.ProjectMember](t, w); w.Code != http.StatusOK || promoted.ID != f.bob.ID || promoted.Role != "owner" {
+		t.Fatalf("promote member: %d %#v", w.Code, promoted)
+	}
+	w = f.request(t, http.MethodPatch, "/v1/projects/"+f.project.ID, f.bobToken, "application/json", v2JSONBody(t, map[string]string{"timezone": "Asia/Singapore"}))
+	if w.Code != http.StatusOK {
+		t.Fatalf("second owner could not manage project: %d %s", w.Code, w.Body.String())
 	}
 
 	path := "/v1/projects/" + f.project.ID + "/events"

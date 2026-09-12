@@ -65,6 +65,15 @@ func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.Servic
 	}) (core.User, error) {
 		return store.AddMember(ctx, core.MemberInput{ProjectID: v2ProjectID(ctx), Username: in.Username})
 	})))
+	mux.Handle("PATCH /v1/projects/{project_id}/members/{user_id}", writeUser(jsonEndpointV2(http.StatusOK, func(ctx context.Context, in struct {
+		Role string `json:"role"`
+	}) (core.ProjectMember, error) {
+		return store.SetMemberRole(ctx, core.MemberRoleInput{
+			ProjectID: v2ProjectID(ctx),
+			UserID:    v2PathUserID(ctx),
+			Role:      in.Role,
+		})
+	})))
 
 	mux.Handle("POST /v1/projects/{project_id}/events", writeSubject(jsonEndpointV2(http.StatusOK, func(ctx context.Context, in v2.RecordEventsInput) (v2.RecordEventsResult, error) {
 		subject := v2SubjectFrom(ctx)
@@ -296,12 +305,14 @@ func v2PathContext(ctx context.Context, r *http.Request) context.Context {
 	ctx = context.WithValue(ctx, v2ProjectKey{}, r.PathValue("project_id"))
 	ctx = context.WithValue(ctx, v2PluginKey{}, r.PathValue("plugin_id"))
 	ctx = context.WithValue(ctx, v2StateNameKey{}, r.PathValue("name"))
+	ctx = context.WithValue(ctx, v2UserKey{}, r.PathValue("user_id"))
 	return ctx
 }
 
 type v2ProjectKey struct{}
 type v2PluginKey struct{}
 type v2StateNameKey struct{}
+type v2UserKey struct{}
 
 func v2ProjectID(ctx context.Context) string {
 	value, _ := ctx.Value(v2ProjectKey{}).(string)
@@ -309,6 +320,10 @@ func v2ProjectID(ctx context.Context) string {
 }
 func v2PathPluginID(ctx context.Context) string {
 	value, _ := ctx.Value(v2PluginKey{}).(string)
+	return value
+}
+func v2PathUserID(ctx context.Context) string {
+	value, _ := ctx.Value(v2UserKey{}).(string)
 	return value
 }
 func v2StateKeyFromContext(ctx context.Context) string {

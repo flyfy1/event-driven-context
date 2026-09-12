@@ -91,6 +91,7 @@ select {
 .member-item { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 9px 0; border-bottom: 1px solid var(--line); }
 .member-item code { color: var(--muted); overflow-wrap: anywhere; }
 .member-item .status-badge { margin-left: auto; }
+.member-role-action { padding: 6px 9px; }
 .add-member-form { display: flex; align-items: end; gap: 8px; max-width: 620px; }
 .add-member-form label { flex: 1; margin: 0; }
 .event-details { margin-top: 12px; }
