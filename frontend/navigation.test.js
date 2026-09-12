@@ -74,7 +74,7 @@ test('network or service failure cannot erase a valid local session or cause bea
     assert.equal(store.getItem('user'),'keep-user');
   }
 });
-test('both entry points bundle routing and the public guide uses the V2 recorder', () => {
+test('both entry points bundle routing and the public guide uses the CLI recorder', () => {
   const index=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
   const workspace=fs.readFileSync(path.join(__dirname,'workspace.html'),'utf8');
   assert.match(index,/data-copy="hero1"/);
@@ -87,7 +87,8 @@ test('both entry points bundle routing and the public guide uses the V2 recorder
   }
   assert.doesNotMatch(index,/query_context|--idempotency-key|edc record|edc get --event/);
   assert.match(index,/edc push/);
-  assert.match(index,/record_events/);
+  assert.match(index,/Use the CLI directly/);
+  assert.match(index,/--type note/);
   assert.equal(fs.readFileSync(path.join(__dirname,'skills/edc-recorder/SKILL.md'),'utf8'),fs.readFileSync(path.join(__dirname,'../backend/skills/edc-recorder/SKILL.md'),'utf8'));
 });
 
