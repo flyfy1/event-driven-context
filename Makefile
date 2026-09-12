@@ -8,6 +8,7 @@ test:
 check:
 	go vet ./...
 	go test -race ./...
+	node frontend/i18n.test.js
 run:
 	go run ./cmd/edc-server
 deploy-prod:

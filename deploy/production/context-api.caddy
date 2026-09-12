@@ -1,4 +1,8 @@
 context-api.integ.life {
-  encode zstd gzip
-  reverse_proxy 127.0.0.1:8401
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8401 {
+		# Preserve the MCP SDK's loopback DNS-rebinding protection. The public
+		# resource identity is enforced separately by OAuth resource/audience.
+		header_up Host 127.0.0.1:8401
+	}
 }

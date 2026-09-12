@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 	"reflect"
+	"slices"
+	"strings"
 	"unicode/utf8"
 
 	"event-driven-context/internal/core"
@@ -32,6 +34,11 @@ func New(backend core.Backend) *mcp.Server {
 
 func add[I, O any](s *mcp.Server, name, description string, readOnly, idempotent bool, fn func(context.Context, I) (O, error)) {
 	no := false
+	requiredScope := core.ScopeWrite
+	if readOnly {
+		requiredScope = core.ScopeRead
+	}
+	description += " OAuth scope: " + requiredScope + "."
 	inputSchema, outputSchema := schemaFor[I](), schemaFor[O]()
 	inputResolved, err := inputSchema.Resolve(nil)
 	if err != nil {
@@ -44,6 +51,11 @@ func add[I, O any](s *mcp.Server, name, description string, readOnly, idempotent
 	// Use the SDK's low-level tool handler: its typed helper currently round-trips
 	// arguments through float64, which would corrupt large metadata numbers.
 	s.AddTool(&mcp.Tool{Name: name, Description: description, InputSchema: inputSchema, OutputSchema: outputSchema, Annotations: &mcp.ToolAnnotations{ReadOnlyHint: readOnly, DestructiveHint: &no, IdempotentHint: idempotent, OpenWorldHint: &no}}, func(ctx context.Context, r *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		if r.Extra != nil && r.Extra.TokenInfo != nil {
+			if !slices.Contains(r.Extra.TokenInfo.Scopes, requiredScope) {
+				return toolError(&core.Error{Code: "forbidden", Message: "OAuth token missing required scope " + requiredScope}), nil
+			}
+		}
 		raw := r.Params.Arguments
 		if len(raw) == 0 {
 			raw = json.RawMessage(`{}`)
@@ -133,14 +145,42 @@ func schemaFor[T any]() *jsonschema.Schema {
 	return s
 }
 
-func HTTP(store *core.Store) http.Handler {
+func HTTP(store *core.Store, publicBaseURL string) http.Handler {
 	s := New(store)
 	h := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server { return s }, &mcp.StreamableHTTPOptions{Stateless: true, JSONResponse: true})
-	return auth.RequireBearerToken(func(ctx context.Context, token string, _ *http.Request) (*auth.TokenInfo, error) {
+	protected := auth.RequireBearerToken(func(ctx context.Context, token string, _ *http.Request) (*auth.TokenInfo, error) {
+		if publicBaseURL != "" && strings.HasPrefix(token, "edco_") {
+			info, err := store.AuthenticateOAuth(ctx, token, strings.TrimRight(publicBaseURL, "/")+"/mcp")
+			if err != nil {
+				return nil, auth.ErrInvalidToken
+			}
+			return &auth.TokenInfo{UserID: info.UserID, Expiration: info.ExpiresAt, Scopes: info.Scopes, Extra: map[string]any{"client_id": info.ClientID, "resource": info.Resource}}, nil
+		}
 		id, expires, err := store.Authenticate(ctx, token)
 		if err != nil {
 			return nil, auth.ErrInvalidToken
 		}
-		return &auth.TokenInfo{UserID: id, Expiration: expires}, nil
+		return &auth.TokenInfo{UserID: id, Expiration: expires, Scopes: append([]string(nil), core.OAuthScopes...)}, nil
 	}, nil)(h)
+	if publicBaseURL == "" {
+		return protected
+	}
+	metadata := strings.TrimRight(publicBaseURL, "/") + "/.well-known/oauth-protected-resource/mcp"
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		protected.ServeHTTP(&challengeWriter{ResponseWriter: w, challenge: `Bearer resource_metadata="` + metadata + `", scope="` + strings.Join(core.OAuthScopes, " ") + `"`}, r)
+	})
 }
+
+type challengeWriter struct {
+	http.ResponseWriter
+	challenge string
+}
+
+func (w *challengeWriter) WriteHeader(status int) {
+	if status == http.StatusUnauthorized || status == http.StatusForbidden {
+		w.Header().Set("WWW-Authenticate", w.challenge)
+	}
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *challengeWriter) Unwrap() http.ResponseWriter { return w.ResponseWriter }

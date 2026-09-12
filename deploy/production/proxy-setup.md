@@ -40,5 +40,7 @@ checks and registration succeed.
 
 If startup fails, inspect the journal for certificate, firewall, or port conflicts.
 To roll back this new proxy, run `sudo systemctl disable --now event-context-proxy`.
-The backend continues to run locally. Normal backend releases preserve proxy
-configuration; changes to this proxy require separate administrator installation.
+The backend continues to run locally. Normal deployments install and validate the
+dedicated proxy configuration, enable and reload the proxy service, and check both
+local and public health endpoints. A subsequent deployment will enable the proxy
+again; the manual steps above are for initial setup or troubleshooting.

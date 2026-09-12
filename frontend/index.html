@@ -1,81 +1,89 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="为团队追加、查询不可修改的原始 context。" />
+    <meta name="description" content="Append and query immutable context with your team." data-i18n-content="metaDescription" />
     <title>Context · Integ.Life</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./i18n.css" />
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="#top" aria-label="Context 首页">Context<span>·</span>Integ.Life</a>
-      <span id="connection-status" class="status" aria-live="polite">未登录</span>
-      <button id="logout-button" class="quiet hidden" type="button">退出</button>
+      <a class="brand" href="#top" aria-label="Context home" data-i18n-aria-label="brandHome">Context<span>·</span>Integ.Life</a>
+      <span id="connection-status" class="status" aria-live="polite">Signed out</span>
+      <select id="language-select" class="language-select" aria-label="Language" data-i18n-aria-label="languageLabel">
+        <option value="en">English</option>
+        <option value="zh-CN">简体中文</option>
+        <option value="ms">Bahasa Melayu</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <button id="logout-button" class="quiet hidden" type="button" data-i18n="logout">Sign out</button>
     </header>
 
     <main id="top">
       <section class="intro">
-        <p class="eyebrow">SHARED, APPEND-ONLY CONTEXT</p>
-        <h1>把原始信息留下来，<br />让团队以后能找到它。</h1>
-        <p>每一条记录都会保留作者、写入时间、原始文本或文件，以及你定义的 metadata。它只能追加，不能被改写。</p>
+        <p class="eyebrow" data-i18n="introEyebrow">SHARED, APPEND-ONLY CONTEXT</p>
+        <h1><span data-i18n="introTitleLine1">Keep the original information,</span><br /><span data-i18n="introTitleLine2">so your team can find it later.</span></h1>
+        <p data-i18n="introBody">Every record keeps its author, write time, original text or file, and the metadata you define. It can only be appended, never rewritten.</p>
       </section>
 
       <section id="auth-panel" class="auth-grid" aria-labelledby="auth-title">
         <div>
-          <p class="eyebrow">START HERE</p>
-          <h2 id="auth-title">进入你的 context</h2>
-          <p class="muted">新成员先注册，再登录。用户名使用小写字母、数字和 <code>_ . -</code>。</p>
+          <p class="eyebrow" data-i18n="authEyebrow">START HERE</p>
+          <h2 id="auth-title" data-i18n="authTitle">Enter your context</h2>
+          <p class="muted" data-i18n="authHint">New members register first, then sign in. Usernames use lowercase letters, numbers, _, . or -.</p>
         </div>
-        <form id="auth-form" class="form-card">
-          <div class="segmented" role="group" aria-label="账户操作">
-            <button class="selected" type="button" data-auth-mode="login">登录</button>
-            <button type="button" data-auth-mode="register">注册</button>
+        <form id="auth-form" class="form-card" novalidate>
+          <div class="segmented" role="group" aria-label="Account actions" data-i18n-aria-label="accountActions">
+            <button class="selected" type="button" data-auth-mode="login" data-i18n="login">Sign in</button>
+            <button type="button" data-auth-mode="register" data-i18n="register">Register</button>
           </div>
-          <label>用户名<input id="auth-username" autocomplete="username" required pattern="[a-z0-9][a-z0-9_.-]{2,63}" placeholder="alice" /></label>
-          <label>密码<input id="auth-password" type="password" autocomplete="current-password" required minlength="12" placeholder="至少 12 个字符" /></label>
-          <button id="auth-submit" class="primary" type="submit">登录</button>
+          <label><span data-i18n="username">Username</span><input id="auth-username" autocomplete="username" required pattern="[a-z0-9][a-z0-9_.-]{2,63}" placeholder="alice" /></label>
+          <label><span data-i18n="password">Password</span><input id="auth-password" type="password" autocomplete="current-password" required minlength="12" placeholder="At least 12 characters" data-i18n-placeholder="passwordPlaceholder" /></label>
+          <button id="auth-submit" class="primary" type="submit" data-i18n="login">Sign in</button>
           <p id="auth-message" class="message" aria-live="polite"></p>
         </form>
       </section>
 
-      <section id="workspace" class="workspace hidden" aria-label="Context 工作区">
+      <section id="workspace" class="workspace hidden" aria-label="Context workspace" data-i18n-aria-label="workspaceLabel">
         <aside class="sidebar">
-          <div class="side-heading"><div><p class="eyebrow">PROJECTS</p><h2>项目</h2></div><button id="new-project-button" class="icon-button" type="button" aria-label="创建项目">+</button></div>
+          <div class="side-heading"><div><p class="eyebrow" data-i18n="projectsEyebrow">PROJECTS</p><h2 data-i18n="projectsTitle">Projects</h2></div><button id="new-project-button" class="icon-button" type="button" aria-label="Create project" data-i18n-aria-label="createProjectAria">+</button></div>
           <div id="project-list" class="project-list" aria-live="polite"></div>
-          <form id="project-form" class="form-card compact hidden">
-            <label>项目名称<input id="project-name" required maxlength="200" placeholder="例如：产品研究" /></label>
-            <label>说明<textarea id="project-description" maxlength="4000" rows="2" placeholder="可选"></textarea></label>
-            <div class="actions"><button type="button" id="cancel-project">取消</button><button class="primary" type="submit">创建</button></div>
+          <form id="project-form" class="form-card compact hidden" novalidate>
+            <label><span data-i18n="projectName">Project name</span><input id="project-name" required maxlength="200" placeholder="For example: Product research" data-i18n-placeholder="projectNamePlaceholder" /></label>
+            <label><span data-i18n="description">Description</span><textarea id="project-description" maxlength="4000" rows="2" placeholder="Optional" data-i18n-placeholder="descriptionPlaceholder"></textarea></label>
+            <div class="actions"><button type="button" id="cancel-project" data-i18n="cancel">Cancel</button><button class="primary" type="submit" data-i18n="create">Create</button></div>
           </form>
         </aside>
 
         <div id="empty-project" class="empty-state">
-          <p class="eyebrow">YOUR FIRST PROJECT</p><h2>先创建一个项目。</h2><p>项目是团队共享 context 的边界。创建后可通过 CLI 或 MCP 添加已注册成员。</p>
-          <button class="primary" data-open-project-form type="button">创建项目</button>
+          <p class="eyebrow" data-i18n="emptyProjectEyebrow">YOUR FIRST PROJECT</p><h2 data-i18n="emptyProjectTitle">Create your first project.</h2><p data-i18n="emptyProjectBody">A project is the boundary for shared team context. After creating it, use the CLI or MCP to add registered members.</p>
+          <button class="primary" data-open-project-form type="button" data-i18n="createProjectAria">Create project</button>
         </div>
 
         <section id="project-view" class="project-view hidden">
-          <div class="project-heading"><div><p id="project-owner" class="eyebrow"></p><h2 id="project-title"></h2><p id="project-description" class="muted"></p></div><button id="refresh-button" class="quiet" type="button">刷新</button></div>
+          <div class="project-heading"><div><p id="project-owner" class="eyebrow"></p><h2 id="project-title"></h2><p id="project-description" class="muted"></p></div><button id="refresh-button" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
           <div class="write-grid">
             <form id="record-form" class="form-card record-card">
-              <div class="card-title"><h3>追加记录</h3><span class="append-only">只追加</span></div>
-              <div class="segmented" role="group" aria-label="内容类型"><button class="selected" type="button" data-content-mode="text">文本</button><button type="button" data-content-mode="file">文本文件</button></div>
-              <label id="text-input-label">内容<textarea id="event-text" rows="6" maxlength="1048576" placeholder="记录决定、观察、原始资料……"></textarea></label>
-              <label id="file-input-label" class="hidden">文件<input id="event-file" type="file" accept="text/*" /></label>
-              <label id="file-type-label" class="hidden">声明类型<input id="event-file-type" value="text/plain" placeholder="text/plain" /></label>
-              <label>Metadata <span class="label-note">JSON object，可选</span><textarea id="event-metadata" rows="3" spellcheck="false" placeholder='{"source":"meeting","tags":["decision"]}'>{}</textarea></label>
-              <label>发生时间 <span class="label-note">可选</span><input id="event-occurred-at" type="datetime-local" /></label>
-              <button class="primary" type="submit">追加 event</button>
+              <div class="card-title"><h3 data-i18n="recordTitle">Append a record</h3><span class="append-only" data-i18n="appendOnly">APPEND ONLY</span></div>
+              <div class="segmented" role="group" aria-label="Content type" data-i18n-aria-label="contentType"><button class="selected" type="button" data-content-mode="text" data-i18n="text">Text</button><button type="button" data-content-mode="file" data-i18n="textFile">Text file</button></div>
+              <label id="text-input-label"><span data-i18n="content">Content</span><textarea id="event-text" rows="6" maxlength="1048576" placeholder="Record a decision, observation, source material…" data-i18n-placeholder="contentPlaceholder"></textarea></label>
+              <label id="file-input-label" class="hidden"><span data-i18n="file">File</span><input id="event-file" type="file" accept="text/*" /></label>
+              <label id="file-type-label" class="hidden"><span data-i18n="declaredType">Declared type</span><input id="event-file-type" value="text/plain" placeholder="text/plain" /></label>
+              <label>Metadata <span class="label-note" data-i18n="metadataNote">JSON object, optional</span><textarea id="event-metadata" rows="3" spellcheck="false" placeholder='{"source":"meeting","tags":["decision"]}'>{}</textarea></label>
+              <label><span data-i18n="occurredAt">Occurred at</span> <span class="label-note" data-i18n="optional">Optional</span><input id="event-occurred-at" type="datetime-local" /></label>
+              <button class="primary" type="submit" data-i18n="appendEvent">Append event</button>
               <p id="record-message" class="message" aria-live="polite"></p>
             </form>
-            <section class="metadata-card"><div class="card-title"><h3>已有 metadata</h3><button id="metadata-refresh" class="quiet" type="button">刷新</button></div><div id="metadata-list" class="metadata-list"><p class="muted">尚未写入 metadata。</p></div></section>
+            <section class="metadata-card"><div class="card-title"><h3 data-i18n="metadataTitle">Available metadata</h3><button id="metadata-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div><div id="metadata-list" class="metadata-list"><p class="muted" data-i18n="metadataNone">No metadata has been recorded yet.</p></div></section>
           </div>
-          <section class="events-section"><div class="card-title event-toolbar"><div><p class="eyebrow">EVENTS</p><h3>记录</h3></div><form id="query-form" class="query-form"><input id="query-metadata" aria-label="按 metadata 筛选" spellcheck="false" placeholder='metadata，如 {"source":"meeting"}' /><button class="quiet" type="submit">筛选</button><button id="clear-query" class="quiet" type="button">清除</button></form></div><div id="events-list" class="events-list" aria-live="polite"></div><button id="load-more" class="quiet hidden" type="button">加载更多</button></section>
+          <section class="events-section"><div class="card-title event-toolbar"><div><p class="eyebrow" data-i18n="eventsEyebrow">EVENTS</p><h3 data-i18n="eventsTitle">Records</h3></div><form id="query-form" class="query-form"><input id="query-metadata" aria-label="Filter by metadata" data-i18n-aria-label="queryAria" spellcheck="false" placeholder='metadata, for example {"source":"meeting"}' data-i18n-placeholder="queryPlaceholder" /><button class="quiet" type="submit" data-i18n="filter">Filter</button><button id="clear-query" class="quiet" type="button" data-i18n="clear">Clear</button></form></div><div id="events-list" class="events-list" aria-live="polite"></div><button id="load-more" class="quiet hidden" type="button" data-i18n="loadMore">Load more</button></section>
         </section>
       </section>
     </main>
-    <template id="event-template"><article class="event"><div class="event-meta"><strong class="event-author"></strong><time class="event-time"></time><span class="event-kind"></span></div><p class="event-text"></p><a class="event-file hidden" target="_blank" rel="noopener">下载原始文件</a><pre class="event-json"></pre></article></template>
+    <template id="event-template"><article class="event"><div class="event-meta"><strong class="event-author"></strong><time class="event-time"></time><span class="event-kind"></span></div><p class="event-text"></p><a class="event-file hidden" target="_blank" rel="noopener" data-i18n="downloadOriginalFile">Download original file</a><pre class="event-json"></pre></article></template>
+    <script src="./i18n.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>

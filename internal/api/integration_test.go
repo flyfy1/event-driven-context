@@ -114,6 +114,13 @@ func TestStandardMCPHTTPSharedWorkflow(t *testing.T) {
 		if tool.Annotations == nil {
 			t.Fatal("missing tool annotations")
 		}
+		requiredScope := core.ScopeWrite
+		if tool.Annotations.ReadOnlyHint {
+			requiredScope = core.ScopeRead
+		}
+		if !strings.Contains(tool.Description, "OAuth scope: "+requiredScope) {
+			t.Fatalf("tool %s description missing accurate scope", tool.Name)
+		}
 		if tool.Name == "query_events" && !tool.Annotations.ReadOnlyHint {
 			t.Fatal("query not read-only")
 		}

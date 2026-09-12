@@ -15,3 +15,24 @@ CREATE TABLE IF NOT EXISTS projects (
 CREATE TABLE IF NOT EXISTS members (
  project_id TEXT NOT NULL REFERENCES projects(id), user_id TEXT NOT NULL REFERENCES users(id), PRIMARY KEY(project_id,user_id)
 );
+CREATE TABLE IF NOT EXISTS oauth_clients (
+ client_id TEXT PRIMARY KEY, client_name TEXT NOT NULL, redirect_uris TEXT NOT NULL,
+ created_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS oauth_requests (
+ id_hash TEXT PRIMARY KEY, client_id TEXT NOT NULL REFERENCES oauth_clients(client_id),
+ redirect_uri TEXT NOT NULL, state TEXT NOT NULL, code_challenge TEXT NOT NULL,
+ scope TEXT NOT NULL, resource TEXT NOT NULL, csrf_hash TEXT NOT NULL,
+ expires_at INTEGER NOT NULL, used_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS oauth_authorization_codes (
+ code_hash TEXT PRIMARY KEY, client_id TEXT NOT NULL REFERENCES oauth_clients(client_id),
+ user_id TEXT NOT NULL REFERENCES users(id), redirect_uri TEXT NOT NULL,
+ code_challenge TEXT NOT NULL, scope TEXT NOT NULL, resource TEXT NOT NULL,
+ expires_at INTEGER NOT NULL, used_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS oauth_access_tokens (
+ hash TEXT PRIMARY KEY, client_id TEXT NOT NULL REFERENCES oauth_clients(client_id),
+ user_id TEXT NOT NULL REFERENCES users(id), scope TEXT NOT NULL, resource TEXT NOT NULL,
+ expires_at INTEGER NOT NULL, created_at INTEGER NOT NULL
+);

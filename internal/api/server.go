@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"io"
@@ -18,6 +19,16 @@ import (
 )
 
 func Handler(store *core.Store, allowedOrigins []string) http.Handler {
+	return HandlerWithConfig(store, Config{AllowedOrigins: allowedOrigins})
+}
+
+type Config struct {
+	AllowedOrigins      []string
+	PublicBaseURL       string
+	OAuthAccessTokenTTL time.Duration
+}
+
+func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { respond(w, 200, map[string]string{"status": "ok"}) })
 	gate := newAuthGate()
@@ -68,32 +79,99 @@ func Handler(store *core.Store, allowedOrigins []string) http.Handler {
 		}
 		respond(w, 200, out)
 	})))
-	mux.Handle("/mcp", mcpserver.HTTP(store))
+	if config.PublicBaseURL != "" {
+		registerOAuthHandlers(mux, store, config)
+	}
+	mux.Handle("/mcp", mcpserver.HTTP(store, config.PublicBaseURL))
 	allowed := map[string]bool{}
-	for _, o := range allowedOrigins {
+	for _, o := range config.AllowedOrigins {
 		allowed[o] = true
 	}
+	if config.PublicBaseURL != "" {
+		allowed[config.PublicBaseURL] = true
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("Cache-Control", "no-store")
+		requestID := r.Header.Get("X-Request-ID")
+		if !validRequestID(requestID) {
+			requestID = "req_" + strings.ToLower(rand.Text())
+		}
+		w.Header().Set("X-Request-ID", requestID)
+		logged := &statusWriter{ResponseWriter: w, status: http.StatusOK}
+		started := time.Now()
+		defer func() {
+			slog.Info("HTTP request", "request_id", requestID, "method", r.Method, "path", r.URL.Path, "status", logged.status, "duration_ms", time.Since(started).Milliseconds())
+		}()
+		logged.Header().Set("X-Content-Type-Options", "nosniff")
+		logged.Header().Set("Cache-Control", "no-store")
 		if origin := r.Header.Get("Origin"); origin != "" {
-			if !allowed[origin] {
-				respond(w, 403, map[string]any{"error": core.Error{Code: "forbidden", Message: "origin not allowed"}})
+			originAllowed := allowed[origin]
+			// OAuth authorization is a browser navigation flow, not a CORS API.
+			// OpenAI-hosted authorization windows can submit the server-rendered
+			// form with a client or opaque Origin. The handler still requires the
+			// short-lived request-bound CSRF cookie before accepting any decision.
+			if !originAllowed && !isOAuthAuthorizationFormPost(r) {
+				respond(logged, 403, map[string]any{"error": core.Error{Code: "forbidden", Message: "origin not allowed"}})
 				return
 			}
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Vary", "Origin")
-			if r.Method == http.MethodOptions {
-				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-				w.Header().Set("Access-Control-Max-Age", "600")
-				w.WriteHeader(http.StatusNoContent)
-				return
+			if originAllowed {
+				logged.Header().Set("Access-Control-Allow-Origin", origin)
+				logged.Header().Set("Vary", "Origin")
+				if r.Method == http.MethodOptions {
+					logged.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+					logged.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+					logged.Header().Set("Access-Control-Max-Age", "600")
+					logged.WriteHeader(http.StatusNoContent)
+					return
+				}
 			}
 		}
-		r.Body = http.MaxBytesReader(w, r.Body, core.MaxRequestBytes)
-		mux.ServeHTTP(w, r)
+		r.Body = http.MaxBytesReader(logged, r.Body, core.MaxRequestBytes)
+		mux.ServeHTTP(logged, r)
 	})
+}
+
+func isOAuthAuthorizationFormPost(r *http.Request) bool {
+	if r.Method != http.MethodPost || r.URL.Path != "/oauth/authorize" {
+		return false
+	}
+	mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
+	return err == nil && mediaType == "application/x-www-form-urlencoded"
+}
+
+type statusWriter struct {
+	http.ResponseWriter
+	status      int
+	wroteHeader bool
+}
+
+func (w *statusWriter) WriteHeader(status int) {
+	if w.wroteHeader {
+		return
+	}
+	w.wroteHeader = true
+	w.status = status
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *statusWriter) Write(body []byte) (int, error) {
+	if !w.wroteHeader {
+		w.WriteHeader(http.StatusOK)
+	}
+	return w.ResponseWriter.Write(body)
+}
+
+func (w *statusWriter) Unwrap() http.ResponseWriter { return w.ResponseWriter }
+
+func validRequestID(id string) bool {
+	if len(id) < 8 || len(id) > 128 {
+		return false
+	}
+	for _, r := range id {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || strings.ContainsRune("_.-", r)) {
+			return false
+		}
+	}
+	return true
 }
 func bearer(r *http.Request) string {
 	f := strings.Fields(r.Header.Get("Authorization"))
@@ -179,6 +257,8 @@ func fail(w http.ResponseWriter, err error) {
 			status = 409
 		case "too_large":
 			status = 413
+		case "rate_limited":
+			status = 429
 		}
 	} else {
 		slog.Error("API operation failed", "error", err)
