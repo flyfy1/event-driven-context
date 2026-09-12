@@ -307,6 +307,12 @@ select {
 .plugin-catalog-preview .card-title { align-items: center; }
 .plugin-catalog-preview p { margin: 10px 0; }
 .plugin-catalog-preview details { margin-top: 10px; }
+.plugin-config-help { margin: -4px 0 16px; padding: 14px; border-left: 3px solid var(--leaf); background: #f8faf7; }
+.plugin-config-help h5 { margin: 0 0 10px; font-size: 14px; }
+.plugin-config-help dl { display: grid; gap: 12px; margin: 0; }
+.plugin-config-field dt { display: flex; align-items: baseline; gap: 8px; }
+.plugin-config-field dd { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.plugin-config-field small { display: block; margin-top: 4px; }
 .plugin-card .actions { justify-content: start; flex-wrap: wrap; }
 .plugin-inline-editor, .uninstall-review { margin-top: 16px; padding: 14px; border: 1px solid var(--line); background: #f8faf7; }
 .uninstall-review { border-color: #d6aaa7; background: #fff0ed; }

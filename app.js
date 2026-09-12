@@ -1,4 +1,5 @@
 const { resolveAPI, sessionStorageKey, audioMediaType, contextFileKind, fileTitle, buildMetadata, buildMetadataFilter, buildReferences, localDateTimeValue, pathWithLocale, uuidV7 } = window.ContextWorkspaceUtils;
+const { configurationFor, defaultFor } = window.ContextWorkspacePluginConfig;
 const { normalizeLocale, resolveLocalePreference, translate } = window.ContextI18n;
 const API = resolveAPI(window.location.hostname, new URLSearchParams(window.location.search).get("api"));
 const TOKEN_KEY = sessionStorageKey("event-context.token", API);
@@ -161,6 +162,7 @@ function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => { element.placeholder = t(element.dataset.i18nPlaceholder); });
   document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => { element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel)); });
   $("#language-select").value = state.locale;
+  $("#external-plugin-guide").href = "https://github.com/flyfy1/event-driven-context/blob/main/docs/external-plugin" + (state.locale === "zh-CN" ? ".cn" : "") + ".md";
   updateHomeLink();
 }
 function setLocale(locale, persist) {
@@ -763,6 +765,29 @@ function renderMembers() {
 function selectedSystemPlugin() {
   return state.systemPlugins.find((plugin) => plugin.id === state.selectedPluginID) || null;
 }
+function renderPluginConfigHelp(plugin) {
+  const section = $("#plugin-config-help"), list = $("#plugin-config-fields"), none = $("#plugin-config-none");
+  section.classList.toggle("hidden", !plugin);
+  list.replaceChildren();
+  if (!plugin) return;
+  const view = configurationFor(plugin);
+  none.classList.toggle("hidden", view.fields.length > 0);
+  none.textContent = t(Object.keys(view.config).length ? "configDocsUnavailable" : "noConfigFields");
+  for (const field of view.fields) {
+    const item = document.createElement("div"); item.className = "plugin-config-field";
+    const term = document.createElement("dt"), key = document.createElement("code"), type = document.createElement("span");
+    key.textContent = field.key; type.className = "label-note"; type.textContent = field.type || ""; term.append(key, type);
+    const description = document.createElement("dd"); description.textContent = field.description || "";
+    const defaultValue = defaultFor(view.config, field.key);
+    if (defaultValue !== null) {
+      const defaultLine = document.createElement("small");
+      defaultLine.append(document.createTextNode(t("configDefault") + " "), document.createElement("code"));
+      defaultLine.lastChild.textContent = defaultValue;
+      description.append(defaultLine);
+    }
+    item.append(term, description); list.append(item);
+  }
+}
 function renderPluginCatalog() {
   const select = $("#plugin-select"), preview = $("#plugin-catalog-preview"), submit = $("#plugin-install-submit");
   const installed = new Set(state.plugins.map((plugin) => plugin.plugin_id));
@@ -785,6 +810,7 @@ function renderPluginCatalog() {
   submit.disabled = !state.selectedPluginID;
   const current = selectedSystemPlugin();
   preview.classList.toggle("hidden", !current);
+  renderPluginConfigHelp(current);
   if (!current) return;
   $("#plugin-catalog-name").textContent = current.name;
   $("#plugin-catalog-version").textContent = current.id + " · " + current.version;
@@ -794,7 +820,7 @@ function renderPluginCatalog() {
 function chooseSystemPlugin(pluginID) {
   state.selectedPluginID = pluginID;
   const plugin = selectedSystemPlugin();
-  $("#plugin-config").value = JSON.stringify(plugin && plugin.config || {}, null, 2);
+  $("#plugin-config").value = configurationFor(plugin).json;
   renderPluginCatalog();
 }
 function renderPlugins() {
