@@ -31,7 +31,7 @@ Android MVP 已有可安装 APK，并在生产隔离项目完成模拟器主路�
 
 ## 2026-09-12 实测结果
 
-构建、单元测试、Lint 和 instrumentation APK 构建通过。调试 APK 为 3,155,282 bytes，SHA-256 `5e03f27dd5875f8913ce62694893a71c600ff349f91b6bdfb4e06fc0de23e961`。
+构建、单元测试、Lint 和 instrumentation APK 构建通过。当前调试 APK 为 3,160,774 bytes，SHA-256 `0aa3a04ffd23037e0f53cc0a907d6e4ee605c48e0911089b0ad44fe16623098c`。
 
 在现有 ARM64 `Medium_Phone` AVD 上以只读、无快照、无宿主音频方式完成生产登录和隔离项目选择：
 
@@ -42,6 +42,8 @@ Android MVP 已有可安装 APK，并在生产隔离项目完成模拟器主路�
 上述 Event 均为 `note`，`source.channel=app`，File 大小和哈希与本机一致。模拟器麦克风是零输入，因此只证明录音容器、持久队列、上传和回读链路，不证明语音质量或转录正确性。
 
 隔离项目当时 `plugins=[]`，未产生 derived 转录、project-brief 或 daily-review State。物理设备仍需验收真实麦克风、锁屏和音频中断、厂商后台策略、通知、相机及真实文件提供方。
+
+同日又在生产主验收项目 `prj_zyb3rqghg6a77drgrcym6nax3p` 完成真实定时回顾：项目时区为 `Asia/Singapore`，计划在 `2026-09-12T09:10:00+08:00` 发布 `daily-review/2026-09-12` v1，`based_on_sequence=32`，含 20 个来源；重复 tick 后仍为 v1。Android 单条 instrumentation 验证了项目时区显示、按日期加载该 State，并点击来源 `01a092f1-4dac-7115-ba1c-7ae6bf007b0f` 打开真实 Event，结果为 `OK (1 test)`，用时 3.081 秒。
 
 ## 与既有后端证据连接
 

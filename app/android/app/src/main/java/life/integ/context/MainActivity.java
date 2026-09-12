@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -171,7 +172,7 @@ public final class MainActivity extends Activity {
                 List<ApiClient.Project> loaded = new ApiClient(session.endpoint, session.token).projects();
                 ApiClient.Project selected = chooseProject(loaded, session);
                 if (selected != null && (session.projectId == null || !selected.id.equals(session.projectId))) {
-                    sessions.selectProject(selected.id, selected.name);
+                    sessions.selectProject(selected.id, selected.name, selected.timezone);
                     session = sessions.load();
                 }
                 projects = loaded;
@@ -198,7 +199,7 @@ public final class MainActivity extends Activity {
                 List<ApiClient.Project> loaded = new ApiClient(expected.endpoint, expected.token).projects();
                 ApiClient.Project selected = chooseProject(loaded, expected);
                 if (selected != null && !selected.id.equals(expected.projectId)) {
-                    sessions.selectProject(selected.id, selected.name);
+                    sessions.selectProject(selected.id, selected.name, selected.timezone);
                     session = sessions.load();
                 }
                 projects = loaded;
@@ -419,13 +420,29 @@ public final class MainActivity extends Activity {
                     ApiClient.Project project = projects.get(position);
                     SessionStore.Session current = sessions.load();
                     if (current != null && !project.id.equals(current.projectId)) {
-                        sessions.selectProject(project.id, project.name); session = sessions.load(); UploadWorker.enqueuePending(MainActivity.this);
+                        sessions.selectProject(project.id, project.name, project.timezone); session = sessions.load(); UploadWorker.enqueuePending(MainActivity.this);
                     }
                 }
                 @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
             page.addView(spinner);
         }
+        ApiClient.Project selectedProject = selectedProject();
+        String currentTimezone = selectedProject == null ? session.projectTimezone : selectedProject.timezone;
+        page.addView(text(getString(R.string.project_timezone, currentTimezone == null ? "" : currentTimezone)));
+        if (selectedProject != null && session.userId.equals(selectedProject.ownerUserId)) {
+            EditText timezone = field(getString(R.string.timezone_hint), InputType.TYPE_CLASS_TEXT);
+            timezone.setText(selectedProject.timezone);
+            page.addView(timezone);
+            Button saveTimezone = button(getString(R.string.save_timezone));
+            saveTimezone.setOnClickListener(v -> updateTimezone(selectedProject, timezone, saveTimezone));
+            page.addView(saveTimezone);
+        }
+        EditText projectName = field(getString(R.string.new_project_name), InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        page.addView(projectName);
+        Button createProject = button(getString(R.string.create_project));
+        createProject.setOnClickListener(v -> createProject(projectName, createProject));
+        page.addView(createProject);
         TextView plugins = text(getString(R.string.plugins) + ": …"); page.addView(plugins);
         Button logout = button(getString(R.string.logout));
         logout.setOnClickListener(v -> {
@@ -436,6 +453,66 @@ public final class MainActivity extends Activity {
         page.addView(logout);
         replace(page);
         loadPlugins(plugins, session);
+    }
+
+    private ApiClient.Project selectedProject() {
+        if (session == null || session.projectId == null) return null;
+        for (ApiClient.Project project : projects) if (session.projectId.equals(project.id)) return project;
+        return null;
+    }
+
+    private void updateTimezone(ApiClient.Project project, EditText field, Button button) {
+        String timezone = field.getText().toString().trim();
+        try { ZoneId.of(timezone); }
+        catch (RuntimeException invalid) { toast(getString(R.string.invalid_timezone)); return; }
+        button.setEnabled(false);
+        SessionStore.Session expected = sessions.load();
+        io.execute(() -> {
+            try {
+                ApiClient.Project updated = new ApiClient(expected.endpoint, expected.token).updateProjectTimezone(project.id, timezone);
+                runUi(() -> {
+                    if (!sameView(expected)) return;
+                    List<ApiClient.Project> revised = new ArrayList<>(projects);
+                    for (int i = 0; i < revised.size(); i++) if (revised.get(i).id.equals(updated.id)) revised.set(i, updated);
+                    projects = revised;
+                    sessions.selectProject(updated.id, updated.name, updated.timezone);
+                    session = sessions.load();
+                    toast(getString(R.string.timezone_saved));
+                    showMe();
+                });
+            } catch (Exception error) {
+                runUi(() -> { button.setEnabled(true); toast(getString(R.string.load_failed, message(error))); });
+            }
+        });
+    }
+
+    private void createProject(EditText field, Button button) {
+        String name = field.getText().toString().trim();
+        if (name.isEmpty()) { toast(getString(R.string.project_name_required)); return; }
+        String timezone = deviceTimezone();
+        button.setEnabled(false);
+        SessionStore.Session expected = sessions.load();
+        io.execute(() -> {
+            try {
+                ApiClient.Project created = new ApiClient(expected.endpoint, expected.token).createProject(name, timezone);
+                runUi(() -> {
+                    SessionStore.Session current = sessions.load();
+                    if (current == null || !expected.endpoint.equals(current.endpoint) || !expected.userId.equals(current.userId)) return;
+                    List<ApiClient.Project> revised = new ArrayList<>(projects); revised.add(created); projects = revised;
+                    sessions.selectProject(created.id, created.name, created.timezone); session = sessions.load();
+                    toast(getString(R.string.project_created));
+                    UploadWorker.enqueuePending(this);
+                    showMe();
+                });
+            } catch (Exception error) {
+                runUi(() -> { button.setEnabled(true); toast(getString(R.string.load_failed, message(error))); });
+            }
+        });
+    }
+
+    static String deviceTimezone() {
+        String id = ZoneId.systemDefault().getId();
+        return id.contains("/") ? id : "Etc/UTC";
     }
 
     private void loadPlugins(TextView target, SessionStore.Session expected) {

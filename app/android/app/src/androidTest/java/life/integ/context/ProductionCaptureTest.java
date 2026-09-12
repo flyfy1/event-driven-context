@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -30,6 +31,26 @@ import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
 public class ProductionCaptureTest {
+    @Test public void prepareProductionReviewSession() throws Exception {
+        Bundle arguments = InstrumentationRegistry.getArguments();
+        String endpoint = required(arguments, "edcEndpoint");
+        String username = required(arguments, "edcUsername");
+        String password = required(arguments, "edcPassword");
+        String projectId = required(arguments, "edcProjectId");
+        String timezone = required(arguments, "edcTimezone");
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        ApiClient.Login login = ApiClient.login(endpoint, username, password);
+        SessionStore store = new SessionStore(context);
+        store.save(endpoint, login.userId, login.username, login.token, login.expiresAt);
+        ApiClient client = new ApiClient(endpoint, login.token);
+        ApiClient.Project selected = null;
+        for (ApiClient.Project project : client.projects()) if (projectId.equals(project.id)) selected = project;
+        assertNotNull("main production project must be accessible", selected);
+        assertEquals("production schedule must retain its configured timezone", timezone, selected.timezone);
+        store.selectProject(selected.id, selected.name, selected.timezone);
+        System.out.println("EDC_REVIEW_SESSION project=" + selected.id + " timezone=" + selected.timezone);
+    }
+
     @Test public void loginRecordAndSyncThroughProductionV2() throws Exception {
         Bundle arguments = InstrumentationRegistry.getArguments();
         String endpoint = required(arguments, "edcEndpoint");
@@ -55,7 +76,7 @@ public class ProductionCaptureTest {
             ApiClient.Project target = null;
             for (ApiClient.Project project : client.projects()) if (projectId.equals(project.id)) target = project;
             assertNotNull("isolated project must be accessible", target);
-            store.selectProject(target.id, target.name);
+            store.selectProject(target.id, target.name, target.timezone);
             scenario.recreate();
             waitFor("record screen", 15_000, () -> hasButton(scenario, R.string.start_recording));
 
@@ -212,6 +233,45 @@ public class ProductionCaptureTest {
         }
     }
 
+    @Test public void projectTimezoneAndDailyReviewSourceAreVisible() throws Exception {
+        Bundle arguments = InstrumentationRegistry.getArguments();
+        String projectId = required(arguments, "edcProjectId");
+        String timezone = required(arguments, "edcTimezone");
+        String reviewKey = required(arguments, "edcReviewKey");
+        Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        SessionStore store = new SessionStore(context);
+        SessionStore.Session session = store.load();
+        assertNotNull("production login session must exist", session);
+        ApiClient client = new ApiClient(session.endpoint, session.token);
+
+        ApiClient.Project project = client.updateProjectTimezone(projectId, timezone);
+        assertEquals(timezone, project.timezone);
+        store.selectProject(project.id, project.name, project.timezone);
+
+        ApiClient.ReviewState expected = null;
+        for (ApiClient.ReviewState review : client.dailyReviews(projectId)) {
+            if (reviewKey.equals(review.key)) expected = review;
+        }
+        assertNotNull("scheduled daily review must be published under the expected date key", expected);
+        assertTrue("daily review must cite at least one source event", !expected.refs.isEmpty());
+        String sourceEventId = expected.refs.get(0);
+        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            waitFor("app navigation", 15_000, () -> hasButton(scenario, R.string.me));
+            scenario.onActivity(activity -> button(activity, activity.getString(R.string.me)).performClick());
+            waitFor("project timezone", 15_000,
+                    () -> hasText(scenario, context.getString(R.string.project_timezone, timezone)));
+            scenario.onActivity(activity -> button(activity, activity.getString(R.string.review)).performClick());
+            waitFor("dated daily review", 30_000, () -> hasText(scenario, reviewKey));
+            waitFor("daily review source", 15_000, () -> hasButton(scenario, "↗ " + sourceEventId));
+            scenario.onActivity(activity -> button(activity, "↗ " + sourceEventId).performClick());
+            assertNotNull("source event dialog must open",
+                    device.wait(Until.findObject(By.text(sourceEventId)), 30_000));
+        }
+        System.out.println("EDC_DAILY_REVIEW key=" + reviewKey + " source=" + sourceEventId + " timezone=" + timezone);
+    }
+
     private static String required(Bundle arguments, String key) {
         String value = arguments.getString(key);
         if (value == null || value.isEmpty()) fail("missing instrumentation argument " + key);
@@ -234,6 +294,22 @@ public class ProductionCaptureTest {
     private static boolean hasButton(ActivityScenario<MainActivity> scenario, int text) {
         final boolean[] result = {false};
         scenario.onActivity(activity -> result[0] = findButton(activity, activity.getString(text)) != null);
+        return result[0];
+    }
+
+    private static boolean hasButton(ActivityScenario<MainActivity> scenario, String text) {
+        final boolean[] result = {false};
+        scenario.onActivity(activity -> result[0] = findButton(activity, text) != null);
+        return result[0];
+    }
+
+    private static boolean hasText(ActivityScenario<MainActivity> scenario, String text) {
+        final boolean[] result = {false};
+        scenario.onActivity(activity -> {
+            for (TextView view : find(activity.findViewById(android.R.id.content), TextView.class)) {
+                if (text.contentEquals(view.getText())) { result[0] = true; return; }
+            }
+        });
         return result[0];
     }
 

@@ -42,8 +42,10 @@ final class ApiClient {
     }
 
     static final class Project {
-        final String id, name, ownerUserId;
-        Project(String id, String name, String ownerUserId) { this.id = id; this.name = name; this.ownerUserId = ownerUserId; }
+        final String id, name, ownerUserId, timezone;
+        Project(String id, String name, String ownerUserId, String timezone) {
+            this.id = id; this.name = name; this.ownerUserId = ownerUserId; this.timezone = timezone;
+        }
         @Override public String toString() { return name; }
     }
 
@@ -103,10 +105,17 @@ final class ApiClient {
         JSONArray values = json("GET", "/v1/projects", null).getJSONArray("projects");
         List<Project> result = new ArrayList<>();
         for (int i = 0; i < values.length(); i++) {
-            JSONObject value = values.getJSONObject(i);
-            result.add(new Project(value.getString("id"), value.getString("name"), value.optString("owner_user_id")));
+            result.add(project(values.getJSONObject(i)));
         }
         return result;
+    }
+
+    Project createProject(String name, String timezone) throws IOException, JSONException {
+        return project(json("POST", "/v1/projects", new JSONObject().put("name", name).put("timezone", timezone)));
+    }
+
+    Project updateProjectTimezone(String projectId, String timezone) throws IOException, JSONException {
+        return project(json("PATCH", projectPath(projectId, ""), new JSONObject().put("timezone", timezone)));
     }
 
     void logout() {
@@ -331,6 +340,11 @@ final class ApiClient {
 
     private static String projectPath(String projectId, String suffix) {
         return "/v1/projects/" + Uri.encode(projectId) + suffix;
+    }
+
+    private static Project project(JSONObject value) throws JSONException {
+        return new Project(value.getString("id"), value.getString("name"), value.optString("owner_user_id"),
+                value.getString("timezone"));
     }
 
     private static void write(BufferedOutputStream output, String value) throws IOException {

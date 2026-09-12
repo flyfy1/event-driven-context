@@ -45,6 +45,10 @@ flowchart LR
 
 ## 3. 统一数据模型
 
+### Project
+
+Project 是 Event、File、State、插件和成员权限的边界，并保存用于日期与计划运行解释的 IANA 时区。创建时可省略 `timezone`，服务端默认使用 `UTC`；owner 可用 `PATCH /v1/projects/{project_id}` 更新，成功直接返回 Project。插件自省返回当前 `project_timezone`，让每次处理使用与项目一致的时间语义；本次不增加 MCP 修改工具。
+
 ### Event
 
 Event 是不可覆盖的项目记录，分为 `log`、`note`、`derived`。写入方提供 UUID；服务端补充 sequence、recorded_at 和经过认证的 actor。
@@ -84,7 +88,7 @@ State 是插件发布的可重建项目视图，不是原始记录。key 使用 
 | 功能 | HTTP | MCP | CLI / App 使用方式 |
 |---|---|---|---|
 | 身份 | register、login、logout、me | 不暴露 | CLI 保存私有 token；网页与 App 使用各自认证流程 |
-| 项目与成员 | projects、project members | list/create projects，list/add members | 所有项目选择与成员结果一致 |
+| 项目与成员 | projects、project timezone、project members | list/create projects，list/add members | Project 响应始终带 timezone；修改仅由 HTTP/CLI/App 管理 |
 | 追加记录 | project events 批量写入 | `record_events` | `edc push`、hook、App 共享 UUID 与逐项结果规则 |
 | 查询与原文 | events query、event get、metadata | `query_events`、`get_event`、`list_metadata` | 网页、skill、`edc query/get/pull` 使用同一筛选和游标 |
 | 文件 | multipart upload、认证原始下载 | `upload_file`、`get_file` | Android 与 `edc push --file` 先传 File 再写 Event |
@@ -100,7 +104,7 @@ State 是插件发布的可重建项目视图，不是原始记录。key 使用 
 
 ### 文本、会话与批量写入
 
-CLI、hook 和 skill 在写入前生成稳定 UUID。重试复用原 UUID；JSONL 的每一项保留自己的成功、重复或失败结果。完整离线 outbox、目录绑定和 hook 安装属于实施步骤 ②，在完成前相关命令必须明确失败，不能静默跳过。
+CLI、hook 和 skill 在写入前生成稳定 UUID。重试复用原 UUID；JSONL 的每一项保留自己的成功、重复或失败结果。目录绑定、hook 安装和持久 outbox 已接入这条路径；网络失败保留输入，后续恢复发送。
 
 SessionStart 由 hook 读取插件声明的 `session_context` State。后续证据查询仍读取 Event；State 不能替代原文或掩盖 lag。
 
@@ -117,7 +121,7 @@ Android 在录制开始时生成稳定 capture UUID，并把账户、项目、�
 
 ### 插件处理
 
-Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉取输入。输出 Event UUID 由插件、输入、输出槽位和版本稳定决定；发布 State 时带 expected_version。只有输出与游标更新都成功后才算推进。
+Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉取输入。当前转录输出 UUID 由项目、插件、输入 Event 和输出槽位稳定决定；发布 State 时带 expected_version。输出成功后更新游标，失败不跳过输入。历史重转录的新 generation 尚未实现。
 
 手动 run 接口只表示请求已持久接受。实际执行、重试、错误状态和用量由 host 与插件状态呈现，不由 Core 假装同步完成。
 
@@ -125,7 +129,7 @@ Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉�
 
 | 插件 | 输入与输出 | 一致性要求 |
 |---|---|---|
-| `audio-transcribe` | 音频 File Event → 引用原录音的 derived 转录 | 保留原语言；失败不推进游标；重跑产生稳定的新 generation |
+| `audio-transcribe` | 音频 File Event → 引用原录音的 derived 转录 | 保留原语言；失败不推进游标；历史重跑 generation 待实现 |
 | `project-brief` | Event → `project-brief/current` State | 决定、约束、待办、问题均带来源；冲突不按时间自动选边 |
 | `daily-review` | 计划时间范围内的 Event → 日期 State | 进展、决定、待办、问题、建议分开；待转录录音可见；错过运行按产品规则处理 |
 | `evidence` | agent 读取概况并查询 Event | 返回来源、冲突、缺口与查询范围，不把 State 或摘要伪装成独立原始证据 |
@@ -161,10 +165,11 @@ Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉�
 
 根据用户要求，公开契约已定义的功能可由不同 Agent 并行开发，GPT-6 持续审核；后一步不能用未验收的前置能力作完成证明。当前每项状态以 `v2-implementation.md` 为准；旧 P1 代码与测试只能作为历史参考。
 
-当前 processor host 只实现显式的 `edc host run --once`：它用插件令牌读取该插件自己的当前 Installation 与配置，从私有 `_cursor` 之后按清单类型拉取 Event，执行有超时的 agent 或 command，校验来源后发布 `project-brief/current` State 或 `audio-transcribe` derived Event，最后以 expected version 推进 `_cursor`；执行失败时不推进游标。输出仍通过同一套 Event、State 和插件身份接口读取，因此 CLI、网页与 MCP 观察到的内容、版本和来源一致。外部 cron 可以重复调用这个单次命令，但 host 本身不会常驻或解释清单中的 schedule。
+当前 processor host 支持 `edc host run --once` 单次处理和 `--watch` 持续检查。它持插件令牌读取当前 Installation、项目时区与配置，经公共接口发布转录 derived、项目概况或每日回顾 State；CLI、网页、Android 与 MCP 读取同一份内容、版本和来源。
 
-内建定时调度、`daily-review` 的日期窗口执行，以及消费或确认插件私有 `_requests` 尚未实现。当前 manual run 接口只持久接受请求；清单中的 schedule 与 `_requests` 声明不能作为这些能力已运行的证明。
+`daily-review` 按项目时区和配置时间（默认 21:00）处理最近到期的计划窗口，以 `recorded_at` 筛选相邻计划点之间的记录，发布 `daily-review/YYYY-MM-DD`。启动延迟不移动窗口；已发布日期保持不变，重试可从 State 恢复完成状态。离线错过多期时仅补最近一期并记录跳过日期，空日也发布说明；迟到转录进入下一期。窗口信息随日期 State 保存，App 与网页按 key 的日期展示并可打开 refs。
 
+生产已验证真实定时发布与重复 tick 不改写，以及网页和 Android 模拟器的日期回顾来源导航。插件私有 `_requests` 的消费、手动重转录 generation 和物理手机验收仍未完成；manual run 接口目前只持久接受请求。
 ## 10. 契约验收
 
 当前按用户最新决定，MVP 验收优先正常闭环、实际产出和跨客户端可读。安全加固与极端输入测试暂不作为发布门槛。以下保留为后续完整契约检查范围，已有证据不必重复执行：
@@ -175,4 +180,4 @@ Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉�
 - 插件令牌最小权限、暂停和卸载即时失效、管理身份不可伪造；
 - 同一数据经 HTTP、MCP 和 CLI 往返后 UUID、sequence、内容、版本和错误一致。
 
-完整 P1 还需真实 Claude Code hook、第二客户端、无人值守处理器、Android 真机断网恢复、实际定时回顾，以及四语言桌面、窄屏、手机和 OAuth 验证。构建通过、模拟数据或手动 run 不能替代这些端到端证据。
+已有真实 Claude hook 注入、Codex 第二客户端检索与 recorder 写回、ASR/概况处理和实际定时回顾证据。完整 P1 仍需补齐手动处理闭环、物理手机与剩余四语言/OAuth 场景，以及持续真实使用；既有合成验收不能替代这些证据。

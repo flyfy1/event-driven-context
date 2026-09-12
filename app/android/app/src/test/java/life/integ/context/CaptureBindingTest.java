@@ -11,10 +11,10 @@ public class CaptureBindingTest {
                 "/tmp/missing", "voice.m4a", "audio/mp4", 1, "hash", 1,
                 "2026-09-12T00:00:00Z", null, CaptureItem.READY, null, 1);
         assertTrue(item.belongsToAccount(new SessionStore.Session("https://example.test", "alice", "Alice", "token",
-                "project-b", "B", 0)));
+                "project-b", "B", "Europe/London", 0)));
         assertFalse(item.belongsToAccount(new SessionStore.Session("https://example.test", "bob", "Bob", "token",
-                "project-a", "A", 0)));
+                "project-a", "A", "Europe/London", 0)));
         assertFalse(item.belongsToAccount(new SessionStore.Session("https://other.test", "alice", "Alice", "token",
-                "project-a", "A", 0)));
+                "project-a", "A", "Europe/London", 0)));
     }
 }

@@ -628,7 +628,8 @@ edc host run
 | `POST /v1/auth/logout` | 吊销当前令牌 | — |
 | `GET /v1/me` | 当前身份 | — |
 | `GET /v1/projects` | 列出项目 | `list_projects` |
-| `POST /v1/projects` | 创建项目 | `create_project` |
+| `POST /v1/projects` | 创建项目，可传 IANA `timezone` | `create_project` |
+| `PATCH /v1/projects/{project_id}` | 项目创建者修改 `timezone` | — |
 | `GET /v1/projects/{project_id}/members` | 列出成员 | `list_members` |
 | `POST /v1/projects/{project_id}/members` | 添加成员 | `add_member` |
 | `POST /v1/projects/{project_id}/events` | 追加 1–100 条事件，逐条返回结果 | `record_events` |
@@ -646,6 +647,8 @@ edc host run
 | `POST /v1/projects/{project_id}/plugins/{plugin_id}/runs` | 手动运行或重跑（例如重新转录某条录音） | — |
 | `DELETE /v1/projects/{project_id}/plugins/{plugin_id}` | 卸载插件，保留已发布内容 | — |
 | `/mcp` | MCP Streamable HTTP | — |
+
+项目响应包含 `timezone`；省略时区或既有项目使用 `UTC`，App/网页新建项目时默认发送当前设备时区。项目插件列表的 Installation 包含即时读取的 `project_timezone`，处理器使用它计算项目本地计划时刻；插件配置不能覆盖项目时区。
 
 ### 7.8 身份、限制与错误码
 

@@ -26,16 +26,18 @@ final class SessionStore {
         final String token;
         final String projectId;
         final String projectName;
+        final String projectTimezone;
         final long expiresAt;
 
         Session(String endpoint, String userId, String username, String token,
-                String projectId, String projectName, long expiresAt) {
+                String projectId, String projectName, String projectTimezone, long expiresAt) {
             this.endpoint = endpoint;
             this.userId = userId;
             this.username = username;
             this.token = token;
             this.projectId = projectId;
             this.projectName = projectName;
+            this.projectTimezone = projectTimezone;
             this.expiresAt = expiresAt;
         }
     }
@@ -50,6 +52,7 @@ final class SessionStore {
         String priorUser = prefs.getString("user_id", null);
         String priorProject = prefs.getString("project_id", null);
         String priorProjectName = prefs.getString("project_name", null);
+        String priorProjectTimezone = prefs.getString("project_timezone", null);
         byte[][] encrypted = encrypt(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         SharedPreferences.Editor edit = prefs.edit()
                 .putString("endpoint", normalized)
@@ -59,16 +62,18 @@ final class SessionStore {
                 .putString("token_iv", Base64.encodeToString(encrypted[0], Base64.NO_WRAP))
                 .putString("token_cipher", Base64.encodeToString(encrypted[1], Base64.NO_WRAP));
         if (normalized.equals(priorEndpoint) && userId.equals(priorUser) && priorProject != null) {
-            edit.putString("project_id", priorProject).putString("project_name", priorProjectName);
+            edit.putString("project_id", priorProject).putString("project_name", priorProjectName)
+                    .putString("project_timezone", priorProjectTimezone);
         } else {
-            edit.remove("project_id").remove("project_name");
+            edit.remove("project_id").remove("project_name").remove("project_timezone");
         }
         boolean saved = edit.commit();
         if (!saved) throw new IllegalStateException("session was not persisted");
     }
 
-    synchronized void selectProject(String projectId, String projectName) {
-        if (!prefs.edit().putString("project_id", projectId).putString("project_name", projectName).commit()) {
+    synchronized void selectProject(String projectId, String projectName, String projectTimezone) {
+        if (!prefs.edit().putString("project_id", projectId).putString("project_name", projectName)
+                .putString("project_timezone", projectTimezone).commit()) {
             throw new IllegalStateException("project selection was not persisted");
         }
     }
@@ -84,6 +89,7 @@ final class SessionStore {
             return new Session(endpoint, userId, prefs.getString("username", ""),
                     new String(token, java.nio.charset.StandardCharsets.UTF_8),
                     prefs.getString("project_id", null), prefs.getString("project_name", null),
+                    prefs.getString("project_timezone", null),
                     prefs.getLong("expires_at", 0));
         } catch (Exception invalid) {
             try { clear(); } catch (RuntimeException ignored) {}

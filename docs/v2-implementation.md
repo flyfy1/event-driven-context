@@ -6,6 +6,12 @@
 
 用户最新要求以跑通 MVP 为重点，安全性工作暂不考虑。接下来集中实现和实际演示“写入记录 → 自动整理 → 查看结果 → 下一次对话使用”。暂停额外安全加固、极端输入测试和不影响主流程的审核扩展；现有基础能力继续使用。审核与集成代理优先发现和修复正常用户流程的阻断问题。以下历史检查记录保留为已有证据，不作为继续堆积验收门槛的理由。
 
+## 当前切片：定时回顾
+
+上一轮完成媒体 → 转录 → 概况 → 网页来源 → SessionStart 注入的真实主链。本轮只补 P1 中的自动定时与每日回顾：项目时区 → 按固定计划窗口执行 → 日期 State → Android/网页查看来源。日期、窗口和成功状态已持久化；实际 watch 到点发布、重复 tick 不改写，以及网页和 Android 模拟器来源导航均已通过。全新 Codex 会话也已验证 evidence 检索回答与 recorder 追加/完成待办；这些是合成验收，新的 dogfood 任务不据此宣称完成。
+
+本轮不扩插件市场、通知、推荐、多 host 或通用任务平台。manual run 消费、重转录 generation 和错误显示仍是已识别的 P1 缺口，不能把已有“请求已接受”当作完成。
+
 ## 范围变化
 
 V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本化 State、hook 自动写入、project-brief 和独立 processor host。旧版服务端生成 event ID、media-events 合并提交、query_context、后端任务协调器和 inbox 不能通过改名称来充当 V2。旧测试保留为旧实现证据；V2 须重新验证。
@@ -20,7 +26,7 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 |---|---|---|
 | A：核心数据与权限 | `backend/internal/v2/`；必要的旧 identity 窄接口 | UUID 事件、文件、查询、State、插件授权、持久化与重启测试 |
 | B：服务适配 | `backend/internal/api/v2*.go`、MCP V2、服务入口 wiring | HTTP / MCP 真实路由、认证 scope、大小约束、核心集成测试 |
-| C：客户端工具与处理器 | `backend/internal/v2client/`、`backend/cmd/edc/`、`backend/internal/processorhost/` | CLI、stdio MCP、hook 接线和最小 RunOnce host；真实 Codex 与 ASR 写回 |
+| C：客户端工具与处理器 | `backend/internal/v2client/`、`backend/cmd/edc/`、`backend/internal/processorhost/` | CLI、stdio MCP、hook 接线、once/watch host 与日期回顾；真实 Codex、ASR 和定时写回 |
 | D：自动写入 | `backend/internal/capture/`、`backend/skills/edc-recorder/` | hook、稳定 UUID、outbox、目录绑定与安装预览；CLI 入口与 C 协作 |
 | E：Android | `app/android/` | 录音、持久队列、File → Event、记录与 State 回顾；保留现有 iOS |
 | F：网站 | `frontend/` 中 workspace 相关文件 | 记录、State、接入和插件流程迁移到 V2；保留无关 landing 修改 |
@@ -44,7 +50,7 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 
 用户已明确授权直接在现有生产环境验收，并创建专用测试账号。集成代理负责可重复运行的测试和证据，主代理统一发布，避免并发修改线上版本；测试只写专用账号的项目。
 
-- 本轮实查 `integ-prod`：`event-context` 与 `event-context-proxy` 均运行，当前发布为 `20260911T171910Z-df67175`；源站 `127.0.0.1:8401/healthz` 返回 200。
+- 本轮实查 `integ-prod`：`event-context` 与 `event-context-proxy` 均运行，初始基线发布为 `20260911T171910Z-df67175`；源站 `127.0.0.1:8401/healthz` 返回 200。
 - 真实浏览器可打开生产网页。浏览器现有用户登录不用于自动测试；集成代理使用专用身份。
 - 新发布从独立干净 worktree 固定源码、验证和发布，保留原工作区并行修改与生产回滚版本；不得把旧版本健康检查当作 V2 验收。
 - 专用账号和每轮结果记录在 `v2-production-acceptance.md`；密码、token 不写入文档、日志或版本库。
@@ -59,7 +65,14 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 
 - 音频生产主链完成：真实 M4A 为 sequence 25，Qwen 转录写为 derived sequence 26，内容为“预算调整为三万元，优先上线移动端，交付时间仍待确认。”。网页可从转录展开原音频；首次临时文件缺扩展失败没有推进游标，修复后成功。
 - 后续真实 Codex 把音频知识合入 brief v3（based 26、8 条 refs），真实 Claude SessionStart 自动注入预算、移动端优先和交付待确认。新 hook sequence 27–29，outbox 为 0；覆盖从原媒体到下一次会话上下文的最小闭环。
-- 固定 host 源码后的 `make check` 全部通过，GPT-6 最终正常路径审核无阻断；任务启动的转录/模型进程及临时处理目录已清理。尚未宣称已实现定时调度、日期回顾、manual run 消费或物理手机验收。
+- 固定 host 源码后的 `make check` 全部通过，GPT-6 最终正常路径审核无阻断；任务启动的转录/模型进程及临时处理目录已清理。该检查点尚无定时回顾证据；后续本轮补齐情况见下文，manual run 消费与物理手机仍未验收。
+
+- 定时回顾依赖的项目时区已发布为 `20260912T005158Z-4c132b3`：旧项目迁移默认 UTC、创建/列表返回时区、owner PATCH 更新、插件自省即时读取项目时区。发布 `make check` 全过；真实网页已将主测试项目保存为 Asia/Singapore。
+- 第二客户端 evidence 实测通过：全新 Codex ephemeral 会话只收到三问，实际执行 12 次 MCP 调用（list_projects 1、get_state 1、query_events 10），自行取得背景并正确回答预算、移动端优先和交付待确认，引用原始 Event。没有用手工背景替代检索，也未声称调用单条 get_event。
+
+- recorder 真实会话验收通过：Codex 创建 sequence 30 的 UUIDv7 todo，新会话追加 sequence 31 的 completed note 与 `resolves` 引用，原 Event 不变；闲聊没有 MCP 调用或新增 note。首次因旧临时 CLI 不识别 timezone 而失败且未写入，更新当前 CLI 后完成。与上述 evidence 检索的摘要均在 `/tmp/edc-codex-evidence.k8xJ9c/`。
+- 真实定时回顾通过：host 源码 `8b90ad0` 的 `--watch` 等待 Asia/Singapore 09:10 计划点，按前一日 09:10 至当日 09:10 固定窗口发布 `daily-review/2026-09-12` v1，based 32、20 条 refs。实际生成完成于 09:11:59；重复 tick 和 12 秒后回读仍为 v1。计划、watch 和 State 证据在 `/tmp/edc-daily-timed-20260912/`，该进程退出 0。
+- 网页显示上述日期回顾并展开 sequence 32 的真实来源；Android 模拟器目标测试验证 Asia/Singapore、同一日期 State 和原 Event 对话框（1 test，3.081 秒）。本轮日期回顾切片完成，物理手机仍未验收。后续取消处理进程修复 `09bc135` 已测试推送，但不混入 `8b90ad0` 的实际定时证据。
 
 ## 第 ① 步的实现边界
 
@@ -94,12 +107,12 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 
 | V2 步骤 | 完成所需证据 | 当前状态 |
 |---|---|---|
-| ① 数据与公开接口 | 上表的真实存储、HTTP、MCP 与 CLI 测试及独立复核 | 基础服务已发布，公网两轮通过；剩余边界与重启/生产 CLI 验收中 |
-| ② 自动写入接入 | link/setup 预览确认，Claude Code 真实 hook 日志，脱敏、去重、outbox 恢复，recorder skill note 质量 | 真实 Claude hook/MCP 已写生产日志；隔离配置模型未登录，Stop 与 note 尚未通过 |
-| ③ 概况与跨工具 | project-brief State 正确及来源可读；第二客户端无手动交代取得背景；evidence skill 正确查询 | 真实 Codex brief v2、网页来源追溯、Claude SessionStart 自动注入通过；完整模型答复和 evidence skill 仍待验收 |
-| ④ 处理器与转录 | 独立 host 用插件令牌读写、游标恢复；真实无人值守转录与失败重试 | 显式 RunOnce 生产转录、derived 写回、失败不推进和后续 brief 更新通过；定时无人值守待实现 |
+| ① 数据与公开接口 | 上表的真实存储、HTTP、MCP 与 CLI 测试及独立复核 | 基础服务已发布，公网 HTTP/MCP 与固定版本 CLI 验收通过；完整边界与生产重启仍未全部验收 |
+| ② 自动写入接入 | link/setup 预览确认，Claude Code 真实 hook 日志，脱敏、去重、outbox 恢复，recorder skill note 质量 | 真实 Claude hook 注入/日志与 outbox 通过；Codex recorder 创建、完成引用和闲聊不写入通过；Claude 完整 Stop 模型会话仍缺证据 |
+| ③ 概况与跨工具 | project-brief State 正确及来源可读；第二客户端无手动交代取得背景；evidence skill 正确查询 | 真实 brief v2/v3、网页来源和 Claude 注入通过；全新 Codex evidence 检索与模型答复通过，持续真实使用待验证 |
+| ④ 处理器与转录 | 独立 host 用插件令牌读写、游标恢复；真实无人值守转录与失败重试 | once/watch 已实现；生产 ASR、失败后恢复、derived 与 brief 写回通过；手动请求消费和重转录仍未实现 |
 | ⑤ Android 采集 | 真机录音、先 File 后 Event、离线重启恢复、哈希一致与账户隔离；第 9.1 节拍照/选文件共用队列 | 生产模拟器录音、断网队列自动恢复、文件选择与下载哈希通过；物理设备仍待验收 |
-| ⑥ 日期回顾 | 实际定时发布 daily-review State；Android 查看来源及待整理记录 | 未验收 |
-| ⑦ 网页与语言 | 记录/状态/接入/插件全流程；四语言真实桌面、窄屏、手机、OAuth 验证 | 未验收 |
+| ⑥ 日期回顾 | 实际定时发布 daily-review State；Android 查看来源及待整理记录 | 实际 watch 定时、重复 tick 不改写、网页与 Android 模拟器来源通过；待整理/迟到转录为已实现分支，尚无独立生产场景证据 |
+| ⑦ 网页与语言 | 记录/状态/接入/插件全流程；四语言真实桌面、窄屏、手机、OAuth 验证 | V2 中文窄屏记录、State 历史/来源、插件暂停恢复、项目时区与日期回顾通过；其余语言/设备/OAuth 场景待验收 |
 
 真实跨工具项目需经历预算修改、待办完成、agent 推断、成员冲突、闲聊和语音记录，并记录漏记、误记及用户补充背景的次数。测试夹具不能代替若干天真实使用或用户反馈。没有这些证据时，完整目标保持未完成。

@@ -1,8 +1,8 @@
 # V2 production acceptance
 
-This runbook verifies Product V2 step 1 through the public HTTP API and MCP endpoint. It writes only to projects owned by the dedicated acceptance account. It does not deploy, remove production data, or use another user's project.
+This runbook records Product V2 acceptance through public interfaces, real processor runs, conversation clients, and the workspace UI. It writes only to projects owned by the dedicated acceptance account. It does not deploy, remove production data, or use another user's project.
 
-## Current baseline
+## Pre-V2 baseline
 
 Checked on 2026-09-12:
 
@@ -21,7 +21,7 @@ Backend release `20260912T000040Z-809d20b` was accepted through `https://context
 - `production-20260912T000217Z-58960f`
 - `production-20260912T000342Z-c6840c` (also isolates and checks the raw `structuredContent` number)
 
-Both runs passed every assertion listed below. They reused main project `prj_zyb3rqghg6a77drgrcym6nax3p`, isolation project `prj_v6dpdcx7kuzjbiiqa3ygi6p5al`, the `acceptance-brief` installation, and its State history. The credentials file remained mode `0600`.
+All three runs passed every assertion listed below. They reused main project `prj_zyb3rqghg6a77drgrcym6nax3p`, isolation project `prj_v6dpdcx7kuzjbiiqa3ygi6p5al`, the `acceptance-brief` installation, and its State history. The credentials file remained mode `0600`.
 
 The frontend had not yet been switched to the V2 workspace at this checkpoint. Its earlier isolated-browser login is only a pre-V2 identity and project-list baseline; it is not counted as V2 event or State UI acceptance.
 
@@ -54,6 +54,14 @@ After the production transcription below, a second real processor run published 
 
 The V2 frontend displayed version 3 with the audio-derived knowledge. A final real Claude Code `SessionStart` injected version 3 with `based_on_sequence=26` and `lag=1`, including the budget, mobile priority, unconfirmed date, audio event ID, and transcript event ID. It persisted lifecycle events at sequences 27–29 and drained its outbox to zero. This final repeat still proves injection rather than a model answer because the isolated Claude CLI remained logged out.
 
+### Second-client evidence and recorder
+
+A new Codex CLI 0.153.4 ephemeral conversation received questions without the answers supplied as background. It made 12 real MCP calls: one `list_projects`, one `get_state`, and ten `query_events`. Its answer correctly recovered the 30,000 budget, mobile-first priority, and unconfirmed delivery date, with both transcript and audio refs. Query responses supplied complete Events; no individual `get_event` call was made. This closes the model-answer gap left by the logged-out Claude injection checks above.
+
+Separate recorder conversations created a UUIDv7 todo at sequence 30, then queried it and appended a completed note at sequence 31 with a `resolves` ref. The original Event remained unchanged. A chitchat conversation made no MCP calls and left the note count at 16. One earlier completion attempt failed because a stale temporary CLI rejected the new Project timezone field; it wrote nothing, and the current CLI completed the retry.
+
+Evidence summaries are `/tmp/edc-codex-evidence.k8xJ9c/evidence-summary.json` and `recorder-evidence-summary.json`. These are synthetic task checks, not evidence of sustained natural usage or a completed dogfood task.
+
 ### Production audio transcription
 
 A production `audio/mp4` note (`01a09306-84c3-7bd3-843e-4ee0a0d64d4b`, sequence 25) was processed by the real audio transcription adapter. It wrote derived event `0b99035f-aad7-5b43-ba30-1bcf65baf1c4`, sequence 26, with text:
@@ -63,6 +71,16 @@ A production `audio/mp4` note (`01a09306-84c3-7bd3-843e-4ee0a0d64d4b`, sequence 
 The derived event is authenticated as plugin `audio-transcribe`, has `source.channel=plugin`, and contains exactly one `derived_from` ref to the sequence-25 file note. The V2 frontend's plugin-output filter displayed the transcript, expanded the ref to the original note, and exposed the `fixture.m4a` download action. Non-secret API responses are under `.codex-artifacts/v2-production-acceptance/asr-production-20260912-seq25-26/`.
 
 The first adapter attempt used a temporary audio path without a file extension and failed before advancing its cursor. After preserving the media extension, the same processing path succeeded. This validates the corrected file-to-adapter handoff and shows that a failed attempt does not skip its source event.
+
+### Scheduled daily review and project timezone
+
+Backend release `20260912T005158Z-4c132b3` added persisted project timezone and plugin access to that same timezone. The acceptance project used `Asia/Singapore`. Host source `8b90ad0` ran in real `--watch` mode before the configured `2026-09-12T09:10:00+08:00` schedule, then published `daily-review/2026-09-12` version 1 from the fixed window `[2026-09-11 09:10, 2026-09-12 09:10)`. The output has `based_on_sequence=32` and 20 refs; its actual publication time was 09:11:59 local, so processing delay did not move the window. Repeated ticks and a read 12 seconds later retained version 1 and identical content. The watch also published an empty prior-period review, with no processing errors recorded.
+
+The production webpage displayed the dated State, version 1 and current lag, then opened the sequence-32 source note `01a09328-6dbe-7ebd-8285-e2c75cf75fc1`. Android's targeted emulator test loaded the same date and project timezone and opened source `01a092f1-4dac-7115-ba1c-7ae6bf007b0f`; it passed one test in 3.081 seconds. See [Android acceptance](android-acceptance.md). These checks use the same State and Event interfaces; no separate review store is involved.
+
+The plan, watch output and before/after-repeat State responses are under `/tmp/edc-daily-timed-20260912/`. The coordinator confirmed watch PID 1223 exited with status 0. The later cancellation fix `09bc135` was tested and pushed separately; it was not the source used for this timed run. The AVD was closed without saving a snapshot.
+
+This proves the scheduled review slice, including web and emulator source navigation. It does not claim physical-phone acceptance, manual `_requests` consumption, transcription reruns, or the new dogfood task. Offline catch-up and late-transcript handling are implemented and reviewed, but were not separately exercised by this production timed run.
 
 ### Fixed-release CLI path
 

@@ -42,6 +42,15 @@
     <string name="account">Account: %1$s</string>
     <string name="server">Server: %1$s</string>
     <string name="queue_count">Pending captures: %1$d</string>
+    <string name="project_timezone">Project time zone: %1$s</string>
+    <string name="timezone_hint">IANA time zone, for example Asia/Singapore</string>
+    <string name="save_timezone">Save time zone</string>
+    <string name="timezone_saved">Project time zone saved.</string>
+    <string name="invalid_timezone">Enter a valid IANA time zone.</string>
+    <string name="new_project_name">New project name</string>
+    <string name="create_project">Create project</string>
+    <string name="project_name_required">Enter a project name.</string>
+    <string name="project_created">Project created with this device’s time zone.</string>
     <string name="recording_notification">Recording audio</string>
     <string name="stop_recording">Stop recording</string>
     <string name="review_coverage">Version %1$d · through event %2$d · lag %3$d</string>
