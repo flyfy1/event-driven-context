@@ -76,7 +76,66 @@ select {
   font: 14px/1.55 ui-sans-serif, system-ui, sans-serif;
 }
 .history-select { max-width: 220px; margin-top: 15px; }
-.integration-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.integration-context-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 1px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--line);
+}
+.integration-context-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 13px 15px;
+  background: #fff;
+}
+.integration-context-bar strong { flex: 0 0 auto; font-size: 13px; }
+.integration-context-bar code { min-width: 0; overflow-wrap: anywhere; color: var(--leaf); }
+.integration-context-bar button { margin-left: auto; }
+.connect-methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.connect-card {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--leaf);
+  border-radius: 7px;
+  background: #fff;
+}
+.chatgpt-connect-card { border-top-color: var(--dark); }
+.connect-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; font: 12px var(--mono); }
+.connect-card-meta > span:first-child { color: var(--muted); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.connect-card h4 { margin: 0 0 8px; font-size: 21px; }
+.connect-card > p { margin: 0; line-height: 1.65; }
+.connect-checklist { display: grid; gap: 10px; margin: 20px 0; padding-left: 22px; }
+.connect-checklist li { padding-left: 3px; line-height: 1.55; }
+.connect-checklist code { overflow-wrap: anywhere; color: var(--leaf); }
+.prompt-label { margin: 20px 0 7px; font-size: 13px; font-weight: 750; }
+.prompt-row { align-items: stretch; }
+.prompt-row code { white-space: pre-wrap; line-height: 1.55; }
+.prompt-row button { flex: 0 0 auto; align-self: start; }
+.connect-links { display: flex; flex-wrap: wrap; gap: 7px 18px; margin-top: 15px; }
+.connect-links a { color: var(--leaf); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+.primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 2px;
+  padding: 10px 15px;
+  border-radius: 4px;
+  background: var(--leaf);
+  color: #fff;
+  font-weight: 750;
+  text-decoration: none;
+}
+.primary-link:hover { color: #fff; filter: brightness(.93); }
+.connect-card .setup-note { margin-top: 16px; padding: 12px 14px; border-left: 3px solid #b07a10; background: #fff8df; color: #6d4d12; font-size: 13px; }
+.integration-members-card { margin-top: 20px; }
 .members-card {
   margin-bottom: 20px;
   padding: 20px;
@@ -98,7 +157,6 @@ select {
 .event-details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
 .status-card code { display: block; margin: 10px 0; overflow-wrap: anywhere; }
 .status-card p { margin: 9px 0; color: var(--muted); font-size: 14px; }
-.integration-steps { display: grid; gap: 18px; margin: 24px 0; padding-left: 24px; }
 .command-row { display: flex; align-items: center; gap: 8px; }
 .command-row code { flex: 1; min-width: 0; padding: 10px; overflow-wrap: anywhere; background: #edf0ea; }
 .plugin-install-form { max-width: 760px; margin-bottom: 22px; }
@@ -244,7 +302,7 @@ button.danger { border-color: var(--danger); color: var(--danger); }
 .inbox-items { margin-top: 10px; }
 
 @media (max-width: 760px) {
-  .workspace, .write-grid, .automation-grid, .automation-results, .integration-status-grid { grid-template-columns: minmax(0, 1fr); }
+  .workspace, .write-grid, .automation-grid, .automation-results, .connect-methods, .integration-context-bar { grid-template-columns: minmax(0, 1fr); }
   .sidebar { max-width: 100%; overflow: hidden; }
   .project-list { width: 100%; overflow-x: auto; overflow-y: hidden; }
   .project-item { flex: 0 0 min(240px, 72vw); min-width: 0; max-width: 72vw; overflow: hidden; }
@@ -257,6 +315,10 @@ button.danger { border-color: var(--danger); color: var(--danger); }
   .audio-input-panel input { font-size: 16px; }
   .automation-section { padding: 18px 15px; }
   .workspace-nav { margin-left: -15px; margin-right: -15px; padding: 0 15px; }
+  .connect-card { padding: 20px 17px; }
+  .command-row.prompt-row { align-items: stretch; flex-direction: column; }
+  .command-row.prompt-row button { width: 100%; }
+  .integration-context-bar > div { align-items: flex-start; flex-wrap: wrap; }
   .query-form select, .query-form input { width: 100%; }
   .section-heading-inline { align-items: start; }
   .command-row { align-items: stretch; flex-direction: column; }

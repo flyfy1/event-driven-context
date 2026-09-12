@@ -14,13 +14,13 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 readonly SOURCE_REVISION="$(git rev-parse --short=12 HEAD)"
 git clone --quiet --branch gh-pages "git@github.com:${REPOSITORY}.git" "$TEMP_DIR/site"
-# The standalone agent guide is published independently on gh-pages, so a
-# workspace release must not remove it. The admin dashboard lives in frontend/
-# and must be refreshed together with the rest of the application.
+# Skill pages are published independently on gh-pages. All application assets,
+# including the admin dashboard and agent guide, live in frontend/ and are
+# released together.
 rsync -a --delete \
   --exclude '.git' \
   --exclude '.DS_Store' \
-  --exclude '/agent-setup.md' \
+  --exclude '/skills/' \
   frontend/ "$TEMP_DIR/site/"
 
 # GitHub Pages serves JavaScript and CSS with long browser/CDN cache lifetimes.
@@ -29,7 +29,7 @@ rsync -a --delete \
 export FRONTEND_RELEASE="$SOURCE_REVISION"
 while IFS= read -r -d '' html_file; do
   perl -0pi -e 's{((?:src|href)="\./[^"?]+\.(?:css|js))(?:\?v=[^"]*)?(")}{$1 . "?v=" . $ENV{FRONTEND_RELEASE} . $2}ge' "$html_file"
-done < <(find "$TEMP_DIR/site" -type f -name '*.html' -print0)
+done < <(find "$TEMP_DIR/site" -path "$TEMP_DIR/site/skills" -prune -o -type f -name '*.html' -print0)
 
 git -C "$TEMP_DIR/site" add --all
 if git -C "$TEMP_DIR/site" diff --cached --quiet; then
