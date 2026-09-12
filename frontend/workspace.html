@@ -135,20 +135,20 @@
           </section>
 
           <section id="integration-panel" class="workspace-panel hidden" data-workspace-panel="integration" aria-labelledby="integration-title">
-            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Choose your AI, authorize it with OAuth, and verify that it can read this exact project.</p></div></div>
+            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Local Codex and Claude use the authenticated edc CLI; ChatGPT connects separately through MCP and OAuth.</p></div></div>
             <div class="integration-context-bar" aria-label="Connection details" data-i18n-aria-label="connectionDetails">
               <div><strong data-i18n="selectedProject">Selected project</strong><code id="integration-project-id"></code></div>
-              <div><strong data-i18n="mcpEndpoint">MCP endpoint</strong><code id="integration-mcp-url">https://context-api.integ.life/mcp</code><button class="quiet" type="button" data-copy-command="integration-mcp-url" data-i18n="copyCommand">Copy</button></div>
+              <div><strong data-i18n="mcpEndpoint">ChatGPT MCP endpoint</strong><code id="integration-mcp-url">https://context-api.integ.life/mcp</code><button class="quiet" type="button" data-copy-command="integration-mcp-url" data-i18n="copyCommand">Copy</button></div>
             </div>
             <div class="connect-methods">
               <article class="connect-card agent-connect-card">
                 <div class="connect-card-meta"><span>Claude Code · Codex</span><span class="status-badge ready" data-i18n="recommended">Recommended</span></div>
-                <h4 data-i18n="agentSetupTitle">Let your agent set it up</h4>
-                <p class="muted" data-i18n="agentSetupBody">Open Claude Code or Codex in the working directory, then paste the instruction below. The agent will read the setup guide, add the remote MCP server, and install the recorder Skill.</p>
+                <h4 data-i18n="agentSetupTitle">Set up the local CLI</h4>
+                <p class="muted" data-i18n="agentSetupBody">Open Claude Code or Codex in the working directory, then paste the instruction below. The agent will use your authenticated edc CLI directly and install the recorder Skill; it will not add MCP.</p>
                 <ol class="connect-checklist">
-                  <li data-i18n="agentSetupStepOne">Paste the project-specific instruction into your coding agent.</li>
-                  <li data-i18n="agentSetupStepTwo">Complete the Integ.Life OAuth page when the agent opens it.</li>
-                  <li data-i18n="agentSetupStepThree">Do not stop at “configured”: let the agent call Context and verify this project.</li>
+                  <li data-i18n="agentSetupStepOne">Paste the project-specific instruction into your local coding agent.</li>
+                  <li data-i18n="agentSetupStepTwo">Let the agent run edc whoami. If login is needed, complete edc login privately in your terminal.</li>
+                  <li data-i18n="agentSetupStepThree">Do not stop at configuration: let the agent run edc query and verify this project.</li>
                 </ol>
                 <div class="prompt-label" data-i18n="pasteIntoAgent">Paste into your agent</div>
                 <div class="command-row prompt-row"><code id="agent-setup-prompt"></code><button class="quiet" type="button" data-copy-command="agent-setup-prompt" data-i18n="copyInstruction">Copy instruction</button></div>

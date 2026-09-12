@@ -296,6 +296,10 @@ func TestSetupPreviewRequiresApprovalPreservesOtherSettingsAndDetectsStaleFile(t
 	if err := os.WriteFile(settings, []byte(`{"permissions":{"allow":["Read"]},"unrelated":{"Authorization":"Bearer synthetic-private-value","env":{"MY_API_KEY":"synthetic-env-secret","SLACK_BOT_TOKEN":"synthetic-slack-secret"}},"hooks":{"PostToolUse":[{"hooks":[{"type":"command","command":"fmt"}]}]}}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	mcpConfig := filepath.Join(project, ".mcp.json")
+	if err := os.WriteFile(mcpConfig, []byte(`{"mcpServers":{"event-driven-context":{"type":"stdio","command":"/old/edc","args":["mcp"]},"keep-me":{"type":"http","url":"https://example.invalid/mcp"}}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	m := newTestManager(t, &fakeSender{})
 	if _, err := m.Link(context.Background(), project, "project", "https://context.example", "alice"); err != nil {
 		t.Fatal(err)
@@ -326,6 +330,10 @@ func TestSetupPreviewRequiresApprovalPreservesOtherSettingsAndDetectsStaleFile(t
 	if !strings.Contains(string(after), "synthetic-private-value") || !strings.Contains(string(after), "synthetic-env-secret") || !strings.Contains(string(after), "synthetic-slack-secret") {
 		t.Fatal("setup changed an unrelated credential field")
 	}
+	mcpAfter, _ := os.ReadFile(mcpConfig)
+	if strings.Contains(string(mcpAfter), "event-driven-context") || !strings.Contains(string(mcpAfter), "keep-me") {
+		t.Fatalf("legacy EDC MCP entry not removed safely: %s", mcpAfter)
+	}
 	skill, _ := os.ReadFile(filepath.Join(project, ".claude", "skills", "edc-recorder", "SKILL.md"))
 	if !bytes.Equal(skill, edcrecorder.Content) {
 		t.Fatal("installed skill differs from embedded recorder")
@@ -340,6 +348,36 @@ func TestSetupPreviewRequiresApprovalPreservesOtherSettingsAndDetectsStaleFile(t
 	}
 	if err = m.ApplySetup(stale, true); err == nil || !strings.Contains(err.Error(), "changed after preview") {
 		t.Fatalf("stale preview accepted: %v", err)
+	}
+}
+
+func TestSetupWithoutLegacyMCPDoesNotCreateMCPConfig(t *testing.T) {
+	project := t.TempDir()
+	edc := filepath.Join(t.TempDir(), "edc")
+	if err := os.WriteFile(edc, []byte("binary"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	m := newTestManager(t, &fakeSender{})
+	if _, err := m.Link(context.Background(), project, "project", "https://context.example", "alice"); err != nil {
+		t.Fatal(err)
+	}
+	preview, err := m.SetupPreview(SetupOptions{Directory: project, Client: ClaudeCode, EDCPath: edc, ConfigPath: filepath.Join(t.TempDir(), "config.json"), Server: "https://context.example", AccountID: "alice"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(preview.Changes) != 3 {
+		t.Fatalf("unexpected setup changes: %#v", preview.Changes)
+	}
+	for _, change := range preview.Changes {
+		if filepath.Base(change.Path) == ".mcp.json" {
+			t.Fatal("direct CLI setup attempted to create .mcp.json")
+		}
+	}
+	if err = m.ApplySetup(preview, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = os.Stat(filepath.Join(project, ".mcp.json")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("MCP config created: %v", err)
 	}
 }
 

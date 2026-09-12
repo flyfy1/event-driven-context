@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -23,21 +22,18 @@ func TestAgentSetupMarkdownPublicRoute(t *testing.T) {
 				t.Fatalf("%d: %s", response.Code, response.Body.String())
 			}
 			body := response.Body.String()
-			for _, want := range []string{title, "`" + setupProjectA + "`", v2TestIssuer + "/mcp", "https://app.example/skills/edc-recorder/SKILL.md"} {
+			for _, want := range []string{title, "`" + setupProjectA + "`", v2TestIssuer, "https://app.example/skills/edc-recorder/SKILL.md", "edc --server " + v2TestIssuer + " whoami", "query --project " + setupProjectA + " --limit 5", "state list --project " + setupProjectA} {
 				if !strings.Contains(body, want) {
 					t.Errorf("missing %q", want)
 				}
 			}
+			for _, forbidden := range []string{"codex mcp", "claude mcp", "mcpServers", v2TestIssuer + "/mcp"} {
+				if strings.Contains(body, forbidden) {
+					t.Errorf("local setup must not contain %q", forbidden)
+				}
+			}
 			if strings.Contains(body, "{{") || strings.Contains(body, "PROJECT_ID") || strings.Contains(body, f.project.Name) || strings.Contains(body, f.token) {
 				t.Fatal("unrendered template or private data")
-			}
-			block := strings.Split(strings.Split(body, "```json\n")[1], "\n```")[0]
-			var input struct {
-				ProjectID string `json:"project_id"`
-				Limit     int    `json:"limit"`
-			}
-			if err := json.Unmarshal([]byte(block), &input); err != nil || input.ProjectID != setupProjectA || input.Limit != 5 {
-				t.Fatalf("invalid MCP input: %+v %v", input, err)
 			}
 			if got := response.Header().Get("Content-Type"); got != "text/markdown; charset=utf-8" {
 				t.Fatal(got)
