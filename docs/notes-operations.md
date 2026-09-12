@@ -1,6 +1,6 @@
 # Notes worker operations
 
-Status: operating contract for the notes and attachment work in progress; it does not claim deployment or production validation.
+Status: notes and attachment support is implemented and tested; production deployment of the attachment extension is pending.
 
 The API and worker are separate processes. Install the notes plugin as project owner, then run one worker per project. Codex CLI must already be authenticated as the worker's Unix user; its bundled MCP support must be available. Shell, browser, app, plugin discovery, and external action tools are disabled for organizer sessions.
 
@@ -37,3 +37,9 @@ The service expects `edc`, `plugins/notes-indexer/manifest.json`, and the API bi
 - Event references use `edc-event://UUID`; wiki links use stable note IDs. A viewer must resolve these IDs; raw Obsidian installation does not automatically resolve them by filename.
 
 The service targets one configured project. Enabling another project requires its owner to install the plugin and an independently configured worker. Before deployment, verify catalog project isolation and frozen pagination, reference pages beyond five previews, atomic main/backfill checkpoints, checksum failure, interrupted cache resume, and all three completion states.
+
+## Verified before deployment
+
+On 2026-09-12, `GOFLAGS='-p=2' make check` passed Go vet, all backend race tests, and all 24 frontend tests. An existing process-timeout test failed under unrestricted package concurrency, then passed alone and in the bounded full run.
+
+A disposable Linux server and authenticated Codex CLI with `gpt-5.6-luna` at medium reasoning processed two historical file Events sharing one attachment. It published revision 2 while keeping main coverage at sequence 3, and cited the existing derived text Event. The same fixture passed metadata-only sync, cache-aware download, verified reuse, local-edit preservation, and complete `--files all` coverage. An unattached upload stayed outside the catalog. Production data and services were not changed.

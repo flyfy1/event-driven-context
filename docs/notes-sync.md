@@ -64,7 +64,7 @@ Any conflict exits nonzero and performs no note or metadata writes. A conflict n
 
 ## Project collection sync
 
-This accepted extension is in progress and not yet claimed deployed or validated. The aggregate command keeps notes, attachment metadata, and optional bytes together:
+This extension is implemented and tested; production deployment is pending. The aggregate command keeps notes, attachment metadata, and optional bytes together:
 
 ```sh
 edc sync --project PROJECT_ID --output COLLECTION

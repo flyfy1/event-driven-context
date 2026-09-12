@@ -1,6 +1,6 @@
 # Agent-organized project notes
 
-Status: the initial organizer is implemented. The attachment, catalog, and cache extension described here is in progress and is not yet claimed deployed or validated. One project-level agent maintains all four lenses in one draft and publication. Users can export notes through the read-only API and CLI; user editing and history UI remain future work. See [notes-sync.md](notes-sync.md).
+Status: the initial organizer is implemented. The attachment, catalog, and cache extension is implemented and tested, but not yet deployed. One project-level agent maintains all four lenses in one draft and publication. Users can export notes through the read-only API and CLI; user editing and history UI remain future work. See [notes-sync.md](notes-sync.md).
 
 ## Document collection
 

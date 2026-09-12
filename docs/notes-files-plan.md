@@ -1,6 +1,6 @@
 # Files in notes and local recall
 
-Status: accepted implementation contract. Work and validation are underway in an isolated worktree; this document does not claim deployment. It extends [notes design](notes-design.md), [sync](notes-sync.md), and [memory recall](memory-recall.md).
+Status: implemented and verified with synthetic data and the real Codex organizer; not yet deployed. It extends [notes design](notes-design.md), [sync](notes-sync.md), and [memory recall](memory-recall.md).
 
 ## Coverage model
 
