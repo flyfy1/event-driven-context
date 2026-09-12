@@ -90,6 +90,10 @@ func Open(path string, dataPaths ...string) (*Store, error) {
 		db.Close()
 		return nil, err
 	}
+	if err = ensureProjectOwners(db); err != nil {
+		db.Close()
+		return nil, err
+	}
 	if err = ensureIntegIdentitySchema(db); err != nil {
 		db.Close()
 		return nil, err
@@ -150,6 +154,20 @@ func ensureProjectTimezoneColumn(db *sql.DB) error {
 		return nil
 	}
 	_, err = db.Exec("ALTER TABLE projects ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'")
+	return err
+}
+
+func ensureProjectOwners(db *sql.DB) error {
+	_, err := db.Exec(`
+		INSERT INTO project_owners(project_id,user_id)
+		SELECT p.id,p.owner_user_id
+		FROM projects p
+		JOIN members m ON m.project_id=p.id AND m.user_id=p.owner_user_id
+		WHERE NOT EXISTS (
+			SELECT 1 FROM project_owners owners WHERE owners.project_id=p.id
+		)
+		ON CONFLICT DO NOTHING
+	`)
 	return err
 }
 
@@ -482,12 +500,11 @@ func (s *Store) RequireProjectOwner(ctx context.Context, projectID string) error
 	if err := s.requireMember(ctx, projectID); err != nil {
 		return err
 	}
-	var owner string
-	if err := s.db.QueryRowContext(ctx, "SELECT owner_user_id FROM projects WHERE id=?", projectID).Scan(&owner); err != nil {
-		return err
-	}
-	if owner != UserID(ctx) {
+	var owner int
+	if err := s.db.QueryRowContext(ctx, "SELECT 1 FROM project_owners WHERE project_id=? AND user_id=?", projectID, UserID(ctx)).Scan(&owner); errors.Is(err, sql.ErrNoRows) {
 		return ErrForbidden
+	} else if err != nil {
+		return err
 	}
 	return nil
 }
@@ -503,7 +520,7 @@ func (s *Store) CreateProject(ctx context.Context, in ProjectInput) (Project, er
 	if err != nil {
 		return Project{}, err
 	}
-	p := Project{ID: newID("prj"), Name: in.Name, Description: in.Description, Timezone: timezone, OwnerUserID: UserID(ctx), CreatedAt: now()}
+	p := Project{ID: newID("prj"), Name: in.Name, Description: in.Description, Timezone: timezone, OwnerUserID: UserID(ctx), OwnerUserIDs: []string{UserID(ctx)}, CreatedAt: now()}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return Project{}, err
@@ -513,6 +530,9 @@ func (s *Store) CreateProject(ctx context.Context, in ProjectInput) (Project, er
 		return Project{}, err
 	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO members VALUES(?,?)", p.ID, p.OwnerUserID); err != nil {
+		return Project{}, err
+	}
+	if _, err = tx.ExecContext(ctx, "INSERT INTO project_owners(project_id,user_id) VALUES(?,?)", p.ID, p.OwnerUserID); err != nil {
 		return Project{}, err
 	}
 	return p, tx.Commit()
@@ -534,7 +554,18 @@ func (s *Store) ListProjects(ctx context.Context, _ Empty) (Projects, error) {
 		}
 		out.Projects = append(out.Projects, p)
 	}
-	return out, rows.Err()
+	if err = rows.Err(); err != nil {
+		return out, err
+	}
+	if err = rows.Close(); err != nil {
+		return out, err
+	}
+	for i := range out.Projects {
+		if err = s.populateProjectOwners(ctx, &out.Projects[i]); err != nil {
+			return out, err
+		}
+	}
+	return out, nil
 }
 
 func (s *Store) UpdateProjectTimezone(ctx context.Context, projectID, timezone string) (Project, error) {
@@ -559,7 +590,30 @@ func (s *Store) projectByID(ctx context.Context, projectID string) (Project, err
 	if errors.Is(err, sql.ErrNoRows) {
 		return Project{}, ErrNotFound
 	}
-	return project, err
+	if err != nil {
+		return Project{}, err
+	}
+	if err = s.populateProjectOwners(ctx, &project); err != nil {
+		return Project{}, err
+	}
+	return project, nil
+}
+
+func (s *Store) populateProjectOwners(ctx context.Context, project *Project) error {
+	project.OwnerUserIDs = []string{}
+	rows, err := s.db.QueryContext(ctx, "SELECT user_id FROM project_owners WHERE project_id=? ORDER BY user_id", project.ID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var userID string
+		if err = rows.Scan(&userID); err != nil {
+			return err
+		}
+		project.OwnerUserIDs = append(project.OwnerUserIDs, userID)
+	}
+	return rows.Err()
 }
 
 // ProjectTimezone is for project-scoped services that have already authorized
@@ -579,19 +633,11 @@ func (s *Store) ProjectTimezone(ctx context.Context, projectID string) (string, 
 	return timezone, nil
 }
 func (s *Store) AddMember(ctx context.Context, in MemberInput) (User, error) {
-	if err := s.requireMember(ctx, in.ProjectID); err != nil {
+	if err := s.RequireProjectOwner(ctx, in.ProjectID); err != nil {
 		return User{}, err
-	}
-	var owner string
-	err := s.db.QueryRowContext(ctx, "SELECT owner_user_id FROM projects WHERE id=?", in.ProjectID).Scan(&owner)
-	if err != nil {
-		return User{}, err
-	}
-	if owner != UserID(ctx) {
-		return User{}, ErrForbidden
 	}
 	var u User
-	err = s.db.QueryRowContext(ctx, "SELECT id,username,created_at FROM users WHERE username=?", strings.ToLower(strings.TrimSpace(in.Username))).Scan(&u.ID, &u.Username, &u.CreatedAt)
+	err := s.db.QueryRowContext(ctx, "SELECT id,username,'',created_at FROM users WHERE username=?", strings.ToLower(strings.TrimSpace(in.Username))).Scan(&u.ID, &u.Username, &u.Email, &u.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return User{}, ErrNotFound
 	}
@@ -602,23 +648,70 @@ func (s *Store) AddMember(ctx context.Context, in MemberInput) (User, error) {
 	return u, err
 }
 func (s *Store) ListMembers(ctx context.Context, in ProjectRef) (Members, error) {
-	out := Members{Members: []User{}}
+	out := Members{Members: []ProjectMember{}}
 	if err := s.requireMember(ctx, in.ProjectID); err != nil {
 		return out, err
 	}
-	rows, err := s.db.QueryContext(ctx, "SELECT u.id,u.username,u.created_at FROM users u JOIN members m ON m.user_id=u.id WHERE m.project_id=? ORDER BY u.username", in.ProjectID)
+	rows, err := s.db.QueryContext(ctx, "SELECT u.id,u.username,'',u.created_at,CASE WHEN owners.user_id IS NULL THEN 'member' ELSE 'owner' END FROM users u JOIN members m ON m.user_id=u.id LEFT JOIN project_owners owners ON owners.project_id=m.project_id AND owners.user_id=m.user_id WHERE m.project_id=? ORDER BY u.username", in.ProjectID)
 	if err != nil {
 		return out, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var u User
-		if err = rows.Scan(&u.ID, &u.Username, &u.CreatedAt); err != nil {
+		var member ProjectMember
+		if err = rows.Scan(&member.ID, &member.Username, &member.Email, &member.CreatedAt, &member.Role); err != nil {
 			return out, err
 		}
-		out.Members = append(out.Members, u)
+		out.Members = append(out.Members, member)
 	}
 	return out, rows.Err()
+}
+
+func (s *Store) SetMemberRole(ctx context.Context, in MemberRoleInput) (ProjectMember, error) {
+	in.Role = strings.ToLower(strings.TrimSpace(in.Role))
+	if in.Role != "member" && in.Role != "owner" {
+		return ProjectMember{}, Invalid("role must be member or owner")
+	}
+	if err := s.RequireProjectOwner(ctx, in.ProjectID); err != nil {
+		return ProjectMember{}, err
+	}
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return ProjectMember{}, err
+	}
+	defer tx.Rollback()
+	var member ProjectMember
+	err = tx.QueryRowContext(ctx, "SELECT u.id,u.username,'',u.created_at,CASE WHEN owners.user_id IS NULL THEN 'member' ELSE 'owner' END FROM users u JOIN members m ON m.user_id=u.id LEFT JOIN project_owners owners ON owners.project_id=m.project_id AND owners.user_id=m.user_id WHERE m.project_id=? AND m.user_id=?", in.ProjectID, in.UserID).Scan(
+		&member.ID, &member.Username, &member.Email, &member.CreatedAt, &member.Role,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ProjectMember{}, ErrNotFound
+	}
+	if err != nil {
+		return ProjectMember{}, err
+	}
+	if member.Role == "owner" && in.Role == "member" {
+		var ownerCount int
+		if err = tx.QueryRowContext(ctx, "SELECT COUNT(*) FROM project_owners WHERE project_id=?", in.ProjectID).Scan(&ownerCount); err != nil {
+			return ProjectMember{}, err
+		}
+		if ownerCount <= 1 {
+			return ProjectMember{}, ErrLastOwner
+		}
+	}
+	if in.Role == "owner" {
+		_, err = tx.ExecContext(ctx, "INSERT INTO project_owners(project_id,user_id) VALUES(?,?) ON CONFLICT DO NOTHING", in.ProjectID, in.UserID)
+	} else {
+		_, err = tx.ExecContext(ctx, "DELETE FROM project_owners WHERE project_id=? AND user_id=?", in.ProjectID, in.UserID)
+	}
+	if err != nil {
+		return ProjectMember{}, err
+	}
+	member.Role = in.Role
+	if err = tx.Commit(); err != nil {
+		return ProjectMember{}, err
+	}
+	return member, nil
 }
 
 // Canonical JSON ignores object key order and whitespace, preserves numbers exactly.

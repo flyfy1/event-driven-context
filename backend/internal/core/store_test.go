@@ -89,6 +89,95 @@ func TestOpenMigratesLegacyUsersEmailColumn(t *testing.T) {
 	}
 }
 
+func TestOpenMigratesLegacyProjectOwnerRole(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "legacy-owner.db")
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.Exec(`
+		CREATE TABLE users (id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, password_hash BLOB NOT NULL, created_at TEXT NOT NULL);
+		CREATE TABLE projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL, owner_user_id TEXT NOT NULL REFERENCES users(id), created_at TEXT NOT NULL);
+		CREATE TABLE members (project_id TEXT NOT NULL REFERENCES projects(id), user_id TEXT NOT NULL REFERENCES users(id), PRIMARY KEY(project_id,user_id));
+		INSERT INTO users(id,username,password_hash,created_at) VALUES('usr_owner','owner',X'00','2026-01-01T00:00:00Z');
+		INSERT INTO projects(id,name,description,owner_user_id,created_at) VALUES('prj_legacy','legacy','', 'usr_owner','2026-01-01T00:00:00Z');
+		INSERT INTO members(project_id,user_id) VALUES('prj_legacy','usr_owner');
+	`); err != nil {
+		_ = db.Close()
+		t.Fatal(err)
+	}
+	if err = db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	s, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	ctx := WithUser(context.Background(), "usr_owner")
+	if err = s.RequireProjectOwner(ctx, "prj_legacy"); err != nil {
+		t.Fatalf("legacy owner role was not migrated: %v", err)
+	}
+	if _, err = s.db.Exec(`
+		INSERT INTO users(id,username,email,password_hash,created_at) VALUES('usr_legacy_member','legacy-member','legacy-member@example.invalid',X'00','2026-01-01T00:00:00Z');
+		INSERT INTO members VALUES('prj_legacy','usr_legacy_member');
+	`); err != nil {
+		t.Fatalf("legacy two-column member insert no longer works: %v", err)
+	}
+	members, err := s.ListMembers(ctx, ProjectRef{ProjectID: "prj_legacy"})
+	if err != nil || len(members.Members) != 2 || members.Members[1].Role != "owner" {
+		t.Fatalf("legacy members: %+v err=%v", members, err)
+	}
+}
+
+func TestProjectSupportsMultipleOwnersAndProtectsLastOwner(t *testing.T) {
+	s := openTest(t)
+	alice := user(t, s, "owner-alice")
+	bob := user(t, s, "owner-bob")
+	charlie := user(t, s, "owner-charlie")
+	project, err := s.CreateProject(alice, ProjectInput{Name: "shared ownership"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(project.OwnerUserIDs) != 1 || project.OwnerUserIDs[0] != UserID(alice) {
+		t.Fatalf("initial owners: %+v", project.OwnerUserIDs)
+	}
+	if _, err = s.AddMember(alice, MemberInput{ProjectID: project.ID, Username: "owner-bob"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.SetMemberRole(bob, MemberRoleInput{ProjectID: project.ID, UserID: UserID(bob), Role: "owner"}); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("member promoted self: %v", err)
+	}
+	if _, err = s.SetMemberRole(alice, MemberRoleInput{ProjectID: project.ID, UserID: UserID(bob), Role: "owner"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.AddMember(bob, MemberInput{ProjectID: project.ID, Username: "owner-charlie"}); err != nil {
+		t.Fatalf("second owner could not manage members: %v", err)
+	}
+	if _, err = s.SetMemberRole(bob, MemberRoleInput{ProjectID: project.ID, UserID: UserID(charlie), Role: "owner"}); err != nil {
+		t.Fatalf("second owner could not promote another member: %v", err)
+	}
+	if _, err = s.SetMemberRole(bob, MemberRoleInput{ProjectID: project.ID, UserID: UserID(alice), Role: "member"}); err != nil {
+		t.Fatalf("owner could not demote another owner: %v", err)
+	}
+	if _, err = s.AddMember(alice, MemberInput{ProjectID: project.ID, Username: "owner-charlie"}); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("demoted owner retained management: %v", err)
+	}
+	if _, err = s.SetMemberRole(bob, MemberRoleInput{ProjectID: project.ID, UserID: UserID(charlie), Role: "member"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.SetMemberRole(bob, MemberRoleInput{ProjectID: project.ID, UserID: UserID(bob), Role: "member"}); !errors.Is(err, ErrLastOwner) {
+		t.Fatalf("last owner was not protected: %v", err)
+	}
+	if err = ensureProjectOwners(s.db); err != nil {
+		t.Fatal(err)
+	}
+	projects, err := s.ListProjects(bob, Empty{})
+	if err != nil || len(projects.Projects) != 1 || len(projects.Projects[0].OwnerUserIDs) != 1 || projects.Projects[0].OwnerUserIDs[0] != UserID(bob) {
+		t.Fatalf("owner list: %+v err=%v", projects, err)
+	}
+}
+
 func openTest(t *testing.T) *Store {
 	t.Helper()
 	s, e := Open(filepath.Join(t.TempDir(), "test.db"))

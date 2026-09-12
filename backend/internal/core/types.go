@@ -37,7 +37,8 @@ func TooLarge(format string, args ...any) error {
 
 var ErrNotFound = &Error{"not_found", "resource not found or access denied"}
 var ErrUnauthenticated = &Error{"unauthenticated", "valid login token required"}
-var ErrForbidden = &Error{"forbidden", "only the project creator can add members"}
+var ErrForbidden = &Error{"forbidden", "project owner permission required"}
+var ErrLastOwner = &Error{"conflict", "project must retain at least one owner"}
 var ErrActionForbidden = &Error{"forbidden", "event action is not allowed"}
 var ErrConflict = &Error{"conflict", "resource already exists or idempotency key reused with different input"}
 
@@ -71,12 +72,13 @@ type ProjectInput struct {
 	Timezone    string `json:"timezone,omitempty"`
 }
 type Project struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Timezone    string `json:"timezone"`
-	OwnerUserID string `json:"owner_user_id"`
-	CreatedAt   string `json:"created_at"`
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Description  string   `json:"description"`
+	Timezone     string   `json:"timezone"`
+	OwnerUserID  string   `json:"owner_user_id"`
+	OwnerUserIDs []string `json:"owner_user_ids"`
+	CreatedAt    string   `json:"created_at"`
 }
 type Projects struct {
 	Projects []Project `json:"projects"`
@@ -88,8 +90,17 @@ type MemberInput struct {
 	ProjectID string `json:"project_id"`
 	Username  string `json:"username"`
 }
+type MemberRoleInput struct {
+	ProjectID string `json:"project_id"`
+	UserID    string `json:"user_id"`
+	Role      string `json:"role"`
+}
+type ProjectMember struct {
+	User
+	Role string `json:"role"`
+}
 type Members struct {
-	Members []User `json:"members"`
+	Members []ProjectMember `json:"members"`
 }
 type FileInput struct {
 	Filename   string `json:"filename"`
