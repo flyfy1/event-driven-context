@@ -52,6 +52,14 @@ func (s Store) Export() (Export, error) {
 	if err = checkDirectories(root, false); err != nil {
 		return out, err
 	}
+	publication, err := readPublication(filepath.Join(filepath.Dir(root), "publication.json"))
+	if err != nil {
+		return out, err
+	}
+	if publication.Revision != out.Revision {
+		return out, fmt.Errorf("notes revision metadata mismatch")
+	}
+	out.ThroughSequence = publication.Checkpoint.AfterSequence
 	totalBytes := 0
 	err = filepath.WalkDir(root, func(name string, entry fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
@@ -160,7 +168,7 @@ func (s Store) Sync(in SyncInput, author string) (Export, error) {
 	if current.Revision == math.MaxInt64 {
 		return Export{}, fmt.Errorf("notes revision exhausted")
 	}
-	next := Export{ProjectID: s.ProjectID, Revision: current.Revision + 1, Files: make([]File, 0, len(files))}
+	next := Export{ProjectID: s.ProjectID, Revision: current.Revision + 1, ThroughSequence: checkpoint.AfterSequence, Files: make([]File, 0, len(files))}
 	for _, f := range files {
 		next.Files = append(next.Files, f)
 	}

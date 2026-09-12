@@ -154,3 +154,25 @@ func TestOrganizationContract(t *testing.T) {
 		}
 	}
 }
+
+func TestExportCoverageComesFromSelectedGeneration(t *testing.T) {
+	s := testStore(t)
+	in := input(0, WriteFile{Path: "index.md", Content: "# First"})
+	in.Checkpoint = &Checkpoint{AfterSequence: 7, AttachmentBackfillThroughSequence: 3}
+	first, err := s.Sync(in, "fixture")
+	if err != nil || first.ThroughSequence != 7 {
+		t.Fatalf("first %#v %v", first, err)
+	}
+	in = input(1, WriteFile{Path: "index.md", Content: "# Second"})
+	in.Checkpoint = &Checkpoint{AfterSequence: 11, AttachmentBackfillThroughSequence: 7}
+	if _, err = s.Sync(in, "fixture"); err != nil {
+		t.Fatal(err)
+	}
+	latest, err := s.Export()
+	if err != nil || latest.Revision != 2 || latest.ThroughSequence != 11 || latest.Files[0].Content != "# Second" {
+		t.Fatalf("latest %#v %v", latest, err)
+	}
+	if first.ThroughSequence != 7 || first.Files[0].Content != "# First" {
+		t.Fatal("previous snapshot changed")
+	}
+}

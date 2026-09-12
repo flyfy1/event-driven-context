@@ -11,6 +11,8 @@ import (
 
 var noteIDPattern = regexp.MustCompile(`^note_[A-Za-z0-9_-]+$`)
 var eventLinkPattern = regexp.MustCompile(`edc-event://([^\s)\]>]+)`)
+var fileLinkPattern = regexp.MustCompile(`edc-file://([^\s)\]>]+)`)
+
 var wikiPattern = regexp.MustCompile(`\[\[([^\]]+)\]\]`)
 
 func DocumentID(text string) string {
@@ -42,7 +44,7 @@ func PolicyHash(files []File) string {
 
 // ValidateOrganizedTree is the host/backend publication boundary, independent
 // of model instructions. It validates structure and references, not factual truth.
-func ValidateOrganizedTree(files []WriteFile, previous []File, sources map[string]bool) error {
+func ValidateOrganizedTree(files []WriteFile, previous []File, sources map[string]bool, fileSources ...map[string]bool) error {
 	ids := map[string]string{}
 	paths := map[string]bool{}
 	for _, f := range files {
@@ -93,6 +95,11 @@ func ValidateOrganizedTree(files []WriteFile, previous []File, sources map[strin
 				return invalid(f.Path + ": unknown or unreadable event citation " + m[1])
 			}
 		}
+		for _, m := range fileLinkPattern.FindAllStringSubmatch(f.Content, -1) {
+			if len(fileSources) == 0 || !fileSources[0][m[1]] {
+				return invalid(f.Path + ": unknown or unreadable file link " + m[1])
+			}
+		}
 		for _, m := range wikiPattern.FindAllStringSubmatch(f.Content, -1) {
 			id := strings.SplitN(m[1], "|", 2)[0]
 			if ids[id] == "" {
@@ -101,4 +108,13 @@ func ValidateOrganizedTree(files []WriteFile, previous []File, sources map[strin
 		}
 	}
 	return nil
+}
+
+// FileLinkIDs returns stable attachment references without interpreting labels.
+func FileLinkIDs(text string) []string {
+	out := []string{}
+	for _, m := range fileLinkPattern.FindAllStringSubmatch(text, -1) {
+		out = append(out, m[1])
+	}
+	return out
 }

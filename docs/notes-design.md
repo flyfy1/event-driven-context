@@ -1,6 +1,6 @@
 # Agent-organized project notes
 
-Status: implemented initial organizer. One project-level agent maintains all four lenses in one draft and publication. Users can export notes through the read-only API and CLI; user editing and history UI remain future work. See [notes-sync.md](notes-sync.md).
+Status: the initial organizer is implemented. The attachment, catalog, and cache extension described here is in progress and is not yet claimed deployed or validated. One project-level agent maintains all four lenses in one draft and publication. Users can export notes through the read-only API and CLI; user editing and history UI remain future work. See [notes-sync.md](notes-sync.md).
 
 ## Document collection
 
@@ -15,10 +15,11 @@ title: Hierarchical retrieval
 > Summary: Agents narrow the tree before reading detailed evidence.
 
 - Selective reads keep context bounded. [source](edc-event://019f...)
+- Attachment: [Recording](edc-file://file_...)
 - Related: [[note_notes_architecture|Notes architecture]]
 ```
 
-IDs remain stable when paths or titles change. Event links name a UUID in the same project. The publisher rejects missing or duplicate IDs, unresolved wiki links, unknown citations, missing titles or summaries, and loss of an existing ID. It requires each ordinary file to contain fewer than 1,000 whitespace-delimited words and stay below 1 MiB.
+IDs remain stable when paths or titles change. Event links name a same-project UUID. File links identify attachments but do not replace Event evidence for content claims. The publisher rejects missing or duplicate IDs, unresolved wiki links, unknown Event/file citations, missing titles or summaries, and loss of an existing ID. File citations may refer to readable historical Events at or below the organizer's `through_sequence`, beyond its current batch. It requires each ordinary file to contain fewer than 1,000 whitespace-delimited words and stay below 1 MiB.
 
 Each `index.md` summarizes its branch and links immediate children. The organizer updates affected ancestors. Direct search can jump to a matching note without traversing every index.
 
@@ -62,7 +63,9 @@ The files are visible through export. Local sync is pull-only, so user edits are
 
 ## Organizer run
 
-The `notes-indexer` plugin has `organize_notes` permission and read access to all `note`, `derived`, and `log` Events. A host runs one Codex `gpt-5.6-luna` process at medium reasoning for one project. Watch mode polls every 15 seconds; failures back off to five minutes. Each run has a five-minute default timeout, a twelve-minute server lease, and at most 20 new Events in append-sequence order. The server prevents a concurrent organizer for the same project.
+The `notes-indexer` plugin has `organize_notes` permission and read access to all `note`, `derived`, and `log` Events. A host runs one Codex `gpt-5.6-luna` process at medium reasoning for one project. Watch mode polls every 15 seconds; failures back off to five minutes. Each run has a five-minute default timeout, a twelve-minute server lease, and at most 20 Events. The server prevents concurrent organization for the project.
+
+With attachment prompt version 2, up to ten slots contain historical file Events and remaining slots contain new append-sequence Events; without historical candidates, all 20 can be new. The backfill advances toward the prior main checkpoint, then follows new coverage. Every file Event gets an attachment link, even when extraction is pending.
 
 Codex runs ephemerally in a read-only sandbox with user rules, shell, web search, apps, plugins, hooks, memories, browser/computer use, and subagents disabled. Its fixed embedded prompt is versioned separately from policy files. A random bearer secret protects a loopback-only MCP server holding the draft in memory.
 
@@ -72,6 +75,7 @@ The agent can:
 - search up to 20 note matches;
 - read an outline or at most 120 lines/12,000 characters of one note;
 - read one Event in chunks of at most 8,000 characters;
+- list up to 20 files, inspect one file with its latest five references, and page up to 20 historical references, without reading bytes;
 - create, replace, or move draft notes;
 - mark every batch Event `used` or `irrelevant`, then validate with `finish`.
 
@@ -81,6 +85,6 @@ A used Event must first be opened with `read_event`; previews are routing hints.
 
 Plugin-only organizer endpoints begin, publish, or cancel a leased run. Ordinary user credentials cannot call them. Begin returns the current tree, checkpoint, timezone, and bounded Event previews. Publish rechecks plugin installation, permission, configuration revision, lease, base notes revision, source access, complete Event accounting, and the entire document tree.
 
-The complete tree and one project-wide checkpoint are written into the same immutable generation before its pointer becomes current. The checkpoint records through-sequence, prompt version, policy hash, and run ID, so a crash cannot advance past unpublished notes. A prompt or policy change causes a run even without new Events. Revision conflicts preserve the current tree and require a fresh run.
+The complete tree and checkpoint are written into the same immutable generation before its pointer becomes current. Notes export returns the atomic `revision` and `through_sequence` pair. The checkpoint records `after_sequence`, `attachment_backfill_through_sequence`, prompt version, policy hash, and run ID. A missing backfill field starts at zero. Neither checkpoint can advance past unpublished notes; historical enrichment does not rewind main coverage. A prompt or policy change causes a run without new Events. Revision conflicts require a fresh run.
 
 Code ownership is split across `internal/notes` for generations and validation, `internal/v2/notes_organizer.go` for authorization and leases, `internal/noteindexer` for the bounded runtime, `internal/processorhost/notes.go` for once/watch operation, `plugins/notes-indexer` for its manifest, and separate public export and plugin-only API handlers. `deploy/production/event-context-notes.service` runs the 15-second project watcher.

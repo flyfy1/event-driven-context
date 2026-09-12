@@ -30,6 +30,7 @@ The route uses existing V2 user authentication, read scope, and project membersh
 {
   "project_id": "prj_example",
   "revision": 7,
+  "through_sequence": 193,
   "files": [{
     "path": "goals/priorities.md",
     "content": "# Priorities\n",
@@ -38,7 +39,7 @@ The route uses existing V2 user authentication, read scope, and project membersh
 }
 ```
 
-Paths are slash-separated relative to `notes/` and bytewise sorted. `sha256` is lowercase hexadecimal SHA-256 of the exact UTF-8 bytes in `content`. A project with no published notes returns revision `0` and `files: []`. The initial public API has no notes write endpoint.
+Paths are slash-separated relative to `notes/` and bytewise sorted. `sha256` is lowercase hexadecimal SHA-256 of the exact UTF-8 bytes in `content`. `revision` and `through_sequence` come from the same atomic publication. A project with no published notes returns both as zero and `files: []`. The public API has no notes write endpoint.
 
 ## CLI contract
 
@@ -48,7 +49,7 @@ edc notes sync --project PROJECT_ID --output DIRECTORY
 
 The command uses existing `--server`, `--config`, authentication, and directory binding. `--project` may be omitted only when the existing binding resolves one project. `--output` is required.
 
-The output directory contains `.edc-notes-sync.json` with version, canonical server origin, project ID, last observed revision, and hashes of remote files successfully mirrored locally. Metadata from another server or project is rejected. Writes use temporary files in the destination directory, and local symlinks are never followed.
+The output directory contains `.edc-notes-sync.json` with version, canonical server origin, project ID, last observed revision/through-sequence pair, and hashes of remote files successfully mirrored locally. Metadata from another server or project is rejected. Writes use temporary files in the destination directory, and local symlinks are never followed.
 
 The CLI fetches one complete export and preflights every path before writing:
 
@@ -59,6 +60,34 @@ The CLI fetches one complete export and preflights every path before writing:
 - Same path without prior metadata and different contents: report a conflict.
 - Local `.md` path absent remotely: preserve it, report it in `preserved_local`, and exclude it from the new remote baseline.
 
-Any conflict exits nonzero and performs no note or metadata writes. A conflict never overwrites the local edit. After a conflict-free run, the CLI installs remote changes and replaces metadata last. It never deletes local files, propagates local deletions, uploads local files, or calls a remote write endpoint. Output JSON reports the revision, downloaded count, restored paths, and `preserved_local` paths.
+Any conflict exits nonzero and performs no note or metadata writes. A conflict never overwrites the local edit. After a conflict-free run, the CLI installs remote changes and replaces metadata last. It never deletes local files, propagates local deletions, uploads local files, or calls a remote write endpoint. Output JSON reports revision, through-sequence, downloaded count, restored paths, and `preserved_local` paths.
 
-Tests cover authorization, project isolation, deterministic hashes and ordering, empty revision `0`, export limits, path traversal and symlinks, first sync, remote updates, missing-file restoration, identical adoption, local-edit conflicts with whole-run preflight, preserved local-only files, local write failure, and retry.
+## Project collection sync
+
+This accepted extension is in progress and not yet claimed deployed or validated. The aggregate command keeps notes, attachment metadata, and optional bytes together:
+
+```sh
+edc sync --project PROJECT_ID --output COLLECTION
+edc sync --project PROJECT_ID --output COLLECTION --files all
+```
+
+```text
+COLLECTION/
+├── notes/...
+├── files/FILE_ID/{metadata.json,original-SAFE_NAME.ext}
+└── manifest.json
+```
+
+Default sync pulls notes and every page of one frozen file catalog. `--files all` also downloads all catalog bytes. The self-checksummed manifest binds canonical server origin and project ID and records three independent completion states: notes revision plus `through_sequence`, catalog through-sequence/cursor, and bytes through-sequence. Counts belong in command output. Catalog completion never implies notes coverage; metadata completion never implies bytes are local.
+
+Notes retain the conflict behavior above. Machine metadata and bytes use verified temporary writes and atomic rename. Interrupted work may retain verified files but leaves the relevant completion false for retry. Existing `edc notes sync` remains supported. Recall defaults new collections to `.context/projects/PROJECT_ID/`; sync never migrates, modifies, or deletes old `.context/notes/` directories.
+
+One attachment can be cached on demand:
+
+```sh
+edc file get --project PROJECT_ID --cache COLLECTION FILE_ID
+```
+
+Flags precede `FILE_ID`; `--cache` and `-o` are mutually exclusive. The command freezes a fresh catalog boundary, verifies server size and SHA-256, and atomically registers the cached file and per-file metadata. Bytes use a fixed `original-` prefix plus a safe, deterministically shortened display name; metadata retains the exact filename. The command skips a matching cache, refuses to overwrite mismatched bytes, and does not mark the whole catalog or bytes set complete.
+
+Acceptance covers authorization, atomic notes coverage, project isolation, frozen catalog pagination, export limits, traversal and symlinks, local-edit conflicts, preserved local-only files, separate completion states, cache verification, interrupted resume, and retry. See [the attachment plan](notes-files-plan.md) for catalog and evidence semantics.

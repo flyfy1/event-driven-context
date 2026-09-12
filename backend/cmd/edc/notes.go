@@ -24,20 +24,22 @@ const notesBaselineName = ".edc-notes-sync.json"
 const notesLockName = ".edc-notes-sync.lock"
 
 type notesBaseline struct {
-	Version   int               `json:"version"`
-	Server    string            `json:"server"`
-	ProjectID string            `json:"project_id"`
-	Revision  int64             `json:"revision"`
-	Files     map[string]string `json:"files"`
+	Version         int               `json:"version"`
+	Server          string            `json:"server"`
+	ProjectID       string            `json:"project_id"`
+	Revision        int64             `json:"revision"`
+	ThroughSequence int64             `json:"through_sequence,omitempty"`
+	Files           map[string]string `json:"files"`
 }
 
 type notesSyncResult struct {
-	ProjectID      string   `json:"project_id"`
-	Output         string   `json:"output"`
-	Revision       int64    `json:"revision"`
-	PreservedLocal []string `json:"preserved_local,omitempty"`
-	Downloaded     int      `json:"downloaded"`
-	Restored       []string `json:"restored,omitempty"`
+	ProjectID       string   `json:"project_id"`
+	Output          string   `json:"output"`
+	Revision        int64    `json:"revision"`
+	ThroughSequence int64    `json:"through_sequence"`
+	PreservedLocal  []string `json:"preserved_local,omitempty"`
+	Downloaded      int      `json:"downloaded"`
+	Restored        []string `json:"restored,omitempty"`
 }
 
 func (a *app) notes(args []string) error {
@@ -179,6 +181,7 @@ func (a *app) syncNotes(projectID, output string) (result notesSyncResult, err e
 		result.Downloaded++
 	}
 	baseline.Revision = remote.Revision
+	baseline.ThroughSequence = remote.ThroughSequence
 	baseline.Files = make(map[string]string, len(remoteFiles))
 	for name, content := range remoteFiles {
 		baseline.Files[name] = v2client.NoteHash(content)
@@ -202,6 +205,7 @@ func (a *app) syncNotes(projectID, output string) (result notesSyncResult, err e
 		return result, err
 	}
 	result.Revision = remote.Revision
+	result.ThroughSequence = remote.ThroughSequence
 	return result, nil
 }
 
@@ -234,7 +238,7 @@ func readNotesBaseline(root *os.Root, origin, projectID string) (notesBaseline, 
 	if err = decoder.Decode(&extra); !errors.Is(err, io.EOF) {
 		return out, fmt.Errorf("invalid notes baseline trailing data")
 	}
-	if out.Version != 1 || out.Files == nil || out.Revision < 0 || len(out.Files) > v2client.MaxNotesFiles {
+	if out.Version != 1 || out.Files == nil || out.Revision < 0 || out.ThroughSequence < 0 || len(out.Files) > v2client.MaxNotesFiles {
 		return out, fmt.Errorf("unsupported or invalid notes baseline")
 	}
 	if out.Server != origin || out.ProjectID != projectID {

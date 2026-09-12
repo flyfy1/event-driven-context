@@ -29,9 +29,10 @@ Commands:
   link [PROJECT_ID] | status
   push [TEXT] | --file PATH | --json | --jsonl
   query | get EVENT_ID | metadata
-  file get FILE_ID
+  file get [--cache DIR] FILE_ID
   state list | get | put
   notes sync --project ID --output DIR
+  sync --project ID --output DIR [--files all]
   plugin install | list | config | pause | resume | rerun | remove
   pull --after SEQUENCE
   hook CLIENT | setup CLIENT [--apply]
@@ -164,6 +165,8 @@ func (a *app) dispatch(command string, args []string) error {
 		return a.metadata(args)
 	case "file":
 		return a.file(args)
+	case "sync":
+		return a.sync(args)
 	case "notes":
 		return a.notes(args)
 	case "state":

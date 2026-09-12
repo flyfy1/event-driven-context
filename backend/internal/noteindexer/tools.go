@@ -11,20 +11,22 @@ import (
 	"unicode/utf8"
 
 	"event-driven-context/internal/notes"
+	"event-driven-context/internal/v2"
 	"event-driven-context/internal/v2client"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 type draft struct {
-	mu        sync.Mutex
-	client    *v2client.Client
-	project   string
-	run       notes.OrganizationRun
-	files     map[string]string
-	read      map[string]bool
-	accounted map[string]string
-	finished  bool
-	Calls     int
+	mu          sync.Mutex
+	client      *v2client.Client
+	project     string
+	run         notes.OrganizationRun
+	files       map[string]string
+	read        map[string]bool
+	accounted   map[string]string
+	fileSources map[string]bool
+	finished    bool
+	Calls       int
 }
 
 type toolArgs struct {
@@ -39,6 +41,8 @@ type toolArgs struct {
 	From        string `json:"from"`
 	To          string `json:"to"`
 	Disposition string `json:"disposition"`
+	FileID      string `json:"file_id"`
+	Cursor      string `json:"cursor"`
 }
 
 func (d *draft) server() *mcp.Server {
@@ -75,6 +79,9 @@ func (d *draft) server() *mcp.Server {
 	add("read_note", "Read selected lines (start one-based, limit <=120; <=12000 characters), or outline=true for headings.", map[string]string{"path": "string", "start": "integer", "limit": "integer", "outline": "boolean"}, "path")
 	add("search_notes", "Search note text; returns up to 20 paths and matching snippets.", map[string]string{"query": "string", "limit": "integer"}, "query")
 	add("read_event", "Read source text on demand with metadata and references. start is a zero-based character offset; limit <=8000. Follow next_start for more.", map[string]string{"event_id": "string", "start": "integer", "limit": "integer"}, "event_id")
+	add("list_files", "Discover attachment metadata at this run's fixed Event boundary; limit <=20. Follow next_cursor for more. No bytes are downloaded.", map[string]string{"limit": "integer", "cursor": "string"})
+	add("file_metadata", "Read one attachment's metadata and up to five source/derived Event references. Metadata does not prove file contents.", map[string]string{"file_id": "string"}, "file_id")
+	add("file_references", "Page source and derived Event references for one attachment at this run's boundary; limit <=20. Read the returned Events for evidence.", map[string]string{"file_id": "string", "limit": "integer", "cursor": "string"}, "file_id")
 	add("write_note", "Create or replace one draft Markdown note; does not publish. Keep ordinary notes under1000 words and organization.md under500.", map[string]string{"path": "string", "content": "string"}, "path", "content")
 	add("move_note", "Move a draft note while preserving its content and ID. Destination must not exist.", map[string]string{"from": "string", "to": "string"}, "from", "to")
 	add("account_event", "Classify a batch event as used or irrelevant. Used events must have been read with read_event.", map[string]string{"event_id": "string", "disposition": "string"}, "event_id", "disposition")
@@ -204,7 +211,34 @@ func (d *draft) call(ctx context.Context, name string, in toolArgs) (any, error)
 		chars := []rune(e.Content.Text)
 		start, end := pageBounds(in.Start, in.Limit, 6000, 8000, len(chars))
 		d.read[e.ID] = true
+		if e.Content.Kind == "file" {
+			if d.fileSources == nil {
+				d.fileSources = map[string]bool{}
+			}
+			d.fileSources[e.Content.FileID] = true
+		}
 		return map[string]any{"id": e.ID, "sequence": e.Sequence, "type": e.Type, "actor": e.Actor, "recorded_at": e.RecordedAt, "occurred_at": e.OccurredAt, "refs": e.Refs, "kind": e.Content.Kind, "file_id": e.Content.FileID, "filename": e.Content.Filename, "text": string(chars[start:end]), "next_start": end, "has_more": end < len(chars)}, nil
+	case "list_files":
+		limit := in.Limit
+		if limit <= 0 || limit > 20 {
+			limit = 20
+		}
+		return d.client.ListFiles(ctx, d.project, v2.FileCatalogInput{Limit: limit, Cursor: in.Cursor, ThroughSequence: &d.run.ThroughSequence})
+	case "file_metadata":
+		out, err := d.client.FileMetadata(ctx, d.project, in.FileID, &d.run.ThroughSequence)
+		if err == nil {
+			if d.fileSources == nil {
+				d.fileSources = map[string]bool{}
+			}
+			d.fileSources[out.ID] = true
+		}
+		return out, err
+	case "file_references":
+		limit := in.Limit
+		if limit <= 0 || limit > 20 {
+			limit = 20
+		}
+		return d.client.FileReferences(ctx, d.project, in.FileID, v2.FileCatalogInput{Limit: limit, Cursor: in.Cursor, ThroughSequence: &d.run.ThroughSequence})
 	case "write_note":
 		if err := notes.ValidatePath(in.Path); err != nil {
 			return nil, err
@@ -259,17 +293,45 @@ func (d *draft) call(ctx context.Context, name string, in toolArgs) (any, error)
 			return nil, fmt.Errorf("account for every source event before finishing")
 		}
 		sources := map[string]bool{}
+		files := map[string]bool{}
+		for id := range d.fileSources {
+			files[id] = true
+		}
 		for id := range d.read {
 			sources[id] = true
 		}
 		pattern := regexp.MustCompile(`edc-event://([^\s)\]>]+)`)
 		for _, f := range d.run.Snapshot.Files {
+			for _, id := range notes.FileLinkIDs(f.Content) {
+				files[id] = true
+			}
 			for _, m := range pattern.FindAllStringSubmatch(f.Content, -1) {
 				sources[m[1]] = true
 			}
 		}
-		if err := notes.ValidateOrganizedTree(d.all(), d.run.Snapshot.Files, sources); err != nil {
+		if err := notes.ValidateOrganizedTree(d.all(), d.run.Snapshot.Files, sources, files); err != nil {
 			return nil, err
+		}
+		linked := map[string]bool{}
+		for _, f := range d.all() {
+			if strings.HasSuffix(f.Path, "/organization.md") {
+				continue
+			}
+			for _, id := range notes.FileLinkIDs(f.Content) {
+				linked[id] = true
+			}
+		}
+		for _, event := range d.run.Events {
+			if event.Kind != "file" {
+				continue
+			}
+			source, err := d.client.GetEvent(ctx, d.project, event.ID)
+			if err != nil {
+				return nil, err
+			}
+			if !linked[source.Content.FileID] {
+				return nil, fmt.Errorf("include attachment link for file Event %s", event.ID)
+			}
 		}
 		d.finished = true
 		return map[string]bool{"validated": true}, nil

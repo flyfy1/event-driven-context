@@ -3,6 +3,7 @@ package v2
 import (
 	"context"
 	"sort"
+	"strings"
 	"time"
 
 	"event-driven-context/internal/notes"
@@ -11,6 +12,7 @@ import (
 type noteLease struct {
 	ID, InstallationID, PromptVersion            string
 	ConfigRevision, BaseRevision, After, Through int64
+	BackfillThrough                              int64
 	Expires                                      time.Time
 	Events                                       []notes.EventPreview
 }
@@ -57,21 +59,52 @@ func (s *Service) BeginNotesOrganization(ctx context.Context, p PluginPrincipal,
 		return notes.OrganizationRun{}, err
 	}
 	out := notes.OrganizationRun{Timezone: timezone, AfterSequence: cp.AfterSequence, ThroughSequence: cp.AfterSequence, Snapshot: snapshot, Events: []notes.EventPreview{}}
+	backfillThrough := cp.AttachmentBackfillThroughSequence
+	if backfillThrough < 0 || backfillThrough > cp.AfterSequence {
+		return out, v2err("conflict", "invalid attachment backfill checkpoint")
+	}
+	preview := func(e Event, historical bool) notes.EventPreview {
+		text := e.Content.Text
+		if e.Content.Kind == "file" {
+			text = e.Content.Filename + " (" + e.Content.MediaType + ")"
+		}
+		chars := []rune(text)
+		if len(chars) > 240 {
+			chars = append(chars[:240], []rune(" …")...)
+		}
+		return notes.EventPreview{ID: e.ID, Sequence: e.Sequence, Type: e.Type, Kind: e.Content.Kind, RecordedAt: e.RecordedAt, Preview: string(chars), Backfill: historical}
+	}
+	// Reserve at most half the batch for historical attachment enrichment.
+	for _, e := range project.Events {
+		if e.Sequence <= backfillThrough {
+			continue
+		}
+		if e.Sequence > cp.AfterSequence {
+			break
+		}
+		backfillThrough = e.Sequence
+		if e.Content.Kind == "file" {
+			out.Events = append(out.Events, preview(e, true))
+			if len(out.Events) == 10 {
+				break
+			}
+		}
+	}
 	for _, e := range project.Events {
 		if e.Sequence <= cp.AfterSequence {
 			continue
 		}
-		text := []rune(e.Content.Text)
-		if len(text) > 240 {
-			text = append(text[:240], []rune(" …")...)
-		}
-		out.Events = append(out.Events, notes.EventPreview{ID: e.ID, Sequence: e.Sequence, Type: e.Type, Kind: e.Content.Kind, RecordedAt: e.RecordedAt, Preview: string(text)})
+		out.Events = append(out.Events, preview(e, false))
 		out.ThroughSequence = e.Sequence
 		if len(out.Events) == 20 {
 			break
 		}
 	}
-	if len(out.Events) == 0 && (snapshot.Revision == 0 || cp.PromptVersion == in.PromptVersion && cp.PolicyHash == notes.PolicyHash(snapshot.Files)) {
+	// Once history is caught up, new batches already account for their files.
+	if backfillThrough == cp.AfterSequence {
+		backfillThrough = out.ThroughSequence
+	}
+	if len(out.Events) == 0 && backfillThrough == cp.AttachmentBackfillThroughSequence && (snapshot.Revision == 0 || cp.PromptVersion == in.PromptVersion && cp.PolicyHash == notes.PolicyHash(snapshot.Files)) {
 		out.Noop = true
 		out.Reason = "up_to_date"
 		return out, nil
@@ -84,7 +117,7 @@ func (s *Service) BeginNotesOrganization(ctx context.Context, p PluginPrincipal,
 	if s.noteLeases == nil {
 		s.noteLeases = map[string]noteLease{}
 	}
-	s.noteLeases[p.ProjectID] = noteLease{ID: id, InstallationID: p.InstallationID, PromptVersion: in.PromptVersion, ConfigRevision: installation.ConfigRevision, BaseRevision: snapshot.Revision, After: out.AfterSequence, Through: out.ThroughSequence, Expires: time.Now().Add(12 * time.Minute), Events: out.Events}
+	s.noteLeases[p.ProjectID] = noteLease{ID: id, InstallationID: p.InstallationID, PromptVersion: in.PromptVersion, ConfigRevision: installation.ConfigRevision, BaseRevision: snapshot.Revision, After: out.AfterSequence, Through: out.ThroughSequence, BackfillThrough: backfillThrough, Expires: time.Now().Add(12 * time.Minute), Events: out.Events}
 	return out, nil
 }
 
@@ -151,13 +184,43 @@ func (s *Service) PublishNotesOrganization(ctx context.Context, p PluginPrincipa
 	}
 	sort.Slice(all, func(i, j int) bool { return all[i].Path < all[j].Path })
 	sources := map[string]bool{}
+	fileSources := map[string]bool{}
 	for _, e := range s.data.Projects[p.ProjectID].Events {
 		if e.Sequence <= lease.Through && contains(installation.Permissions.ReadEvents, e.Type) {
 			sources[e.ID] = true
+			if e.Content.Kind == "file" {
+				if _, ok := s.data.Projects[p.ProjectID].Files[e.Content.FileID]; ok {
+					fileSources[e.Content.FileID] = true
+				}
+			}
 		}
 	}
-	if err = notes.ValidateOrganizedTree(all, snapshot.Files, sources); err != nil {
+	if err = notes.ValidateOrganizedTree(all, snapshot.Files, sources, fileSources); err != nil {
 		return notes.PublishResult{}, v2err("invalid_input", "invalid notes: %s", err)
+	}
+	for _, event := range lease.Events {
+		if event.Kind != "file" {
+			continue
+		}
+		source, ok := eventByID(s.data.Projects[p.ProjectID], event.ID)
+		if !ok {
+			return notes.PublishResult{}, v2err("conflict", "attachment event missing")
+		}
+		linked := false
+		for _, f := range all {
+			if strings.HasSuffix(f.Path, "/organization.md") {
+				continue
+			}
+			for _, id := range notes.FileLinkIDs(f.Content) {
+				if id == source.Content.FileID {
+					linked = true
+					break
+				}
+			}
+		}
+		if !linked {
+			return notes.PublishResult{}, v2err("invalid_input", "include an attachment link for each file Event in the batch")
+		}
 	}
 	for _, f := range all {
 		if len(f.Content) > notes.MaxFileBytes {
@@ -168,7 +231,7 @@ func (s *Service) PublishNotesOrganization(ctx context.Context, p PluginPrincipa
 	for _, f := range all {
 		forHash = append(forHash, notes.File{Path: f.Path, Content: f.Content})
 	}
-	cp := notes.Checkpoint{AfterSequence: lease.Through, PromptVersion: lease.PromptVersion, PolicyHash: notes.PolicyHash(forHash), RunID: lease.ID}
+	cp := notes.Checkpoint{AfterSequence: lease.Through, AttachmentBackfillThroughSequence: lease.BackfillThrough, PromptVersion: lease.PromptVersion, PolicyHash: notes.PolicyHash(forHash), RunID: lease.ID}
 	written, err := store.Sync(notes.SyncInput{ExpectedRevision: &lease.BaseRevision, Files: all, Replace: true, Checkpoint: &cp}, "plugin:"+installation.PluginID)
 	if err != nil {
 		return notes.PublishResult{}, notesError(err)

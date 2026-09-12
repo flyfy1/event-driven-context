@@ -17,6 +17,7 @@ import (
 
 	"event-driven-context/internal/capture"
 	"event-driven-context/internal/core"
+	"event-driven-context/internal/localcollection"
 	"event-driven-context/internal/v2"
 	"event-driven-context/internal/v2client"
 	"github.com/google/uuid"
@@ -432,6 +433,7 @@ func (a *app) file(args []string) error {
 	f := a.flags("file get")
 	projectID := f.String("project", "", "project ID")
 	output := f.String("o", "-", "output path or -")
+	cache := f.String("cache", "", "collection directory for verified on-demand caching")
 	if err := f.Parse(args[1:]); err != nil {
 		return err
 	}
@@ -440,6 +442,24 @@ func (a *app) file(args []string) error {
 	}
 	if f.NArg() != 1 {
 		return fmt.Errorf("file get requires one FILE_ID")
+	}
+	if *cache != "" {
+		hasOutput := false
+		f.Visit(func(value *flag.Flag) {
+			if value.Name == "o" {
+				hasOutput = true
+			}
+		})
+		if hasOutput {
+			return fmt.Errorf("--cache and -o are mutually exclusive")
+		}
+		collection, err := localcollection.Open(*cache, a.client.BaseURL, *projectID)
+		if err != nil {
+			return err
+		}
+		defer collection.Close()
+		result, err := collection.GetFile(a.ctx, a.client, f.Arg(0))
+		return a.result(result, err)
 	}
 	if *output == "-" {
 		tmp, err := os.CreateTemp("", "edc-download-*")
