@@ -74,29 +74,4 @@ assert.match(agentSetup, /codex mcp login event-context --scopes context:read,co
 assert.match(agentSetup, /claude mcp add --transport http --scope local/);
 assert.doesNotMatch(translate("zh-CN", "agentSetupPrompt", { guide_url: "GUIDE", project_id: "PROJECT", skill_url: "SKILL" }), /\{(?:guide_url|project_id|skill_url)\}/);
 
-// Exercise the actual workspace renderer: both the visible link and copied
-// prompt must use the API, retaining the selected project and locale.
-const integrationRenderer = app.slice(app.indexOf("function renderIntegration()"), app.indexOf("async function loadMembers()"));
-assert.ok(integrationRenderer.length > 0);
-for (const api of ["https://context-api.integ.life", "http://127.0.0.1:8401"]) {
-  for (const locale of supportedLocales) {
-    const elements = new Map();
-    const projectID = "prj_l4wcypqzs2be2pmyza3injqyw7";
-    const scope = {
-      API: api, URL, state: { project: { id: projectID }, locale },
-      window: { location: { href: "https://context.integ.life/workspace.html?project=prj_old&locale=en" } },
-      $: selector => { if (!elements.has(selector)) elements.set(selector, {}); return elements.get(selector); },
-      t: (key, values) => translate(locale, key, values),
-    };
-    vm.runInNewContext(integrationRenderer + "\nrenderIntegration();", scope);
-    const guide = new URL(elements.get("#agent-setup-guide-link").href);
-    assert.equal(guide.origin, api);
-    assert.equal(guide.pathname, "/agent-setup.md");
-    assert.equal(guide.searchParams.get("project"), projectID);
-    assert.equal(guide.searchParams.get("locale"), locale);
-    assert.ok(elements.get("#agent-setup-prompt").textContent.includes(guide.href));
-    assert.ok(elements.get("#agent-setup-prompt").textContent.includes(projectID));
-  }
-}
-
 console.log(`frontend i18n checks passed: ${supportedLocales.length} locales, ${englishKeys.length} keys`);

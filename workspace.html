@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Append and query immutable context with your team." data-i18n-content="metaDescription" />
     <title>Context · Integ.Life</title>
-    <link rel="stylesheet" href="./styles.css?v=a51d655379b6" />
-    <link rel="stylesheet" href="./workspace-features.css?v=a51d655379b6" />
-    <link rel="stylesheet" href="./i18n.css?v=a51d655379b6" />
+    <link rel="stylesheet" href="./styles.css?v=c2066221cd53" />
+    <link rel="stylesheet" href="./workspace-features.css?v=c2066221cd53" />
+    <link rel="stylesheet" href="./i18n.css?v=c2066221cd53" />
   </head>
   <body>
     <header class="topbar">
@@ -85,7 +85,8 @@
                 <label id="file-input-label" class="hidden"><span data-i18n="file">File</span><input id="event-file" type="file" /></label>
                 <div id="audio-input-panel" class="audio-input-panel hidden">
                   <label><span data-i18n="recordOrChooseAudio">Record or choose audio</span><input id="audio-file" type="file" accept="audio/mp4,audio/wav,audio/mpeg,.m4a,.wav,.mp3" capture /></label>
-                  <p class="muted" data-i18n="audioLimitsV2">M4A, WAV, or MP3 · up to 50 MiB.</p>
+                  <p class="muted" data-i18n="audioLimitsV2">M4A, WAV, or MP3 · up to 25 MB.</p>
+                  <p class="muted" data-i18n="audioPrivacyV2">The original stays in Context. The audio is sent to OpenAI for transcription.</p>
                   <p id="audio-local-status" class="local-status" aria-live="polite" data-i18n="audioNotSelected">No audio selected on this device.</p>
                 </div>
                 <label><span data-i18n="metadataLabel">Metadata</span> <span class="label-note" data-i18n="metadataNote">JSON object, optional</span><textarea id="event-metadata" rows="3" spellcheck="false" placeholder='{"kind":"decision","topic":"launch"}'>{}</textarea></label>
@@ -176,9 +177,9 @@
       </section>
     </main>
     <template id="event-template"><article class="event"><div class="event-meta"><strong class="event-author"></strong><time class="event-time"></time><span class="event-kind"></span></div><p class="event-text"></p><a class="event-file hidden" target="_blank" rel="noopener" data-i18n="downloadOriginalFile">Download original file</a><pre class="event-json"></pre></article></template>
-    <script src="./i18n.js?v=a51d655379b6" defer></script>
-    <script src="./workspace-utils.js?v=a51d655379b6" defer></script>
-    <script src="./navigation.js?v=a51d655379b6" defer></script>
-    <script src="./app.js?v=a51d655379b6" defer></script>
+    <script src="./i18n.js?v=c2066221cd53" defer></script>
+    <script src="./workspace-utils.js?v=c2066221cd53" defer></script>
+    <script src="./navigation.js?v=c2066221cd53" defer></script>
+    <script src="./app.js?v=c2066221cd53" defer></script>
   </body>
 </html>
