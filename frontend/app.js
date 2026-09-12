@@ -6,6 +6,7 @@ const USER_KEY = sessionStorageKey("event-context.user", API);
 const LOCALE_KEY = "event-context.locale";
 const SHARED_LOCALE_COOKIE = "event_context_locale";
 const MAX_FILE_BYTES = 50 << 20;
+const MAX_AUDIO_BYTES = 25_000_000;
 const VIEWS = new Set(["records", "state", "integration", "plugins"]);
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -125,7 +126,8 @@ function apiError(payload, statusCode) {
     conflict: "conflict", invalid_input: "invalidInput", too_large: "fileTooLargeV2",
     invalid_ref: "invalidRef", unsupported_media_type: "unsupportedMediaType",
     state_version_mismatch: "stateVersionMismatch", forbidden_namespace: "forbiddenNamespace",
-    plugin_paused: "pluginPaused", rate_limited: "rateLimited"
+    plugin_paused: "pluginPaused", rate_limited: "rateLimited",
+    service_unavailable: "serviceUnavailable", processing_failed: "processingFailed"
   }[code];
   const error = new Error(key ? t(key) : (serviceMessage || t("requestFailed", { status: statusCode })));
   error.status = statusCode;
@@ -347,6 +349,12 @@ function eventNode(event, compact) {
     const file = document.createElement("button"); file.type = "button"; file.className = "quiet source-download";
     file.textContent = t("downloadFile", { filename: event.content.filename || event.content.file_id, mediaType: event.content.media_type || "" });
     file.addEventListener("click", () => downloadFile(event.content)); article.append(file);
+    if (!compact && ["audio/mp4", "audio/mpeg", "audio/wav"].includes(event.content.media_type)) {
+      const transcribe = document.createElement("button"); transcribe.type = "button"; transcribe.className = "quiet transcribe-audio";
+      transcribe.textContent = t("transcribeAudio");
+      transcribe.addEventListener("click", () => transcribeAudio(event.id, transcribe, "#events-message"));
+      article.append(transcribe);
+    }
   }
   if (event.refs && event.refs.length) {
     const refs = document.createElement("div"); refs.className = "reference-list";
@@ -520,6 +528,30 @@ async function uploadFile(file, projectID) {
   return uploaded;
 }
 
+async function transcribeAudio(sourceEventID, button, messageSelector) {
+  if (!state.project) return null;
+  const projectID = state.project.id, version = state.projectVersion;
+  if (button) setBusy(button, true, "transcribeAudio");
+  if (messageSelector) setMessage(messageSelector, t("audioTranscribing"));
+  try {
+    const result = await request(projectPath("/transcriptions"), { method: "POST", body: { source_event_id: sourceEventID } });
+    if (!activeProject(version, projectID)) return null;
+    const transcript = result && result.transcript_event;
+    if (!transcript) throw new Error(t("audioTranscriptionFailed"));
+    state.eventCache.set(transcript.id, transcript);
+    state.events = [transcript].concat(state.events.filter((item) => item.id !== transcript.id));
+    state.eventsStatus = "ready";
+    renderEvents();
+    if (messageSelector) setMessage(messageSelector, t("audioTranscriptionReady"), true);
+    return transcript;
+  } catch (error) {
+    if (activeProject(version, projectID) && messageSelector) setMessage(messageSelector, t("audioTranscriptionFailedWithReason", { error: error.message }));
+    return null;
+  } finally {
+    if (button && button.isConnected) setBusy(button, false, "transcribeAudio");
+  }
+}
+
 function resetRecordID() { state.pendingEventID = ""; }
 function recordBody(eventBase, metadataRaw, refs) {
   const event = Object.assign({}, eventBase, { refs });
@@ -548,6 +580,7 @@ async function submitRecord(form) {
       if (contentMode === "audio") {
         const mediaType = audioMediaType(file.name, file.type);
         if (!mediaType) throw new Error(t("invalidAudioType"));
+        if (file.size > MAX_AUDIO_BYTES) throw new Error(t("audioTooLargeV2"));
         if (file.type !== mediaType) file = new File([file], file.name, { type: mediaType, lastModified: file.lastModified });
         setAudioStatus("audioUploading");
       }
@@ -575,10 +608,20 @@ async function submitRecord(form) {
     state.eventsStatus = "ready";
     if (state.pendingEventID === eventID) {
       form.reset(); $("#event-metadata").value = "{}"; $("#event-refs").value = "[]"; state.pendingEventID = "";
-      setAudioStatus("audioNotSelected");
+      setAudioStatus(contentMode === "audio" ? "audioTranscribing" : "audioNotSelected");
     }
     setMessage("#record-message", t(outcome.status === "duplicate" ? "eventDuplicate" : "eventAppended") + " · " + outcome.id, true);
     renderEvents();
+    if (contentMode === "audio") {
+      const transcript = await transcribeAudio(savedEvent.id, null, "#record-message");
+      if (!activeProject(version, projectID)) return;
+      if (transcript) {
+        setAudioStatus("audioTranscriptionReady", {}, true);
+        await loadPlugins();
+      } else {
+        setAudioStatus("audioTranscriptionFailed");
+      }
+    }
     await Promise.allSettled([loadMetadata(), loadStates()]);
   } catch (error) {
     if (activeProject(version, projectID)) {

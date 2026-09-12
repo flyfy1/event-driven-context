@@ -117,6 +117,93 @@ func (s *Service) InstallPlugin(ctx context.Context, projectID string, in Instal
 	return InstallPluginResult{cloneInstallation(installation), token}, nil
 }
 
+// EnsureBuiltinPlugin authorizes an active server-managed plugin, installing it
+// on first use when the caller owns the project. Built-ins do not receive a
+// bearer token: only code running inside this server can obtain their principal.
+func (s *Service) EnsureBuiltinPlugin(ctx context.Context, projectID string, manifest Manifest, config json.RawMessage) (PluginPrincipal, Installation, error) {
+	if err := s.identity.RequireProjectMember(ctx, projectID); err != nil {
+		return PluginPrincipal{}, Installation{}, err
+	}
+	manifest, err := validateManifest(manifest)
+	if err != nil {
+		return PluginPrincipal{}, Installation{}, err
+	}
+	config, err = canonicalJSON(config)
+	if err != nil {
+		return PluginPrincipal{}, Installation{}, err
+	}
+	if len(config) == 0 {
+		config = manifest.Config
+	}
+	if len(config) == 0 {
+		config = json.RawMessage(`{}`)
+	}
+	if len(config) > MaxStateBytes {
+		return PluginPrincipal{}, Installation{}, v2err("too_large", "plugin config too large")
+	}
+
+	s.mu.Lock()
+	p := s.data.Projects[projectID]
+	if p != nil {
+		if current, ok := p.Installations[manifest.ID]; ok && current.Status != "removed" {
+			s.mu.Unlock()
+			if current.Status == "paused" {
+				return PluginPrincipal{}, Installation{}, v2err("plugin_paused", "plugin is paused")
+			}
+			if current.PluginVersion != manifest.Version || !jsonEqual(current.Manifest.Processor, manifest.Processor) {
+				return PluginPrincipal{}, Installation{}, v2err("conflict", "plugin id is already installed by a different processor")
+			}
+			current = cloneInstallation(current)
+			return PluginPrincipal{InstallationID: current.ID, ProjectID: projectID, PluginID: current.PluginID, Revision: current.ConfigRevision}, current, nil
+		}
+	}
+	s.mu.Unlock()
+
+	if err = s.identity.RequireProjectOwner(ctx, projectID); err != nil {
+		return PluginPrincipal{}, Installation{}, err
+	}
+	user, err := s.identity.Me(ctx)
+	if err != nil {
+		return PluginPrincipal{}, Installation{}, err
+	}
+	id, err := randomID("pin_")
+	if err != nil {
+		return PluginPrincipal{}, Installation{}, err
+	}
+	now := nowUTC()
+	installation := Installation{ID: id, ProjectID: projectID, PluginID: manifest.ID, PluginVersion: manifest.Version, Manifest: manifest, ManagerUserID: user.ID, Status: "active", ConfigRevision: 1, Config: config, ConfigRevisions: []PluginConfigRevision{{Revision: 1, Config: config, CreatedAt: now, CreatedByUserID: user.ID}}, Permissions: manifest.Permissions, CreatedAt: now, UpdatedAt: now}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p = s.projectLocked(projectID)
+	if current, ok := p.Installations[manifest.ID]; ok && current.Status != "removed" {
+		if current.Status == "paused" {
+			return PluginPrincipal{}, Installation{}, v2err("plugin_paused", "plugin is paused")
+		}
+		if current.PluginVersion != manifest.Version || !jsonEqual(current.Manifest.Processor, manifest.Processor) {
+			return PluginPrincipal{}, Installation{}, v2err("conflict", "plugin id is already installed by a different processor")
+		}
+		current = cloneInstallation(current)
+		return PluginPrincipal{InstallationID: current.ID, ProjectID: projectID, PluginID: current.PluginID, Revision: current.ConfigRevision}, current, nil
+	}
+	candidate, err := cloneSnapshot(s.data)
+	if err != nil {
+		return PluginPrincipal{}, Installation{}, err
+	}
+	cp := candidate.Projects[projectID]
+	if cp == nil {
+		cp = &projectData{}
+		normalizeProjectData(cp)
+		candidate.Projects[projectID] = cp
+	}
+	cp.Installations[manifest.ID] = cloneInstallation(installation)
+	if err = s.persistSnapshotLocked(candidate); err != nil {
+		return PluginPrincipal{}, Installation{}, err
+	}
+	s.data = candidate
+	return PluginPrincipal{InstallationID: installation.ID, ProjectID: projectID, PluginID: installation.PluginID, Revision: installation.ConfigRevision}, cloneInstallation(installation), nil
+}
+
 func (s *Service) ListPlugins(ctx context.Context, projectID string) ([]Installation, error) {
 	if err := s.identity.RequireProjectMember(ctx, projectID); err != nil {
 		return nil, err

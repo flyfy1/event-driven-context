@@ -17,6 +17,7 @@ import (
 
 	"event-driven-context/internal/api"
 	"event-driven-context/internal/core"
+	"event-driven-context/internal/transcription"
 	"event-driven-context/internal/v2"
 )
 
@@ -110,7 +111,14 @@ func run() (runErr error) {
 	if configuredFields != 0 && configuredFields != 5 {
 		return fmt.Errorf("EDC Integ.Auth configuration must set issuer, client ID, client secret, redirect URI, and web base URL together")
 	}
-	httpServer := &http.Server{Addr: *addr, Handler: api.V2HandlerWithConfig(store, service, api.Config{AllowedOrigins: allowed, PublicBaseURL: *publicBaseURL, IntegAuth: integAuth, AdminUsers: adminUsers}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 3 * time.Minute, WriteTimeout: 3 * time.Minute, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	var audioTranscriber transcription.Transcriber
+	if apiKey := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); apiKey != "" {
+		audioTranscriber, err = transcription.NewClient(apiKey, strings.TrimSpace(os.Getenv("OPENAI_BASE_URL")), strings.TrimSpace(os.Getenv("OPENAI_TRANSCRIBE_MODEL")), 2*time.Minute)
+		if err != nil {
+			return fmt.Errorf("configure OpenAI transcription: %w", err)
+		}
+	}
+	httpServer := &http.Server{Addr: *addr, Handler: api.V2HandlerWithConfig(store, service, api.Config{AllowedOrigins: allowed, PublicBaseURL: *publicBaseURL, IntegAuth: integAuth, AdminUsers: adminUsers, AudioTranscriber: audioTranscriber}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 3 * time.Minute, WriteTimeout: 3 * time.Minute, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {
 		return err

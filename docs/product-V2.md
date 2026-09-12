@@ -214,7 +214,7 @@ Claude Code 的默认映射如下，具体字段以客户端当前 hook 文档�
 
 | 插件 | 提供什么 | 组成 | 处理器运行位置 |
 |---|---|---|---|
-| `audio-transcribe` 音频转录 | 逐字转录，标记听不清的段落 | 处理器 + `derived` 事件 | processor host |
+| `audio-transcribe` 音频转录 | 逐字转录，标记听不清的段落 | 处理器 + `derived` 事件 | 网页默认 server-managed OpenAI；自部署可用 processor host |
 | `project-brief` 项目概况 | 目标、当前决定、约束、待办、未解决问题，每条带来源 | State + 使用 skill + 更新处理器 | agent 或 processor host |
 | `daily-review` 每日回顾 | 当天的进展、决定、待办、问题，每条带来源 | 定时处理器 + 按日期发布的 State | processor host |
 | `evidence` 证据检索 | 针对一个问题，返回相关记录片段、出处、冲突和缺口 | skill（agent 按说明调用查询接口） | 调用方 agent |

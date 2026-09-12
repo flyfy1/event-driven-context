@@ -126,7 +126,7 @@ Android 在录制开始时生成稳定 capture UUID，并把账户、项目、�
 
 ### 插件处理
 
-Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉取输入。当前转录输出 UUID 由项目、插件、输入 Event 和输出槽位稳定决定；发布 State 时带 expected_version。输出成功后更新游标，失败不跳过输入。历史重转录的新 generation 尚未实现。
+Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉取输入。网页的 OpenAI 转写由 server-managed `audio-transcribe` 同步处理：原录音 Event 已保存后才发起，结果 UUID 由项目与输入 Event 稳定决定，并写成引用原录音的 derived Event；重试会返回已有结果。转写失败不删除原录音。自部署仍可选择本地 processor host；发布 State 时带 expected_version，输出成功后才更新游标。历史重转录的新 generation 尚未实现。
 
 Agent 或处理器整理团队记录时以 `actor` 判断写入者，以 refs 保留原 Event。`source.channel` 只说明进入渠道；导入旧会话时，执行导入的账号仍是 actor，原会话角色应留在 source 或 metadata，不能冒充为经过认证的成员发言。概况、冲突和回顾若需要区分成员说法，应显示成员 username 并允许打开原 Event。
 

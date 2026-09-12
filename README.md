@@ -56,6 +56,8 @@ make build
 
 `GET /healthz` 用于存活检查。`SIGINT` / `SIGTERM` 会停止接收请求并等待在途请求结束。
 
+网页的 Audio 模式会先把原始录音作为不可修改的 File Event 保存，再调用内置 `audio-transcribe` 插件生成带 `derived_from` 引用的文字 Event。服务端设置 `OPENAI_API_KEY` 后启用此能力；默认模型为 `gpt-transcribe`，可用 `OPENAI_TRANSCRIBE_MODEL` 修改，并可用 `OPENAI_BASE_URL` 指定兼容端点。M4A、MP3、WAV 的转写上限为 25 MB。原始录音保存在 Context 的 `-data` 目录，转写请求会把音频发送给 OpenAI；密钥只应存在于服务端环境中。
+
 ### 部署到自己的平台
 
 自行部署不依赖 `integ.life` 域名或维护者的生产主机。在目标环境构建并运行 `edc-server`，使用 `-db` 和 `-data` 指定自己管理的持久化位置；CLI 通过 `--server` 或 `EDC_SERVER` 连接自己的实例。当前采用单服务进程写入，不应让多个服务进程同时写入同一数据目录。
