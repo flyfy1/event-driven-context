@@ -279,7 +279,7 @@ func v2TranscriptionEndpoint(service v2.ServiceAPI, transcriber transcription.Tr
 			return v2TranscriptionResult{}, &v2.Error{Code: "unsupported_media_type", Message: "source event must contain M4A, MP3, or WAV audio"}
 		}
 		if source.Content.SizeBytes > transcription.MaxAudioBytes {
-			return v2TranscriptionResult{}, &v2.Error{Code: "too_large", Message: "OpenAI transcription accepts audio up to 25 MiB"}
+			return v2TranscriptionResult{}, &v2.Error{Code: "too_large", Message: "OpenAI transcription accepts audio up to 25 MB"}
 		}
 		if existing, ok := existingTranscript(ctx, service, projectID, sourceID); ok {
 			return v2TranscriptionResult{Status: "ready", SourceEventID: sourceID, TranscriptEvent: existing}, nil
