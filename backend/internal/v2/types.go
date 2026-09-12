@@ -257,6 +257,7 @@ type ManualRunRequest struct {
 // ServiceAPI is the adapter-facing contract. Plugin calls deliberately accept
 // an authenticated principal rather than a caller-selected plugin id.
 type ServiceAPI interface {
+	AdminProjectStats([]string) []AdminProjectStats
 	RecordEvents(context.Context, string, RecordEventsInput) (RecordEventsResult, error)
 	QueryEvents(context.Context, string, QueryEventsInput) (EventsPage, error)
 	GetEvent(context.Context, string, string) (Event, error)

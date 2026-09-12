@@ -101,6 +101,66 @@ func decodeV2Response[T any](t *testing.T, w *httptest.ResponseRecorder) T {
 	return out
 }
 
+func (f *v2APIFixture) adminRequest(t *testing.T, method, path, sessionToken string, body io.Reader) *httptest.ResponseRecorder {
+	t.Helper()
+	r := httptest.NewRequest(method, path, body)
+	if sessionToken != "" {
+		r.AddCookie(&http.Cookie{Name: localSessionCookieName, Value: sessionToken, Path: "/"})
+	}
+	if body != nil {
+		r.Header.Set("Content-Type", "application/json")
+	}
+	w := httptest.NewRecorder()
+	f.handler.ServeHTTP(w, r)
+	return w
+}
+
+func TestV2AdminOverviewAndMembershipBoundary(t *testing.T) {
+	f := newV2APIFixture(t)
+	f.handler = V2HandlerWithConfig(f.store, f.service, Config{PublicBaseURL: v2TestIssuer, AdminUsers: []string{f.alice.Username}})
+
+	// A bearer token for the same user is intentionally insufficient: admin
+	// privileges belong only to the first-party browser session cookie.
+	w := f.request(t, http.MethodGet, "/v1/admin/overview", f.token, "", nil)
+	if w.Code != http.StatusUnauthorized || w.Header().Get("WWW-Authenticate") != "Cookie" {
+		t.Fatalf("bearer admin boundary: %d %s", w.Code, w.Body.String())
+	}
+	w = f.adminRequest(t, http.MethodGet, "/v1/admin/overview", f.bobToken, nil)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("non-admin cookie: %d %s", w.Code, w.Body.String())
+	}
+
+	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.bob.ID, f.token, v2JSONBody(t, map[string]string{"access": "member"}))
+	if w.Code != http.StatusOK {
+		t.Fatalf("admin grant: %d %s", w.Code, w.Body.String())
+	}
+	w = f.adminRequest(t, http.MethodGet, "/v1/admin/overview", f.token, nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("admin overview: %d %s", w.Code, w.Body.String())
+	}
+	overview := decodeV2Response[adminOverview](t, w)
+	if overview.Totals.Users != 2 || overview.Totals.Projects != 1 || overview.Totals.SharedMemberships != 1 || len(overview.Projects) != 1 || len(overview.Projects[0].Members) != 2 {
+		t.Fatalf("overview = %#v", overview)
+	}
+
+	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.alice.ID, f.token, v2JSONBody(t, map[string]string{"access": "none"}))
+	if w.Code != http.StatusConflict {
+		t.Fatalf("owner removal: %d %s", w.Code, w.Body.String())
+	}
+	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.bob.ID, f.token, v2JSONBody(t, map[string]string{"access": "owner"}))
+	if w.Code != http.StatusOK {
+		t.Fatalf("admin promote: %d %s", w.Code, w.Body.String())
+	}
+	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.bob.ID, f.token, v2JSONBody(t, map[string]string{"access": "member"}))
+	if w.Code != http.StatusOK {
+		t.Fatalf("admin demote: %d %s", w.Code, w.Body.String())
+	}
+	w = f.adminRequest(t, http.MethodPatch, "/v1/admin/projects/"+f.project.ID+"/members/"+f.bob.ID, f.token, v2JSONBody(t, map[string]string{"access": "none"}))
+	if w.Code != http.StatusOK {
+		t.Fatalf("admin removal: %d %s", w.Code, w.Body.String())
+	}
+}
+
 func TestV2HTTPAddsMemberByExactEmail(t *testing.T) {
 	f := newV2APIFixture(t)
 	carol, err := f.store.Register(context.Background(), core.Credentials{Username: "carol-v2", Email: "carol-v2@example.invalid", Password: "password-123"})

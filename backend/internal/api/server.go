@@ -31,6 +31,7 @@ type Config struct {
 	OAuthAccessTokenTTL time.Duration
 	Automation          *automation.Coordinator
 	IntegAuth           IntegAuthConfig
+	AdminUsers          []string
 }
 
 func HandlerWithConfig(store *core.Store, config Config) http.Handler {
