@@ -66,11 +66,13 @@ type Empty struct{}
 type ProjectInput struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
+	Timezone    string `json:"timezone,omitempty"`
 }
 type Project struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	Timezone    string `json:"timezone"`
 	OwnerUserID string `json:"owner_user_id"`
 	CreatedAt   string `json:"created_at"`
 }

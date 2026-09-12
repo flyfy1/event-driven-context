@@ -121,13 +121,21 @@ func (s *Service) ListPlugins(ctx context.Context, projectID string) ([]Installa
 	if err := s.identity.RequireProjectMember(ctx, projectID); err != nil {
 		return nil, err
 	}
+	timezone, err := s.identity.ProjectTimezone(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p := s.data.Projects[projectID]
 	if p == nil {
 		return []Installation{}, nil
 	}
-	return sortedInstallations(p), nil
+	installations := sortedInstallations(p)
+	for i := range installations {
+		installations[i].ProjectTimezone = timezone
+	}
+	return installations, nil
 }
 
 func (s *Service) managedPlugin(ctx context.Context, projectID, pluginID string) (Installation, error) {
@@ -272,12 +280,18 @@ func (s *Service) AuthenticatePlugin(token string) (PluginPrincipal, error) {
 // current configuration without granting visibility into other installations.
 func (s *Service) GetPluginAsPlugin(ctx context.Context, principal PluginPrincipal) (Installation, error) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	in, err := s.authorizePluginLocked(principal)
+	s.mu.Unlock()
 	if err != nil {
 		return Installation{}, err
 	}
-	return cloneInstallation(in), nil
+	timezone, err := s.identity.ProjectTimezone(ctx, principal.ProjectID)
+	if err != nil {
+		return Installation{}, err
+	}
+	in = cloneInstallation(in)
+	in.ProjectTimezone = timezone
+	return in, nil
 }
 
 func (s *Service) authorizePluginLocked(principal PluginPrincipal) (Installation, error) {

@@ -7,6 +7,7 @@ const LOCALE_KEY = "event-context.locale";
 const SHARED_LOCALE_COOKIE = "event_context_locale";
 const MAX_FILE_BYTES = 50 << 20;
 const VIEWS = new Set(["records", "state", "integration", "plugins"]);
+const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const $ = (selector, root = document) => root.querySelector(selector);
 
 function storedUser() {
@@ -54,6 +55,19 @@ function formatDate(value) {
 }
 function formatNumber(value) {
   try { return new Intl.NumberFormat(state.locale).format(value); } catch { return String(value); }
+}
+function formatReviewDate(value) {
+  try { return new Intl.DateTimeFormat(state.locale, { dateStyle: "long", timeZone: "UTC" }).format(new Date(value + "T12:00:00Z")); }
+  catch { return value; }
+}
+function populateTimezones(select, selected) {
+  const available = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [];
+  const zones = Array.from(new Set([selected || BROWSER_TIMEZONE, BROWSER_TIMEZONE, "UTC"].concat(available))).filter(Boolean).sort();
+  select.replaceChildren();
+  for (const zone of zones) {
+    const option = document.createElement("option"); option.value = zone; option.textContent = zone; select.append(option);
+  }
+  select.value = selected || BROWSER_TIMEZONE;
 }
 function setMessage(selector, text, success) {
   const element = $(selector);
@@ -245,6 +259,11 @@ function renderProject() {
   $("#project-title").textContent = state.project.name;
   $("#project-description-display").textContent = state.project.description || t("noProjectDescription");
   $("#project-owner").textContent = t("owner", { id: state.project.owner_user_id });
+  $("#project-timezone-display").textContent = state.project.timezone || "UTC";
+  populateTimezones($("#project-timezone-select"), state.project.timezone || "UTC");
+  $("#project-timezone-form").classList.add("hidden");
+  $("#edit-project-timezone").classList.remove("hidden");
+  setMessage("#project-timezone-message");
 }
 
 async function loadEvents(options) {
@@ -384,12 +403,18 @@ function stateNode(item, latestVersion) {
   const newestVersion = latestVersion || item.version;
   const article = document.createElement("article"); article.className = "state-card";
   const heading = document.createElement("div"); heading.className = "card-title";
-  const title = document.createElement("h4"); title.textContent = item.key;
+  const dailyDate = item.key && item.key.startsWith("daily-review/") ? item.key.slice("daily-review/".length) : "";
+  const isDailyReview = /^\d{4}-\d{2}-\d{2}$/.test(dailyDate);
+  const title = document.createElement("h4"); title.textContent = isDailyReview ? t("dailyReviewDate", { date: formatReviewDate(dailyDate) }) : item.key;
   const badges = document.createElement("div"); badges.className = "state-badges";
   for (const label of [t("versionLabel", { version: item.version }), item.lag ? t("laggingLabel", { count: item.lag }) : t("upToDate")]) {
     const badge = document.createElement("span"); badge.textContent = label; badges.append(badge);
   }
   heading.append(title, badges); article.append(heading);
+  if (isDailyReview) {
+    article.classList.add("daily-review-state");
+    const key = document.createElement("p"); key.className = "muted state-key"; key.textContent = item.key; article.append(key);
+  }
   const producer = document.createElement("p"); producer.className = "muted";
   producer.textContent = t("stateProducer", { plugin: item.producer && item.producer.plugin_id || "?", version: item.producer && item.producer.plugin_version || "?", date: formatDate(item.updated_at) });
   article.append(producer);
@@ -659,8 +684,8 @@ $("#project-form").addEventListener("submit", async (event) => {
   const form = event.currentTarget, button = form.querySelector("button[type=submit]");
   setBusy(button, true, "create");
   try {
-    const project = await request("/v1/projects", { method: "POST", body: { name: $("#project-name").value.trim(), description: $("#project-description-input").value.trim() } });
-    form.reset(); showProjectForm(false); await loadProjects(project.id);
+    const project = await request("/v1/projects", { method: "POST", body: { name: $("#project-name").value.trim(), description: $("#project-description-input").value.trim(), timezone: $("#project-timezone").value } });
+    form.reset(); populateTimezones($("#project-timezone"), BROWSER_TIMEZONE); showProjectForm(false); await loadProjects(project.id);
   } catch (error) { setMessage("#auth-message", error.message); }
   finally { setBusy(button, false, "create"); }
 });
@@ -691,6 +716,32 @@ $("#load-more").addEventListener("click", () => loadEvents({ more: true }));
 $("#metadata-refresh").addEventListener("click", loadMetadata);
 $("#state-refresh").addEventListener("click", loadStates);
 $("#plugins-refresh").addEventListener("click", loadPlugins);
+$("#edit-project-timezone").addEventListener("click", () => {
+  populateTimezones($("#project-timezone-select"), state.project && state.project.timezone || "UTC");
+  setMessage("#project-timezone-message");
+  $("#project-timezone-form").classList.remove("hidden");
+  $("#edit-project-timezone").classList.add("hidden");
+  $("#project-timezone-select").focus();
+});
+$("#cancel-project-timezone").addEventListener("click", () => {
+  $("#project-timezone-form").classList.add("hidden");
+  $("#edit-project-timezone").classList.remove("hidden");
+  setMessage("#project-timezone-message");
+});
+$("#project-timezone-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!state.project) return;
+  const form = event.currentTarget, button = form.querySelector("button[type=submit]"), projectID = state.project.id, version = state.projectVersion;
+  setBusy(button, true, "saveTimezone"); setMessage("#project-timezone-message");
+  try {
+    const updated = await request(projectPath(""), { method: "PATCH", body: { timezone: $("#project-timezone-select").value } });
+    if (!activeProject(version, projectID)) return;
+    state.project = updated;
+    state.projects = state.projects.map((project) => project.id === updated.id ? updated : project);
+    renderProjects(); renderProject(); setMessage("#project-timezone-message", t("timezoneSaved"), true);
+  } catch (error) { setMessage("#project-timezone-message", error.message); }
+  finally { setBusy(button, false, "saveTimezone"); }
+});
 $("#plugin-install-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget, button = $("#plugin-install-submit");
@@ -721,6 +772,7 @@ $("#refresh-button").addEventListener("click", () => loadProjects(state.project 
 $("#project-unavailable-retry").addEventListener("click", () => loadProjects());
 
 async function boot() {
+  populateTimezones($("#project-timezone"), BROWSER_TIMEZONE);
   setLocale(state.locale, false); setView(state.view); setContentMode(); renderAudioStatus();
   if (!state.token) return;
   const epoch = state.sessionEpoch, token = state.token;

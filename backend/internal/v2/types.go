@@ -203,6 +203,7 @@ type StateDeclaration struct {
 type Installation struct {
 	ID              string                 `json:"id"`
 	ProjectID       string                 `json:"project_id"`
+	ProjectTimezone string                 `json:"project_timezone,omitempty"`
 	PluginID        string                 `json:"plugin_id"`
 	PluginVersion   string                 `json:"plugin_version"`
 	Manifest        Manifest               `json:"manifest"`

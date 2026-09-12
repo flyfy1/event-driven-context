@@ -51,6 +51,11 @@ func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.Servic
 		v2RespondResult(w, http.StatusOK, out, err)
 	})))
 	mux.Handle("POST /v1/projects", writeUser(jsonEndpointV2(http.StatusCreated, store.CreateProject)))
+	mux.Handle("PATCH /v1/projects/{project_id}", writeUser(jsonEndpointV2(http.StatusOK, func(ctx context.Context, in struct {
+		Timezone string `json:"timezone"`
+	}) (core.Project, error) {
+		return store.UpdateProjectTimezone(ctx, v2ProjectID(ctx), in.Timezone)
+	})))
 	mux.Handle("GET /v1/projects/{project_id}/members", readUser(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		out, err := store.ListMembers(r.Context(), core.ProjectRef{ProjectID: r.PathValue("project_id")})
 		v2RespondResult(w, http.StatusOK, out, err)

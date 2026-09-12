@@ -151,6 +151,26 @@ func TestReturnedValuesCannotMutateStoredDataOrPermissions(t *testing.T) {
 	}
 }
 
+func TestPluginInstallationReadsCurrentProjectTimezone(t *testing.T) {
+	f := newFixture(t)
+	installed, principal := install(t, f)
+	listed, err := f.service.ListPlugins(f.aliceCtx, f.project.ID)
+	if err != nil || len(listed) != 1 || listed[0].ProjectTimezone != "UTC" {
+		t.Fatalf("initial plugin timezone=%#v err=%v", listed, err)
+	}
+	if _, err = f.identity.UpdateProjectTimezone(f.aliceCtx, f.project.ID, "Asia/Singapore"); err != nil {
+		t.Fatal(err)
+	}
+	listed, err = f.service.ListPlugins(f.aliceCtx, f.project.ID)
+	if err != nil || listed[0].ProjectTimezone != "Asia/Singapore" {
+		t.Fatalf("updated list timezone=%#v err=%v", listed, err)
+	}
+	self, err := f.service.GetPluginAsPlugin(context.Background(), principal)
+	if err != nil || self.ID != installed.Installation.ID || self.ProjectTimezone != "Asia/Singapore" {
+		t.Fatalf("plugin self timezone=%#v err=%v", self, err)
+	}
+}
+
 func TestFileReadsAndDedupeFailClosedAfterBlobCorruption(t *testing.T) {
 	f := newFixture(t)
 	original := []byte("original")

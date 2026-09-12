@@ -54,6 +54,7 @@
           <form id="project-form" class="form-card compact hidden" novalidate>
             <label><span data-i18n="projectName">Project name</span><input id="project-name" required maxlength="200" placeholder="For example: Product research" data-i18n-placeholder="projectNamePlaceholder" /></label>
             <label><span data-i18n="description">Description</span><textarea id="project-description-input" maxlength="4000" rows="2" placeholder="Optional" data-i18n-placeholder="descriptionPlaceholder"></textarea></label>
+            <label><span data-i18n="projectTimezone">Project time zone</span><select id="project-timezone" required></select></label>
             <div class="actions"><button type="button" id="cancel-project" data-i18n="cancel">Cancel</button><button class="primary" type="submit" data-i18n="create">Create</button></div>
           </form>
         </aside>
@@ -69,7 +70,7 @@
         </div>
 
         <section id="project-view" class="project-view hidden">
-          <div class="project-heading"><div><p id="project-owner" class="eyebrow"></p><h2 id="project-title"></h2><p id="project-description-display" class="muted"></p></div><button id="refresh-button" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
+          <div class="project-heading"><div><p id="project-owner" class="eyebrow"></p><h2 id="project-title"></h2><p id="project-description-display" class="muted"></p><div class="project-timezone"><span data-i18n="projectTimezone">Project time zone</span><strong id="project-timezone-display"></strong><button id="edit-project-timezone" class="quiet" type="button" data-i18n="changeTimezone">Change</button></div><form id="project-timezone-form" class="project-timezone-form hidden"><label><span data-i18n="projectTimezone">Project time zone</span><select id="project-timezone-select" required></select></label><div class="actions"><button id="cancel-project-timezone" class="quiet" type="button" data-i18n="cancel">Cancel</button><button class="primary" type="submit" data-i18n="saveTimezone">Save time zone</button></div></form><p id="project-timezone-message" class="message" aria-live="polite"></p></div><button id="refresh-button" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
           <nav class="workspace-nav" aria-label="Project sections" data-i18n-aria-label="projectSections">
             <button class="selected" type="button" data-workspace-view="records" aria-controls="records-panel" aria-selected="true" data-i18n="recordsTab">Records</button>
             <button type="button" data-workspace-view="state" aria-controls="state-panel" aria-selected="false" data-i18n="stateTab">State</button>

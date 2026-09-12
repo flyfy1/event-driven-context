@@ -85,6 +85,10 @@ func Open(path string, dataPaths ...string) (*Store, error) {
 		db.Close()
 		return nil, err
 	}
+	if err = ensureProjectTimezoneColumn(db); err != nil {
+		db.Close()
+		return nil, err
+	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(rand.Text()), bcrypt.DefaultCost)
 	if err != nil {
 		db.Close()
@@ -110,6 +114,52 @@ func normalizedTime(v string) (string, error) {
 		return "", Invalid("time must be RFC3339 with timezone")
 	}
 	return t.UTC().Format(timeFormat), nil
+}
+
+func ensureProjectTimezoneColumn(db *sql.DB) error {
+	rows, err := db.Query("PRAGMA table_info(projects)")
+	if err != nil {
+		return err
+	}
+	found := false
+	for rows.Next() {
+		var cid, notNull, primaryKey int
+		var name, columnType string
+		var defaultValue sql.NullString
+		if err = rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
+			_ = rows.Close()
+			return err
+		}
+		if name == "timezone" {
+			found = true
+		}
+	}
+	if err = rows.Err(); err != nil {
+		_ = rows.Close()
+		return err
+	}
+	if err = rows.Close(); err != nil {
+		return err
+	}
+	if found {
+		return nil
+	}
+	_, err = db.Exec("ALTER TABLE projects ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'")
+	return err
+}
+
+func normalizeProjectTimezone(value string, defaultUTC bool) (string, error) {
+	value = strings.TrimSpace(value)
+	if value == "" && defaultUTC {
+		return "UTC", nil
+	}
+	if value == "" || value == "Local" || len(value) > 255 || !utf8.ValidString(value) {
+		return "", Invalid("timezone must be a valid IANA timezone")
+	}
+	if _, err := time.LoadLocation(value); err != nil {
+		return "", Invalid("timezone must be a valid IANA timezone")
+	}
+	return value, nil
 }
 
 var usernamePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9_.-]{2,63}$`)
@@ -230,13 +280,17 @@ func (s *Store) CreateProject(ctx context.Context, in ProjectInput) (Project, er
 	if in.Name == "" || len(in.Name) > 200 || len(in.Description) > 4000 {
 		return Project{}, Invalid("name required (max 200 bytes); description max 4000 bytes")
 	}
-	p := Project{newID("prj"), in.Name, in.Description, UserID(ctx), now()}
+	timezone, err := normalizeProjectTimezone(in.Timezone, true)
+	if err != nil {
+		return Project{}, err
+	}
+	p := Project{ID: newID("prj"), Name: in.Name, Description: in.Description, Timezone: timezone, OwnerUserID: UserID(ctx), CreatedAt: now()}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return Project{}, err
 	}
 	defer tx.Rollback()
-	if _, err = tx.ExecContext(ctx, "INSERT INTO projects VALUES(?,?,?,?,?)", p.ID, p.Name, p.Description, p.OwnerUserID, p.CreatedAt); err != nil {
+	if _, err = tx.ExecContext(ctx, "INSERT INTO projects(id,name,description,timezone,owner_user_id,created_at) VALUES(?,?,?,?,?,?)", p.ID, p.Name, p.Description, p.Timezone, p.OwnerUserID, p.CreatedAt); err != nil {
 		return Project{}, err
 	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO members VALUES(?,?)", p.ID, p.OwnerUserID); err != nil {
@@ -249,19 +303,61 @@ func (s *Store) ListProjects(ctx context.Context, _ Empty) (Projects, error) {
 	if UserID(ctx) == "" {
 		return out, ErrUnauthenticated
 	}
-	rows, err := s.db.QueryContext(ctx, "SELECT p.id,p.name,p.description,p.owner_user_id,p.created_at FROM projects p JOIN members m ON m.project_id=p.id WHERE m.user_id=? ORDER BY p.created_at,p.id", UserID(ctx))
+	rows, err := s.db.QueryContext(ctx, "SELECT p.id,p.name,p.description,p.timezone,p.owner_user_id,p.created_at FROM projects p JOIN members m ON m.project_id=p.id WHERE m.user_id=? ORDER BY p.created_at,p.id", UserID(ctx))
 	if err != nil {
 		return out, err
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var p Project
-		if err = rows.Scan(&p.ID, &p.Name, &p.Description, &p.OwnerUserID, &p.CreatedAt); err != nil {
+		if err = rows.Scan(&p.ID, &p.Name, &p.Description, &p.Timezone, &p.OwnerUserID, &p.CreatedAt); err != nil {
 			return out, err
 		}
 		out.Projects = append(out.Projects, p)
 	}
 	return out, rows.Err()
+}
+
+func (s *Store) UpdateProjectTimezone(ctx context.Context, projectID, timezone string) (Project, error) {
+	if err := s.RequireProjectOwner(ctx, projectID); err != nil {
+		return Project{}, err
+	}
+	timezone, err := normalizeProjectTimezone(timezone, false)
+	if err != nil {
+		return Project{}, err
+	}
+	if _, err = s.db.ExecContext(ctx, "UPDATE projects SET timezone=? WHERE id=?", timezone, projectID); err != nil {
+		return Project{}, err
+	}
+	return s.projectByID(ctx, projectID)
+}
+
+func (s *Store) projectByID(ctx context.Context, projectID string) (Project, error) {
+	var project Project
+	err := s.db.QueryRowContext(ctx, "SELECT id,name,description,timezone,owner_user_id,created_at FROM projects WHERE id=?", projectID).Scan(
+		&project.ID, &project.Name, &project.Description, &project.Timezone, &project.OwnerUserID, &project.CreatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return Project{}, ErrNotFound
+	}
+	return project, err
+}
+
+// ProjectTimezone is for project-scoped services that have already authorized
+// their caller and need the current scheduling timezone from the identity store.
+func (s *Store) ProjectTimezone(ctx context.Context, projectID string) (string, error) {
+	var timezone string
+	err := s.db.QueryRowContext(ctx, "SELECT timezone FROM projects WHERE id=?", projectID).Scan(&timezone)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	if err != nil {
+		return "", err
+	}
+	if timezone == "" {
+		return "UTC", nil
+	}
+	return timezone, nil
 }
 func (s *Store) AddMember(ctx context.Context, in MemberInput) (User, error) {
 	if err := s.requireMember(ctx, in.ProjectID); err != nil {

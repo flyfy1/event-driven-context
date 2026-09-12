@@ -739,6 +739,7 @@
   });
 
   Object.assign(translations.en, {
+    projectTimezone: "Project time zone", changeTimezone: "Change", saveTimezone: "Save time zone", timezoneSaved: "Project time zone saved.", dailyReviewDate: "Daily review · {date}",
     projectSections: "Project sections", recordsTab: "Records", stateTab: "State", integrationTab: "Connect", pluginsTab: "Plugins",
     recordsEyebrow: "PROJECT RECORDS", recordsTitle: "Original records", recordsHint: "Append a note or log, then inspect immutable events, files, sources and references.",
     eventType: "Record type", noteType: "Note", logType: "Log", derivedType: "Derived", allTypes: "All types",
@@ -764,6 +765,7 @@
     pluginPausedSuccess: "Plugin paused.", pluginResumedSuccess: "Plugin resumed.", pluginUninstalled: "Plugin uninstalled.", pluginInstalled: "Plugin installed. Copy its token now."
   });
   Object.assign(translations["zh-CN"], {
+    projectTimezone: "项目时区", changeTimezone: "修改", saveTimezone: "保存时区", timezoneSaved: "项目时区已保存。", dailyReviewDate: "每日回顾 · {date}",
     projectSections: "项目分区", recordsTab: "记录", stateTab: "项目状态", integrationTab: "接入", pluginsTab: "插件",
     recordsEyebrow: "项目记录", recordsTitle: "原始记录", recordsHint: "追加 note 或 log，并查看不可修改的事件、文件、来源和引用。",
     eventType: "记录类型", noteType: "主动记录", logType: "自动日志", derivedType: "插件产出", allTypes: "全部类型",
@@ -789,6 +791,7 @@
     pluginPausedSuccess: "插件已暂停。", pluginResumedSuccess: "插件已恢复。", pluginUninstalled: "插件已卸载。", pluginInstalled: "插件已安装，请立即复制 token。"
   });
   Object.assign(translations.ms, {
+    projectTimezone: "Zon waktu projek", changeTimezone: "Ubah", saveTimezone: "Simpan zon waktu", timezoneSaved: "Zon waktu projek disimpan.", dailyReviewDate: "Ulasan harian · {date}",
     projectSections: "Bahagian projek", recordsTab: "Rekod", stateTab: "State", integrationTab: "Sambung", pluginsTab: "Plugin",
     recordsEyebrow: "REKOD PROJEK", recordsTitle: "Rekod asal", recordsHint: "Tambah note atau log, kemudian semak event, fail, sumber dan rujukan yang kekal.",
     eventType: "Jenis rekod", noteType: "Nota", logType: "Log", derivedType: "Terbitan", allTypes: "Semua jenis",
@@ -814,6 +817,7 @@
     pluginPausedSuccess: "Plugin dijeda.", pluginResumedSuccess: "Plugin disambung.", pluginUninstalled: "Plugin dinyahpasang.", pluginInstalled: "Plugin dipasang. Salin tokennya sekarang."
   });
   Object.assign(translations.hi, {
+    projectTimezone: "प्रोजेक्ट का समय क्षेत्र", changeTimezone: "बदलें", saveTimezone: "समय क्षेत्र सेव करें", timezoneSaved: "प्रोजेक्ट का समय क्षेत्र सेव हो गया।", dailyReviewDate: "दैनिक समीक्षा · {date}",
     projectSections: "प्रोजेक्ट अनुभाग", recordsTab: "रिकॉर्ड", stateTab: "State", integrationTab: "कनेक्ट", pluginsTab: "प्लगइन",
     recordsEyebrow: "प्रोजेक्ट रिकॉर्ड", recordsTitle: "मूल रिकॉर्ड", recordsHint: "note या log जोड़ें, फिर स्थायी event, फ़ाइल, स्रोत और संदर्भ देखें।",
     eventType: "रिकॉर्ड प्रकार", noteType: "नोट", logType: "लॉग", derivedType: "व्युत्पन्न", allTypes: "सभी प्रकार",
