@@ -14,12 +14,12 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 readonly SOURCE_REVISION="$(git rev-parse --short=12 HEAD)"
 git clone --quiet --branch gh-pages "git@github.com:${REPOSITORY}.git" "$TEMP_DIR/site"
-# The admin dashboard and standalone agent guide are published independently
-# on gh-pages, so a workspace release must not remove them.
+# The standalone agent guide is published independently on gh-pages, so a
+# workspace release must not remove it. The admin dashboard lives in frontend/
+# and must be refreshed together with the rest of the application.
 rsync -a --delete \
   --exclude '.git' \
   --exclude '.DS_Store' \
-  --exclude '/admin/' \
   --exclude '/agent-setup.md' \
   frontend/ "$TEMP_DIR/site/"
 
