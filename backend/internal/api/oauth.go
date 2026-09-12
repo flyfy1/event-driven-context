@@ -359,7 +359,7 @@ func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Stor
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Language", language)
-	w.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'")
+	w.Header().Set("Content-Security-Policy", oauthAuthorizationCSP(request.RedirectURI))
 	w.Header().Set("Referrer-Policy", "no-referrer")
 	if errorKey != "" {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -370,6 +370,22 @@ func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Stor
 func oauthCSRFCookieName(requestID string) string {
 	digest := sha256.Sum256([]byte(requestID))
 	return "edc_oauth_csrf_" + hex.EncodeToString(digest[:16])
+}
+
+func oauthAuthorizationCSP(redirectURI string) string {
+	formAction := "'self'"
+	if source := oauthRedirectCSPSource(redirectURI); source != "" {
+		formAction += " " + source
+	}
+	return "default-src 'none'; style-src 'unsafe-inline'; form-action " + formAction + "; frame-ancestors 'none'; base-uri 'none'"
+}
+
+func oauthRedirectCSPSource(redirectURI string) string {
+	parsed, err := url.ParseRequestURI(redirectURI)
+	if err != nil || parsed.User != nil || parsed.Host == "" || parsed.Scheme != "https" && parsed.Scheme != "http" || strings.ContainsAny(parsed.Host, " \t\r\n;,'\"*%") {
+		return ""
+	}
+	return parsed.Scheme + "://" + parsed.Host
 }
 
 func clearOAuthCSRFCookie(w http.ResponseWriter, base, requestID string) {
