@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Context 管理后台：查看用户、项目、分享关系与插件。" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Context 管理后台</title>
+    <link rel="stylesheet" href="../styles.css" />
+    <link rel="stylesheet" href="./admin.css?v=da78246f4d2b" />
+  </head>
+  <body>
+    <header class="topbar admin-topbar">
+      <a class="brand" href="../" aria-label="Context 首页">Context<span>·</span>Integ.Life</a>
+      <span class="admin-label">管理后台</span>
+      <span id="session-status" class="status" aria-live="polite">正在检查身份…</span>
+      <a class="quiet admin-link" href="../workspace.html">返回工作区</a>
+      <button id="logout-button" class="quiet hidden" type="button">退出</button>
+    </header>
+
+    <main class="admin-main">
+      <section class="admin-intro">
+        <div>
+          <p class="eyebrow">CONTEXT ADMIN</p>
+          <h1>看清谁在使用、项目如何共享。</h1>
+          <p class="muted">用户、项目、插件与活动统计来自当前服务数据；权限变更会立即写入项目成员关系。</p>
+        </div>
+        <button id="refresh-button" class="quiet hidden" type="button">刷新数据</button>
+      </section>
+
+      <section id="auth-panel" class="auth-grid hidden" aria-labelledby="auth-title">
+        <div><p class="eyebrow">需要登录</p><h2 id="auth-title">使用你的 Integ.Life 管理员账号</h2><p class="muted">登录后仍会由服务端白名单再次校验管理员身份。</p></div>
+        <div class="form-card"><button id="login-button" class="primary" type="button">使用 Integ.Life 登录</button><p id="auth-message" class="message" aria-live="polite"></p></div>
+      </section>
+
+      <section id="denied-panel" class="empty-state hidden" aria-labelledby="denied-title">
+        <p class="eyebrow">没有管理员权限</p>
+        <h2 id="denied-title">这个账号不能访问管理后台。</h2>
+        <p class="muted">如果这是预期的管理员账号，请检查服务端的 <code>EDC_ADMIN_USERS</code> 配置。</p>
+      </section>
+
+      <section id="dashboard" class="hidden" aria-label="Context 管理概览">
+        <p id="page-message" class="message" aria-live="polite"></p>
+        <div id="summary-grid" class="summary-grid" aria-label="服务统计"></div>
+
+        <section class="admin-section" aria-labelledby="projects-title">
+          <div class="admin-section-heading">
+            <div><p class="eyebrow">PROJECTS & ACCESS</p><h2 id="projects-title">项目与权限</h2></div>
+            <label class="filter-label"><span>筛选项目</span><input id="project-filter" type="search" placeholder="名称、ID 或成员" /></label>
+          </div>
+          <div id="project-list" class="admin-project-list"></div>
+        </section>
+
+        <section class="admin-section" aria-labelledby="users-title">
+          <div class="admin-section-heading"><div><p class="eyebrow">REGISTERED USERS</p><h2 id="users-title">注册用户</h2></div></div>
+          <div class="table-scroll"><table><thead><tr><th>用户</th><th>邮箱</th><th>加入时间</th><th>可访问项目</th><th>拥有项目</th></tr></thead><tbody id="user-list"></tbody></table></div>
+        </section>
+
+        <section class="admin-section" aria-labelledby="plugins-title">
+          <div class="admin-section-heading"><div><p class="eyebrow">INSTALLED PLUGINS</p><h2 id="plugins-title">插件列表</h2></div></div>
+          <div id="plugin-list" class="plugin-admin-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="../workspace-utils.js" defer></script>
+    <script src="./admin.js?v=da78246f4d2b" defer></script>
+  </body>
+</html>
