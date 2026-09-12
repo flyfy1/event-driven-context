@@ -9,6 +9,7 @@
     function makeSession(id) {
       return { id, revision: 0, loaded: false, busy: false, request: 0, docs: new Map(), expanded: new Set(), selected: '', focused: '', filter: '', scroll: 0, message: '', tree: buildTree([]) };
     }
+    function errorMessage(error) { return error.code === "service_unavailable" ? t("filesUnavailable") : error.message; }
     function dirty(doc) { return doc.content !== doc.base; }
     function stash() {
       if (session && editor && session.docs.has(session.selected)) session.docs.get(session.selected).editorState = editor.snapshot();
@@ -72,7 +73,7 @@
           let parent = s.tree.nodes.get(s.selected).parent;
           while (parent) { s.expanded.add(parent); parent = s.tree.nodes.get(parent).parent; }
         }
-      } catch (error) { if (epoch === generation) s.message = error.message; }
+      } catch (error) { if (epoch === generation) s.message = errorMessage(error); }
       finally {
         if (epoch === generation) {
           s.busy = false;
@@ -102,7 +103,7 @@
         doc.base = content;
         merge(s, snapshot); s.message = t('filesSaved');
       } catch (error) {
-        if (epoch === generation) s.message = error.code === 'notes_revision_mismatch' ? t('filesStale') : error.message;
+        if (epoch === generation) s.message = error.code === 'notes_revision_mismatch' ? t('filesStale') : errorMessage(error);
       } finally {
         if (epoch === generation) {
           s.busy = false;

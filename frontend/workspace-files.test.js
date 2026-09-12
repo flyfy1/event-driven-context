@@ -102,3 +102,10 @@ test('unrelated remote edits do not block a dirty file after refresh', async () 
   await h.click('#files-refresh');
   assert.equal(h.text(), '# Local'); assert.equal(h.element('#files-save').disabled, false);
 });
+
+
+test('file service failures never use an audio-specific message', async () => {
+  const h = harness(async () => { throw Object.assign(new Error('Audio transcription is not configured'), { code: 'service_unavailable' }); });
+  h.workspace.select('a'); await flush();
+  assert.match(h.element('#files-message').textContent, /Files are temporarily unavailable/);
+});

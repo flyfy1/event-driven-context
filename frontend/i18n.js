@@ -946,6 +946,13 @@
     hi: "साइन आउट करके बिना सहेजे फ़ाइल ड्राफ़्ट छोड़ें? उन्हें रखने के लिए पहले डाउनलोड या सहेजें।"
   })) translations[locale].filesSignOutConfirm = message;
 
+  for (const [locale, message] of Object.entries({
+    en: "Files are temporarily unavailable. Your draft is retained; try again later.",
+    "zh-CN": "文件服务暂时不可用。草稿已保留，请稍后重试。",
+    ms: "Fail tidak tersedia buat sementara waktu. Draf anda dikekalkan; cuba lagi kemudian.",
+    hi: "फ़ाइलें अस्थायी रूप से उपलब्ध नहीं हैं। आपका ड्राफ़्ट सुरक्षित है; बाद में फिर कोशिश करें।"
+  })) translations[locale].filesUnavailable = message;
+
   function normalizeLocale(raw) {
     const value = String(raw || "").trim().toLowerCase();
     if (value === "zh" || value.startsWith("zh-")) return "zh-CN";
