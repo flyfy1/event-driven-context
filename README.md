@@ -469,36 +469,21 @@ When visiting `http://127.0.0.1:4173`, the page automatically points to the loca
 Before production deployment, first commit a clean working tree, then run:
 
 ```sh
-make deploy-prod       # Build linux/amd64, upload to integ-prod, install systemd service
+make deploy-prod       # Build linux/arm64, upload to songyy-pi, install systemd service
 make deploy-frontend   # Push frontend/ to gh-pages
 ```
 
-The service runs on `integ-prod` at `127.0.0.1:8401` and is exposed as `https://context-api.integ.life` through a dedicated Caddy `event-context-proxy.service`. It does not share the machine's global Caddy instance. The identity and authorization database is stored at `/var/lib/event-driven-context/context.db`; the V2 index and original file bytes are stored under `/var/lib/event-driven-context/data/v2/`. Static deployment uses `frontend/CNAME` to specify `context.integ.life`.
+The service runs on `songyy-pi` at `127.0.0.1:8401`. Cloudflare Tunnel `integ-pi` exposes that loopback service as `https://context-api.integ.life`; the Pi's shared Caddy configuration is not part of this route. The identity and authorization database is stored at `/var/lib/event-driven-context/context.db`. Append-only event and State records, original files, notes revisions, and plugin state are stored under `/var/lib/event-driven-context/data/`, including the V2 snapshot at `data/v2/index.json`. Static deployment uses `frontend/CNAME` to specify `context.integ.life`.
 
-### integ-prod Operations
+### Raspberry Pi Operations
 
-When production SSH access is available, use `EDC_DEPLOY_SSH_TARGET=user@host make deploy-prod`; if it is unset, deployment continues to use gcloud/IAP. Both connection methods run the same validation, backup, release, and rollback flow.
+`make deploy-prod` uses SSH target `pi` by default. Set `EDC_DEPLOY_SSH_TARGET=user@host` to select the same Pi through another SSH alias. The script refuses a dirty worktree, runs repository checks, cross-compiles Linux ARM64 binaries, backs up the existing Pi data, installs an immutable release, and rolls the release symlink back if loopback health fails.
 
-The service process and SQLite data use the Linux account `yycy`. The shared group is `context-admins`. Both `yycy` and `songyy` belong to this group. Deployment directories remain group-readable and group-writable, and subsequent deployment directories inherit this group.
+The service process uses the Pi account `songyy` and shared operating group `service-admins`. The SQLite driver keeps the authorization database private to the runtime account. Other clients and collaborators access records through authenticated product interfaces rather than direct filesystem access.
 
-The SQLite driver tightens the database file so that it is private to the runtime account. Collaborators access data through the service interface.
+The historical GCE deployment script is retained only for rollback. It refuses to run unless an operator explicitly uses `make deploy-legacy-gce`, which sets `ALLOW_LEGACY_GCE_DEPLOY=1`. Once the Pi has accepted production writes, rollback requires first freezing Pi writes, taking a new consistent Pi backup, restoring that newest data to GCE, and only then moving the public route. Starting the old GCE copy directly would lose post-cutover records.
 
-The systemd unit remains root-managed. `yycy` can manage the Context service only through the following restricted commands and is not granted general-purpose sudo:
-
-```sh
-sudo context-service-admin status
-sudo context-service-admin health
-sudo context-service-admin logs
-sudo context-service-admin restart
-sudo context-service-admin start
-sudo context-service-admin stop
-```
-
-The deployment script installs this helper and its sudo rules. It also validates, starts, or reloads the dedicated `event-context-proxy.service`; it does not take control of the machine's global `caddy.service`.
-
-After stopping the application, the deployment process backs up the identity database using the SQLite backup API and archives the complete `data/` directory. It retains the previous release symlink target for rollback if health checks fail.
-
-See [proxy-setup.md](deploy/production/proxy-setup.md) for the independent HTTPS proxy configuration and first-installation checks for the public API.
+After stopping the application, each deployment backs up the identity database using the SQLite backup API and archives the complete `data/` directory. It retains the previous release symlink target for rollback if health checks fail. See the [production deployment and migration runbook](docs/production-deployment.md) for cutover, verification, backup, and rollback details. The historical direct-Caddy configuration remains in `deploy/production/` only as GCE rollback material.
 
 ## Verification and Current Boundaries
 

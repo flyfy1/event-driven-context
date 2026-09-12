@@ -1,0 +1,25 @@
+[Unit]
+Description=Event-driven Context API on Raspberry Pi
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=songyy
+Group=service-admins
+UMask=0007
+WorkingDirectory=/var/lib/event-driven-context
+Environment=HOME=/home/songyy
+Environment=EDC_NOTES_CODEX=/home/songyy/.local/bin/codex
+EnvironmentFile=/etc/event-context.env
+ExecStart=/opt/event-driven-context/current/edc-server -addr 127.0.0.1:8401 -db /var/lib/event-driven-context/context.db -data /var/lib/event-driven-context/data -skill-root /opt/event-driven-context/current/skills -allowed-origins https://context.integ.life -public-base-url https://context-api.integ.life
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/event-driven-context -/home/songyy/.codex
+
+[Install]
+WantedBy=multi-user.target

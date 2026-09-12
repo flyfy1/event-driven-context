@@ -418,28 +418,21 @@ go -C backend run ./cmd/edc-server -addr 127.0.0.1:8401 \
 生产发布前先提交一个干净工作树，然后运行：
 
 ```sh
-make deploy-prod       # 编译 linux/amd64、上传 integ-prod、安装 systemd 服务
+make deploy-prod       # 编译 linux/arm64、上传 songyy-pi、安装 systemd 服务
 make deploy-frontend   # 将 frontend/ 推送到 gh-pages
 ```
 
-服务运行于 integ-prod 的 `127.0.0.1:8401`，由独立的 `event-context-proxy.service`（Caddy）发布为 `https://context-api.integ.life`，不与主机上的全局 Caddy 实例混用。身份与授权数据库在 `/var/lib/event-driven-context/context.db`；V2 index 与原始文件字节保存在 `/var/lib/event-driven-context/data/v2/`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。
+服务运行于 `songyy-pi` 的 `127.0.0.1:8401`。Cloudflare Tunnel `integ-pi` 把这个 loopback 服务发布为 `https://context-api.integ.life`；此路由不经过 Pi 的共享 Caddy。身份与授权数据库在 `/var/lib/event-driven-context/context.db`。append-only Event、State、原始文件、Notes revision 与插件状态均在 `/var/lib/event-driven-context/data/`，V2 快照位于 `data/v2/index.json`。静态发布使用 `frontend/CNAME` 指定 `context.integ.life`。
 
-### integ-prod 运维
+### Raspberry Pi 运维
 
-已有生产 SSH 登录时，可使用 `EDC_DEPLOY_SSH_TARGET=user@host make deploy-prod`；未设置时仍使用 gcloud/IAP。两种连接方式执行相同的校验、备份、发布与回滚流程。
+`make deploy-prod` 默认使用 SSH target `pi`；如需通过另一个 SSH alias 连接同一台 Pi，可设置 `EDC_DEPLOY_SSH_TARGET=user@host`。脚本拒绝 dirty worktree，运行仓库检查，交叉编译 Linux ARM64，备份 Pi 现有数据，安装不可变 release；loopback 健康检查失败时会回滚 release symlink。
 
-服务进程和 SQLite 数据使用 Linux 账户 `yycy`，共享组为 `context-admins`。`yycy` 与 `songyy` 都在该组中；发布目录保持组可读写，后续发布目录继承该组。SQLite 驱动将数据库文件收紧为运行账户私有，协作者通过服务接口访问数据。systemd unit 仍由 root 管理。`yycy` 只能通过以下受限命令管理 Context 服务，不能获得通用 sudo：
+服务进程使用 Pi 账户 `songyy` 与共享运维组 `service-admins`。SQLite 驱动把授权数据库收紧为运行账户私有；其他客户端和协作者通过带认证的产品接口访问记录，不直接读写文件系统。
 
-```sh
-sudo context-service-admin status
-sudo context-service-admin health
-sudo context-service-admin logs
-sudo context-service-admin restart
-sudo context-service-admin start
-sudo context-service-admin stop
-```
+历史 GCE 部署脚本只保留用于回滚；除非运维人员明确运行 `make deploy-legacy-gce` 并由该目标设置 `ALLOW_LEGACY_GCE_DEPLOY=1`，否则脚本拒绝执行。Pi 接受生产写入后，回滚必须先冻结 Pi 写入、生成新的 Pi 一致性备份，把最新数据恢复到 GCE，再切换公网路由。直接启动旧 GCE 副本会丢失切换后的记录。
 
-部署脚本会安装这个 helper 和 sudo 规则，并验证、启动或 reload 专用的 `event-context-proxy.service`；不会接管主机上的全局 `caddy.service`。部署在停止应用后使用 SQLite backup API 备份身份库，同时归档完整 `data/`，保留旧 release symlink 目标用于健康检查失败时回滚。公网 API 的独立 HTTPS 代理配置与首次安装检查见 [proxy-setup.md](deploy/production/proxy-setup.md)。
+每次发布都会在停止应用后用 SQLite backup API 备份身份库，并归档完整 `data/`；健康检查失败时保留旧 release symlink 目标用于回滚。切流、验证、备份与回滚细节见[生产部署与迁移手册](docs/production-deployment.cn.md)。`deploy/production/` 中历史 direct-Caddy 配置仅作为 GCE 回滚材料保留。
 
 ## 验证与当前边界
 

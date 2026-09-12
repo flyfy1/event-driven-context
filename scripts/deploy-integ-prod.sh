@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${ALLOW_LEGACY_GCE_DEPLOY:-}" != "1" ]]; then
+  echo "refusing legacy GCE deployment; production runs on Raspberry Pi" >&2
+  echo "set ALLOW_LEGACY_GCE_DEPLOY=1 only for an intentional rollback" >&2
+  exit 1
+fi
+
 readonly PROJECT_ID="project-e8ef2daf-0520-4018-b9f"
 readonly ZONE="asia-southeast1-b"
 readonly INSTANCE="integ-prod"
