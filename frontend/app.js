@@ -162,6 +162,7 @@ function applyStaticTranslations() {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => { element.placeholder = t(element.dataset.i18nPlaceholder); });
   document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => { element.setAttribute("aria-label", t(element.dataset.i18nAriaLabel)); });
   $("#language-select").value = state.locale;
+  $("#external-plugin-guide").href = "https://github.com/flyfy1/event-driven-context/blob/main/docs/external-plugin" + (state.locale === "zh-CN" ? ".cn" : "") + ".md";
   updateHomeLink();
 }
 function setLocale(locale, persist) {

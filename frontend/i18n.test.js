@@ -78,6 +78,7 @@ assert.match(workspace, /https:\/\/chatgpt\.com\/plugins#settings\/Connectors\?c
 assert.match(workspace, /href="\.\/skills\/edc-recorder\/SKILL\.md"/);
 assert.match(workspace, /href="https:\/\/github\.com\/flyfy1\/event-driven-context\/blob\/main\/docs\/external-plugin\.md"/);
 assert.match(workspace, /id="plugin-token-panel"[^>]*>[\s\S]*data-i18n="externalPluginGuide"/);
+assert.match(app, /external-plugin" \+ \(state\.locale === "zh-CN" \? "\.cn" : ""\) \+ "\.md"/);
 assert.match(app, /agent-setup\.md/);
 assert.match(app, /agentSetupPrompt/);
 assert.match(app, /async function transcribeAudio/);

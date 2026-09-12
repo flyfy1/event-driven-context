@@ -1,50 +1,52 @@
-# 在你的机器上运行 Plugin（External Plugin）
+# Run a Plugin on Your Machine (External Plugin)
 
-安装页面出现一次性 Plugin token，表示这个 Plugin 需要由你控制的机器运行。请先把 token 安全保存，再启动 `edc host run`。安装本身只创建授权和配置，不会启动 processor；只有 processor host 正在运行时，Plugin 才会处理新的 Event。
+English | [简体中文](external-plugin.cn.md)
 
-> `evidence` 是例外：它是给对话 agent 使用的 Skill，没有后台 processor，不需要启动 host。如果通用安装接口仍返回了 token，也不要把它配置给 processor host。
+When the installation page shows a one-time Plugin token, the Plugin is intended to run on a machine you control. Save the token securely, then start `edc host run`. Installation only creates the authorization and configuration; it does not start a processor. The Plugin processes new Events only while its processor host is running.
 
-## 整体流程
+> `evidence` is the exception: it is a Skill for use by a conversation agent, has no background processor, and does not need a host. If the generic installation API still returns a token, do not configure that token in a processor host.
+
+## End-to-end flow
 
 ```text
-在项目中安装 Plugin
+Install a Plugin in a Project
         │
-        ├─ 保存安装记录、manifest、configuration 和权限
-        └─ 返回一次性 edcp_... token
+        ├─ Save installation, manifest, configuration, and permissions
+        └─ Return a one-time edcp_... token
                      │
                      ▼
-             用户机器上的 edc host
+             edc host on the user's machine
                      │
         ┌────────────┼────────────┐
         │            │            │
-  读取获准 Event   运行本地命令   启动本机 Codex
-  和上次 _cursor   或本地模型     CLI 进程
+  Read authorized   Run a local   Start a local
+  Events + _cursor  command/model Codex CLI process
         │            │            │
         └────────────┼────────────┘
                      ▼
-       回写获准的 derived Event / State
+       Write authorized derived Events / State
                      │
                      ▼
-              成功后更新 _cursor
+            Advance _cursor after success
 ```
 
-远程部署时，host 只需要主动连接 Context API；不需要公网 IP、端口转发或对外开放监听端口。生产环境应使用 HTTPS，例如 `https://context-api.integ.life`。连接本机自托管服务时也可以使用 `http://127.0.0.1:...`。
+For a remote deployment, the host only needs to make outbound connections to the Context API. It does not need a public IP, port forwarding, or a publicly exposed listening port. Production deployments should use HTTPS, for example `https://context-api.integ.life`. A host may also use `http://127.0.0.1:...` when connecting to a self-hosted service on the same machine.
 
-## 哪些 Plugin 需要 host
+## Which Plugins need a host
 
-| Plugin | 执行方式 | 本机依赖 | 主要输出 |
+| Plugin | Execution mode | Local dependencies | Main output |
 | --- | --- | --- | --- |
-| `project-brief` | Agent processor | 已安装并登录的 Codex CLI | `project-brief/current` State |
-| `daily-review` | 定时 Agent processor | 已安装并登录的 Codex CLI | `daily-review/YYYY-MM-DD` State |
-| `audio-transcribe` | Command processor | adapter、Python + `mlx_audio`、本地 Qwen3-ASR 模型、FFmpeg、FFprobe | source-linked transcript Event |
-| `notes-indexer` | 内置的受限 Agent protocol | 已安装并登录的 Codex CLI | 项目 Notes 文件树 |
-| `evidence` | 对话 agent 中的 Skill | 支持该 Skill 的 agent 接入 | 即时证据回答；无后台输出 |
+| `project-brief` | Agent processor | Installed and authenticated Codex CLI | `project-brief/current` State |
+| `daily-review` | Scheduled Agent processor | Installed and authenticated Codex CLI | `daily-review/YYYY-MM-DD` State |
+| `audio-transcribe` | Command processor | Adapter, Python + `mlx_audio`, local Qwen3-ASR model, FFmpeg, FFprobe | Source-linked transcript Event |
+| `notes-indexer` | Built-in bounded Agent protocol | Installed and authenticated Codex CLI | Project Notes tree |
+| `evidence` | Skill inside a conversation agent | An agent integration that supports the Skill | Immediate evidence answer; no background output |
 
-`audio-transcribe` 另有服务器托管路径。通过该路径启用的 built-in installation 不签发 bearer token；通过通用 manifest 安装并在自己的机器上运行时，才使用本页的 processor host 流程。
+`audio-transcribe` also has a server-managed path. A built-in installation enabled through that path does not receive a bearer token. Use the processor-host flow on this page when installing through the generic manifest flow and running it on your own machine.
 
-## 1. 准备 CLI 和 Plugin 包
+## 1. Prepare the CLI and Plugin package
 
-以下命令假定你已经在受信任的 Event-driven Context 源码 checkout 根目录：
+The following commands assume you are at the root of a trusted Event-driven Context source checkout:
 
 ```sh
 make build
@@ -54,15 +56,15 @@ export PROJECT_ID="prj_replace_me"
 export PLUGIN_DIR="$PWD/backend/plugins"
 ```
 
-自托管时，把 `EDC_SERVER` 换成你的 API 地址。`PLUGIN_DIR` 可以指向包含各 Plugin 子目录的目录，也可以直接指向单个 Plugin 目录；其中必须有 `manifest.json` 和 manifest 引用的本地资源。
+For self-hosting, replace `EDC_SERVER` with your API address. `PLUGIN_DIR` may point to a directory containing multiple Plugin subdirectories or directly to one Plugin directory. The selected directory must contain `manifest.json` and the local resources referenced by the manifest.
 
-只运行你信任并审核过的 Plugin 包。Plugin token 限制的是它能在 Context 服务器上访问的数据；它不是本机沙箱。Command processor 以当前操作系统用户身份执行，拥有这个用户本来就有的本机权限。
+Run only Plugin packages you trust and have reviewed. A Plugin token limits what the Plugin can access on the Context server; it is not a local-machine sandbox. A Command processor runs as the current operating-system user and has the local permissions that user already has.
 
-## 2. 保存一次性 token
+## 2. Save the one-time token
 
-服务器只保存 token 的 SHA-256 摘要，无法再次显示明文。不要把 token 放进仓库、命令参数、截图、聊天消息或普通日志。
+The server stores only the token's SHA-256 digest and cannot display the plaintext again. Do not put the token in a repository, command argument, screenshot, chat message, or ordinary log.
 
-如果从 Web 安装，请在页面复制 token 后，用隐藏输入把它写入私有文件。下面的例子适用于 macOS 默认的 zsh，token 本身不会进入 shell history 或终端输出：
+If you install from the Web, copy the token from the page and write it to a private file through hidden input. The following example is for the default zsh on macOS; the token itself does not enter shell history or terminal output:
 
 ```zsh
 export PLUGIN_ID="project-brief"
@@ -77,7 +79,7 @@ unset PLUGIN_TOKEN
 chmod 600 "$TOKEN_FILE"
 ```
 
-如果使用 CLI 安装，优先让 CLI 直接创建私有文件，不要让 token 出现在输出中：
+If you install with the CLI, prefer having the CLI create the private file directly so the token never appears in output:
 
 ```sh
 export PLUGIN_ID="project-brief"
@@ -89,15 +91,15 @@ export TOKEN_FILE="$HOME/.config/event-driven-context/$PLUGIN_ID.token"
   --token-file "$TOKEN_FILE"
 ```
 
-`--token-file` 使用新建文件语义并创建 mode `0600` 文件；已有文件不会被覆盖。`edc host run` 也会拒绝 group 或 other 可读写的 token 文件。长期运行时应使用 `--plugin-token-file`，不要把 token 持久化到 `EDC_PLUGIN_TOKEN` 环境变量。
+`--token-file` uses create-new semantics and creates a mode `0600` file; it will not overwrite an existing file. `edc host run` also rejects a token file that is readable or writable by group or other users. For a long-running host, use `--plugin-token-file` instead of persisting the token in the `EDC_PLUGIN_TOKEN` environment variable.
 
-如果 token 丢失，当前没有 reveal 或 rotate 操作。需要 remove 后重新安装，取得新 token。
+If the token is lost, there is currently no reveal or rotate operation. Remove and reinstall the Plugin to obtain a new token.
 
-## 3. 先运行一次
+## 3. Run one pass first
 
-首次配置时先用 `--once`。成功结果会以 JSON 输出；没有新工作时返回 `"noop": true`。
+Use `--once` for initial setup. A successful result is printed as JSON; when there is no new work, it returns `"noop": true`.
 
-### Agent processor：Project brief
+### Agent processor: Project brief
 
 ```sh
 export PLUGIN_ID="project-brief"
@@ -113,9 +115,9 @@ export CODEX_BIN="$(command -v codex)"
   --once
 ```
 
-`project-brief` 和 `daily-review` 都从 Plugin 包读取固定 Skill，把获准的 Event、当前 configuration 和必要的前一版 State 组成输入，再启动本机 Codex CLI。当前实现使用固定模型和结构化输出 schema，禁用 Web search，并要求只返回可校验的 State；引用的 Event ID 必须来自授权输入。
+`project-brief` and `daily-review` both load a fixed Skill from the Plugin package, combine authorized Events, the current configuration, and any required previous State, then start the local Codex CLI. The current implementation uses a fixed model and structured output schema, disables Web search, and requires a validated State as the only output. Every cited Event ID must come from the authorized input.
 
-`daily-review` 的命令结构相同，只需改为对应的 ID 和 token 文件：
+The `daily-review` command has the same structure; only change the ID and token file:
 
 ```sh
 export PLUGIN_ID="daily-review"
@@ -131,11 +133,11 @@ export CODEX_BIN="$(command -v codex)"
   --once
 ```
 
-Daily review 按项目的 IANA timezone 解释 configuration 中的 `time`；默认是 `21:00`。一次执行检查最近已经到期的回顾周期，而不是安装后立即开启一个服务器定时任务。
+Daily review interprets the configuration's `time` in the Project's IANA timezone; the default is `21:00`. A one-pass run checks the most recent review period that is already due. Installing the Plugin does not create a server-side scheduled job.
 
-### Command processor：Audio transcription
+### Command processor: Audio transcription
 
-先构建 adapter，并提供所有本地 ASR 路径：
+Build the adapter, then provide every local ASR path:
 
 ```sh
 go -C backend build \
@@ -160,13 +162,13 @@ export EDC_RUNNER_FFPROBE="/absolute/path/to/ffprobe"
   --once
 ```
 
-Python 环境必须能导入 `mlx_audio`，模型必须是本地目录。Host 只下载该 Plugin 获准读取的音频 File，写入私有临时目录并核对 SHA-256；adapter 用 FFprobe 检查时长，再用本地模型转录。临时目录在成功、失败或超时后都会删除。当前实现拒绝超过 20 MiB 或 600 秒的音频。
+The Python environment must be able to import `mlx_audio`, and the model must be a local directory. The host downloads only an audio File that this Plugin is authorized to read, writes it to a private temporary directory, and verifies its SHA-256. The adapter uses FFprobe to check its duration, then transcribes it with the local model. Temporary directories are removed after success, failure, or timeout. The current implementation rejects audio longer than 600 seconds or larger than 20 MiB.
 
-当前 command protocol 是为 `audio-transcribe` 的单音频输入和 derived transcript 输出实现的，不是通用的任意第三方命令运行时。
+The current command protocol implements the single-audio input and derived-transcript output required by `audio-transcribe`. It is not a general runtime for arbitrary third-party commands.
 
-## 4. 通过 watch 持续运行
+## 4. Keep it running with watch
 
-确认 `--once` 正常后，把最后一个参数换成 `--watch`：
+After `--once` succeeds, replace the final argument with `--watch`:
 
 ```sh
 ./bin/edc --server "$EDC_SERVER" host run \
@@ -179,38 +181,38 @@ Python 环境必须能导入 `mlx_audio`，模型必须是本地目录。Host �
   --interval 30s
 ```
 
-Command processor 把 `--agent-command` 换成它的 `--command`。Host 启动后会立即检查一次，之后按 interval 检查；默认 interval 是 30 秒，`notes-indexer` 是 15 秒，最小 1 秒。SIGINT 或 SIGTERM 会取消正在运行的子进程、清理临时目录并正常退出。
+For a Command processor, replace `--agent-command` with its `--command`. The host checks once immediately after startup and then at the configured interval. The default interval is 30 seconds, or 15 seconds for `notes-indexer`; the minimum is 1 second. SIGINT or SIGTERM cancels the active child process, removes its temporary directory, and exits normally.
 
-`--watch` 只是前台常驻进程。当前项目不会自动安装 launchd、systemd、容器、cron 或其他进程守护；生产使用时需要由你自己的 supervisor 管理它。
+`--watch` is only a long-running foreground process. The project does not automatically install launchd, systemd, a container, cron, or another process supervisor. Use your own supervisor for production operation.
 
-## 每一轮实际做什么
+## What happens in each pass
 
-1. Host 用 token 读取它自己的 installation、当前 manifest、configuration revision 和项目 timezone。
-2. Host 加载本地 `manifest.json`，并要求本地 Plugin ID、版本与服务器安装版本完全一致。
-3. 对 cursor-driven processor，读取私有 State `<plugin-id>/_cursor`，然后只拉取 cursor 之后、且 `read_events` 允许的 Event。
-4. Agent processor 启动 Codex；command processor 启动本地 executable。两类 processor 都只收到本轮需要的数据。
-5. Host 校验 processor 输出、来源引用和写入权限。
-6. 成功后写入 `derived` Event 或 Plugin 自己命名空间下的 State。
-7. 对普通 cursor-driven processor，所有输出成功后才更新 `_cursor`。Daily review 会在执行前先把本日 attempt 记入 cursor data，再在发布成功后标记完成。
+1. The host uses the token to read its own installation, current manifest, configuration revision, and Project timezone.
+2. The host loads the local `manifest.json` and requires the local Plugin ID and version to exactly match the installed version on the server.
+3. For a cursor-driven processor, it reads the private State `<plugin-id>/_cursor`, then pulls only Events after that cursor whose types are allowed by `read_events`.
+4. An Agent processor starts Codex; a Command processor starts a local executable. Each receives only the data required for that pass.
+5. The host validates processor output, source references, and write permissions.
+6. On success, it writes a `derived` Event or State inside the Plugin's own namespace.
+7. For an ordinary cursor-driven processor, `_cursor` advances only after every output succeeds. Daily review first records the day's attempt in cursor data, then marks it complete after publication succeeds.
 
-Token 绑定一个 installation、一个 Project 和一个 Plugin。服务器按 manifest 限制 `read_events`、`write_events` 和 `write_state`；Plugin 只能写 `derived` Event，并只能写获准的自身 State namespace。File 也只有在被可读 Event 引用时才能下载。这个 token 不是用户登录 token，不能因此获得项目成员管理权限或其他项目的数据。
+A token is bound to one installation, one Project, and one Plugin. The server enforces the manifest's `read_events`, `write_events`, and `write_state` permissions. A Plugin may write only `derived` Events and only the granted State names inside its own namespace. It may download a File only when a readable Event references that File. The Plugin token is not a user login token and does not grant Project member management or access to another Project's data.
 
-## 失败、重试和重复执行
+## Failures, retries, and repeated execution
 
-如果读取、processor 执行、输出校验或发布失败，普通 cursor-driven host 不会推进 `_cursor`；`--watch` 下一轮会从同一位置重试。因此应把它理解为 at-least-once，而不是 exactly-once。
+If reading, processor execution, output validation, or publication fails, an ordinary cursor-driven host does not advance `_cursor`. The next `--watch` pass retries from the same position. Treat this as at-least-once execution, not exactly-once execution.
 
-存在“输出已被服务器接受，但 host 尚未成功更新 cursor”的失败窗口。当前 audio command processor 为 derived Event 生成确定性 ID，重试同一结果时服务器会按 duplicate 处理；自定义 processor 也必须能安全处理 replay。State 写入和 cursor 写入使用 expected version，多个 host 竞争时可能产生 revision conflict；多 host 协调目前不是正式支持的部署方式。
+There is a failure window in which the server has accepted output but the host has not successfully advanced the cursor. The current audio Command processor generates deterministic IDs for derived Events, so the server handles the same result as a duplicate on retry. A custom processor must also handle replay safely. State writes and cursor writes use expected versions; competing hosts may encounter revision conflicts. Coordinating multiple hosts is not currently a supported deployment mode.
 
-`daily-review` 还会在 `_cursor` 中记录当日 attempt，并受 manifest 的 `max_runs_per_day` 限制。网络读取失败不消耗 attempt；已经发布的日期不会重复生成。
+`daily-review` also records the day's attempt in `_cursor` and is limited by the manifest's `max_runs_per_day`. Network failures while reading Events do not consume an attempt. A date that has already been published is not generated again.
 
-## Configuration 和生命周期
+## Configuration and lifecycle
 
-- **修改 configuration**：服务器增加 configuration revision；下一轮 host 读取新值，不需要更换 token。
-- **Pause**：token 认证返回 `plugin_paused`，host 不能继续读取或写入。
-- **Resume**：原 token 恢复可用，host 从原 `_cursor` 继续。
-- **Remove**：installation 标记为 removed，token 摘要被删除，原 token 永久失效。已有 Event、State 和 Notes 不会因此自动删除。
+- **Change configuration**: the server increments the configuration revision; the host reads the new value on its next pass without replacing the token.
+- **Pause**: token authentication returns `plugin_paused`, so the host cannot continue reading or writing.
+- **Resume**: the original token works again, and the host continues from the existing `_cursor`.
+- **Remove**: the installation is marked removed, its token digest is deleted, and the original token is permanently invalid. Existing Events, State, and Notes are not automatically deleted.
 
-Configuration 可以通过 Web 修改，也可以用 CLI 的 optimistic revision 更新：
+Configuration can be changed in the Web UI or with an optimistic CLI revision update:
 
 ```sh
 ./bin/edc --server "$EDC_SERVER" plugin config \
@@ -220,23 +222,23 @@ Configuration 可以通过 Web 修改，也可以用 CLI 的 optimistic revision
   --config '{"language":"zh-CN","prompt":"Keep the result concise."}'
 ```
 
-请以安装页面针对该 Plugin 展示的 configuration 字段说明为准；不同 Plugin 接受的字段不同。
+Use the installation page's field documentation for the selected Plugin. Different Plugins accept different configuration fields.
 
-## 数据边界：运行在本机不等于数据不离开本机
+## Data boundary: running locally does not mean data stays local
 
-- Context Server 仍是 Event、File、State、installation 和 cursor 的持久化位置。远程 Server 意味着这些数据会通过 HTTPS 在 Server 和 host 之间传输。
-- `audio-transcribe` 可以在本地 Python、FFmpeg 和本地模型中完成推理，不需要把音频发送给云模型；但原音频本来已经存储在 Context Server，转录结果也会回写该 Server。
-- `project-brief`、`daily-review` 和 `notes-indexer` 虽然由本机启动 Codex CLI，但获准的项目内容会进入 Codex 模型请求，因此会发送到模型服务。部署前必须把这条模型数据流与“数据存储在哪里”分开评估。
-- Plugin token 只应由 host 读取。不要把 token 写进 Plugin prompt、processor stdin、configuration 或模型输入。
+- The Context Server remains the persistence location for Events, Files, State, installations, and cursors. With a remote Server, that data travels between the Server and host over HTTPS.
+- `audio-transcribe` can perform inference with local Python, FFmpeg, and a local model without sending audio to a cloud model. The original audio is still already stored on the Context Server, and the transcript is written back to that Server.
+- Although the local machine starts the Codex CLI for `project-brief`, `daily-review`, and `notes-indexer`, authorized Project content enters a Codex model request and is therefore sent to the model service. Evaluate this model data flow separately from where data is persisted.
+- Only the host should read the Plugin token. Do not put it in a Plugin prompt, processor stdin, configuration, or model input.
 
-## 当前限制
+## Current limitations
 
-- Web 安装只完成授权和配置，不会自动安装 CLI、Plugin 包、Codex、Python、模型、FFmpeg 或 FFprobe。
-- Web 目前不能证明 processor host 在线，也没有 heartbeat、last seen 或最后成功处理时间。
-- `--watch` 不安装系统服务；机器休眠或进程退出时不会继续处理。
-- 多台 host 同时运行同一个 installation 尚未作为正式能力支持。
-- 手动 rerun 请求可以持久化到 `_requests`，但当前 processor host 不消费这些请求。
-- 当前 host 支持仓库中定义的固定 agent/command protocol；它不是通用 Plugin marketplace，也不是第三方代码的安全沙箱。
-- `evidence` 没有 host processor；它必须由已经接入对应 Skill 的对话 agent 使用。
+- Web installation creates only authorization and configuration; it does not install the CLI, Plugin package, Codex, Python, model, FFmpeg, or FFprobe.
+- The Web UI cannot currently prove that a processor host is online and has no heartbeat, last-seen status, or last-successful-processing time.
+- `--watch` does not install a system service. Processing stops while the machine sleeps or the process is not running.
+- Running multiple hosts for one installation is not yet a supported capability.
+- A manual rerun request can be persisted to `_requests`, but the current processor host does not consume those requests.
+- The current host supports the fixed Agent and Command protocols defined in this repository. It is neither a general Plugin marketplace nor a security sandbox for third-party code.
+- `evidence` has no host processor; it must be used by a conversation agent with the corresponding Skill integration.
 
-遇到问题时，先用 `--once` 保留完整错误，再检查：API 地址、Project ID、token 文件权限、本地 manifest 版本、Plugin 状态、Codex 登录状态，以及 command processor 的绝对依赖路径。
+When troubleshooting, run `--once` first and keep the complete error. Then check the API address, Project ID, token file permissions, local manifest version, Plugin status, Codex authentication, and absolute dependency paths for a Command processor.
