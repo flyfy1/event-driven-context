@@ -62,8 +62,9 @@ func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.Servic
 	})))
 	mux.Handle("POST /v1/projects/{project_id}/members", writeUser(jsonEndpointV2(http.StatusOK, func(ctx context.Context, in struct {
 		Username string `json:"username"`
+		Email    string `json:"email"`
 	}) (core.User, error) {
-		return store.AddMember(ctx, core.MemberInput{ProjectID: v2ProjectID(ctx), Username: in.Username})
+		return store.AddMember(ctx, core.MemberInput{ProjectID: v2ProjectID(ctx), Username: in.Username, Email: in.Email})
 	})))
 	mux.Handle("PATCH /v1/projects/{project_id}/members/{user_id}", writeUser(jsonEndpointV2(http.StatusOK, func(ctx context.Context, in struct {
 		Role string `json:"role"`

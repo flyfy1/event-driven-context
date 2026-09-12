@@ -49,7 +49,7 @@ flowchart LR
 
 Project 是 Event、File、State、插件和成员权限的边界，并保存用于日期与计划运行解释的 IANA 时区。创建时可省略 `timezone`，服务端默认使用 `UTC`；owner 可用 `PATCH /v1/projects/{project_id}` 更新，成功直接返回 Project。插件自省返回当前 `project_timezone`，让每次处理使用与项目一致的时间语义；本次不增加 MCP 修改工具。
 
-Project 同时是团队 context 的共享边界。项目可以有多位 owner；任一 owner 可按注册用户名添加成员，也可把其他成员提升为 owner 或降为普通 member。服务端在事务中保证项目至少保留一位 owner。项目列表按当前登录用户的成员关系返回，并通过 `owner_user_ids` 返回完整 owner 集合；`owner_user_id` 暂时保留为旧客户端的原始 owner 字段。加入后，成员通过 HTTP、MCP、CLI、网页或 App 读取同一份 Event、File 和公开 State，并可向同一项目追加 Event。
+Project 同时是团队 context 的共享边界。项目可以有多位 owner；任一 owner 可按已注册 username 或 email 精确添加成员，也可把其他成员提升为 owner 或降为普通 member。添加接口必须且只能提供一个标识，不提供模糊搜索，也不向调用方返回目标邮箱。服务端在事务中保证项目至少保留一位 owner。项目列表按当前登录用户的成员关系返回，并通过 `owner_user_ids` 返回完整 owner 集合；`owner_user_id` 暂时保留为旧客户端的原始 owner 字段。加入后，成员通过 HTTP、MCP、CLI、网页或 App 读取同一份 Event、File 和公开 State，并可向同一项目追加 Event。
 
 Web 用 `?project=<project_id>#<view>` 表达当前项目与分区，并可把该 URL 作为成员间的共享链接。服务端成员权限仍是访问边界；未知或无权 project 不能回退到列表中的其他项目。
 
@@ -93,7 +93,7 @@ State 是插件发布的可重建项目视图，不是原始记录。key 使用 
 | 功能 | HTTP | MCP | CLI / App 使用方式 |
 |---|---|---|---|
 | 身份 | Integ.Life start/callback、logout、me；CLI 兼容 register/login | 不暴露 | Web 使用 Context HttpOnly Session；CLI、hook 与 MCP 保存私有 Bearer token |
-| 项目与成员 | projects、project timezone、project members | list/create projects，list/add members | owner 添加注册成员；成员在各入口看到并读写同一项目；Project 响应始终带 timezone |
+| 项目与成员 | projects、project timezone、project members | list/create projects，list/add members | owner 以 username 或 email 精确添加注册成员；成员在各入口看到并读写同一项目；Project 响应始终带 timezone |
 | 追加记录 | project events 批量写入 | `record_events` | `edc push`、hook、App 共享 UUID 与逐项结果规则 |
 | 查询与原文 | events query、event get、metadata | `query_events`、`get_event`、`list_metadata` | 网页、skill、`edc query/get/pull` 使用同一筛选和游标 |
 | 文件 | multipart upload、认证原始下载 | `upload_file`、`get_file` | Android 与 `edc push --file` 先传 File 再写 Event |

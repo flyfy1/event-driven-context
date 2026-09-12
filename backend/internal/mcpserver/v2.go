@@ -42,7 +42,8 @@ type V2ProjectInput struct {
 }
 type V2AddMemberInput struct {
 	ProjectID string `json:"project_id"`
-	Username  string `json:"username"`
+	Username  string `json:"username,omitempty"`
+	Email     string `json:"email,omitempty"`
 }
 type V2RecordEventsInput struct {
 	ProjectID string          `json:"project_id"`
@@ -112,7 +113,7 @@ func NewV2(backend V2Backend) *mcp.Server {
 	addV2(s, "list_projects", "List projects available to the authenticated user.", true, false, backend.ListProjects)
 	addV2(s, "create_project", "Create a project owned by the authenticated user.", false, false, backend.CreateProject)
 	addV2(s, "list_members", "List members of one project.", true, false, backend.ListMembers)
-	addV2(s, "add_member", "Add a registered username to a project you own.", false, false, backend.AddMember)
+	addV2(s, "add_member", "Add a registered username or email to a project you own. Provide exactly one identifier.", false, false, backend.AddMember)
 	addV2(s, "record_events", "Append 1 to 100 immutable events. The server sets actor, sequence, recorded_at, and file details. Results are per event.", false, true, backend.RecordEvents)
 	addV2(s, "query_events", "Query one stable project snapshot. Filters are ANDed; metadata and source values use typed JSON equality; results are ascending by sequence.", true, true, backend.QueryEvents)
 	addV2(s, "get_event", "Read one project event by id.", true, true, backend.GetEvent)
@@ -257,7 +258,7 @@ func (b *serviceV2Backend) AddMember(ctx context.Context, in V2AddMemberInput) (
 	if err := b.requireUser(ctx); err != nil {
 		return core.User{}, err
 	}
-	return b.store.AddMember(ctx, core.MemberInput{ProjectID: in.ProjectID, Username: in.Username})
+	return b.store.AddMember(ctx, core.MemberInput{ProjectID: in.ProjectID, Username: in.Username, Email: in.Email})
 }
 func (b *serviceV2Backend) RecordEvents(ctx context.Context, in V2RecordEventsInput) (v2.RecordEventsResult, error) {
 	if p, ok := v2MCPPrincipal(ctx); ok {
