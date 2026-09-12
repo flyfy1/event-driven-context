@@ -6,6 +6,16 @@
 
 用户最新要求以跑通 MVP 为重点，安全性工作暂不考虑。接下来集中实现和实际演示“写入记录 → 自动整理 → 查看结果 → 下一次对话使用”。暂停额外安全加固、极端输入测试和不影响主流程的审核扩展；现有基础能力继续使用。审核与集成代理优先发现和修复正常用户流程的阻断问题。以下历史检查记录保留为已有证据，不作为继续堆积验收门槛的理由。
 
+团队共享和“谁写了什么”是 MVP 必须能力。Project 成员必须共同读取和追加同一 context；Event actor 必须由服务端登录身份产生，和客户端声明的 source、metadata 分开。Agent 生成概况、冲突与回顾时保留原 Event 引用，并在需要归属时使用 actor。
+
+## 当前切片：团队共享与作者归属
+
+生产 dogfood 项目已有 owner 与 `songyy` 两个真实成员。`songyy` 从 Chrome 写入 Event `01a09371-27f0-7008-8fe8-9f3a79987ae1`（sequence 148），网页显示作者 `songyy`；另一个已登录 owner 用 CLI 读取同一 Event，仍得到 `actor={type:user,id:usr_zhf5geavmwa4gv6xv6gh3b2pmj,username:songyy}`、`source={channel:api,client:web}` 和服务端 `recorded_at=2026-09-12T02:27:41.83258778Z`。这证明成员共享读写与作者绑定的 API/CLI/网页记录主链。
+
+网页 Event 列表已显示 actor、记录时间和 source channel；成员列表和 owner 按注册用户名添加的控件已在 `da19592` 实现并由 Pages 提交 `ff3ab80` 发布，完成真实双身份浏览器验收前不标为完成。Android 能选择成员可见项目并读写 app Event，但当前记录模型未保留或展示 actor，因此 Android 的团队作者展示仍是明确缺口。
+
+真实 `project-brief/current` 已更新到 v2、`based_on_sequence=148`、lag 0；摘要把 sequence 148 的团队共享和作者归属要求列为约束，并保留该 Event ref。这是 Agent 整理输出保留新要求与来源的生产证据。
+
 ## 当前切片：定时回顾
 
 上一轮完成媒体 → 转录 → 概况 → 网页来源 → SessionStart 注入的真实主链。本轮只补 P1 中的自动定时与每日回顾：项目时区 → 按固定计划窗口执行 → 日期 State → Android/网页查看来源。日期、窗口和成功状态已持久化；实际 watch 到点发布、重复 tick 不改写，以及网页和 Android 模拟器来源导航均已通过。全新 Codex 会话也已验证 evidence 检索回答与 recorder 追加/完成待办；这些是合成验收，新的 dogfood 任务不据此宣称完成。
@@ -82,6 +92,7 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 - 核心只做数据、约束和权限，不执行转录、模型、语义检索或每日回顾逻辑。
 - 手动处理请求必须可持久恢复；接收请求不表示已执行。processor host 后续通过公共接口处理，不引入旧版后端任务协调器。
 - 插件管理与发布权限必须在服务端验证。客户端传来的 plugin ID、source、actor 或 producer 不能直接获得身份。
+- Project 成员通过公开接口共享同一事件历史；用户 Event 的 actor 由当前登录身份绑定，写入方声明的 source 与 metadata 不得作为作者。Agent 整理团队结论时保留 refs 和必要的 actor 归属。
 - 第 ① 步基础 CLI 用于验证公开接口；hook/setup、完整离线 outbox 与真实会话接入仍属于第 ② 步，未实现时不得返回成功。
 
 ## 第 ① 步执行前的验收预期
@@ -100,6 +111,7 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 | 私有 State | `_` 开头的名称仅所属插件可读；普通成员、项目 owner、其他插件的 list/get/history 都不可见 |
 | 插件身份 | 令牌限定项目/插件/清单权限；derived、namespace 与 refs 均校验；暂停/卸载后旧令牌和已取出的 principal 均不能继续操作 |
 | 管理 | 共享项目安装与成员管理须项目创建者批准；普通用户不能凭请求体冒充插件发布者；配置版本保留 |
+| 团队与作者 | owner 添加注册成员；两个真实身份从不同入口读写同一项目；跨成员读取仍保留写入者 actor ID/username、recorded_at 与独立 source channel；Agent 输出可回到原 Event |
 | HTTP / MCP / CLI | 同一事实在三个入口的 UUID、sequence、内容、版本及权限一致；OAuth read-only 不可写；未知或未实现命令明确失败 |
 | 持久性 | 关闭并重开进程后数据、去重、State 版本与撤销仍成立；写入失败不提前确认成功 |
 
@@ -107,7 +119,7 @@ V2 要求客户端 UUID、log/note/derived、独立 File、插件令牌、版本
 
 | V2 步骤 | 完成所需证据 | 当前状态 |
 |---|---|---|
-| ① 数据与公开接口 | 上表的真实存储、HTTP、MCP 与 CLI 测试及独立复核 | 基础服务已发布，公网 HTTP/MCP 与固定版本 CLI 验收通过；完整边界与生产重启仍未全部验收 |
+| ① 数据与公开接口 | 上表的真实存储、HTTP、MCP 与 CLI 测试及独立复核 | 基础服务已发布；真实双成员网页写入与另一身份 CLI 读取保留 actor 已通过；网页成员管理 UI 待当前切片验收，Android actor 展示未完成 |
 | ② 自动写入接入 | link/setup 预览确认，Claude Code 真实 hook 日志，脱敏、去重、outbox 恢复，recorder skill note 质量 | 真实 Claude hook 注入/日志与 outbox 通过；Codex recorder 创建、完成引用和闲聊不写入通过；Claude 完整 Stop 模型会话仍缺证据 |
 | ③ 概况与跨工具 | project-brief State 正确及来源可读；第二客户端无手动交代取得背景；evidence skill 正确查询 | 真实 brief v2/v3、网页来源和 Claude 注入通过；全新 Codex evidence 检索与模型答复通过，持续真实使用待验证 |
 | ④ 处理器与转录 | 独立 host 用插件令牌读写、游标恢复；真实无人值守转录与失败重试 | once/watch 已实现；生产 ASR、失败后恢复、derived 与 brief 写回通过；手动请求消费和重转录仍未实现 |

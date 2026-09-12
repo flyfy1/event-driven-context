@@ -117,7 +117,11 @@ button.danger { border-color: var(--danger); color: var(--danger); }
 .source-panel {
   min-width: 0;
 }
-.project-list { min-width: 0; max-width: 100%; }
+.sidebar { max-width: 100%; overflow: hidden; }
+.project-list { grid-template-columns: minmax(0, 1fr); width: 100%; min-width: 0; max-width: 100%; overflow: hidden; }
+.project-item { display: block; width: 100%; min-width: 0; max-width: 100%; overflow: hidden; }
+.project-item > span { display: block; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.project-item > small { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .project-heading > div, .card-title > div { min-width: 0; }
 .project-timezone {
   display: flex;
@@ -238,7 +242,7 @@ button.danger { border-color: var(--danger); color: var(--danger); }
 @media (max-width: 760px) {
   .workspace, .write-grid, .automation-grid, .automation-results, .integration-status-grid { grid-template-columns: minmax(0, 1fr); }
   .sidebar { max-width: 100%; overflow: hidden; }
-  .project-list { width: 100%; }
+  .project-list { width: 100%; overflow-x: auto; overflow-y: hidden; }
   .project-item { flex: 0 0 min(240px, 72vw); min-width: 0; max-width: 72vw; overflow: hidden; }
   .segmented { overflow-x: auto; }
   .segmented button { flex: 1; white-space: nowrap; }

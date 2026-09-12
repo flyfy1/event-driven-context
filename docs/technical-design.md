@@ -49,10 +49,13 @@ flowchart LR
 
 Project 是 Event、File、State、插件和成员权限的边界，并保存用于日期与计划运行解释的 IANA 时区。创建时可省略 `timezone`，服务端默认使用 `UTC`；owner 可用 `PATCH /v1/projects/{project_id}` 更新，成功直接返回 Project。插件自省返回当前 `project_timezone`，让每次处理使用与项目一致的时间语义；本次不增加 MCP 修改工具。
 
+Project 同时是团队 context 的共享边界。owner 按注册用户名添加成员；项目列表按当前登录用户的成员关系返回。加入后，成员通过 HTTP、MCP、CLI、网页或 App 读取同一份 Event、File 和公开 State，并可向同一项目追加 Event。
+
 ### Event
 
 Event 是不可覆盖的项目记录，分为 `log`、`note`、`derived`。写入方提供 UUID；服务端补充 sequence、recorded_at 和经过认证的 actor。
 
+- 用户 Event 的 actor 固定为当前登录用户的 `type=user`、用户 ID 和 username；插件 Event 固定为 `type=plugin`、插件 ID 和 `on_behalf_of`。EventInput 不提供可由调用者指定的 actor 字段。
 - 同项目同 UUID、同规范内容返回 `duplicate`；内容不同返回 `conflict`。
 - metadata 与 source 是写入方声明，不能改变 actor、权限或可信级别。
 - refs 只能指向同项目已有 Event，用于表达取代、撤回、完成、派生和回复。
@@ -88,7 +91,7 @@ State 是插件发布的可重建项目视图，不是原始记录。key 使用 
 | 功能 | HTTP | MCP | CLI / App 使用方式 |
 |---|---|---|---|
 | 身份 | register、login、logout、me | 不暴露 | CLI 保存私有 token；网页与 App 使用各自认证流程 |
-| 项目与成员 | projects、project timezone、project members | list/create projects，list/add members | Project 响应始终带 timezone；修改仅由 HTTP/CLI/App 管理 |
+| 项目与成员 | projects、project timezone、project members | list/create projects，list/add members | owner 添加注册成员；成员在各入口看到并读写同一项目；Project 响应始终带 timezone |
 | 追加记录 | project events 批量写入 | `record_events` | `edc push`、hook、App 共享 UUID 与逐项结果规则 |
 | 查询与原文 | events query、event get、metadata | `query_events`、`get_event`、`list_metadata` | 网页、skill、`edc query/get/pull` 使用同一筛选和游标 |
 | 文件 | multipart upload、认证原始下载 | `upload_file`、`get_file` | Android 与 `edc push --file` 先传 File 再写 Event |
@@ -123,6 +126,8 @@ Android 在录制开始时生成稳定 capture UUID，并把账户、项目、�
 
 Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉取输入。当前转录输出 UUID 由项目、插件、输入 Event 和输出槽位稳定决定；发布 State 时带 expected_version。输出成功后更新游标，失败不跳过输入。历史重转录的新 generation 尚未实现。
 
+Agent 或处理器整理团队记录时以 `actor` 判断写入者，以 refs 保留原 Event。`source.channel` 只说明进入渠道；导入旧会话时，执行导入的账号仍是 actor，原会话角色应留在 source 或 metadata，不能冒充为经过认证的成员发言。概况、冲突和回顾若需要区分成员说法，应显示成员 username 并允许打开原 Event。
+
 手动 run 接口只表示请求已持久接受。实际执行、重试、错误状态和用量由 host 与插件状态呈现，不由 Core 假装同步完成。
 
 ## 6. P1 四个插件
@@ -155,6 +160,7 @@ Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉�
 - duplicate 是成功确认；conflict 和批次局部失败需要保留原输入并提示处理。
 - State lag、插件暂停、处理失败、输出截断和查询范围不足必须明确展示。
 - source 与 actor 分开显示；agent note、用户原话、插件 derived 和 State 不能互相冒充。
+- 团队 Event 视图显示 actor username（必要时 ID）、recorded_at 和 source channel；项目成员入口显示当前成员，并允许 owner 添加已注册用户名。
 - 四种目标语言覆盖同一流程、校验、错误、空状态和跨页选择；生成内容语言由插件配置决定，转录保留原语言。
 
 网页提供项目记录、项目状态、接入和插件管理。Android 提供记录、回顾、我的，并复用相同项目、插件和 State 接口。界面优先显示用户可理解的名称与结果，ID 用于来源和诊断。
@@ -179,5 +185,6 @@ Processor host 用插件私有 State 保存游标，通过 `after_sequence` 拉�
 - State 历史版本、expected_version 冲突、lag 与私有命名空间；
 - 插件令牌最小权限、暂停和卸载即时失效、管理身份不可伪造；
 - 同一数据经 HTTP、MCP 和 CLI 往返后 UUID、sequence、内容、版本和错误一致。
+- 两个真实成员从不同入口读写同一项目，成员 B 的 Event 由成员 A 读取时仍保留 B 的 actor ID、username 和服务端 recorded_at；网页显示同一作者，Agent 输出保留来源和必要归属。
 
 已有真实 Claude hook 注入、Codex 第二客户端检索与 recorder 写回、ASR/概况处理和实际定时回顾证据。完整 P1 仍需补齐手动处理闭环、物理手机与剩余四语言/OAuth 场景，以及持续真实使用；既有合成验收不能替代这些证据。
