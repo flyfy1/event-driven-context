@@ -43,6 +43,19 @@ func TestReturnedValuesCannotMutateStoredDataOrPermissions(t *testing.T) {
 		t.Fatal(err)
 	}
 	seq := created(t, first).Sequence
+	refs := []Ref{{Rel: "replies_to", ID: eventOne}}
+	second := textInput(eventTwo, "reply")
+	second.Refs = refs
+	secondWrite, err := f.service.RecordEvents(f.aliceCtx, f.project.ID, RecordEventsInput{Events: []EventInput{second}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	created(t, secondWrite)
+	refs[0].ID = eventThree
+	storedSecond, err := f.service.GetEvent(f.aliceCtx, f.project.ID, eventTwo)
+	if err != nil || len(storedSecond.Refs) != 1 || storedSecond.Refs[0].ID != eventOne {
+		t.Fatalf("input refs mutated stored event: %#v err=%v", storedSecond, err)
+	}
 
 	page, err := f.service.QueryEvents(f.aliceCtx, f.project.ID, QueryEventsInput{})
 	if err != nil {
@@ -89,10 +102,28 @@ func TestReturnedValuesCannotMutateStoredDataOrPermissions(t *testing.T) {
 	if err != nil || relisted[0].Permissions.ReadEvents[0] != "note" {
 		t.Fatalf("list result mutated stored authority: %#v err=%v", relisted, err)
 	}
+	revised, err := f.service.RevisePlugin(f.aliceCtx, f.project.ID, "alias-check", RevisePluginInput{ExpectedRevision: 1, Config: json.RawMessage(`{"prompt":"revised"}`)})
+	if err != nil || revised.ConfigRevision != 2 || len(revised.ConfigRevisions) != 2 || string(revised.ConfigRevisions[0].Config) != `{"prompt":"safe"}` || string(revised.ConfigRevisions[1].Config) != `{"prompt":"revised"}` {
+		t.Fatalf("config revision history %#v err=%v", revised, err)
+	}
+	revised.ConfigRevisions[0].Config[11] = 'Z'
+	relisted, err = f.service.ListPlugins(f.aliceCtx, f.project.ID)
+	if err != nil || string(relisted[0].ConfigRevisions[0].Config) != `{"prompt":"safe"}` {
+		t.Fatalf("revision result mutated config history: %#v err=%v", relisted, err)
+	}
 
 	principal, err := f.service.AuthenticatePlugin(installed.Token)
 	if err != nil {
 		t.Fatal(err)
+	}
+	self, err := f.service.GetPluginAsPlugin(context.Background(), principal)
+	if err != nil || self.PluginID != "alias-check" || self.ConfigRevision != 2 || string(self.Config) != `{"prompt":"revised"}` {
+		t.Fatalf("plugin self inspection %#v err=%v", self, err)
+	}
+	self.Config[11] = 'X'
+	relisted, err = f.service.ListPlugins(f.aliceCtx, f.project.ID)
+	if err != nil || string(relisted[0].Config) != `{"prompt":"revised"}` {
+		t.Fatalf("plugin self result mutated config: %#v err=%v", relisted, err)
 	}
 	zero := int64(0)
 	state, err := f.service.PutStateAsPlugin(context.Background(), principal, PutStateInput{
@@ -138,6 +169,41 @@ func TestFileReadsAndDedupeFailClosedAfterBlobCorruption(t *testing.T) {
 	}
 	if _, retryErr := f.service.PutFile(f.aliceCtx, f.project.ID, FileUpload{Filename: "x.txt", MediaType: "text/plain", SizeBytes: int64(len(original)), Reader: bytes.NewReader(original)}); errorCode(retryErr) != "conflict" {
 		t.Fatalf("dedupe falsely confirmed corrupt blob: %v", retryErr)
+	}
+}
+
+func TestPluginCannotReadOrAttachFileFromUnreadableEvent(t *testing.T) {
+	f := newFixture(t)
+	contents := []byte("private log attachment")
+	info, err := f.service.PutFile(f.aliceCtx, f.project.ID, FileUpload{Filename: "private.txt", MediaType: "text/plain", SizeBytes: int64(len(contents)), Reader: bytes.NewReader(contents)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	logEvent := textInput(eventOne, "")
+	logEvent.Type = "log"
+	logEvent.Content = EventContent{Kind: "file", FileID: info.ID}
+	write, err := f.service.RecordEvents(f.aliceCtx, f.project.ID, RecordEventsInput{Events: []EventInput{logEvent}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	created(t, write)
+	_, principal := install(t, f) // read_events excludes log
+	if _, reader, openErr := f.service.OpenFileAsPlugin(context.Background(), principal, info.ID); !errors.Is(openErr, core.ErrNotFound) {
+		if reader != nil {
+			_ = reader.Close()
+		}
+		t.Fatalf("plugin opened file from unreadable event: %v", openErr)
+	}
+	derived := textInput(eventTwo, "")
+	derived.Type = "derived"
+	derived.Content = EventContent{Kind: "file", FileID: info.ID}
+	derived.Source = map[string]json.RawMessage{"channel": json.RawMessage(`"plugin"`)}
+	result, err := f.service.RecordEventsAsPlugin(context.Background(), principal, RecordEventsInput{Events: []EventInput{derived}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Results) != 1 || result.Results[0].Status != "invalid" || result.Results[0].Error == nil || result.Results[0].Error.Code != "invalid_ref" {
+		t.Fatalf("plugin attached file from unreadable event: %#v", result)
 	}
 }
 

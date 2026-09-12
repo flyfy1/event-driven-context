@@ -1,6 +1,6 @@
 const assert = require("node:assert/strict");
 const test = require("node:test");
-const { PRODUCTION_API, resolveAPI, sessionStorageKey, bytesToBase64, audioMediaType, pathWithLocale } = require("./workspace-utils.js");
+const { PRODUCTION_API, resolveAPI, sessionStorageKey, bytesToBase64, audioMediaType, pathWithLocale, uuidV7 } = require("./workspace-utils.js");
 
 test("production pages ignore API overrides", () => {
   assert.equal(resolveAPI("context.integ.life", "https://example.com"), PRODUCTION_API);
@@ -34,4 +34,9 @@ test("changing the workspace locale preserves other URL state", () => {
   assert.equal(result.searchParams.get("api"), "http://localhost:8401");
   assert.equal(result.searchParams.get("next"), "records");
   assert.equal(result.hash, "#inbox");
+});
+
+test("event ids use UUIDv7 timestamp, version, and variant bits", () => {
+  const id = uuidV7(0x0192f3a17c2e, new Uint8Array(16).fill(0xab));
+  assert.match(id, /^0192f3a1-7c2e-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 });

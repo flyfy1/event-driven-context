@@ -289,12 +289,32 @@ func (s *Service) RequestManualRun(ctx context.Context, projectID, pluginID stri
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p := s.data.Projects[projectID]
-	installation := p.Installations[pluginID]
+	if p == nil {
+		return ManualRunRequest{}, core.ErrNotFound
+	}
+	installation, ok := p.Installations[pluginID]
+	if !ok || installation.Status == "removed" || installation.ManagerUserID != core.UserID(ctx) {
+		return ManualRunRequest{}, core.ErrNotFound
+	}
 	if installation.Status == "paused" {
 		return ManualRunRequest{}, v2err("plugin_paused", "plugin is paused")
 	}
+	if installation.Status != "active" {
+		return ManualRunRequest{}, core.ErrNotFound
+	}
+	in.SourceEventIDs = append([]string(nil), in.SourceEventIDs...)
+	for i, rawID := range in.SourceEventIDs {
+		id := strings.ToLower(strings.TrimSpace(rawID))
+		if !uuidPattern.MatchString(id) {
+			return ManualRunRequest{}, v2err("invalid_ref", "manual run source must be a UUID")
+		}
+		in.SourceEventIDs[i] = id
+	}
 	sort.Strings(in.SourceEventIDs)
-	for _, id := range in.SourceEventIDs {
+	for i, id := range in.SourceEventIDs {
+		if i > 0 && id == in.SourceEventIDs[i-1] {
+			return ManualRunRequest{}, v2err("invalid_ref", "duplicate manual run source")
+		}
 		e, ok := eventByID(p, id)
 		if !ok || !contains(installation.Permissions.ReadEvents, e.Type) {
 			return ManualRunRequest{}, v2err("invalid_ref", "manual run source is missing or unreadable")
@@ -303,7 +323,7 @@ func (s *Service) RequestManualRun(ctx context.Context, projectID, pluginID stri
 	mapKey := pluginID + "\x00" + in.RequestID
 	if old, ok := p.ManualRuns[mapKey]; ok {
 		if strings.Join(old.SourceEventIDs, "\x00") == strings.Join(in.SourceEventIDs, "\x00") {
-			return old, nil
+			return cloneManualRun(old), nil
 		}
 		return ManualRunRequest{}, v2err("conflict", "request id reused with different inputs")
 	}
@@ -348,5 +368,5 @@ func (s *Service) RequestManualRun(ctx context.Context, projectID, pluginID stri
 		return ManualRunRequest{}, err
 	}
 	s.data = candidate
-	return req, nil
+	return cloneManualRun(req), nil
 }

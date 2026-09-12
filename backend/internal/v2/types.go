@@ -272,6 +272,7 @@ type ServiceAPI interface {
 	RemovePlugin(context.Context, string, string) (Installation, error)
 	RequestManualRun(context.Context, string, string, ManualRunInput) (ManualRunRequest, error)
 	AuthenticatePlugin(string) (PluginPrincipal, error)
+	GetPluginAsPlugin(context.Context, PluginPrincipal) (Installation, error)
 	RecordEventsAsPlugin(context.Context, PluginPrincipal, RecordEventsInput) (RecordEventsResult, error)
 	QueryEventsAsPlugin(context.Context, PluginPrincipal, QueryEventsInput) (EventsPage, error)
 	GetEventAsPlugin(context.Context, PluginPrincipal, string) (Event, error)

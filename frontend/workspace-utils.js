@@ -44,5 +44,20 @@
     return `${target.pathname}${target.search}${target.hash}`;
   }
 
-  return { PRODUCTION_API, resolveAPI, sessionStorageKey, bytesToBase64, audioMediaType, pathWithLocale };
+  function uuidV7(now = Date.now(), random) {
+    const bytes = new Uint8Array(16);
+    if (random) bytes.set(random.slice(0, 16));
+    else globalThis.crypto.getRandomValues(bytes);
+    let timestamp = BigInt(now);
+    for (let index = 5; index >= 0; index -= 1) {
+      bytes[index] = Number(timestamp & 255n);
+      timestamp >>= 8n;
+    }
+    bytes[6] = (bytes[6] & 15) | 112;
+    bytes[8] = (bytes[8] & 63) | 128;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    return hex.slice(0, 8) + "-" + hex.slice(8, 12) + "-" + hex.slice(12, 16) + "-" + hex.slice(16, 20) + "-" + hex.slice(20);
+  }
+
+  return { PRODUCTION_API, resolveAPI, sessionStorageKey, bytesToBase64, audioMediaType, pathWithLocale, uuidV7 };
 });

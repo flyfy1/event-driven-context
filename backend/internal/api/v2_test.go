@@ -235,14 +235,26 @@ func TestV2HTTPPluginStatePauseManualRunAndUserOnlyManagement(t *testing.T) {
 		t.Fatalf("install: %d %#v", w.Code, installed)
 	}
 
-	// Plugin credentials cannot cross into user-only member or plugin management.
+	// Plugin credentials cannot cross into user-only member management. A host
+	// may introspect only its own current installation and config revision.
 	w = f.request(t, http.MethodGet, path+"/members", installed.Token, "", nil)
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("plugin members: %d %s", w.Code, w.Body.String())
 	}
 	w = f.request(t, http.MethodGet, path+"/plugins", installed.Token, "", nil)
-	if w.Code != http.StatusUnauthorized {
-		t.Fatalf("plugin plugins: %d %s", w.Code, w.Body.String())
+	self := decodeV2Response[struct {
+		Plugins []v2.Installation `json:"plugins"`
+	}](t, w)
+	if w.Code != http.StatusOK || len(self.Plugins) != 1 || self.Plugins[0].ID != installed.Installation.ID || self.Plugins[0].ConfigRevision != installed.Installation.ConfigRevision {
+		t.Fatalf("plugin self introspection: %d %#v", w.Code, self)
+	}
+	otherProject, err := f.store.CreateProject(core.WithUser(context.Background(), f.alice.ID), core.ProjectInput{Name: "Other V2 project"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	w = f.request(t, http.MethodGet, "/v1/projects/"+otherProject.ID+"/plugins", installed.Token, "", nil)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("plugin crossed project boundary: %d %s", w.Code, w.Body.String())
 	}
 
 	derived := v2.EventInput{ID: "44444444-4444-4444-8444-444444444444", Type: "derived", Content: v2.EventContent{Kind: "text", Text: "summary"}, Source: map[string]json.RawMessage{"channel": json.RawMessage(`"plugin"`)}, Refs: []v2.Ref{{Rel: "derived_from", ID: event.ID}}}

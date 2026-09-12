@@ -297,6 +297,15 @@ func TestPluginStateNamespacePauseRemovalAndRestart(t *testing.T) {
 	if _, err = f.service.GetState(f.aliceCtx, f.project.ID, GetStateInput{Keys: []string{"project-brief/_cursor"}}); errorCode(err) != "forbidden_namespace" {
 		t.Fatalf("private read err=%v", err)
 	}
+	one := int64(1)
+	updated, err := f.service.PutStateAsPlugin(context.Background(), principal, PutStateInput{Key: "project-brief/current", ExpectedVersion: &one, Content: StateContent{Format: "markdown", Text: "brief v2"}, BasedOnSequence: written.Results[0].Sequence, Refs: []string{eventOne, eventTwo}})
+	if err != nil || updated.Version != 2 {
+		t.Fatalf("state v2 %#v err=%v", updated, err)
+	}
+	history, err := f.service.GetState(f.aliceCtx, f.project.ID, GetStateInput{Keys: []string{"project-brief/current"}, Version: &one})
+	if err != nil || len(history.States) != 1 || history.States[0].Version != 1 || history.States[0].Content.Text != "brief" {
+		t.Fatalf("state history %#v err=%v", history, err)
+	}
 	if _, err = f.service.SetPluginStatus(f.aliceCtx, f.project.ID, "project-brief", "paused"); err != nil {
 		t.Fatal(err)
 	}

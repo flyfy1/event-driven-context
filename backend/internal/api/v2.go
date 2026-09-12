@@ -174,8 +174,19 @@ func RegisterV2Handlers(mux *http.ServeMux, store *core.Store, service v2.Servic
 		return service.PutState(ctx, v2ProjectID(ctx), in)
 	})))
 
-	mux.Handle("GET /v1/projects/{project_id}/plugins", readUser(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		plugins, err := service.ListPlugins(r.Context(), r.PathValue("project_id"))
+	mux.Handle("GET /v1/projects/{project_id}/plugins", readSubject(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		subject := v2SubjectFrom(r.Context())
+		var plugins []v2.Installation
+		var err error
+		if subject.plugin != nil {
+			var installation v2.Installation
+			installation, err = service.GetPluginAsPlugin(r.Context(), *subject.plugin)
+			if err == nil {
+				plugins = []v2.Installation{installation}
+			}
+		} else {
+			plugins, err = service.ListPlugins(r.Context(), r.PathValue("project_id"))
+		}
 		v2RespondResult(w, http.StatusOK, struct {
 			Plugins []v2.Installation `json:"plugins"`
 		}{Plugins: plugins}, err)

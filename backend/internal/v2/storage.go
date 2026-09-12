@@ -13,10 +13,10 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"event-driven-context/internal/core"
-	"golang.org/x/sys/unix"
 )
 
 const snapshotVersion = 1
@@ -72,7 +72,7 @@ func New(identity *core.Store, dataDir string) (*Service, error) {
 	keepLock := false
 	defer func() {
 		if !keepLock {
-			_ = unix.Flock(int(lockFile.Fd()), unix.LOCK_UN)
+			_ = syscall.Flock(int(lockFile.Fd()), syscall.LOCK_UN)
 			_ = lockFile.Close()
 		}
 	}()
@@ -111,7 +111,7 @@ func acquireWriterLock(root string) (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
-	if err = unix.Flock(int(f.Fd()), unix.LOCK_EX|unix.LOCK_NB); err != nil {
+	if err = syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		_ = f.Close()
 		return nil, fmt.Errorf("v2 data directory is already open by another service: %w", err)
 	}
@@ -127,7 +127,7 @@ func (s *Service) Close() error {
 	}
 	f := s.lockFile
 	s.lockFile = nil
-	unlockErr := unix.Flock(int(f.Fd()), unix.LOCK_UN)
+	unlockErr := syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
 	closeErr := f.Close()
 	if unlockErr != nil {
 		return unlockErr

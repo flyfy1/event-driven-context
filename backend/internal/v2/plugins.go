@@ -268,6 +268,18 @@ func (s *Service) AuthenticatePlugin(token string) (PluginPrincipal, error) {
 	return PluginPrincipal{}, core.ErrUnauthenticated
 }
 
+// GetPluginAsPlugin lets a processor refresh its own immutable manifest and
+// current configuration without granting visibility into other installations.
+func (s *Service) GetPluginAsPlugin(ctx context.Context, principal PluginPrincipal) (Installation, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	in, err := s.authorizePluginLocked(principal)
+	if err != nil {
+		return Installation{}, err
+	}
+	return cloneInstallation(in), nil
+}
+
 func (s *Service) authorizePluginLocked(principal PluginPrincipal) (Installation, error) {
 	p := s.data.Projects[principal.ProjectID]
 	if p == nil {
