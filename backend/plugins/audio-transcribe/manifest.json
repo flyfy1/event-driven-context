@@ -1,0 +1,34 @@
+{
+  "id": "audio-transcribe",
+  "version": "1.0.0",
+  "name": "Audio transcription",
+  "description": "Transcribes an authorized audio Event into a source-linked derived transcript.",
+  "skills": ["skills/audio-transcribe/SKILL.md"],
+  "state": [
+    {"key": "_cursor"}
+  ],
+  "session_context": [],
+  "processor": {
+    "runs_in": "host",
+    "entry": {
+      "type": "command",
+      "command": ["audio-transcribe-adapter"]
+    },
+    "input": {
+      "types": ["note", "log"],
+      "media_types": ["audio/*"]
+    },
+    "limits": {
+      "timeout_seconds": 600
+    }
+  },
+  "config": {
+    "language": "auto",
+    "prompt": "Transcribe faithfully in the original language and mark unclear speech without guessing."
+  },
+  "permissions": {
+    "read_events": ["note", "log"],
+    "write_events": ["derived"],
+    "write_state": ["_cursor"]
+  }
+}

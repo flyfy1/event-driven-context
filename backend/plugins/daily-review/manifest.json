@@ -1,0 +1,55 @@
+{
+  "id": "daily-review",
+  "version": "0.1.0",
+  "name": "Daily review",
+  "description": "Publishes a source-linked daily review with progress, decisions, todos, questions, and clearly separate suggestions.",
+  "skills": [
+    "skills/daily-review/SKILL.md"
+  ],
+  "state": [
+    { "key": "{date}" },
+    { "key": "_cursor" },
+    { "key": "_requests" }
+  ],
+  "session_context": [],
+  "processor": {
+    "runs_in": "host",
+    "entry": {
+      "type": "agent",
+      "skill": "skills/daily-review/SKILL.md",
+      "protocol": "edc-processor-v1"
+    },
+    "input": {
+      "types": [
+        "note",
+        "derived",
+        "log"
+      ]
+    },
+    "schedule": {
+      "time": "21:00",
+      "timezone": "project"
+    },
+    "limits": {
+      "timeout_seconds": 120,
+      "max_runs_per_day": 3
+    }
+  },
+  "config": {
+    "time": "21:00",
+    "language": "auto",
+    "prompt": "Keep progress, decisions, todos, questions, and suggestions distinct."
+  },
+  "permissions": {
+    "read_events": [
+      "note",
+      "derived",
+      "log"
+    ],
+    "write_events": [],
+    "write_state": [
+      "{date}",
+      "_cursor"
+    ]
+  }
+}
