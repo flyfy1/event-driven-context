@@ -51,10 +51,12 @@ func UserID(ctx context.Context) string { id, _ := ctx.Value(userKey{}).(string)
 type User struct {
 	ID        string `json:"id"`
 	Username  string `json:"username"`
+	Email     string `json:"email"`
 	CreatedAt string `json:"created_at"`
 }
 type Credentials struct {
 	Username string `json:"username"`
+	Email    string `json:"email,omitempty"`
 	Password string `json:"password"`
 }
 type LoginResult struct {

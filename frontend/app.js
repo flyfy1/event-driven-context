@@ -32,7 +32,6 @@ const state = {
   token: localStorage.getItem(TOKEN_KEY),
   user: storedUser(),
   locale: resolveLocalePreference(requestedLocale, sharedLocale(), localStorage.getItem(LOCALE_KEY), navigator.languages || [navigator.language]),
-  authMode: "login",
   view: VIEWS.has(location.hash.slice(1)) ? location.hash.slice(1) : "records",
   routeProjectID: new URLSearchParams(location.search).get("project") || "", routeError: false,
   projects: [], project: null, projectsStatus: "idle", projectsError: "", projectsRequest: 0,
@@ -47,6 +46,13 @@ const state = {
   eventCache: new Map(), pluginToken: "",
   audioStatus: { key: "audioNotSelected", variables: {}, success: false }
 };
+const returnedFromCentralAuth = new URLSearchParams(location.search).get("auth") === "complete";
+if (returnedFromCentralAuth) {
+  state.token = null; state.user = null;
+  localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(USER_KEY);
+  const cleanURL = new URL(location.href); cleanURL.searchParams.delete("auth");
+  history.replaceState(history.state, "", cleanURL.pathname + cleanURL.search + cleanURL.hash);
+}
 if (requestedLocale) persistLocale(requestedLocale);
 
 function t(key, variables) { return translate(state.locale, key, variables); }
@@ -107,7 +113,7 @@ function apiError(payload, statusCode) {
   const code = payload && payload.error && payload.error.code;
   const serviceMessage = payload && payload.error && payload.error.message;
   const key = {
-    unauthenticated: "invalidCredentials", forbidden: "forbidden", not_found: "notFound",
+    unauthenticated: "sessionExpired", forbidden: "forbidden", not_found: "notFound",
     conflict: "conflict", invalid_input: "invalidInput", too_large: "fileTooLargeV2",
     invalid_ref: "invalidRef", unsupported_media_type: "unsupportedMediaType",
     state_version_mismatch: "stateVersionMismatch", forbidden_namespace: "forbiddenNamespace",
@@ -128,6 +134,7 @@ async function request(path, options) {
     response = await fetch(API + path, {
       method: config.method || "GET",
       headers,
+      credentials: "include",
       body: config.form || config.rawBody || (config.body === undefined ? undefined : JSON.stringify(config.body))
     });
   } catch { throw new Error(t("networkError")); }
@@ -153,7 +160,6 @@ function setLocale(locale, persist) {
   }
   applyStaticTranslations();
   updateIdentity();
-  setAuthMode(false);
   renderProjects();
   renderProject();
   renderEvents();
@@ -193,13 +199,6 @@ function setView(view, historyMode = "replace") {
   syncRoute(historyMode);
 }
 
-function saveSession(login) {
-  state.sessionEpoch += 1;
-  state.token = login.token;
-  state.user = login.user;
-  localStorage.setItem(TOKEN_KEY, login.token);
-  localStorage.setItem(USER_KEY, JSON.stringify(login.user));
-}
 function clearSession() {
   state.sessionEpoch += 1;
   state.projectsRequest += 1;
@@ -216,17 +215,11 @@ function clearSession() {
 }
 function updateIdentity() {
   const online = Boolean(state.user);
-  $("#connection-status").textContent = online ? t("signedInAs", { username: state.user.username }) : t("signedOut");
+  $("#connection-status").textContent = online ? t("signedInAs", { username: state.user.email || state.user.username }) : t("signedOut");
   $("#connection-status").classList.toggle("online", online);
   $("#logout-button").classList.toggle("hidden", !online);
   $("#auth-panel").classList.toggle("hidden", online);
   $("#workspace").classList.toggle("hidden", !online);
-}
-function setAuthMode(clear) {
-  document.querySelectorAll("[data-auth-mode]").forEach((button) => button.classList.toggle("selected", button.dataset.authMode === state.authMode));
-  $("#auth-submit").textContent = t(state.authMode);
-  $("#auth-password").autocomplete = state.authMode === "login" ? "current-password" : "new-password";
-  if (clear !== false) setMessage("#auth-message");
 }
 
 async function loadProjects(selectID) {
@@ -717,7 +710,6 @@ async function loadPlugins() {
   }
 }
 
-document.querySelectorAll("[data-auth-mode]").forEach((button) => button.addEventListener("click", () => { state.authMode = button.dataset.authMode; setAuthMode(); }));
 document.querySelectorAll("[data-workspace-view]").forEach((button) => button.addEventListener("click", () => setView(button.dataset.workspaceView, "push")));
 document.querySelectorAll("[data-content-mode]").forEach((button) => button.addEventListener("click", () => { state.contentMode = button.dataset.contentMode; resetRecordID(); setContentMode(); }));
 document.querySelectorAll("[data-copy-command]").forEach((button) => button.addEventListener("click", async () => {
@@ -725,23 +717,18 @@ document.querySelectorAll("[data-copy-command]").forEach((button) => button.addE
   catch { setMessage("#integration-message", t("copyFailed")); }
 }));
 $("#language-select").addEventListener("change", (event) => setLocale(event.target.value, true));
-$("#auth-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const button = $("#auth-submit"), credentials = { username: $("#auth-username").value.trim().toLowerCase(), password: $("#auth-password").value };
-  setBusy(button, true, state.authMode); setMessage("#auth-message");
-  try {
-    if (state.authMode === "register") {
-      await request("/v1/auth/register", { method: "POST", body: credentials, auth: false });
-      state.authMode = "login"; setAuthMode(); setMessage("#auth-message", t("registrationSuccess"), true);
-    } else {
-      const login = await request("/v1/auth/login", { method: "POST", body: credentials, auth: false });
-      saveSession(login); updateIdentity(); await loadProjects();
-    }
-  } catch (error) { setMessage("#auth-message", error.message); }
-  finally { setBusy(button, false, state.authMode); }
+$("#auth-submit").addEventListener("click", () => {
+  const returnURL = new URL(location.href);
+  returnURL.searchParams.delete("auth");
+  const returnTo = returnURL.pathname + returnURL.search + returnURL.hash;
+  clearSession();
+  const start = new URL(API + "/v1/auth/integ/start");
+  start.searchParams.set("ui_locales", state.locale);
+  start.searchParams.set("return_to", returnTo);
+  location.assign(start.toString());
 });
 $("#logout-button").addEventListener("click", async () => {
-  try { await request("/v1/auth/logout", { method: "POST", body: {} }); } finally { clearSession(); updateIdentity(); renderProjects(); renderProject(); }
+  try { await request("/v1/auth/logout", { method: "POST" }); } finally { clearSession(); updateIdentity(); renderProjects(); renderProject(); }
 });
 function showProjectForm(show) { $("#project-form").classList.toggle("hidden", !show); }
 $("#new-project-button").addEventListener("click", () => showProjectForm(true));
@@ -861,7 +848,7 @@ window.addEventListener("hashchange", restoreRoute);
 async function boot() {
   populateTimezones($("#project-timezone"), BROWSER_TIMEZONE);
   setLocale(state.locale, false); setView(state.view); setContentMode(); renderAudioStatus();
-  if (!state.token) return;
+  const expectedSession = Boolean(state.token || state.user || returnedFromCentralAuth);
   const epoch = state.sessionEpoch, token = state.token;
   try {
     const user = await request("/v1/me");
@@ -869,7 +856,8 @@ async function boot() {
     state.user = user; localStorage.setItem(USER_KEY, JSON.stringify(user)); updateIdentity(); await loadProjects();
   } catch (error) {
     if (error.status === 401 || error.code === "unauthenticated") {
-      clearSession(); updateIdentity(); setMessage("#auth-message", t("sessionExpired"));
+      clearSession(); updateIdentity();
+      if (expectedSession) setMessage("#auth-message", t("sessionExpired"));
     } else setMessage("#auth-message", error.message);
   }
 }

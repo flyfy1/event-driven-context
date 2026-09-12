@@ -35,11 +35,11 @@ func newFixture(t *testing.T) *testFixture {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = store.Close() })
-	aliceUser, err := store.Register(context.Background(), core.Credentials{Username: "alice", Password: "test-password-long-enough"})
+	aliceUser, err := store.Register(context.Background(), core.Credentials{Username: "alice", Email: "automation-alice@example.invalid", Password: "test-password-long-enough"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	bobUser, err := store.Register(context.Background(), core.Credentials{Username: "bob", Password: "test-password-long-enough"})
+	bobUser, err := store.Register(context.Background(), core.Credentials{Username: "bob", Email: "automation-bob@example.invalid", Password: "test-password-long-enough"})
 	if err != nil {
 		t.Fatal(err)
 	}

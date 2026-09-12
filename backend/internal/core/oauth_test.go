@@ -24,7 +24,7 @@ func TestOAuthScopeNormalizationAndExpiredCode(t *testing.T) {
 	}
 	defer s.Close()
 	ctx := context.Background()
-	user, err := s.Register(ctx, Credentials{Username: "oauth-user", Password: "integration-password-123"})
+	user, err := s.Register(ctx, Credentials{Username: "oauth-user", Email: "oauth-user@example.invalid", Password: "integration-password-123"})
 	if err != nil {
 		t.Fatal(err)
 	}

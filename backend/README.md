@@ -27,6 +27,7 @@ go run ./cmd/edc-server -addr 127.0.0.1:8080 -db data/context.db -data data
 The CLI uses `--server` and a private `--config` file. Global flags must precede the command:
 
 ```sh
+go run ./cmd/edc --server http://127.0.0.1:8080 --config /private/path/edc.json register --username alice --email alice@example.com
 go run ./cmd/edc --server http://127.0.0.1:8080 --config /private/path/edc.json login --username alice
 go run ./cmd/edc --server http://127.0.0.1:8080 --config /private/path/edc.json project create --name demo
 go run ./cmd/edc --server http://127.0.0.1:8080 --config /private/path/edc.json link prj_example

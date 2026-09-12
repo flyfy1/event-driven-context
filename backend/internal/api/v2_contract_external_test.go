@@ -90,7 +90,7 @@ func newContractFixture(t *testing.T) *contractFixture {
 
 func contractUser(t *testing.T, store *core.Store, username string) (core.User, string) {
 	t.Helper()
-	user, err := store.Register(context.Background(), core.Credentials{Username: username, Password: "password-123"})
+	user, err := store.Register(context.Background(), core.Credentials{Username: username, Email: username + "@example.test", Password: "password-123"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -11,6 +12,82 @@ import (
 	"sync"
 	"testing"
 )
+
+func TestIntegIdentityPreservesMigratedUserIDAndCreatesSessions(t *testing.T) {
+	s := openTest(t)
+	if _, err := s.Register(context.Background(), Credentials{Username: "no-email", Password: "test-password-long-enough"}); err == nil {
+		t.Fatal("registration without email succeeded")
+	}
+	legacy, err := s.Register(context.Background(), Credentials{Username: "songyy", Email: "temporary@example.invalid", Password: "test-password-long-enough"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	project, err := s.CreateProject(WithUser(context.Background(), legacy.ID), ProjectInput{Name: "existing team context"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = s.db.Exec("UPDATE users SET email=NULL WHERE id=?", legacy.ID); err != nil {
+		t.Fatal(err)
+	}
+	migrated, err := s.SetUserEmail(context.Background(), legacy.ID, "songyy", " FlyFy1@Gmail.com ")
+	if err != nil || migrated.ID != legacy.ID || migrated.Email != "flyfy1@gmail.com" {
+		t.Fatalf("migrate user: %+v err=%v", migrated, err)
+	}
+	if _, err = s.Register(context.Background(), Credentials{Username: "other-user", Email: "flyfy1@gmail.com", Password: "test-password-long-enough"}); !errors.Is(err, ErrConflict) {
+		t.Fatalf("duplicate email registration error = %v", err)
+	}
+	if _, err = s.SetUserEmail(context.Background(), "wrong-id", "songyy", "other@example.com"); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("wrong identity migration error = %v", err)
+	}
+	login, err := s.LoginInteg(context.Background(), "https://auth.integ.life/", "central-songyy", "flyfy1@gmail.com")
+	if err != nil || login.User.ID != legacy.ID || login.Token == "" {
+		t.Fatalf("central login: %+v err=%v", login, err)
+	}
+	userID, _, err := s.Authenticate(context.Background(), login.Token)
+	if err != nil || userID != legacy.ID {
+		t.Fatalf("session user = %q err=%v", userID, err)
+	}
+	projects, err := s.ListProjects(WithUser(context.Background(), login.User.ID), Empty{})
+	if err != nil || len(projects.Projects) != 1 || projects.Projects[0].ID != project.ID {
+		t.Fatalf("central binding lost existing project membership: %+v err=%v", projects, err)
+	}
+	repeat, err := s.LoginInteg(context.Background(), "https://auth.integ.life", "central-songyy", "flyfy1@gmail.com")
+	if err != nil || repeat.User.ID != legacy.ID {
+		t.Fatalf("repeat central login: %+v err=%v", repeat, err)
+	}
+	if _, err = s.LoginInteg(context.Background(), "https://auth.integ.life", "different-subject", "flyfy1@gmail.com"); !errors.Is(err, ErrConflict) {
+		t.Fatalf("different subject rebound same user: %v", err)
+	}
+	created, err := s.LoginInteg(context.Background(), "https://auth.integ.life", "central-new", "new.person@example.com")
+	if err != nil || created.User.ID == legacy.ID || created.User.Email != "new.person@example.com" || created.User.Username != "new.person" {
+		t.Fatalf("new central user: %+v err=%v", created, err)
+	}
+}
+
+func TestOpenMigratesLegacyUsersEmailColumn(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "legacy.db")
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = db.Exec(`CREATE TABLE users (id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, password_hash BLOB NOT NULL, created_at TEXT NOT NULL);
+		INSERT INTO users(id,username,password_hash,created_at) VALUES('usr_legacy','legacy',X'00','2026-01-01T00:00:00Z')`); err != nil {
+		_ = db.Close()
+		t.Fatal(err)
+	}
+	if err = db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	s, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	got, err := s.SetUserEmail(context.Background(), "usr_legacy", "legacy", "legacy@example.invalid")
+	if err != nil || got.Email != "legacy@example.invalid" {
+		t.Fatalf("migrated legacy user: %+v err=%v", got, err)
+	}
+}
 
 func openTest(t *testing.T) *Store {
 	t.Helper()
@@ -23,7 +100,7 @@ func openTest(t *testing.T) *Store {
 }
 func user(t *testing.T, s *Store, name string) context.Context {
 	t.Helper()
-	u, e := s.Register(context.Background(), Credentials{name, "test-password-long-enough"})
+	u, e := s.Register(context.Background(), Credentials{Username: name, Email: name + "@example.invalid", Password: "test-password-long-enough"})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -339,11 +416,11 @@ func TestConcurrentIdempotencyAndTokenLifecycle(t *testing.T) {
 	in.Content.Text = new(string)
 	_, err = s.RecordEvent(ctx, in)
 	requireError(t, err, ErrConflict)
-	for _, creds := range []Credentials{{"missing", "test-password-long-enough"}, {"alice", "incorrect-password"}} {
+	for _, creds := range []Credentials{{Username: "missing", Password: "test-password-long-enough"}, {Username: "alice", Password: "incorrect-password"}} {
 		_, err = s.Login(ctx, creds)
 		requireError(t, err, ErrUnauthenticated)
 	}
-	login, err := s.Login(ctx, Credentials{"alice", "test-password-long-enough"})
+	login, err := s.Login(ctx, Credentials{Username: "alice", Password: "test-password-long-enough"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -360,7 +437,7 @@ func TestConcurrentIdempotencyAndTokenLifecycle(t *testing.T) {
 	}
 	_, _, err = s.Authenticate(ctx, login.Token)
 	requireError(t, err, ErrUnauthenticated)
-	login, err = s.Login(ctx, Credentials{"alice", "test-password-long-enough"})
+	login, err = s.Login(ctx, Credentials{Username: "alice", Password: "test-password-long-enough"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -41,11 +41,11 @@ func newFixture(t *testing.T) *fixture {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = identity.Close() })
-	alice, err := identity.Register(context.Background(), core.Credentials{Username: "alice", Password: "password-123"})
+	alice, err := identity.Register(context.Background(), core.Credentials{Username: "alice", Email: "v2-service-alice@example.invalid", Password: "password-123"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	bob, err := identity.Register(context.Background(), core.Credentials{Username: "bob-user", Password: "password-123"})
+	bob, err := identity.Register(context.Background(), core.Credentials{Username: "bob-user", Email: "v2-service-bob@example.invalid", Password: "password-123"})
 	if err != nil {
 		t.Fatal(err)
 	}

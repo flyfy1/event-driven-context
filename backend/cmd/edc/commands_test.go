@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -53,6 +54,16 @@ func TestReadJSONLEventsRejectsTrailingJSON(t *testing.T) {
 	_, err := readJSONLEvents(strings.NewReader(`{"id":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"} {"id":"bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"}` + "\n"))
 	if err == nil || !strings.Contains(err.Error(), "trailing data") {
 		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestRegisterRequiresEmailAndLoginKeepsUsernamePasswordContract(t *testing.T) {
+	a := &app{ctx: context.Background(), io: streams{in: strings.NewReader("password-from-stdin\n"), out: io.Discard, err: io.Discard}}
+	if err := a.auth("register", []string{"--username", "alice", "--password-stdin"}); err == nil || !strings.Contains(err.Error(), "--email is required") {
+		t.Fatalf("register without email error = %v", err)
+	}
+	if err := a.auth("login", []string{"--username", "alice", "--email", "alice@example.com", "--password-stdin"}); err == nil || !strings.Contains(err.Error(), "flag provided but not defined") {
+		t.Fatalf("login unexpectedly accepted register email flag: %v", err)
 	}
 }
 

@@ -46,7 +46,7 @@ func account(t *testing.T, base, name string) *Client {
 		t.Fatal(err)
 	}
 	ctx := context.Background()
-	in := core.Credentials{Username: name, Password: "integration-password-123"}
+	in := core.Credentials{Username: name, Email: name + "@example.invalid", Password: "integration-password-123"}
 	if _, err = c.Register(ctx, in); err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +193,7 @@ func TestMediaUploadExtendsServerWriteDeadline(t *testing.T) {
 	h.Config.WriteTimeout = 200 * time.Millisecond
 	h.Start()
 	t.Cleanup(h.Close)
-	credentials := core.Credentials{Username: "slow-media", Password: "integration-password-123"}
+	credentials := core.Credentials{Username: "slow-media", Email: "slow-media@example.invalid", Password: "integration-password-123"}
 	user, err := s.Register(context.Background(), credentials)
 	if err != nil {
 		t.Fatal(err)
@@ -612,7 +612,7 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 	}
 	tokens := map[string]string{}
 	for _, name := range []string{"alice", "bob"} {
-		cli(name, "integration-password-123\n", "register", "--username", name, "--password-stdin")
+		cli(name, "integration-password-123\n", "register", "--username", name, "--email", name+"@example.invalid", "--password-stdin")
 		loginOut := cli(name, "integration-password-123\n", "login", "--username", name, "--password-stdin")
 		configPath := filepath.Join(dir, name+".json")
 		info, err := os.Stat(configPath)
