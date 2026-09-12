@@ -739,6 +739,7 @@
   });
 
   Object.assign(translations.en, {
+    authTitle: "Sign in to Context", authHint: "Use your Integ.Life account to keep one verified identity across shared projects.", continueWithGoogle: "Continue with Google", centralAuthNote: "Google is the default sign-in option. The central Integ.Life page also supports verified email.",
     projectTimezone: "Project time zone", changeTimezone: "Change", saveTimezone: "Save time zone", timezoneSaved: "Project time zone saved.", dailyReviewDate: "Daily review · {date}",
     eventDetails: "Record details", membersTitle: "Project members", membersHint: "Everyone listed here can read and append this project's shared context.", membersLoading: "Loading project members…", membersEmpty: "No project members were returned.",
     addMemberTitle: "Add a registered member", memberUsernamePlaceholder: "registered username", addMember: "Add member", memberAdded: "@{username} is now a project member.", memberNotFound: "No registered user has that username.", memberID: "User ID · {id}", projectOwner: "Owner", onlyOwnerCanAdd: "Only the project owner can add members.",
@@ -767,6 +768,7 @@
     pluginPausedSuccess: "Plugin paused.", pluginResumedSuccess: "Plugin resumed.", pluginUninstalled: "Plugin uninstalled.", pluginInstalled: "Plugin installed. Copy its token now."
   });
   Object.assign(translations["zh-CN"], {
+    authTitle: "登录 Context", authHint: "使用 Integ.Life 账号，以同一个已验证身份参与共享项目。", continueWithGoogle: "使用 Google 继续", centralAuthNote: "默认使用 Google 登录；也可以在 Integ.Life 中心登录页使用已验证邮箱。",
     projectTimezone: "项目时区", changeTimezone: "修改", saveTimezone: "保存时区", timezoneSaved: "项目时区已保存。", dailyReviewDate: "每日回顾 · {date}",
     eventDetails: "记录详情", membersTitle: "项目成员", membersHint: "这里列出的每位成员都能读取并追加该项目的团队 context。", membersLoading: "正在加载项目成员…", membersEmpty: "没有返回项目成员。",
     addMemberTitle: "添加已注册成员", memberUsernamePlaceholder: "已注册的用户名", addMember: "添加成员", memberAdded: "@{username} 已加入项目。", memberNotFound: "找不到这个用户名对应的已注册用户。", memberID: "用户 ID · {id}", projectOwner: "所有者", onlyOwnerCanAdd: "只有项目所有者可以添加成员。",
@@ -795,6 +797,7 @@
     pluginPausedSuccess: "插件已暂停。", pluginResumedSuccess: "插件已恢复。", pluginUninstalled: "插件已卸载。", pluginInstalled: "插件已安装，请立即复制 token。"
   });
   Object.assign(translations.ms, {
+    authTitle: "Log masuk ke Context", authHint: "Gunakan akaun Integ.Life anda untuk satu identiti disahkan dalam projek kongsi.", continueWithGoogle: "Teruskan dengan Google", centralAuthNote: "Google ialah pilihan log masuk lalai. Halaman pusat Integ.Life turut menyokong e-mel yang disahkan.",
     projectTimezone: "Zon waktu projek", changeTimezone: "Ubah", saveTimezone: "Simpan zon waktu", timezoneSaved: "Zon waktu projek disimpan.", dailyReviewDate: "Ulasan harian · {date}",
     eventDetails: "Butiran rekod", membersTitle: "Ahli projek", membersHint: "Setiap orang dalam senarai ini boleh membaca dan menambah context kongsi projek.", membersLoading: "Memuatkan ahli projek…", membersEmpty: "Tiada ahli projek dikembalikan.",
     addMemberTitle: "Tambah ahli berdaftar", memberUsernamePlaceholder: "nama pengguna berdaftar", addMember: "Tambah ahli", memberAdded: "@{username} kini ahli projek.", memberNotFound: "Tiada pengguna berdaftar dengan nama pengguna itu.", memberID: "ID pengguna · {id}", projectOwner: "Pemilik", onlyOwnerCanAdd: "Hanya pemilik projek boleh menambah ahli.",
@@ -823,6 +826,7 @@
     pluginPausedSuccess: "Plugin dijeda.", pluginResumedSuccess: "Plugin disambung.", pluginUninstalled: "Plugin dinyahpasang.", pluginInstalled: "Plugin dipasang. Salin tokennya sekarang."
   });
   Object.assign(translations.hi, {
+    authTitle: "Context में साइन इन करें", authHint: "साझा प्रोजेक्ट में एक सत्यापित पहचान रखने के लिए अपने Integ.Life खाते का उपयोग करें।", continueWithGoogle: "Google से जारी रखें", centralAuthNote: "Google डिफ़ॉल्ट साइन-इन विकल्प है। केंद्रीय Integ.Life पेज सत्यापित ईमेल भी स्वीकार करता है।",
     projectTimezone: "प्रोजेक्ट का समय क्षेत्र", changeTimezone: "बदलें", saveTimezone: "समय क्षेत्र सेव करें", timezoneSaved: "प्रोजेक्ट का समय क्षेत्र सेव हो गया।", dailyReviewDate: "दैनिक समीक्षा · {date}",
     eventDetails: "रिकॉर्ड का विवरण", membersTitle: "प्रोजेक्ट सदस्य", membersHint: "यहाँ सूचीबद्ध हर सदस्य इस प्रोजेक्ट का साझा context पढ़ और जोड़ सकता है।", membersLoading: "प्रोजेक्ट सदस्य लोड हो रहे हैं…", membersEmpty: "कोई प्रोजेक्ट सदस्य नहीं मिला।",
     addMemberTitle: "रजिस्टर्ड सदस्य जोड़ें", memberUsernamePlaceholder: "रजिस्टर्ड उपयोगकर्ता नाम", addMember: "सदस्य जोड़ें", memberAdded: "@{username} अब प्रोजेक्ट सदस्य हैं।", memberNotFound: "इस उपयोगकर्ता नाम का कोई रजिस्टर्ड उपयोगकर्ता नहीं मिला।", memberID: "उपयोगकर्ता ID · {id}", projectOwner: "मालिक", onlyOwnerCanAdd: "केवल प्रोजेक्ट मालिक सदस्य जोड़ सकते हैं।",

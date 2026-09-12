@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Append and query immutable context with your team." data-i18n-content="metaDescription" />
     <title>Context · Integ.Life</title>
-    <link rel="stylesheet" href="./styles.css?v=84067c575b8f" />
-    <link rel="stylesheet" href="./workspace-features.css?v=84067c575b8f" />
-    <link rel="stylesheet" href="./i18n.css?v=84067c575b8f" />
+    <link rel="stylesheet" href="./styles.css?v=3dd97da8ccbf" />
+    <link rel="stylesheet" href="./workspace-features.css?v=3dd97da8ccbf" />
+    <link rel="stylesheet" href="./i18n.css?v=3dd97da8ccbf" />
   </head>
   <body>
     <header class="topbar">
@@ -33,18 +33,13 @@
         <div>
           <p class="eyebrow" data-i18n="authEyebrow">START HERE</p>
           <h2 id="auth-title" data-i18n="authTitle">Enter your context</h2>
-          <p class="muted" data-i18n="authHint">New members register first, then sign in. Usernames use lowercase letters, numbers, _, . or -.</p>
+          <p class="muted" data-i18n="authHint">Use your Integ.Life account to keep one verified identity across shared projects.</p>
         </div>
-        <form id="auth-form" class="form-card" novalidate>
-          <div class="segmented" role="group" aria-label="Account actions" data-i18n-aria-label="accountActions">
-            <button class="selected" type="button" data-auth-mode="login" data-i18n="login">Sign in</button>
-            <button type="button" data-auth-mode="register" data-i18n="register">Register</button>
-          </div>
-          <label><span data-i18n="username">Username</span><input id="auth-username" autocomplete="username" required pattern="[a-z0-9][a-z0-9_.-]{2,63}" placeholder="alice" /></label>
-          <label><span data-i18n="password">Password</span><input id="auth-password" type="password" autocomplete="current-password" required minlength="12" placeholder="At least 12 characters" data-i18n-placeholder="passwordPlaceholder" /></label>
-          <button id="auth-submit" class="primary" type="submit" data-i18n="login">Sign in</button>
+        <div id="auth-form" class="form-card central-auth-card">
+          <p data-i18n="centralAuthNote">Google is the default sign-in option. The central Integ.Life page also supports verified email.</p>
+          <button id="auth-submit" class="primary central-auth-button" type="button" data-i18n="continueWithGoogle">Continue with Google</button>
           <p id="auth-message" class="message" aria-live="polite"></p>
-        </form>
+        </div>
       </section>
 
       <section id="workspace" class="workspace hidden" aria-label="Context workspace" data-i18n-aria-label="workspaceLabel">
@@ -150,8 +145,8 @@
       </section>
     </main>
     <template id="event-template"><article class="event"><div class="event-meta"><strong class="event-author"></strong><time class="event-time"></time><span class="event-kind"></span></div><p class="event-text"></p><a class="event-file hidden" target="_blank" rel="noopener" data-i18n="downloadOriginalFile">Download original file</a><pre class="event-json"></pre></article></template>
-    <script src="./i18n.js?v=84067c575b8f" defer></script>
-    <script src="./workspace-utils.js?v=84067c575b8f" defer></script>
-    <script src="./app.js?v=84067c575b8f" defer></script>
+    <script src="./i18n.js?v=3dd97da8ccbf" defer></script>
+    <script src="./workspace-utils.js?v=3dd97da8ccbf" defer></script>
+    <script src="./app.js?v=3dd97da8ccbf" defer></script>
   </body>
 </html>

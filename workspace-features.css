@@ -5,6 +5,9 @@
   border-radius: 4px;
   background: #f8faf7;
 }
+.central-auth-card { display: grid; gap: 16px; }
+.central-auth-card p { margin: 0; color: var(--muted); }
+.central-auth-button { width: 100%; }
 .workspace-nav {
   display: flex;
   gap: 6px;
