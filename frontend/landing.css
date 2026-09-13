@@ -188,6 +188,28 @@ h1>span {
   color:#737d8a;
   margin-top:22px
 }
+.open-source-note {
+  margin-top:24px;
+  padding-left:18px;
+  border-left:3px solid var(--accent)
+}
+.open-source-note h2 {
+  margin:0 0 8px;
+  font-size:16px;
+  font-weight:650;
+  line-height:1.5;
+  letter-spacing:0;
+  text-wrap:wrap
+}
+.open-source-note p {
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.7
+}
+.open-source-note a {
+  color:var(--accent)
+}
 .demo {
   background:#fff;
   border:1px solid #d9dfe9;
