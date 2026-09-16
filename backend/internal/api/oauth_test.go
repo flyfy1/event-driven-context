@@ -131,14 +131,14 @@ func TestOAuthPageRegistrationContinuesAuthorization(t *testing.T) {
 	res = f.do(t, http.MethodGet, res.Header.Get("Location"), "", "")
 	page, _ = io.ReadAll(res.Body)
 	res.Body.Close()
-	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("当前登录用户 <strong>new-user</strong>")) || !bytes.Contains(page, []byte(core.ScopeRead)) {
+	if res.StatusCode != http.StatusOK || !bytes.Contains(page, []byte("当前登录用户 <strong>new-user</strong>")) || !bytes.Contains(page, []byte(core.ScopeRead)) || !bytes.Contains(page, []byte(`name="expiry_mode" value="never" checked`)) || !bytes.Contains(page, []byte("永不过期（默认）")) {
 		t.Fatalf("registration did not continue to consent: %d %s", res.StatusCode, page)
 	}
 
 	form = url.Values{"request_id": {requestID}, "decision": {"approve"}}
 	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
 	res.Body.Close()
-	if res.StatusCode != http.StatusFound {
+	if res.StatusCode != http.StatusSeeOther {
 		t.Fatalf("consent: %d", res.StatusCode)
 	}
 	callback, _ := url.Parse(res.Header.Get("Location"))
@@ -348,8 +348,47 @@ func TestOAuthExpiredAuthorizationRequestShowsRestartGuidance(t *testing.T) {
 	res := f.do(t, http.MethodGet, oauthRequestLocation(requestID, "en"), "", "")
 	page, _ := io.ReadAll(res.Body)
 	res.Body.Close()
-	if res.StatusCode != http.StatusBadRequest || !strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") || !bytes.Contains(page, []byte("Authorization request expired")) || !bytes.Contains(page, []byte("start the connection again")) || bytes.Contains(page, []byte(`"error":"invalid_request"`)) {
+	if res.StatusCode != http.StatusBadRequest || !strings.HasPrefix(res.Header.Get("Content-Type"), "text/html") || !bytes.Contains(page, []byte("Authorization request unavailable")) || !bytes.Contains(page, []byte("start the connection again")) || bytes.Contains(page, []byte(`"error":"invalid_request"`)) {
 		t.Fatalf("expired request response: %d %q %s", res.StatusCode, res.Header.Get("Content-Type"), page)
+	}
+}
+
+func TestOAuthAccessExpirySelection(t *testing.T) {
+	if expires, err := oauthAccessExpiry("never", "", "", 0); err != nil || !expires.IsZero() {
+		t.Fatalf("never expiry = %v, %v", expires, err)
+	}
+	if expires, err := oauthAccessExpiry("", "", "", 0); err != nil || !expires.IsZero() {
+		t.Fatalf("default expiry = %v, %v", expires, err)
+	}
+	for _, tc := range []struct {
+		value, unit string
+		want        time.Duration
+	}{{"6", "hours", 6 * time.Hour}, {"3", "days", 72 * time.Hour}} {
+		before := time.Now().UTC().Add(tc.want)
+		expires, err := oauthAccessExpiry("duration", tc.value, tc.unit, 0)
+		after := time.Now().UTC().Add(tc.want)
+		if err != nil || expires.Before(before) || expires.After(after) {
+			t.Fatalf("duration %s %s = %v, %v", tc.value, tc.unit, expires, err)
+		}
+	}
+	for _, tc := range []struct{ mode, value, unit string }{
+		{"duration", "0", "hours"}, {"duration", "1.5", "hours"}, {"duration", "1", "weeks"}, {"other", "1", "days"},
+	} {
+		if _, err := oauthAccessExpiry(tc.mode, tc.value, tc.unit, 0); err == nil {
+			t.Fatalf("accepted invalid expiry: %+v", tc)
+		}
+	}
+}
+
+func TestOAuthDefaultAccessTokenNeverExpires(t *testing.T) {
+	f := newOAuthFixture(t, 0)
+	token := f.authorize(t, core.ScopeRead)
+	info, err := f.store.AuthenticateOAuth(context.Background(), token, testOAuthIssuer+"/mcp")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !info.ExpiresAt.IsZero() {
+		t.Fatalf("default OAuth token expires at %v", info.ExpiresAt)
 	}
 }
 
@@ -489,7 +528,7 @@ func (f *oauthFixture) approveAuthorization(t *testing.T, requestID, state strin
 	form := url.Values{"request_id": {requestID}, "decision": {"approve"}}
 	res := f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
 	res.Body.Close()
-	if res.StatusCode != http.StatusFound {
+	if res.StatusCode != http.StatusSeeOther {
 		t.Fatalf("approve %s: %d", state, res.StatusCode)
 	}
 	callback, _ := url.Parse(res.Header.Get("Location"))
@@ -553,7 +592,7 @@ func (f *oauthFixture) authorize(t *testing.T, scope string) (accessToken string
 	form = url.Values{"request_id": {requestID}, "decision": {"approve"}}
 	res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
 	res.Body.Close()
-	if res.StatusCode != http.StatusFound {
+	if res.StatusCode != http.StatusSeeOther {
 		t.Fatalf("consent: %d", res.StatusCode)
 	}
 	callback, _ := url.Parse(res.Header.Get("Location"))

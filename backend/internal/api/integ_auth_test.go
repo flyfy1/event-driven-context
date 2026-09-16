@@ -353,7 +353,7 @@ func TestIntegAuthReturnsMCPLoginToOriginalConsent(t *testing.T) {
 	}
 	response.Body.Close()
 	clientCallback := mustParseURL(t, response.Header.Get("Location"))
-	if response.StatusCode != http.StatusFound || clientCallback.Host != "client.example" || clientCallback.Query().Get("code") == "" || clientCallback.Query().Get("state") != "mcp-client-state" {
+	if response.StatusCode != http.StatusSeeOther || clientCallback.Host != "client.example" || clientCallback.Query().Get("code") == "" || clientCallback.Query().Get("state") != "mcp-client-state" {
 		t.Fatalf("consent approval failed: status=%d location=%s", response.StatusCode, clientCallback)
 	}
 }

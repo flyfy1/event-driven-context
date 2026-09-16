@@ -379,7 +379,7 @@ setup 不会添加 MCP；如果项目 `.mcp.json` 中存在旧的 `event-driven-
 - Protected Resource Metadata：`https://context-api.integ.life/.well-known/oauth-protected-resource/mcp`（根路径版本也可用）。未认证 `/mcp` 的 `WWW-Authenticate` 会指向这里。
 - Authorization Server Metadata：`https://context-api.integ.life/.well-known/oauth-authorization-server`。
 - 授权、换 token、动态客户端注册：`/oauth/authorize`、`/oauth/token`、`/oauth/register`。动态注册只接受无 client secret 的 public client、精确 HTTPS 或 loopback callback URL。
-- `resource` 在授权请求和换 token 时都必须精确等于 `https://context-api.integ.life/mcp`；authorization code 5 分钟过期且只能使用一次，OAuth access token 1 小时过期。
+- `resource` 在授权请求和换 token 时都必须精确等于 `https://context-api.integ.life/mcp`；authorization code 5 分钟过期且只能使用一次。OAuth access token 在授权页默认永不过期，用户也可以填写整数小时数或天数；有限期 token 的响应包含 `expires_in`，永不过期 token 则不返回该字段。
 
 最小 scope 模型：
 

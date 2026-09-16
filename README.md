@@ -402,7 +402,7 @@ It continues to support the static Bearer-token access described above and also 
 - Protected Resource Metadata: `https://context-api.integ.life/.well-known/oauth-protected-resource/mcp` (the root-path version is also supported). The `WWW-Authenticate` header returned by unauthenticated `/mcp` requests points here.
 - Authorization Server Metadata: `https://context-api.integ.life/.well-known/oauth-authorization-server`.
 - Authorization, token exchange, and dynamic client registration: `/oauth/authorize`, `/oauth/token`, and `/oauth/register`. Dynamic registration accepts only public clients without a client secret and only exact HTTPS or loopback callback URLs.
-- `resource` must exactly equal `https://context-api.integ.life/mcp` in both the authorization request and token exchange. Authorization codes expire after 5 minutes and are single-use. OAuth access tokens expire after 1 hour.
+- `resource` must exactly equal `https://context-api.integ.life/mcp` in both the authorization request and token exchange. Authorization codes expire after 5 minutes and are single-use. On the consent page, OAuth access tokens default to no expiry; the user can instead enter a whole number of hours or days. A finite token response includes `expires_in`, while a non-expiring token omits it.
 
 Minimal scope model:
 

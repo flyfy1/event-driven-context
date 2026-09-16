@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,14 +31,16 @@ var pkcePattern = regexp.MustCompile(`^[A-Za-z0-9._~-]{43,128}$`)
 
 var oauthPage = template.Must(template.New("oauth").Parse(`<!doctype html>
 <html lang="{{.Language}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Event-driven Context OAuth</title><style>
-body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}button,.button{display:inline-block;font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;text-decoration:none;cursor:pointer}.secondary{background:#6b7169}.languages{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;font-size:14px}.languages a{color:#265c3b}code{word-break:break-all}
-</style></head><body><main class="card">{{if .Expired}}<h1>{{.Copy.ExpiredTitle}}</h1><p class="notice">{{.Copy.ExpiredMessage}}</p>{{else}}<nav class="languages" aria-label="{{.Copy.LanguageLabel}}"><span>{{.Copy.LanguageLabel}}:</span><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=en" hreflang="en">English</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=zh-CN" hreflang="zh-CN">简体中文</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=ms" hreflang="ms">Bahasa Melayu</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=hi" hreflang="hi">हिन्दी</a></nav><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} {{.Copy.ClientRequest}}</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">{{.Copy.SignInNotice}}</p><p><a class="button" href="{{.IntegLoginURL}}">{{.Copy.IntegLoginLabel}}</a></p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><label for="username">{{.Copy.UsernameLabel}}</label><input id="username" name="username" autocomplete="username" required><label for="email">{{.Copy.EmailLabel}}</label><input id="email" name="email" type="email" autocomplete="email"><label for="password">{{.Copy.PasswordLabel}}</label><input id="password" name="password" type="password" autocomplete="current-password" required><p class="muted">{{.Copy.NewAccountHint}}</p><div class="actions"><button type="submit" name="decision" value="login">{{.Copy.SignInLabel}}</button><button class="secondary" type="submit" name="decision" value="register">{{.Copy.CreateAccountLabel}}</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>{{.Copy.CancelLabel}}</button></div></form>{{else}}<p>{{.Copy.SignedInAs}} <strong>{{.Username}}</strong>.</p><p class="notice">{{.Copy.ApproveAccess}}</p><ul>{{range .Scopes}}<li><strong>{{.Name}}</strong> — {{.Description}}</li>{{end}}</ul><p class="muted">{{.Copy.AccessPrefix}} <code>{{.Resource}}</code> {{.Copy.AccessSuffix}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><div class="actions"><button type="submit" name="decision" value="approve">{{.Copy.AuthorizeLabel}}</button><button class="secondary" type="submit" name="decision" value="deny">{{.Copy.CancelLabel}}</button></div></form>{{end}}{{end}}</main></body></html>`))
+body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input[type=text],input[type=email],input[type=password],input[type=number],select{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}fieldset{margin:22px 0 0;padding:14px 16px 16px;border:1px solid #d9ddd5;border-radius:10px}.choice{display:flex;align-items:center;gap:8px;margin:10px 0}.choice input{margin:0}.duration{display:grid;grid-template-columns:auto minmax(80px,1fr) minmax(110px,1fr);align-items:center;gap:8px;margin-top:10px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}button,.button{display:inline-block;font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;text-decoration:none;cursor:pointer}.secondary{background:#6b7169}.languages{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;font-size:14px}.languages a{color:#265c3b}code{word-break:break-all}
+</style></head><body><main class="card">{{if .Expired}}<h1>{{.Copy.ExpiredTitle}}</h1><p class="notice">{{.Copy.ExpiredMessage}}</p>{{else}}<nav class="languages" aria-label="{{.Copy.LanguageLabel}}"><span>{{.Copy.LanguageLabel}}:</span><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=en" hreflang="en">English</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=zh-CN" hreflang="zh-CN">简体中文</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=ms" hreflang="ms">Bahasa Melayu</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=hi" hreflang="hi">हिन्दी</a></nav><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} {{.Copy.ClientRequest}}</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">{{.Copy.SignInNotice}}</p><p><a class="button" href="{{.IntegLoginURL}}">{{.Copy.IntegLoginLabel}}</a></p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><label for="username">{{.Copy.UsernameLabel}}</label><input id="username" name="username" autocomplete="username" required><label for="email">{{.Copy.EmailLabel}}</label><input id="email" name="email" type="email" autocomplete="email"><label for="password">{{.Copy.PasswordLabel}}</label><input id="password" name="password" type="password" autocomplete="current-password" required><p class="muted">{{.Copy.NewAccountHint}}</p><div class="actions"><button type="submit" name="decision" value="login">{{.Copy.SignInLabel}}</button><button class="secondary" type="submit" name="decision" value="register">{{.Copy.CreateAccountLabel}}</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>{{.Copy.CancelLabel}}</button></div></form>{{else}}<p>{{.Copy.SignedInAs}} <strong>{{.Username}}</strong>.</p><p class="notice">{{.Copy.ApproveAccess}}</p><ul>{{range .Scopes}}<li><strong>{{.Name}}</strong> — {{.Description}}</li>{{end}}</ul><p class="muted">{{.Copy.AccessPrefix}} <code>{{.Resource}}</code> {{.Copy.AccessSuffix}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><fieldset><legend>{{.Copy.ExpirationLabel}}</legend><label class="choice"><input type="radio" name="expiry_mode" value="never" checked> {{.Copy.NeverExpiresLabel}}</label><label class="choice"><input type="radio" name="expiry_mode" value="duration"> {{.Copy.DurationLabel}}</label><div class="duration"><span></span><input name="expiry_value" type="number" min="1" max="876000" value="1" inputmode="numeric" aria-label="{{.Copy.DurationValueLabel}}"><select name="expiry_unit" aria-label="{{.Copy.DurationUnitLabel}}"><option value="hours">{{.Copy.HoursLabel}}</option><option value="days">{{.Copy.DaysLabel}}</option></select></div><p class="muted">{{.Copy.ExpirationHint}}</p></fieldset><div class="actions"><button type="submit" name="decision" value="approve">{{.Copy.AuthorizeLabel}}</button><button class="secondary" type="submit" name="decision" value="deny">{{.Copy.CancelLabel}}</button></div></form>{{end}}{{end}}</main></body></html>`))
 
 type oauthCopy struct {
 	LanguageLabel, ClientRequest, SignInNotice, IntegLoginLabel, UsernameLabel, EmailLabel       string
 	PasswordLabel                                                                                string
 	NewAccountHint, SignInLabel, CreateAccountLabel, CancelLabel, SignedInAs                     string
 	ApproveAccess, ReadDescription, WriteDescription, AccessPrefix, AccessSuffix, AuthorizeLabel string
+	ExpirationLabel, NeverExpiresLabel, DurationLabel, DurationValueLabel, DurationUnitLabel     string
+	HoursLabel, DaysLabel, ExpirationHint                                                        string
 	ExpiredTitle, ExpiredMessage                                                                 string
 	Errors                                                                                       map[string]string
 }
@@ -54,9 +57,10 @@ var oauthCopies = map[string]oauthCopy{
 		UsernameLabel:   "Username", EmailLabel: "Email (required to create an account)", PasswordLabel: "Password", NewAccountHint: "New here? A username uses 3–64 lowercase letters, digits, _, . or -, and a password uses 12–72 bytes.",
 		SignInLabel: "Sign in", CreateAccountLabel: "Create account", CancelLabel: "Cancel", SignedInAs: "Signed in as", ApproveAccess: "Approve access to:",
 		ReadDescription: "read projects, members, events, metadata, and files", WriteDescription: "create projects, add members, and append immutable events",
-		AccessPrefix: "Access is limited to", AccessSuffix: "and expires after one hour. Project membership rules still apply.", AuthorizeLabel: "Authorize",
-		ExpiredTitle: "Authorization request expired", ExpiredMessage: "Return to the app that opened this page and start the connection again. Refreshing this page will not work.",
-		Errors: map[string]string{"invalid_credentials": "Invalid username or password.", "invalid_username": "Username must be 3–64 lowercase letters, digits, _, . or -.", "invalid_email": "Enter a valid email address to create an account.", "invalid_password": "Password must be 12–72 bytes.", "username_exists": "Username or email already exists. Sign in or choose another one.", "registration_failed": "Could not create account. Please try again."},
+		AccessPrefix: "Access is limited to", AccessSuffix: ". Project membership rules still apply.", AuthorizeLabel: "Authorize",
+		ExpirationLabel: "Access duration", NeverExpiresLabel: "Never expires (default)", DurationLabel: "Expire after", DurationValueLabel: "Duration", DurationUnitLabel: "Duration unit", HoursLabel: "hour(s)", DaysLabel: "day(s)", ExpirationHint: "Choose a finite duration for temporary or shared-device access.",
+		ExpiredTitle: "Authorization request unavailable", ExpiredMessage: "This request was already completed or expired. Return to the app that opened this page and start the connection again.",
+		Errors: map[string]string{"invalid_credentials": "Invalid username or password.", "invalid_username": "Username must be 3–64 lowercase letters, digits, _, . or -.", "invalid_email": "Enter a valid email address to create an account.", "invalid_password": "Password must be 12–72 bytes.", "username_exists": "Username or email already exists. Sign in or choose another one.", "registration_failed": "Could not create account. Please try again.", "invalid_expiry": "Choose never expires, or enter a whole number of hours or days."},
 	},
 	"zh-CN": {
 		LanguageLabel: "语言", ClientRequest: "正在通过 OAuth 请求访问。",
@@ -65,9 +69,10 @@ var oauthCopies = map[string]oauthCopy{
 		UsernameLabel:   "用户名", EmailLabel: "邮箱（创建账号时必填）", PasswordLabel: "密码", NewAccountHint: "还没有账号？用户名须为 3–64 位小写字母、数字、_、. 或 -，密码须为 12–72 字节。",
 		SignInLabel: "登录", CreateAccountLabel: "创建账号", CancelLabel: "取消", SignedInAs: "当前登录用户", ApproveAccess: "授权访问以下范围：",
 		ReadDescription: "读取项目、成员、事件、元数据和文件", WriteDescription: "创建项目、添加成员并追加不可变事件",
-		AccessPrefix: "访问权限仅限于", AccessSuffix: "，并在一小时后过期。项目成员权限规则仍然适用。", AuthorizeLabel: "授权",
-		ExpiredTitle: "授权请求已过期", ExpiredMessage: "请返回打开此页面的应用，重新发起连接。刷新此页面无法继续。",
-		Errors: map[string]string{"invalid_credentials": "用户名或密码错误。", "invalid_username": "用户名须为 3–64 位小写字母、数字、_、. 或 -。", "invalid_email": "请输入有效邮箱以创建账号。", "invalid_password": "密码须为 12–72 字节。", "username_exists": "用户名或邮箱已存在，请登录或更换。", "registration_failed": "无法创建账号，请重试。"},
+		AccessPrefix: "访问权限仅限于", AccessSuffix: "。项目成员权限规则仍然适用。", AuthorizeLabel: "授权",
+		ExpirationLabel: "访问有效期", NeverExpiresLabel: "永不过期（默认）", DurationLabel: "在以下时间后过期", DurationValueLabel: "时长", DurationUnitLabel: "时长单位", HoursLabel: "小时", DaysLabel: "天", ExpirationHint: "临时使用或共享设备建议选择有限有效期。",
+		ExpiredTitle: "授权请求不可用", ExpiredMessage: "此请求已完成或已过期。请返回打开此页面的应用，重新发起连接。",
+		Errors: map[string]string{"invalid_credentials": "用户名或密码错误。", "invalid_username": "用户名须为 3–64 位小写字母、数字、_、. 或 -。", "invalid_email": "请输入有效邮箱以创建账号。", "invalid_password": "密码须为 12–72 字节。", "username_exists": "用户名或邮箱已存在，请登录或更换。", "registration_failed": "无法创建账号，请重试。", "invalid_expiry": "请选择永不过期，或填写整数小时/天数。"},
 	},
 	"ms": {
 		LanguageLabel: "Bahasa", ClientRequest: "meminta akses melalui OAuth.",
@@ -76,9 +81,10 @@ var oauthCopies = map[string]oauthCopy{
 		UsernameLabel:   "Nama pengguna", EmailLabel: "E-mel (diperlukan untuk mencipta akaun)", PasswordLabel: "Kata laluan", NewAccountHint: "Pengguna baharu? Nama pengguna menggunakan 3–64 huruf kecil, nombor, _, . atau -, dan kata laluan menggunakan 12–72 bait.",
 		SignInLabel: "Log masuk", CreateAccountLabel: "Cipta akaun", CancelLabel: "Batal", SignedInAs: "Log masuk sebagai", ApproveAccess: "Benarkan akses kepada:",
 		ReadDescription: "baca projek, ahli, peristiwa, metadata dan fail", WriteDescription: "cipta projek, tambah ahli dan lampirkan peristiwa kekal",
-		AccessPrefix: "Akses terhad kepada", AccessSuffix: "dan tamat selepas satu jam. Peraturan keahlian projek masih terpakai.", AuthorizeLabel: "Benarkan",
-		ExpiredTitle: "Permintaan kebenaran telah tamat", ExpiredMessage: "Kembali ke aplikasi yang membuka halaman ini dan mulakan sambungan semula. Memuat semula halaman ini tidak akan berjaya.",
-		Errors: map[string]string{"invalid_credentials": "Nama pengguna atau kata laluan tidak sah.", "invalid_username": "Nama pengguna mesti terdiri daripada 3–64 huruf kecil, nombor, _, . atau -.", "invalid_email": "Masukkan alamat e-mel yang sah untuk mencipta akaun.", "invalid_password": "Kata laluan mesti terdiri daripada 12–72 bait.", "username_exists": "Nama pengguna atau e-mel sudah wujud. Log masuk atau pilih yang lain.", "registration_failed": "Akaun tidak dapat dicipta. Sila cuba lagi."},
+		AccessPrefix: "Akses terhad kepada", AccessSuffix: ". Peraturan keahlian projek masih terpakai.", AuthorizeLabel: "Benarkan",
+		ExpirationLabel: "Tempoh akses", NeverExpiresLabel: "Tidak tamat tempoh (lalai)", DurationLabel: "Tamat selepas", DurationValueLabel: "Tempoh", DurationUnitLabel: "Unit tempoh", HoursLabel: "jam", DaysLabel: "hari", ExpirationHint: "Pilih tempoh terhad untuk akses sementara atau peranti yang dikongsi.",
+		ExpiredTitle: "Permintaan kebenaran tidak tersedia", ExpiredMessage: "Permintaan ini telah selesai atau tamat tempoh. Kembali ke aplikasi yang membuka halaman ini dan mulakan sambungan semula.",
+		Errors: map[string]string{"invalid_credentials": "Nama pengguna atau kata laluan tidak sah.", "invalid_username": "Nama pengguna mesti terdiri daripada 3–64 huruf kecil, nombor, _, . atau -.", "invalid_email": "Masukkan alamat e-mel yang sah untuk mencipta akaun.", "invalid_password": "Kata laluan mesti terdiri daripada 12–72 bait.", "username_exists": "Nama pengguna atau e-mel sudah wujud. Log masuk atau pilih yang lain.", "registration_failed": "Akaun tidak dapat dicipta. Sila cuba lagi.", "invalid_expiry": "Pilih tidak tamat tempoh, atau masukkan bilangan jam atau hari dalam nombor bulat."},
 	},
 	"hi": {
 		LanguageLabel: "भाषा", ClientRequest: "OAuth के माध्यम से पहुँच का अनुरोध कर रहा है।",
@@ -87,9 +93,10 @@ var oauthCopies = map[string]oauthCopy{
 		UsernameLabel:   "उपयोगकर्ता नाम", EmailLabel: "ईमेल (खाता बनाने के लिए आवश्यक)", PasswordLabel: "पासवर्ड", NewAccountHint: "नए उपयोगकर्ता? नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - और पासवर्ड में 12–72 बाइट होने चाहिए।",
 		SignInLabel: "साइन इन", CreateAccountLabel: "खाता बनाएँ", CancelLabel: "रद्द करें", SignedInAs: "साइन इन उपयोगकर्ता", ApproveAccess: "इन अनुमतियों को स्वीकृत करें:",
 		ReadDescription: "प्रोजेक्ट, सदस्य, इवेंट, मेटाडेटा और फ़ाइलें पढ़ें", WriteDescription: "प्रोजेक्ट बनाएँ, सदस्य जोड़ें और अपरिवर्तनीय इवेंट जोड़ें",
-		AccessPrefix: "पहुँच केवल", AccessSuffix: "तक सीमित है और एक घंटे बाद समाप्त हो जाती है। प्रोजेक्ट सदस्यता नियम लागू रहते हैं।", AuthorizeLabel: "अनुमति दें",
-		ExpiredTitle: "अनुमति अनुरोध की समय सीमा समाप्त हो गई", ExpiredMessage: "उस ऐप पर वापस जाएँ जिसने यह पेज खोला था और कनेक्शन फिर से शुरू करें। इस पेज को रीफ़्रेश करने से अनुरोध जारी नहीं होगा।",
-		Errors: map[string]string{"invalid_credentials": "उपयोगकर्ता नाम या पासवर्ड गलत है।", "invalid_username": "उपयोगकर्ता नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - होने चाहिए।", "invalid_email": "खाता बनाने के लिए एक मान्य ईमेल पता दर्ज करें।", "invalid_password": "पासवर्ड 12–72 बाइट का होना चाहिए।", "username_exists": "यह उपयोगकर्ता नाम या ईमेल पहले से मौजूद है। साइन इन करें या दूसरा चुनें।", "registration_failed": "खाता नहीं बनाया जा सका। फिर से प्रयास करें।"},
+		AccessPrefix: "पहुँच केवल", AccessSuffix: "तक सीमित है। प्रोजेक्ट सदस्यता नियम लागू रहते हैं।", AuthorizeLabel: "अनुमति दें",
+		ExpirationLabel: "पहुँच की अवधि", NeverExpiresLabel: "कभी समाप्त नहीं (डिफ़ॉल्ट)", DurationLabel: "इतने समय बाद समाप्त करें", DurationValueLabel: "अवधि", DurationUnitLabel: "अवधि की इकाई", HoursLabel: "घंटे", DaysLabel: "दिन", ExpirationHint: "अस्थायी या साझा डिवाइस पहुँच के लिए सीमित अवधि चुनें।",
+		ExpiredTitle: "अनुमति अनुरोध उपलब्ध नहीं है", ExpiredMessage: "यह अनुरोध पहले ही पूरा हो चुका है या समाप्त हो गया है। उस ऐप पर लौटें जिसने यह पेज खोला था और कनेक्शन फिर से शुरू करें।",
+		Errors: map[string]string{"invalid_credentials": "उपयोगकर्ता नाम या पासवर्ड गलत है।", "invalid_username": "उपयोगकर्ता नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - होने चाहिए।", "invalid_email": "खाता बनाने के लिए एक मान्य ईमेल पता दर्ज करें।", "invalid_password": "पासवर्ड 12–72 बाइट का होना चाहिए।", "username_exists": "यह उपयोगकर्ता नाम या ईमेल पहले से मौजूद है। साइन इन करें या दूसरा चुनें।", "registration_failed": "खाता नहीं बनाया जा सका। फिर से प्रयास करें।", "invalid_expiry": "कभी समाप्त नहीं विकल्प चुनें, या घंटों/दिनों की पूर्ण संख्या दर्ज करें।"},
 	},
 }
 
@@ -103,17 +110,16 @@ type oauthPageData struct {
 
 func registerOAuthHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 	base := strings.TrimRight(config.PublicBaseURL, "/")
-	if config.OAuthAccessTokenTTL <= 0 {
-		config.OAuthAccessTokenTTL = time.Hour
-	}
 	mux.HandleFunc("GET /.well-known/oauth-protected-resource", func(w http.ResponseWriter, _ *http.Request) { oauthProtectedResource(w, base) })
 	mux.HandleFunc("GET /.well-known/oauth-protected-resource/mcp", func(w http.ResponseWriter, _ *http.Request) { oauthProtectedResource(w, base) })
 	mux.HandleFunc("GET /.well-known/oauth-authorization-server", func(w http.ResponseWriter, _ *http.Request) { oauthAuthorizationServer(w, base) })
 	mux.HandleFunc("POST /oauth/register", func(w http.ResponseWriter, r *http.Request) { oauthRegister(w, r, store) })
 	mux.HandleFunc("GET /oauth/authorize", func(w http.ResponseWriter, r *http.Request) { oauthAuthorizeGet(w, r, store, base) })
-	mux.Handle("POST /oauth/authorize", newAuthGate().wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { oauthAuthorizePost(w, r, store, base) })))
+	mux.Handle("POST /oauth/authorize", newAuthGate().wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		oauthAuthorizePost(w, r, store, base, config.OAuthAccessTokenTTL)
+	})))
 	mux.HandleFunc("POST /oauth/token", func(w http.ResponseWriter, r *http.Request) {
-		oauthToken(w, r, store, base, config.OAuthAccessTokenTTL)
+		oauthToken(w, r, store, base)
 	})
 }
 
@@ -242,7 +248,7 @@ func oauthAuthorizeGet(w http.ResponseWriter, r *http.Request, store *core.Store
 	http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 }
 
-func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Store, base string) {
+func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Store, base string, accessTTLOverride time.Duration) {
 	if err := r.ParseForm(); err != nil {
 		oauthError(w, http.StatusBadRequest, "invalid_request", "invalid form")
 		return
@@ -295,8 +301,13 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 			http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 			return
 		}
+		accessExpires, expiryErr := oauthAccessExpiry(r.FormValue("expiry_mode"), r.FormValue("expiry_value"), r.FormValue("expiry_unit"), accessTTLOverride)
+		if expiryErr != nil {
+			renderOAuthRequest(w, r, store, base, requestID, "invalid_expiry")
+			return
+		}
 		code := randomSecret("edc_code_")
-		approved, approveErr := store.ApproveOAuthRequest(r.Context(), requestID, csrf.Value, userID, code, time.Now().Add(oauthCodeTTL))
+		approved, approveErr := store.ApproveOAuthRequest(r.Context(), requestID, csrf.Value, userID, code, time.Now().Add(oauthCodeTTL), accessExpires)
 		if approveErr != nil {
 			renderOAuthExpired(w, r, base)
 			return
@@ -306,6 +317,38 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 	default:
 		oauthError(w, http.StatusBadRequest, "invalid_request", "missing authorization decision")
 	}
+}
+
+func oauthAccessExpiry(mode, rawValue, unit string, override time.Duration) (time.Time, error) {
+	if override > 0 {
+		return time.Now().UTC().Add(override), nil
+	}
+	if mode == "" || mode == "never" {
+		return time.Time{}, nil
+	}
+	if mode != "duration" {
+		return time.Time{}, errors.New("invalid expiry mode")
+	}
+	value, err := strconv.ParseInt(rawValue, 10, 64)
+	if err != nil || value < 1 {
+		return time.Time{}, errors.New("invalid expiry duration")
+	}
+	var duration time.Duration
+	switch unit {
+	case "hours":
+		if value > 876000 {
+			return time.Time{}, errors.New("expiry duration is too large")
+		}
+		duration = time.Duration(value) * time.Hour
+	case "days":
+		if value > 36500 {
+			return time.Time{}, errors.New("expiry duration is too large")
+		}
+		duration = time.Duration(value) * 24 * time.Hour
+	default:
+		return time.Time{}, errors.New("invalid expiry unit")
+	}
+	return time.Now().UTC().Add(duration), nil
 }
 
 func setOAuthSessionCookie(w http.ResponseWriter, base string, login core.LoginResult) {
@@ -503,7 +546,7 @@ func integAuthOAuthStartLocation(requestID, language string) string {
 	}.Encode()
 }
 
-func oauthToken(w http.ResponseWriter, r *http.Request, store *core.Store, base string, ttl time.Duration) {
+func oauthToken(w http.ResponseWriter, r *http.Request, store *core.Store, base string) {
 	if r.Header.Get("Authorization") != "" {
 		oauthError(w, http.StatusUnauthorized, "invalid_client", "public clients must not send credentials")
 		return
@@ -512,12 +555,16 @@ func oauthToken(w http.ResponseWriter, r *http.Request, store *core.Store, base 
 		oauthError(w, http.StatusBadRequest, "invalid_request", "invalid authorization code exchange")
 		return
 	}
-	token, info, err := store.ExchangeOAuthCode(r.Context(), r.FormValue("code"), r.FormValue("client_id"), r.FormValue("redirect_uri"), r.FormValue("code_verifier"), r.FormValue("resource"), ttl)
+	token, info, err := store.ExchangeOAuthCode(r.Context(), r.FormValue("code"), r.FormValue("client_id"), r.FormValue("redirect_uri"), r.FormValue("code_verifier"), r.FormValue("resource"))
 	if err != nil {
 		oauthError(w, http.StatusBadRequest, "invalid_grant", "authorization code is invalid, expired, or already used")
 		return
 	}
-	respond(w, http.StatusOK, map[string]any{"access_token": token, "token_type": "Bearer", "expires_in": int64(time.Until(info.ExpiresAt).Seconds()), "scope": strings.Join(info.Scopes, " ")})
+	response := map[string]any{"access_token": token, "token_type": "Bearer", "scope": strings.Join(info.Scopes, " ")}
+	if !info.ExpiresAt.IsZero() {
+		response["expires_in"] = max(int64(1), int64(time.Until(info.ExpiresAt).Seconds()))
+	}
+	respond(w, http.StatusOK, response)
 }
 
 func oauthRedirect(w http.ResponseWriter, r *http.Request, redirectURI, state, issuer, code, oauthErr string) {
@@ -537,7 +584,11 @@ func oauthRedirect(w http.ResponseWriter, r *http.Request, redirectURI, state, i
 	}
 	q.Set("iss", issuer)
 	u.RawQuery = q.Encode()
-	http.Redirect(w, r, u.String(), http.StatusFound)
+	status := http.StatusFound
+	if r.Method == http.MethodPost {
+		status = http.StatusSeeOther
+	}
+	http.Redirect(w, r, u.String(), status)
 }
 
 func oauthError(w http.ResponseWriter, status int, code, description string) {
