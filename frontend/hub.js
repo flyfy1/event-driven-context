@@ -10,7 +10,7 @@
   const userKey = sessionStorageKey("event-context.user", api);
   const words = {
     en: {
-      googleTitle: "Connect a Google account", googleHint: "Choose a source, then sign in and review permissions at Google. Repeat to connect several accounts.", connectionName: "Connection name", connectionPlaceholder: "Work account", googleConnect: "Continue to Google", googleReady: "You will choose the Google account on Google's authorization page.", googleChecking: "Checking whether Google connections are enabled…", googleUnconfigured: "Google connections are not configured on this server. The deployer needs to configure Google OAuth and credential storage.", googleUnavailable: "Cannot check Google connection availability. Try Refresh.", googleStarting: "Opening Google authorization…", googleFailed: "Could not start Google authorization. Try again.", googleInvalidURL: "The server returned an unexpected authorization address. Navigation was blocked.", googleNameRequired: "Enter a connection name and choose a supported Google source.", googleDriveScope: "Google Drive: this connection requests read-only access to all Drive files your account can access. Agent API access requires separate approval.", googleMailScope: "Gmail: this connection requests read-only access to your mailbox. Agent API access requires separate approval.",
+      calendarId: "Allowed calendar", windowStart: "Window start", windowEnd: "Window end", calendarScope: "Access is limited to this calendar and time window, with basic event or availability fields only.", invalidConstraints: "This request has missing, unsupported or invalid access constraints. Approval is disabled.", addAccount: "Add account", operations: "Available API operations", integrationsUnavailable: "Connected sources are temporarily unavailable. Authorization requests and revocation remain available.", googleScope: "Review the account permissions on Google before continuing. Agent access requires separate approval for each API operation and covers the resources that account permits.", googleTitle: "Connect an account", googleHint: "Choose a source, then sign in and review permissions at Google. Repeat to connect several accounts.", connectionName: "Connection name", connectionPlaceholder: "Work account", googleConnect: "Continue to Google", googleReady: "You will choose the Google account on Google's authorization page.", googleChecking: "Checking whether Google connections are enabled…", googleUnconfigured: "Google connections are not configured on this server. The deployer needs to configure Google OAuth and credential storage.", googleUnavailable: "Cannot check Google connection availability. Try Refresh.", googleStarting: "Opening Google authorization…", googleFailed: "Could not start Google authorization. Try again.", googleInvalidURL: "The server returned an unexpected authorization address. Navigation was blocked.", googleNameRequired: "Enter a connection name and choose a supported Google source.", googleDriveScope: "Google Drive: this connection requests read-only access to all Drive files your account can access. Agent API access requires separate approval.", googleMailScope: "Gmail: this connection requests read-only access to your mailbox. Agent API access requires separate approval.",
       language: "Language", eyebrow: "CONTEXT HUB", title: "My authorizations", intro: "Control which agents can use each connected account and API operation.", refresh: "Refresh",
       signInTitle: "Sign in to review requests", signInBody: "Use your owner account to manage agents and data access.", signIn: "Open workspace to sign in",
       polling: "Updates every 30 seconds while this page is open and visible.", agents: "Agents", requests: "API access", connections: "Connected accounts",
@@ -25,7 +25,7 @@
       unavailable: "Authorizations are unavailable on this server. The Hub API may not be installed yet.", failed: "Unable to load authorizations. Check your connection and try Refresh.", mutationFailed: "The change could not be confirmed. Refresh to check the current status before trying again.", sessionChanged: "Your signed-in account changed. Review the requests again before taking action.", invalidData: "The server returned an invalid authorization response. No approval is available.", forbidden: "Use your owner account to review authorizations. Agent credentials cannot approve access.", loading: "Checking your session…", updated: "Authorization updated.", noExpiry: "No expiry provided", pendingCount: (n) => `${n} pending request${n === 1 ? "" : "s"}`, reminderError: "My authorizations · status unavailable", missingAgent: "The agent is not approved or its registration has expired. Approval is disabled.",
     },
     "zh-CN": {
-      googleTitle: "连接 Google 账号", googleHint: "选择数据源，然后前往 Google 登录并确认权限。可重复操作以连接多个账号。", connectionName: "连接名称", connectionPlaceholder: "工作账号", googleConnect: "前往 Google", googleReady: "你将在 Google 授权页面选择要连接的账号。", googleChecking: "正在检查 Google 连接是否已启用…", googleUnconfigured: "此服务器尚未配置 Google 连接，需要部署者配置 Google OAuth 和凭证存储。", googleUnavailable: "无法确认 Google 连接是否可用，请刷新重试。", googleStarting: "正在打开 Google 授权…", googleFailed: "无法开始 Google 授权，请重试。", googleInvalidURL: "服务器返回了非预期的授权地址，已阻止跳转。", googleNameRequired: "请输入连接名称并选择支持的 Google 数据源。", googleDriveScope: "Google Drive：此连接申请只读访问该账号可以访问的所有 Drive 文件。Agent 访问 API 仍需单独批准。", googleMailScope: "Gmail：此连接申请只读访问你的邮箱。Agent 访问 API 仍需单独批准。",
+      calendarId: "允许访问的日历", windowStart: "时间窗口起点", windowEnd: "时间窗口终点", calendarScope: "仅允许访问此日历和时间窗口内的基本日程或忙闲信息。", invalidConstraints: "此申请的权限限制缺失、不受支持或无效，无法批准。", addAccount: "添加账号", operations: "可用 API 操作", integrationsUnavailable: "已连接的数据源暂时不可用，仍可处理授权申请和撤销权限。", googleScope: "继续前请在 Google 确认账号权限。Agent 使用每个 API 操作仍需单独批准，授权范围涵盖该账号允许访问的资源。", googleTitle: "连接账号", googleHint: "选择数据源，然后前往 Google 登录并确认权限。可重复操作以连接多个账号。", connectionName: "连接名称", connectionPlaceholder: "工作账号", googleConnect: "前往 Google", googleReady: "你将在 Google 授权页面选择要连接的账号。", googleChecking: "正在检查 Google 连接是否已启用…", googleUnconfigured: "此服务器尚未配置 Google 连接，需要部署者配置 Google OAuth 和凭证存储。", googleUnavailable: "无法确认 Google 连接是否可用，请刷新重试。", googleStarting: "正在打开 Google 授权…", googleFailed: "无法开始 Google 授权，请重试。", googleInvalidURL: "服务器返回了非预期的授权地址，已阻止跳转。", googleNameRequired: "请输入连接名称并选择支持的 Google 数据源。", googleDriveScope: "Google Drive：此连接申请只读访问该账号可以访问的所有 Drive 文件。Agent 访问 API 仍需单独批准。", googleMailScope: "Gmail：此连接申请只读访问你的邮箱。Agent 访问 API 仍需单独批准。",
       language: "语言", eyebrow: "CONTEXT HUB", title: "我的授权", intro: "管理每个 Agent 可以使用的账号和 API 操作。", refresh: "刷新",
       signInTitle: "登录后查看授权申请", signInBody: "使用你的所有者账号管理 Agent 和数据访问权限。", signIn: "打开工作区登录",
       polling: "页面打开并可见时，每 30 秒更新一次。", agents: "Agent", requests: "API 访问权限", connections: "已连接账号",
@@ -44,7 +44,7 @@
   let locale = (params.get("locale") || saved("event-context.locale") || navigator.language || "en").startsWith("zh") ? "zh-CN" : "en";
   let user = null, token = null, epoch = 0, requestVersion = 0, snapshot = null, busy = false, fetching = false, timer = null;
   let controller = new AbortController();
-  let renderedStatuses = "", googleState = "checking", googleMessage = "";
+  let renderedStatuses = "", integrations = null, integrationsFailed = false, googleMessage = "";
   const t = (key) => words[locale][key] || key;
   const $ = (selector) => document.querySelector(selector);
   const stamp = () => `${saved(tokenKey) || ""}\u0000${saved(userKey) || ""}`;
@@ -79,8 +79,9 @@
   }
   function reset() {
     epoch += 1; requestVersion += 1; controller.abort(); controller = new AbortController();
-    user = null; token = null; snapshot = null; busy = false; fetching = false; googleState = "checking"; googleMessage = ""; clearTimeout(timer);
+    user = null; token = null; snapshot = null; busy = false; fetching = false; integrations = null; integrationsFailed = false; googleMessage = ""; clearTimeout(timer);
     if (page) { $("#hub-content").hidden = true; $("#hub-identity").textContent = ""; ["agents", "requests", "connections"].forEach((key) => $("#hub-" + key).replaceChildren()); }
+    renderIntegrations();
     updateReminder(0);
   }
   async function call(path, options = {}) {
@@ -110,19 +111,19 @@
     const version = epoch, authStamp = stamp(), requestID = ++requestVersion, identity = user.id;
     try {
       if (!await checkIdentity(identity) || !current(version, authStamp)) return;
-      const [data, google] = await Promise.all([
+      const [data, registry] = await Promise.all([
         call("/v1/hub/owner"),
-        page ? call("/v1/hub/google/status").then((result) => typeof result?.configured === "boolean" ? result : null).catch(() => null) : null
+        page ? call("/v1/hub/integrations").then(validateIntegrations).catch(() => null) : null
       ]);
       if (!current(version, authStamp) || requestID !== requestVersion) return;
       if (!data || !["agents", "requests", "connections"].every((key) => Array.isArray(data[key]))) throw new Error("invalid_response");
       const statuses = [...data.agents, ...data.requests].map(effectiveStatus).join("|");
       const changed = JSON.stringify(snapshot) !== JSON.stringify(data) || renderedStatuses !== statuses;
       snapshot = data;
-      if (page) { googleMessage = ""; googleState = google === null ? "unavailable" : google.configured ? "ready" : "unconfigured"; renderGoogle(); }
+      if (page) { googleMessage = ""; integrations = registry; integrationsFailed = registry === null; renderIntegrations(); }
       if (page) { $("#hub-content").hidden = false; $("#hub-signin").hidden = true; message(""); if (changed) render(data); else $("#hub-pending").textContent = t("pendingCount")(countPending(data)); }
       updateReminder(countPending(data));
-    } catch (error) { if (current(version, authStamp)) loadError(error); }
+    } catch (error) { if (current(version, authStamp)) { integrations = null; integrationsFailed = true; renderIntegrations(); loadError(error); } }
     finally { if (version === epoch) { fetching = false; schedule(); } }
   }
   async function start() {
@@ -140,17 +141,71 @@
       await refresh();
     } catch (error) { if (version === epoch) loadError(error); }
   }
+  // The registry is authoritative. Unknown readiness states and malformed responses
+  // must never turn into source cards or onboarding controls.
+  function validateIntegrations(value) {
+    const text = (v) => typeof v === "string" && v.trim().length > 0;
+    if (!value || !Array.isArray(value.providers) || !value.feature_flags ||
+      !["hub_approvals", "google_oauth", "push"].every((key) => typeof value.feature_flags[key] === "boolean")) return null;
+    const seen = new Set(), accounts = new Set();
+    for (const row of value.providers) {
+      const p = row?.provider;
+      if (!p || !text(p.id) || !text(p.name) || seen.has(p.id) || !text(p.implementation_status) || !Array.isArray(p.operations) ||
+        !["deployment_configured", "connectable", "visible"].every((key) => typeof row[key] === "boolean") ||
+        !Array.isArray(p.limitations) || p.limitations.some((item) => typeof item !== "string") || !Number.isInteger(row.connected_account_count) || row.connected_account_count < 0 || !Array.isArray(row.connections) || typeof row.onboarding_method !== "string") return null;
+      seen.add(p.id);
+      if (p.operations.some((op) => !op || !text(op.id) || typeof op.read_only !== "boolean")) return null;
+      for (const c of row.connections) {
+        if (!c || !text(c.id) || accounts.has(c.id) || c.provider_id !== p.id || !text(c.account_id) || !text(c.display_name) || typeof c.status !== "string" || !Array.isArray(c.operations) || c.operations.some((op) => !op || typeof op.read_only !== "boolean" || !p.operations.some((declared) => declared.id === op.id))) return null;
+        accounts.add(c.id);
+      }
+    }
+    return value;
+  }
+  function runnable(row) { return row.provider.implementation_status === "adapter_available" && row.deployment_configured === true && row.provider.operations.length > 0; }
+  function onboardingProviders() { return integrations?.feature_flags.google_oauth === true ? integrations.providers.filter((row) => runnable(row) && row.connectable === true && row.onboarding_method === "browser_oauth") : []; }
+  function visibleConnections() {
+    if (!integrations) return [];
+    return integrations.providers.filter((row) => runnable(row) && row.visible === true && row.connected_account_count > 0)
+      .flatMap((row) => row.connections.filter((c) => c.status === "configured" && c.operations.length > 0).map((connection) => ({ connection, provider: row.provider })));
+  }
+  function renderIntegrations() {
+    if (!page) return;
+    const options = onboardingProviders(), connections = visibleConnections();
+    const picker = $("#hub-google-provider"), selected = picker.value;
+    picker.replaceChildren();
+    for (const row of options) { const option = node("option", row.provider.name); option.value = row.provider.id; picker.append(option); }
+    picker.value = options.some((row) => row.provider.id === selected) ? selected : options[0]?.provider.id || "";
+    $("#hub-add-account").hidden = options.length === 0;
+    if (!options.length) $("#hub-add-account").open = false;
+    $("#hub-integrations-message").textContent = integrationsFailed ? t("integrationsUnavailable") : "";
+    const showSection = connections.length > 0 || options.length > 0 || integrationsFailed;
+    $("#hub-connections-section").hidden = !showSection;
+    $("#hub-connections-nav").hidden = !showSection;
+    $("#hub-connections").replaceChildren();
+    for (const { connection, provider } of connections) {
+      const item = card(connection.display_name, connection.status);
+      item.append(details([["provider", provider.name], ["account", connection.account_id], ["connectionId", connection.id]]));
+      item.append(node("p", `${t("operations")}: ${connection.operations.map((op) => op.id).join(", ")}`, "hub-operations"));
+      const actions = node("div", undefined, "actions");
+      actions.append(button("disconnect", () => { if (window.confirm(t("confirmDisconnect"))) void decide("connections", connection.id, "disconnect"); }));
+      item.append(actions); $("#hub-connections").append(item);
+    }
+    renderGoogle();
+  }
   function renderGoogle() {
     if (!page) return;
-    $("#hub-google-connect").disabled = googleState !== "ready" || busy || !user;
-    $("#hub-google-message").textContent = t(googleMessage || ({ checking: "googleChecking", ready: "googleReady", unconfigured: "googleUnconfigured", unavailable: "googleUnavailable" }[googleState]));
-    $("#hub-google-scope").textContent = t($("#hub-google-provider").value === "gmail" ? "googleMailScope" : "googleDriveScope");
+    const available = onboardingProviders().some((row) => row.provider.id === $("#hub-google-provider").value);
+    $("#hub-google-connect").disabled = !available || busy || !user;
+    $("#hub-google-message").textContent = available ? t(googleMessage || "googleReady") : "";
+    const selected = onboardingProviders().find((row) => row.provider.id === $("#hub-google-provider").value);
+    $("#hub-google-scope").textContent = available ? [t("googleScope"), ...selected.provider.limitations].join(" ") : "";
   }
   async function connectGoogle(event) {
     event.preventDefault();
-    if (busy || !user || googleState !== "ready") return;
+    if (busy || !user || !integrations) return;
     const provider = $("#hub-google-provider").value, name = $("#hub-google-name").value.trim();
-    if (!["google-drive", "gmail"].includes(provider) || !name || name.length > 150 || /[\r\n\x00]/.test(name)) { googleMessage = "googleNameRequired"; renderGoogle(); return; }
+    if (!onboardingProviders().some((row) => row.provider.id === provider) || !name || name.length > 150 || /[\r\n\x00]/.test(name)) { googleMessage = "googleNameRequired"; renderGoogle(); return; }
     busy = true; clearTimeout(timer); requestVersion += 1;
     const version = epoch, authStamp = stamp(), identity = user.id;
     googleMessage = "googleStarting"; renderGoogle();
@@ -165,7 +220,8 @@
     } catch (error) {
       if (!current(version, authStamp) || error.name === "AbortError") return;
       if (error.status === 401) { loadError(error); return; }
-      googleMessage = error.code === "service_unavailable" || error.status === 503 ? "googleUnconfigured" : "googleFailed";
+      googleMessage = "googleFailed";
+      if (error.code === "service_unavailable" || error.status === 503) { integrations = null; integrationsFailed = true; renderIntegrations(); }
     } finally { if (version === epoch) { busy = false; renderGoogle(); schedule(); } }
   }
   function details(entries) {
@@ -180,11 +236,31 @@
     header.append(node("h3", title), node("span", t(status), "hub-state")); article.append(header); return article;
   }
   function ordered(items) { return [...items].sort((a, b) => Number(effectiveStatus(b) === "pending") - Number(effectiveStatus(a) === "pending") || String(b.created_at || "").localeCompare(String(a.created_at || ""))); }
+  function calendarTimestamp(value) {
+    if (typeof value !== "string") return NaN;
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|([+-])(\d{2}):(\d{2}))$/.exec(value);
+    if (!m) return NaN;
+    const [, year, month, day, hour, minute, second, , offsetHour, offsetMinute] = m;
+    const y = Number(year), mo = Number(month), d = Number(day);
+    const days = [31, y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (mo < 1 || mo > 12 || d < 1 || d > days[mo - 1] || Number(hour) > 23 || Number(minute) > 59 || Number(second) > 59 || Number(offsetHour || 0) > 23 || Number(offsetMinute || 0) > 59) return NaN;
+    return Date.parse(value);
+  }
+  function requestScope(request, connection) {
+    const scoped = ["google-calendar", "microsoft-calendar"].includes(connection?.provider_id) && ["events.list", "freebusy.query"].includes(request.operation);
+    const constraints = request.constraints;
+    if (!scoped) return { scoped: false, valid: constraints === null || constraints === undefined };
+    if (!constraints || typeof constraints !== "object" || Array.isArray(constraints) || Object.keys(constraints).length !== 3 ||
+      !["calendar_id", "time_min", "time_max"].every((key) => Object.hasOwn(constraints, key)) ||
+      typeof constraints.calendar_id !== "string" || !constraints.calendar_id.trim() || constraints.calendar_id.length > 512 || /[\r\n\x00]/.test(constraints.calendar_id)) return { scoped: true, valid: false };
+    const start = calendarTimestamp(constraints.time_min), end = calendarTimestamp(constraints.time_max);
+    return { scoped: true, valid: Number.isFinite(start) && Number.isFinite(end) && end > start && end - start <= 7 * 24 * 60 * 60 * 1000, constraints };
+  }
   function render(data) {
     if (!page) return;
     renderedStatuses = [...data.agents, ...data.requests].map(effectiveStatus).join("|");
     $("#hub-pending").textContent = t("pendingCount")(countPending(data));
-    for (const key of ["agents", "requests", "connections"]) $("#hub-" + key).replaceChildren();
+    for (const key of ["agents", "requests"]) $("#hub-" + key).replaceChildren();
     for (const agent of ordered(data.agents)) {
       const status = effectiveStatus(agent), item = card(agent.name, status);
       item.append(details([["agentId", agent.id], ["created", formatDate(agent.created_at)], [status === "pending" ? "approvalDeadline" : "expires", formatDate(agent.expires_at)]]));
@@ -204,13 +280,17 @@
     }
     for (const request of ordered(data.requests)) {
       const status = effectiveStatus(request), connection = data.connections.find((c) => c.id === request.connection_id), agent = data.agents.find((a) => a.id === request.agent_id);
-      const item = card(request.operation, status);
+      const item = card(request.operation, status), scope = requestScope(request, connection);
       item.append(details([["agent", request.agent_name], ["agentId", request.agent_id], ["connection", connection?.display_name || request.connection_name], ["connectionId", request.connection_id], ["provider", connection?.provider_id], ["account", connection?.account_id], ["operation", request.operation], ["reason", request.reason], ["created", formatDate(request.created_at)], ["expires", formatDate(request.expires_at)]]));
-      if (status === "pending" || status === "approved") item.append(node("p", t("fullScope"), "hub-scope"));
+      if (scope.scoped && scope.valid) {
+        item.append(details([["calendarId", scope.constraints.calendar_id], ["windowStart", scope.constraints.time_min], ["windowEnd", scope.constraints.time_max]]));
+        item.append(node("p", t("calendarScope"), "hub-scope"));
+      } else if (!scope.valid) item.append(node("p", t("invalidConstraints"), "hub-scope"));
+      else if (status === "pending" || status === "approved") item.append(node("p", t("fullScope"), "hub-scope"));
       const actions = node("div", undefined, "actions");
       if (status === "pending") {
         const canConnect = connection && ["configured", "connected"].includes(connection.status), canAgent = agent && effectiveStatus(agent) === "approved";
-        const approve = button("approve", () => void decide("requests", request.id, "approve"), true); approve.disabled = !canConnect || !canAgent;
+        const approve = button("approve", () => void decide("requests", request.id, "approve"), true); approve.disabled = !canConnect || !canAgent || !scope.valid;
         actions.append(approve, button("deny", () => void decide("requests", request.id, "deny")));
         if (!canConnect) item.append(node("p", t("missingConnection"), "hub-note"));
         if (!canAgent) item.append(node("p", t("missingAgent"), "hub-note"));
@@ -218,13 +298,8 @@
       if (actions.childNodes.length) item.append(actions);
       $("#hub-requests").append(item);
     }
-    for (const connection of data.connections) {
-      const item = card(connection.display_name, connection.status);
-      item.append(details([["provider", connection.provider_id], ["account", connection.account_id], ["connectionId", connection.id]]));
-      if (connection.status !== "disconnected") { const actions = node("div", undefined, "actions"); actions.append(button("disconnect", () => { if (window.confirm(t("confirmDisconnect"))) void decide("connections", connection.id, "disconnect"); })); item.append(actions); }
-      $("#hub-connections").append(item);
-    }
-    for (const [key, empty] of [["agents", "noneAgents"], ["requests", "noneRequests"], ["connections", "noneConnections"]]) if (!data[key].length) $("#hub-" + key).append(node("p", t(empty), "hub-empty"));
+    for (const [key, empty] of [["agents", "noneAgents"], ["requests", "noneRequests"]]) if (!data[key].length) $("#hub-" + key).append(node("p", t(empty), "hub-empty"));
+    renderIntegrations();
   }
   async function decide(kind, id, decision, extra = {}) {
     if (busy || !user) return;

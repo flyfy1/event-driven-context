@@ -190,11 +190,13 @@ public final class AuthorizationsActivity extends Activity {
         String id = item.getString("id"), state = item.getString("status"), expiry = item.optString("expires_at");
         boolean agent = "agents".equals(kind);
         boolean accountAvailable = agent;
+        String provider = null;
         String account = item.optString("connection_name", item.optString("connection_id"));
         for (int i = 0; i < connections.length(); i++) {
             JSONObject connection = connections.getJSONObject(i);
             if (connection.optString("id").equals(item.optString("connection_id"))) {
                 accountAvailable = !"disconnected".equals(connection.optString("status"));
+                provider = connection.optString("provider_id");
                 account = connection.optString("display_name") + " · " + connection.optString("provider_id")
                         + " · " + connection.optString("account_id");
                 break;
@@ -203,14 +205,30 @@ public final class AuthorizationsActivity extends Activity {
         String description = agent ? item.optString("name") + "\n" + getString(R.string.hub_pairing_scope)
                 : getString(R.string.hub_request_details, item.optString("agent_name"), account,
                         item.optString("operation"), item.optString("reason"));
-        if (!agent) description += "\n" + getString(R.string.hub_operation_scope);
+        java.util.Map<String, Object> constraints = null;
+        if (item.has("constraints") && !item.isNull("constraints")) {
+            constraints = new java.util.HashMap<>();
+            JSONObject scope = item.optJSONObject("constraints");
+            if (scope == null) constraints.put("invalid", true);
+            else {
+                java.util.Iterator<String> keys = scope.keys();
+                while (keys.hasNext()) { String key = keys.next(); constraints.put(key, scope.get(key)); }
+            }
+        }
+        boolean scopeValid = agent || HubAuthorization.validConstraints(provider, item.optString("operation"), constraints);
+        if (!agent) {
+            if (!scopeValid) description += "\n" + getString(R.string.hub_scope_invalid);
+            else if (constraints != null) description += "\n" + getString(R.string.hub_calendar_scope,
+                    constraints.get("calendar_id"), constraints.get("time_min"), constraints.get("time_max"));
+            else description += "\n" + getString(R.string.hub_operation_scope);
+        }
         if (!accountAvailable) description += "\n" + getString(R.string.hub_account_unavailable);
         description += "\n" + getString(R.string.hub_expiry, expiry) + "\n" + state + "\nID: " + id;
         addText(description, 16);
         boolean pending = HubAuthorization.pending(state, expiry, System.currentTimeMillis());
         if (pending) {
             String details = description;
-            if (accountAvailable) addButton(getString(R.string.hub_approve)).setOnClickListener(v -> confirm(kind, id, "approve", details, expiry));
+            if (accountAvailable && scopeValid) addButton(getString(R.string.hub_approve)).setOnClickListener(v -> confirm(kind, id, "approve", details, expiry));
             addButton(getString(R.string.hub_deny)).setOnClickListener(v -> confirm(kind, id, "deny", details, expiry));
         } else if (("approved".equals(state) || "active".equals(state)) && HubAuthorization.unexpired(expiry, System.currentTimeMillis())) {
             String details = description;

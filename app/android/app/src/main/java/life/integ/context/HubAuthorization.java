@@ -6,6 +6,30 @@ import java.time.Instant;
 
 /** Shared fail-closed checks for authorization UI and background reminders. */
 final class HubAuthorization {
+    static boolean calendarOperation(String provider, String operation) {
+        return ("google-calendar".equals(provider) || "microsoft-calendar".equals(provider))
+                && ("events.list".equals(operation) || "freebusy.query".equals(operation));
+    }
+
+    static boolean validConstraints(String provider, String operation, java.util.Map<String, Object> constraints) {
+        if (!calendarOperation(provider, operation)) return constraints == null;
+        if (constraints == null || constraints.size() != 3
+                || !constraints.keySet().equals(new java.util.HashSet<>(java.util.Arrays.asList("calendar_id", "time_min", "time_max")))) return false;
+        for (String key : constraints.keySet()) {
+            if (!(constraints.get(key) instanceof String) || ((String) constraints.get(key)).trim().isEmpty()) return false;
+        }
+        String calendar = (String) constraints.get("calendar_id");
+        if (calendar.length() > 1024 || calendar.indexOf('\0') >= 0) return false;
+        try {
+            String startValue = (String) constraints.get("time_min"), endValue = (String) constraints.get("time_max");
+            String timestamp = "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})";
+            if (!startValue.matches(timestamp) || !endValue.matches(timestamp)) return false;
+            Instant start = java.time.OffsetDateTime.parse(startValue).toInstant();
+            Instant end = java.time.OffsetDateTime.parse(endValue).toInstant();
+            return end.isAfter(start) && java.time.Duration.between(start, end).compareTo(java.time.Duration.ofDays(7)) <= 0;
+        } catch (RuntimeException invalid) { return false; }
+    }
+
     static boolean visible(String status, String expiresAt, long now, boolean showHistory) {
         return showHistory || pending(status, expiresAt, now);
     }

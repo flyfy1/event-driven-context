@@ -74,8 +74,24 @@ func (c *Client) Execute(ctx context.Context, providerID, operationID, credentia
 	if err := validateArgs(operation.InputSchema, args); err != nil {
 		return Result{}, err
 	}
+	switch providerID {
+	case "caldav", "carddav", "icloud-calendar", "icloud-contacts":
+		return c.executeDAV(ctx, providerID, operationID, credential, args)
+	}
+	if providerID == "rss-feed" {
+		return c.executeFeed(ctx, operationID, credential, args)
+	}
 	if len(credential) == 0 || len(credential) > 8192 || strings.ContainsAny(credential, " \t\r\n\x00") {
 		return Result{}, &Error{Code: "invalid_credential"}
+	}
+	if googlePersonal(providerID) {
+		return c.executeGooglePersonal(ctx, providerID, operationID, credential, args)
+	}
+	switch providerID {
+	case "todoist", "notion", "dropbox", "readwise-reader", "github", "slack":
+		return c.executeSaaS(ctx, providerID, operationID, credential, args)
+	case "microsoft-calendar", "microsoft-todo", "onedrive", "outlook-mail":
+		return c.executeGraph(ctx, providerID, operationID, credential, args)
 	}
 	q := url.Values{}
 	endpoint, expectedType := "", "application/json"

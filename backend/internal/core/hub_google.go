@@ -6,6 +6,7 @@ import (
 	"crypto/subtle"
 	"database/sql"
 	"errors"
+	"event-driven-context/internal/hubconnectors"
 	"time"
 )
 
@@ -28,7 +29,7 @@ func (s *Store) StartHubGoogle(ctx context.Context, providerID, displayName stri
 	if owner == "" {
 		return HubGoogleState{}, ErrUnauthenticated
 	}
-	if (providerID != "google-drive" && providerID != "gmail") || !hubText(displayName, 150) {
+	if len(hubconnectors.GoogleScopes(providerID)) == 0 || !hubText(displayName, 150) {
 		return HubGoogleState{}, Invalid("Google provider and display name required")
 	}
 	state := HubGoogleState{State: rand.Text() + rand.Text(), OwnerID: owner, ProviderID: providerID, DisplayName: displayName, Verifier: rand.Text() + rand.Text()}
@@ -146,7 +147,7 @@ func (s *Store) SaveHubGoogleConnection(ctx context.Context, c HubConnection, se
 	if c.OwnerID == "" {
 		return c, ErrUnauthenticated
 	}
-	if (c.ProviderID != "google-drive" && c.ProviderID != "gmail") || !hubText(c.AccountID, 254) || !hubText(c.DisplayName, 150) || len(secret) == 0 || len(secret) > 16384 {
+	if len(hubconnectors.GoogleScopes(c.ProviderID)) == 0 || !hubText(c.AccountID, 254) || !hubText(c.DisplayName, 150) || len(secret) == 0 || len(secret) > 16384 {
 		return c, Invalid("invalid Google connection")
 	}
 	return s.AddHubConnection(ctx, c, secret, key)

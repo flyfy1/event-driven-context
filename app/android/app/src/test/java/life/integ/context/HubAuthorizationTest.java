@@ -15,6 +15,32 @@ public class HubAuthorizationTest {
         assertTrue(HubAuthorization.visible("denied", future, now, true));
     }
 
+    @Test public void calendarGrantsRequireExactKnownBoundedConstraints() {
+        java.util.Map<String, Object> scope = new java.util.HashMap<>();
+        scope.put("calendar_id", "primary");
+        scope.put("time_min", "2026-09-19T08:00:00+08:00");
+        scope.put("time_max", "2026-09-26T08:00:00+08:00");
+        assertTrue(HubAuthorization.validConstraints("google-calendar", "events.list", scope));
+        assertTrue(HubAuthorization.validConstraints("microsoft-calendar", "events.list", scope));
+        assertTrue(HubAuthorization.validConstraints("google-calendar", "freebusy.query", scope));
+        assertFalse(HubAuthorization.validConstraints("google-calendar", "events.list", null));
+        assertFalse(HubAuthorization.validConstraints("outlook-mail", "messages.list", scope));
+        assertTrue(HubAuthorization.validConstraints("outlook-mail", "messages.list", null));
+        scope.put("include_attendees", true);
+        assertFalse(HubAuthorization.validConstraints("google-calendar", "events.list", scope));
+        scope.remove("include_attendees");
+        scope.put("time_max", "2026-09-26T08:00:01+08:00");
+        assertFalse(HubAuthorization.validConstraints("microsoft-calendar", "events.list", scope));
+        scope.put("time_max", "2026-09-18T08:00:00+08:00");
+        assertFalse(HubAuthorization.validConstraints("microsoft-calendar", "events.list", scope));
+        scope.put("time_max", "2026-09-20");
+        assertFalse(HubAuthorization.validConstraints("google-calendar", "events.list", scope));
+        scope.put("time_max", 42);
+        assertFalse(HubAuthorization.validConstraints("google-calendar", "events.list", scope));
+        scope.remove("calendar_id");
+        assertFalse(HubAuthorization.validConstraints("google-calendar", "events.list", scope));
+    }
+
     private SessionStore.Session session(String endpoint, String owner, String token, long expiry) {
         return new SessionStore.Session(endpoint, owner, owner, token, null, null, null, expiry);
     }

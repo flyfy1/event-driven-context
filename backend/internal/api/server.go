@@ -159,6 +159,9 @@ func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 			}
 		}
 		maxBytes := int64(core.MaxRequestBytes)
+		if r.Method == http.MethodPost && r.URL.Path == "/v1/hub/imports" {
+			maxBytes = 6*core.HubImportMaxBytes + 16384
+		}
 		if r.Method == http.MethodPost && r.URL.Path == "/v1/media-events" {
 			maxBytes = core.MaxMediaRequestBytes
 		}

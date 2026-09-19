@@ -23,20 +23,20 @@
     <section id="hub-signin" class="hub-notice" hidden><h2 data-hub-text="signInTitle">Sign in to review requests</h2><p data-hub-text="signInBody">Use your owner account to manage agents and data access.</p><a id="hub-signin-link" href="./workspace.html" data-hub-text="signIn">Open workspace to sign in</a></section>
     <div id="hub-content" hidden>
       <div class="hub-summary"><strong id="hub-pending" role="status" aria-live="polite"></strong><span class="muted" data-hub-text="polling">Updates every 30 seconds while this page is open and visible.</span></div>
-      <nav class="hub-nav" aria-label="Authorization sections"><a href="#hub-agents-section" data-hub-text="agents">Agents</a><a href="#hub-requests-section" data-hub-text="requests">API access</a><a href="#hub-connections-section" data-hub-text="connections">Connected accounts</a></nav>
+      <nav class="hub-nav" aria-label="Authorization sections"><a href="#hub-agents-section" data-hub-text="agents">Agents</a><a href="#hub-requests-section" data-hub-text="requests">API access</a><a id="hub-connections-nav" href="#hub-connections-section" data-hub-text="connections" hidden>Connected accounts</a></nav>
       <section id="hub-agents-section" class="hub-section" aria-labelledby="hub-agents-title"><h2 id="hub-agents-title" data-hub-text="agents">Agents</h2><p class="muted" data-hub-text="agentHint">Approve only an agent you are setting up. Its name is self-reported. Confirm the verification code in its CLI before approving. Approval reveals connected account names and identities for 7 days. Reading source content requires a separate authorization.</p><div id="hub-agents" class="hub-cards"></div></section>
       <section id="hub-requests-section" class="hub-section" aria-labelledby="hub-requests-title"><h2 id="hub-requests-title" data-hub-text="requests">API access</h2><p class="muted" data-hub-text="requestHint">Each authorization covers one account and one API operation until the stated expiry. Read the exact scope before approving.</p><div id="hub-requests" class="hub-cards"></div></section>
-      <section id="hub-connections-section" class="hub-section" aria-labelledby="hub-connections-title"><h2 id="hub-connections-title" data-hub-text="connections">Connected accounts</h2><p class="muted" data-hub-text="connectionHint">Each account is a separate connection. Disconnecting an account stops future access through the Hub.</p><form id="hub-google-form" class="hub-onboarding">
+      <section id="hub-connections-section" class="hub-section" hidden aria-labelledby="hub-connections-title"><h2 id="hub-connections-title" data-hub-text="connections">Connected accounts</h2><p class="muted" data-hub-text="connectionHint">Each account is a separate connection. Disconnecting an account stops future access through the Hub.</p><p id="hub-integrations-message" class="muted" role="status" aria-live="polite"></p><details id="hub-add-account" class="hub-add-account" hidden><summary data-hub-text="addAccount">Add account</summary><form id="hub-google-form" class="hub-onboarding">
           <h3 data-hub-text="googleTitle">Connect a Google account</h3>
           <p class="muted" data-hub-text="googleHint">Choose a source, then sign in and review permissions at Google. Repeat to connect several accounts.</p>
           <div class="hub-onboarding-fields">
-            <label><span data-hub-text="provider">Provider</span><select id="hub-google-provider" required><option value="google-drive">Google Drive</option><option value="gmail">Gmail</option></select></label>
+            <label><span data-hub-text="provider">Provider</span><select id="hub-google-provider" required></select></label>
             <label><span data-hub-text="connectionName">Connection name</span><input id="hub-google-name" type="text" maxlength="150" required autocomplete="off" placeholder="Work account" data-hub-placeholder="connectionPlaceholder" /></label>
           </div>
           <p id="hub-google-scope" class="hub-scope"></p>
           <button id="hub-google-connect" type="submit" class="primary" disabled data-hub-text="googleConnect">Continue to Google</button>
           <p id="hub-google-message" class="hub-note" role="status" aria-live="polite"></p>
-        </form><div id="hub-connections" class="hub-cards"></div></section>
+        </form></details><div id="hub-connections" class="hub-cards"></div></section>
     </div>
   </main>
 </body>

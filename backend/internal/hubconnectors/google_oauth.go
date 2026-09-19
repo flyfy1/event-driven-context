@@ -61,18 +61,15 @@ func (g GoogleOAuth) AuthorizationURL(state, verifier string, providerIDs []stri
 	scopes := []string{}
 	seen := map[string]bool{}
 	for _, p := range providerIDs {
-		var s string
-		switch p {
-		case "google-drive":
-			s = "https://www.googleapis.com/auth/drive.readonly"
-		case "gmail":
-			s = "https://www.googleapis.com/auth/gmail.readonly"
-		default:
+		requested := GoogleScopes(p)
+		if len(requested) == 0 {
 			return "", &Error{Code: "invalid_oauth_provider"}
 		}
-		if !seen[s] {
-			scopes = append(scopes, s)
-			seen[s] = true
+		for _, scope := range requested {
+			if !seen[scope] {
+				scopes = append(scopes, scope)
+				seen[scope] = true
+			}
 		}
 	}
 	if len(scopes) == 0 {
@@ -143,7 +140,10 @@ func (c *Client) GoogleAccountID(ctx context.Context, providerID, accessToken st
 	case "gmail":
 		endpoint = "https://gmail.googleapis.com/gmail/v1/users/me/profile"
 	default:
-		return "", &Error{Code: "invalid_oauth_provider"}
+		if !googlePersonal(providerID) {
+			return "", &Error{Code: "invalid_oauth_provider"}
+		}
+		endpoint = "https://openidconnect.googleapis.com/v1/userinfo"
 	}
 	if len(accessToken) == 0 || len(accessToken) > 8192 || strings.ContainsAny(accessToken, " \t\r\n\x00") {
 		return "", &Error{Code: "invalid_credential"}
@@ -167,6 +167,7 @@ func (c *Client) GoogleAccountID(ctx context.Context, providerID, accessToken st
 		return "", &Error{Code: "invalid_account_response"}
 	}
 	var profile struct {
+		Sub          string `json:"sub"`
 		EmailAddress string `json:"emailAddress"`
 		User         struct {
 			EmailAddress string `json:"emailAddress"`
@@ -177,6 +178,9 @@ func (c *Client) GoogleAccountID(ctx context.Context, providerID, accessToken st
 		return "", &Error{Code: "invalid_account_response"}
 	}
 	id := profile.EmailAddress
+	if googlePersonal(providerID) {
+		id = profile.Sub
+	}
 	if providerID == "google-drive" {
 		id = profile.User.PermissionID
 		if id == "" {

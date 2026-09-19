@@ -100,6 +100,9 @@ func v2HTTPMiddleware(next http.Handler, config Config) http.Handler {
 			}
 		}
 		maxBytes := int64(core.MaxRequestBytes)
+		if r.Method == http.MethodPost && r.URL.Path == "/v1/hub/imports" {
+			maxBytes = 6*core.HubImportMaxBytes + 16384
+		}
 		if v2IsFileUpload(r) {
 			maxBytes = int64(v2.MaxFileBytes + v2MultipartOverhead)
 		}

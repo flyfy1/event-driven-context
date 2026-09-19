@@ -37,4 +37,6 @@
     <string name="hub_notification_missing">此通知对应的申请已不可用。</string>
     <string name="hub_operation_scope">授权范围：在所选账号内执行此操作，不仅限于申请原因中提及的内容。申请原因由 Agent 提供。</string>
     <string name="hub_account_unavailable">此账号不可用，无法批准。</string>
+    <string name="hub_scope_invalid">访问限制缺失、无效或此应用不支持。已禁用允许操作，仍可拒绝或撤销。</string>
+    <string name="hub_calendar_scope">日历：%1$s\n开始：%2$s\n结束：%3$s\n访问仅限此日历和时段（最多 7 天）。仅返回基本事件字段或忙碌时段，不包含参会者详情和会议链接。</string>
 </resources>

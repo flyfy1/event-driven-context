@@ -67,14 +67,14 @@ func TestHubAuthorizationIsolationRevocationAndPersistence(t *testing.T) {
 	if err != nil || len(list) != 2 {
 		t.Fatal("multiaccount or owner isolation", list, err)
 	}
-	if _, err = s.RequestHubAccess(owner, a, outsider.ID, "messages.get", "Cross owner", 3600); err == nil {
+	if _, err = s.RequestHubAccess(owner, a, outsider.ID, "messages.get", "Cross owner", 3600, nil); err == nil {
 		t.Fatal("cross owner request succeeded")
 	}
-	r, err := s.RequestHubAccess(owner, a, c.ID, "messages.get", "Read one project thread", 3600)
+	r, err := s.RequestHubAccess(owner, a, c.ID, "messages.get", "Read one project thread", 3600, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	repeat, err := s.RequestHubAccess(owner, a, c.ID, "messages.get", "Read one project thread", 3600)
+	repeat, err := s.RequestHubAccess(owner, a, c.ID, "messages.get", "Read one project thread", 3600, nil)
 	if err != nil || repeat.ID != r.ID {
 		t.Fatal("duplicate request", repeat, err)
 	}
@@ -119,7 +119,7 @@ func TestHubAuthorizationIsolationRevocationAndPersistence(t *testing.T) {
 	if err = s.DecideHubRequest(owner, r.ID, "approve"); err == nil {
 		t.Fatal("revoked request replayed")
 	}
-	r, err = s.RequestHubAccess(owner, a, c.ID, "messages.get", "New authorization", 3600)
+	r, err = s.RequestHubAccess(owner, a, c.ID, "messages.get", "New authorization", 3600, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,7 +175,7 @@ func TestHubExpiryAndSecretlessAccounts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	r, err := s.RequestHubAccess(owner, a, c.ID, "messages.list", "Read", 60)
+	r, err := s.RequestHubAccess(owner, a, c.ID, "messages.list", "Read", 60, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +211,7 @@ func TestHubReconnectionRevokesGrantsAndStaleAgentCannotRequest(t *testing.T) {
 	if err != nil || configured.ID != c.ID {
 		t.Fatal("could not configure account", err)
 	}
-	r, err := s.RequestHubAccess(owner, a, c.ID, "messages.list", "Read", 3600)
+	r, err := s.RequestHubAccess(owner, a, c.ID, "messages.list", "Read", 3600, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -227,7 +227,7 @@ func TestHubReconnectionRevokesGrantsAndStaleAgentCannotRequest(t *testing.T) {
 	if err = s.DecideHubAgent(owner, a.ID, "revoke", ""); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = s.RequestHubAccess(owner, a, c.ID, "messages.list", "Stale snapshot", 3600); err == nil {
+	if _, err = s.RequestHubAccess(owner, a, c.ID, "messages.list", "Stale snapshot", 3600, nil); err == nil {
 		t.Fatal("revoked agent created request")
 	}
 }

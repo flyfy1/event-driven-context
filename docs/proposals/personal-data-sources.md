@@ -2,7 +2,7 @@
 
 # Proposal: personal information sources for Agent Hub
 
-Status: proposal only; no new connector is implemented by this document. Research date: 2026-09-19. Priorities and effort estimates below are product judgments, not provider commitments.
+Status: historical proposal, researched on 2026-09-19 before implementation. The user subsequently approved implementation; the current [connector inventory](../hub-connectors.md) and [Hub contract](../agent-hub.md) supersede the starting-state claims and proposed commands below. Current constraints use singular `calendar_id`; Google identity uses the authenticated userinfo endpoint; owner calendar selection and availability-only OAuth remain deferred. Priorities and effort estimates below are product judgments, not provider commitments.
 
 ## Recommendation
 

@@ -15,6 +15,7 @@ type Operation struct {
 	// ScopeAlternatives are provider OAuth scopes, any one of which suffices.
 	ScopeAlternatives []string       `json:"scope_alternatives,omitempty"`
 	InputSchema       map[string]any `json:"input_schema"`
+	ConstraintsSchema map[string]any `json:"constraints_schema,omitempty"`
 }
 
 type Provider struct {
@@ -76,7 +77,7 @@ func limitParam() map[string]any {
 func Catalog() []Provider {
 	driveScopes := []string{"https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive.readonly"}
 	mailScopes := []string{"https://www.googleapis.com/auth/gmail.readonly"}
-	return []Provider{
+	providers := []Provider{
 		{ID: "google-drive", Name: "Google Drive", AuthMode: "oauth2", ImplementationStatus: "adapter_available", MultipleAccounts: true,
 			Requirements: []string{"Google OAuth application and enabled Drive API", "Owner consent, credential storage and refresh supplied by host"},
 			Limitations:  []string{"drive.file is limited to app-selected files but includes provider write permission; these adapters only read", "Single-page reads; no OAuth onboarding, durable sync or binary-file download in this package"},
@@ -101,8 +102,30 @@ func Catalog() []Provider {
 			}},
 		{ID: "telegram-user", Name: "Telegram Personal Account", AuthMode: "mtproto_user_session", ImplementationStatus: "not_implemented", MultipleAccounts: true, Operations: []Operation{}, Requirements: []string{"Telegram API application credentials and user-authorized MTProto session"}, Limitations: []string{"Bot tokens cannot substitute for personal account authorization; session storage and ingestion are not implemented"}},
 		{ID: "whatsapp-business", Name: "WhatsApp Business", AuthMode: "business_webhook", ImplementationStatus: "not_implemented", MultipleAccounts: true, Operations: []Operation{}, Requirements: []string{"Meta business application, WhatsApp Business account and phone number", "Verified webhook ingestion and secret storage"}, Limitations: []string{"Business webhook ingestion is not implemented; this is not a personal chat-history API"}},
-		{ID: "whatsapp-import", Name: "WhatsApp Chat Export", AuthMode: "owner_file_import", ImplementationStatus: "not_implemented", MultipleAccounts: true, Operations: []Operation{}, Requirements: []string{"Owner-selected chat export with account provenance"}, Limitations: []string{"Personal chat export parser is not implemented; no live account connection"}},
 	}
+	providers = append(providers, googlePersonalProviders()...)
+	providers = append(providers, saasProviders()...)
+	providers = append(providers, graphProviders()...)
+	providers = append(providers, feedProviders()...)
+	providers = append(providers, davProviders()...)
+	providers = append(providers, importProviders()...)
+	for _, candidate := range []struct{ id, name, mode, requirement string }{
+		{"health-connect", "Android Health Connect", "device_permission", "Native device collection bridge and selected health permissions are not implemented"},
+		{"google-photos-picker", "Google Photos Picker", "oauth2", "Picker session onboarding and selected media retrieval are not implemented"},
+	} {
+		providers = append(providers, Provider{ID: candidate.id, Name: candidate.name, AuthMode: candidate.mode, ImplementationStatus: "not_implemented", MultipleAccounts: true, Operations: []Operation{}, Requirements: []string{candidate.requirement}, Limitations: []string{"Hidden until implementation and owner setup are complete"}})
+	}
+	for i := range providers {
+		if providers[i].ID == "google-calendar" || providers[i].ID == "microsoft-calendar" {
+			for j := range providers[i].Operations {
+				op := &providers[i].Operations[j]
+				if op.ID == "events.list" || op.ID == "freebusy.query" {
+					op.ConstraintsSchema = schema(map[string]any{"calendar_id": textParam(256), "time_min": textParam(64), "time_max": textParam(64)}, "calendar_id", "time_min", "time_max")
+				}
+			}
+		}
+	}
+	return providers
 }
 
 func Lookup(id string) (Provider, bool) {

@@ -20,12 +20,15 @@ const hubHelp = `Agent Hub commands (structured JSON output):
   agent connect --owner USERNAME --name NAME --output NEW_CONFIG
   agent status                         Inspect pairing / revocation / expiry
   source list                          Discover owner's accounts after pairing
-  access request --connection ID --operation OP --reason TEXT [--duration 1h]
+  source integrations                  Discover deployment/account/API availability
+  source integrations --owner          Inspect owner integration registry
+  access request --connection ID --operation OP --reason TEXT [--duration 1h] [--constraints JSON]
   access list                          Inspect pending and effective grants
   api call --connection ID --operation OP [--args '{"key":"value"}']
 
 Owner-only setup (use the owner's normal configuration):
   source add --provider ID --account ACCOUNT --name NAME [--credential-stdin]
+  source import --provider ID --account ACCOUNT --name NAME --format FORMAT --file PATH
   source disconnect CONNECTION_ID
 
 Use --config NEW_CONFIG before the command when acting as the agent.
@@ -133,11 +136,43 @@ func (a *app) hub(command string, args []string) error {
 			return fmt.Errorf("source requires list, add or disconnect")
 		}
 		switch args[0] {
+		case "integrations":
+			if len(args) == 1 {
+				return a.hubJSON("GET", "/v1/hub/integrations-agent", nil)
+			}
+			if len(args) == 2 && args[1] == "--owner" {
+				return a.hubJSON("GET", "/v1/hub/integrations", nil)
+			}
+			return fmt.Errorf("source integrations accepts only --owner")
 		case "list":
 			if len(args) != 1 {
 				return fmt.Errorf("source list takes no arguments")
 			}
 			return a.hubJSON("GET", "/v1/hub/sources", nil)
+		case "import":
+			f := flag.NewFlagSet("source import", flag.ContinueOnError)
+			f.SetOutput(a.io.err)
+			provider := f.String("provider", "", "import provider ID")
+			account := f.String("account", "", "owner-declared source account")
+			name := f.String("name", "", "connection display name")
+			format := f.String("format", "", "whatsapp-text, ics or markdown")
+			path := f.String("file", "", "owner-selected UTF-8 file")
+			if err := f.Parse(args[1:]); err != nil {
+				return err
+			}
+			if f.NArg() != 0 || *path == "" || *provider == "" || *account == "" || *name == "" || *format == "" {
+				return fmt.Errorf("provider, account, name, format and file are required")
+			}
+			file, err := os.Open(*path)
+			if err != nil {
+				return fmt.Errorf("could not open import file")
+			}
+			defer file.Close()
+			data, err := io.ReadAll(io.LimitReader(file, core.HubImportMaxBytes+1))
+			if err != nil || len(data) > core.HubImportMaxBytes {
+				return fmt.Errorf("import file must be readable and at most 1 MiB")
+			}
+			return a.hubJSON("POST", "/v1/hub/imports", map[string]string{"provider_id": *provider, "account_id": *account, "display_name": *name, "format": *format, "filename": filepath.Base(*path), "content": string(data)})
 		case "add":
 			f := flag.NewFlagSet("source add", flag.ContinueOnError)
 			f.SetOutput(a.io.err)
@@ -187,6 +222,7 @@ func (a *app) hub(command string, args []string) error {
 		connection := f.String("connection", "", "connection ID")
 		operation := f.String("operation", "", "operation ID")
 		reason := f.String("reason", "", "explain the task to the owner")
+		constraints := f.String("constraints", "", "calendar authorization boundaries as JSON")
 		duration := f.Duration("duration", time.Hour, "grant duration, 1m to 168h")
 		if err := f.Parse(args[1:]); err != nil {
 			return err
@@ -194,7 +230,11 @@ func (a *app) hub(command string, args []string) error {
 		if f.NArg() != 0 || !hubID(*connection) || *operation == "" || *reason == "" || *duration < time.Minute || *duration > 168*time.Hour {
 			return fmt.Errorf("connection, operation, reason and duration (1m to 168h) required")
 		}
-		return a.hubJSON("POST", "/v1/hub/requests", map[string]any{"connection_id": *connection, "operation": *operation, "reason": *reason, "duration_seconds": int64(duration.Seconds())})
+		var bounds map[string]any
+		if *constraints != "" && (len(*constraints) > 4096 || json.Unmarshal([]byte(*constraints), &bounds) != nil || bounds == nil) {
+			return fmt.Errorf("constraints must be a JSON object, max 4096 bytes")
+		}
+		return a.hubJSON("POST", "/v1/hub/requests", map[string]any{"constraints": bounds, "connection_id": *connection, "operation": *operation, "reason": *reason, "duration_seconds": int64(duration.Seconds())})
 	case "api":
 		if len(args) == 0 || args[0] != "call" {
 			return fmt.Errorf("api requires call")

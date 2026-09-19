@@ -27,11 +27,14 @@ func hubGoogleConfig() hubconnectors.GoogleOAuth {
 	return hubconnectors.GoogleOAuth{ClientID: os.Getenv("EDC_HUB_GOOGLE_CLIENT_ID"), ClientSecret: os.Getenv("EDC_HUB_GOOGLE_CLIENT_SECRET"), RedirectURL: os.Getenv("EDC_HUB_GOOGLE_REDIRECT_URL")}
 }
 func hubGoogleConfigured(g hubconnectors.GoogleOAuth, key []byte) bool {
-	return g.ClientID != "" && g.ClientSecret != "" && g.RedirectURL != "" && len(key) == 32
+	return hubRegistryGoogleReady(g, key, "google-drive")
 }
 
 func registerHubGoogleHandlers(mux *http.ServeMux, store *core.Store, approvalURLs ...string) {
-	key, _ := base64.StdEncoding.DecodeString(os.Getenv("EDC_HUB_CREDENTIAL_KEY"))
+	key, err := base64.StdEncoding.DecodeString(os.Getenv("EDC_HUB_CREDENTIAL_KEY"))
+	if err != nil {
+		key = nil
+	}
 	registerHubGoogleWithConfig(mux, store, hubGoogleConfig(), key, approvalURLs...)
 }
 
@@ -71,7 +74,7 @@ func registerHubGoogleWithConfig(mux *http.ServeMux, store *core.Store, g hubcon
 			return
 		}
 		http.SetCookie(w, hubGoogleCookie(state.State, strings.HasPrefix(g.RedirectURL, "https://"), 600))
-		respond(w, 200, map[string]any{"authorization_url": link, "expires_in": 600, "provider_id": state.ProviderID, "scope_notice": "Google Drive or Gmail account-wide read access will be requested. Agent operation grants remain separate."})
+		respond(w, 200, map[string]any{"authorization_url": link, "expires_in": 600, "provider_id": state.ProviderID, "scope_notice": "Provider read access for the selected Google service will be requested. Agent operation grants remain separate."})
 	})))
 	mux.HandleFunc("GET /v1/hub/google/callback", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
@@ -137,16 +140,20 @@ func hubGoogleCookie(state string, secure bool, maxAge int) *http.Cookie {
 }
 
 func hubGoogleHasScope(scopes, providerID string) bool {
-	want := "https://www.googleapis.com/auth/gmail.readonly"
-	if providerID == "google-drive" {
-		want = "https://www.googleapis.com/auth/drive.readonly"
+	required := hubconnectors.GoogleScopes(providerID)
+	if len(required) == 0 {
+		return false
 	}
+	granted := map[string]bool{}
 	for _, scope := range strings.Fields(scopes) {
-		if scope == want {
-			return true
+		granted[scope] = true
+	}
+	for _, scope := range required {
+		if !granted[scope] {
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func hubProviderCredential(ctx context.Context, store *core.Store, c core.HubConnection, key []byte) (string, error) {
@@ -158,7 +165,7 @@ func hubProviderCredentialWithConfig(ctx context.Context, store *core.Store, c c
 	if err != nil {
 		return "", err
 	}
-	if c.ProviderID != "google-drive" && c.ProviderID != "gmail" {
+	if len(hubconnectors.GoogleScopes(c.ProviderID)) == 0 {
 		return secret, nil
 	}
 	// Manual access tokens remain supported; JSON represents managed credentials.

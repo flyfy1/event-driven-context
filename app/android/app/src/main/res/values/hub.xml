@@ -37,4 +37,6 @@
     <string name="hub_notification_missing">This notification no longer matches an available request.</string>
     <string name="hub_operation_scope">Scope: this operation across the selected account, not only the example in the reason. The reason is supplied by the agent.</string>
     <string name="hub_account_unavailable">This account is unavailable. Approval is disabled.</string>
+    <string name="hub_scope_invalid">These access limits are missing, invalid, or unsupported by this app. Approval is disabled; deny or revoke remains available.</string>
+    <string name="hub_calendar_scope">Calendar: %1$s\nFrom: %2$s\nUntil: %3$s\nAccess is limited to this calendar and interval (at most 7 days). Only basic event fields or busy times are returned; attendee details and meeting links are excluded.</string>
 </resources>

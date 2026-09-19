@@ -37,4 +37,6 @@
     <string name="hub_notification_missing">Permintaan untuk pemberitahuan ini tidak lagi tersedia.</string>
     <string name="hub_operation_scope">Skop: operasi ini merentasi akaun yang dipilih, bukan hanya contoh dalam sebab. Sebab diberikan oleh ejen.</string>
     <string name="hub_account_unavailable">Akaun ini tidak tersedia. Kelulusan dinyahdayakan.</string>
+    <string name="hub_scope_invalid">Had akses tiada, tidak sah atau tidak disokong oleh aplikasi ini. Kelulusan dimatikan; penolakan atau pembatalan masih tersedia.</string>
+    <string name="hub_calendar_scope">Kalendar: %1$s\nDari: %2$s\nHingga: %3$s\nAkses terhad kepada kalendar dan selang ini (maksimum 7 hari). Hanya medan acara asas atau masa sibuk dikembalikan; butiran peserta dan pautan mesyuarat dikecualikan.</string>
 </resources>

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
@@ -23,10 +24,15 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 		}
 	}
 	registerHubPushHandlers(mux, store)
+	registerHubRegistryHandlers(mux, store)
+	registerHubImportHandlers(mux, store)
 	registerHubGoogleHandlers(mux, store, approvalURL)
-	key, _ := base64.StdEncoding.DecodeString(os.Getenv("EDC_HUB_CREDENTIAL_KEY"))
+	key, keyErr := base64.StdEncoding.DecodeString(os.Getenv("EDC_HUB_CREDENTIAL_KEY"))
+	if keyErr != nil {
+		key = nil
+	}
 	mux.HandleFunc("GET /v1/hub/capabilities", func(w http.ResponseWriter, r *http.Request) {
-		respond(w, 200, map[string]any{"providers": hubconnectors.Catalog(), "authorization": map[string]any{"agent_registration": "POST /v1/hub/agents", "request_access": "POST /v1/hub/requests", "owner_approval_page": approvalURL, "owner_session_required": true, "scope": "one connection and one operation", "max_duration_seconds": 604800}, "credential_storage_configured": len(key) == 32})
+		respond(w, 200, map[string]any{"providers": hubconnectors.Catalog(), "authorization": map[string]any{"agent_registration": "POST /v1/hub/agents", "request_access": "POST /v1/hub/requests", "owner_approval_page": approvalURL, "owner_session_required": true, "scope": "one connection and one operation; calendar event/availability reads require calendar_id and time_min/time_max constraints", "max_duration_seconds": 604800}, "credential_storage_configured": len(key) == 32})
 	})
 	mux.Handle("POST /v1/hub/agents", newAuthGate().wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var in struct {
@@ -77,10 +83,11 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 	}))
 	mux.Handle("POST /v1/hub/requests", agent(true, func(w http.ResponseWriter, r *http.Request, a core.HubAgent) {
 		var in struct {
-			ConnectionID    string `json:"connection_id"`
-			Operation       string `json:"operation"`
-			Reason          string `json:"reason"`
-			DurationSeconds int64  `json:"duration_seconds"`
+			ConnectionID    string               `json:"connection_id"`
+			Operation       string               `json:"operation"`
+			Reason          string               `json:"reason"`
+			DurationSeconds int64                `json:"duration_seconds"`
+			Constraints     *core.HubConstraints `json:"constraints,omitempty"`
 		}
 		if err := decode(r, &in); err != nil {
 			hubFail(w, err)
@@ -95,7 +102,7 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 			hubFail(w, core.Invalid("operation is not supported by this provider"))
 			return
 		}
-		out, err := store.RequestHubAccess(r.Context(), a, in.ConnectionID, in.Operation, in.Reason, in.DurationSeconds)
+		out, err := store.RequestHubAccess(r.Context(), a, in.ConnectionID, in.Operation, in.Reason, in.DurationSeconds, in.Constraints)
 		if err != nil {
 			hubFail(w, err)
 			return
@@ -113,7 +120,7 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 			hubFail(w, err)
 			return
 		}
-		if err := store.CheckHubAccess(r.Context(), a, in.ConnectionID, in.Operation); err != nil {
+		if err := store.CheckHubAccessArgs(r.Context(), a, in.ConnectionID, in.Operation, in.Args); err != nil {
 			hubFail(w, err)
 			return
 		}
@@ -127,14 +134,35 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 			hubFail(w, err)
 			return
 		}
-		result, err := connector.Execute(r.Context(), c.ProviderID, in.Operation, secret, in.Args)
+		var result hubconnectors.Result
+		switch c.ProviderID {
+		case "whatsapp-import", "calendar-import", "markdown-import":
+			if in.Operation != "records.list" {
+				hubFail(w, core.Invalid("unsupported import operation"))
+				return
+			}
+			page, e := store.ExecuteHubImport(r.Context(), c, secret, in.Args)
+			if e != nil {
+				hubFail(w, e)
+				return
+			}
+			result.ContentType = "application/json"
+			currentSecret, e := store.HubCredential(r.Context(), c, key)
+			if e != nil || subtle.ConstantTimeCompare([]byte(currentSecret), []byte(secret)) != 1 {
+				hubFail(w, core.ErrConflict)
+				return
+			}
+			result.Body, err = json.Marshal(page)
+		default:
+			result, err = connector.Execute(r.Context(), c.ProviderID, in.Operation, secret, in.Args)
+		}
 		if err != nil {
 			// Provider errors can contain URLs or credentials; only return controlled adapter codes.
 			respond(w, http.StatusBadGateway, map[string]any{"error": map[string]string{"code": "provider_failed", "message": "Provider request failed. The owner may need to reconnect this account."}})
 			return
 		}
 		// Recheck grants before releasing a response that raced with revocation.
-		if err := store.CheckHubAccess(r.Context(), a, in.ConnectionID, in.Operation); err != nil {
+		if err := store.CheckHubAccessArgs(r.Context(), a, in.ConnectionID, in.Operation, in.Args); err != nil {
 			hubFail(w, err)
 			return
 		}

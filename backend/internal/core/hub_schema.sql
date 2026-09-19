@@ -16,3 +16,7 @@ CREATE TABLE IF NOT EXISTS hub_requests (
  reason TEXT NOT NULL, status TEXT NOT NULL, created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS hub_requests_agent ON hub_requests(agent_id);
+CREATE TABLE IF NOT EXISTS hub_request_constraints (
+ request_id TEXT PRIMARY KEY REFERENCES hub_requests(id),
+ constraints_json TEXT NOT NULL
+);

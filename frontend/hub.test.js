@@ -27,6 +27,12 @@ function fixture() {
     requests: [], connections: [{ id: "connection_a", provider_id: "gmail", account_id: "work@example.test", display_name: "Work mail", status: "configured" }],
   };
 }
+function integrationRow(id, connections = [], overrides = {}) {
+  return { provider: { id, name: id, implementation_status: "adapter_available", operations: [{ id: "read", read_only: true }], limitations: ["Owner approval required"] }, deployment_configured: true, connectable: true, connected_account_count: connections.length, visible: connections.length > 0, hidden_reason: connections.length ? "" : "no_configured_accounts", onboarding_method: "browser_oauth", connections: connections.map((connection) => ({ ...connection, operations: [{ id: "read", read_only: true }] })), ...overrides };
+}
+function registryFixture(data, configured = true) {
+  return { providers: [integrationRow("gmail", data.connections, configured ? {} : { deployment_configured: false, connectable: false, visible: false }), integrationRow("google-drive", [], configured ? {} : { deployment_configured: false, connectable: false })], feature_flags: { hub_approvals: true, google_oauth: configured, push: false } };
+}
 function harness(options = {}) {
   const map = new Map();
   for (const match of fs.readFileSync(__dirname + "/hub.html", "utf8").matchAll(/id="([^"]+)"/g)) map.set("#" + match[1], new Element());
@@ -38,6 +44,7 @@ function harness(options = {}) {
   const navigations = [];
   let identity = { id: "owner_a", email: "owner@example.test" };
   let data = options.data || fixture();
+  let registry = Object.hasOwn(options, "registry") ? options.registry : registryFixture(data, options.googleConfigured !== false);
   const document = { hidden: false, documentElement: {}, querySelector: (selector) => map.get(selector) || null,
     createElement: (tag) => new Element(tag),
     querySelectorAll: (selector) => selector === "#hub-content button" ? ["agents", "requests", "connections"].flatMap((key) => descendants(map.get("#hub-" + key)).filter((el) => el.tagName === "button")) : [],
@@ -54,7 +61,7 @@ function harness(options = {}) {
       calls.push({ url, config });
       if (url.endsWith("/v1/me")) return { ok: true, status: 200, json: async () => identity };
       if (url.endsWith("/v1/hub/owner")) { if (options.owner) return options.owner(); return { ok: true, status: 200, json: async () => data }; }
-      if (url.endsWith("/v1/hub/google/status")) return { ok: true, status: 200, json: async () => ({ configured: options.googleConfigured !== false }) };
+      if (url.endsWith("/v1/hub/integrations")) { if (options.integrations) return options.integrations(); return { ok: true, status: 200, json: async () => registry }; }
       if (url.endsWith("/v1/hub/google/start")) {
         if (options.googleStart) return options.googleStart();
         return { ok: true, status: 200, json: async () => ({ authorization_url: options.authorizationURL || "https://accounts.google.com/o/oauth2/v2/auth?state=opaque" }) };
@@ -68,7 +75,7 @@ function harness(options = {}) {
   };
   context.window = context;
   vm.runInNewContext(fs.readFileSync(__dirname + "/hub.js", "utf8"), context);
-  return { map, calls, navigations, storage, windowEvents, docEvents, document, setIdentity: (next) => { identity = next; }, setData: (next) => { data = next; } };
+  return { map, calls, navigations, storage, windowEvents, docEvents, document, setIdentity: (next) => { identity = next; }, setData: (next) => { data = next; }, setRegistry: (next) => { registry = next; } };
 }
 
 test("Hub renders untrusted names as text and approval requires the CLI code", async () => {
@@ -152,10 +159,11 @@ test("Google onboarding rejects non-Google origins, insecure URLs, and embedded 
   }
 });
 
-test("Google onboarding stays disabled and truthful when OAuth is not configured", async () => {
+test("Google onboarding is hidden when deployment is not configured", async () => {
   const h = harness({ googleConfigured: false }); await flush();
   assert.equal(h.map.get("#hub-google-connect").disabled, true);
-  assert.match(h.map.get("#hub-google-message").textContent, /not configured/);
+  assert.equal(h.map.get("#hub-add-account").hidden, true);
+  assert.equal(h.map.get("#hub-connections").textContent, "");
   submitGoogle(h); await flush();
   assert.equal(h.calls.some((c) => c.url.endsWith("/v1/hub/google/start")), false);
 });
@@ -173,4 +181,100 @@ test("Agent approvals disclose account discovery and configured connections avoi
   const h = harness(); await flush();
   assert.match(h.map.get("#hub-agents").textContent, /discover connected account names and identities for 7 days/);
   assert.match(h.map.get("#hub-connections").textContent, /access not verified/);
+});
+
+
+test("Registry hides unavailable adapters, no-account providers and disconnected accounts", async () => {
+  const data = fixture();
+  const hidden = integrationRow("gmail", data.connections, { visible: false });
+  const unavailable = integrationRow("future-source", [{ ...data.connections[0], id: "future", provider_id: "future-source" }], { provider: { id: "future-source", name: "Future", implementation_status: "not_implemented", operations: [], limitations: [] }, visible: true, connections: [], connected_account_count: 0 });
+  const noAccount = integrationRow("google-drive", []);
+  const disconnected = integrationRow("telegram-bot", [{ ...data.connections[0], id: "off", provider_id: "telegram-bot", status: "disconnected" }]);
+  const h = harness({ registry: { providers: [hidden, unavailable, noAccount, disconnected], feature_flags: { hub_approvals: true, google_oauth: false, push: false } } }); await flush();
+  assert.equal(h.map.get("#hub-connections").textContent, "");
+  assert.equal(h.map.get("#hub-add-account").hidden, true);
+  assert.equal(h.map.get("#hub-connections-section").hidden, true);
+  assert.match(h.map.get("#hub-agents").textContent, /Agent ID/);
+});
+
+test("Ready accounts render independently and new browser OAuth providers need no frontend provider list", async () => {
+  const data = fixture(), second = { ...data.connections[0], id: "second", account_id: "personal@example.test", display_name: "Personal" };
+  const registry = registryFixture(data); registry.providers[0] = integrationRow("gmail", [...data.connections, second]);
+  registry.providers.push(integrationRow("google-calendar", []));
+  const h = harness({ registry }); await flush();
+  assert.match(h.map.get("#hub-connections").textContent, /work@example.test/);
+  assert.match(h.map.get("#hub-connections").textContent, /personal@example.test/);
+  assert.equal(h.map.get("#hub-google-provider").children.some((c) => c.value === "google-calendar"), true);
+  submitGoogle(h, "google-calendar", "Work calendar"); await flush();
+  const post = h.calls.find((c) => c.url.endsWith("/v1/hub/google/start"));
+  assert.equal(JSON.parse(post.config.body).provider_id, "google-calendar");
+});
+
+test("Malformed or unknown registry readiness fails closed while request history remains", async () => {
+  const data = fixture(); data.agents[0].status = "approved";
+  data.requests.push({ id: "old", agent_id: "agent_a", agent_name: "Helper", connection_id: "connection_a", operation: "messages.get", reason: "Read", status: "approved", created_at: data.agents[0].created_at, expires_at: data.agents[0].expires_at });
+  for (const registry of [null, {}, { providers: [], feature_flags: { google_oauth: "true" } }, { ...registryFixture(data), providers: [{ ...integrationRow("gmail", data.connections), visible: "true" }] }, { ...registryFixture(data), providers: [{ ...integrationRow("gmail", data.connections), provider: { id: "gmail", name: "Gmail", implementation_status: "unknown", operations: [{ id: "read", read_only: true }], limitations: [] } }] }]) {
+    const h = harness({ data, registry }); await flush();
+    assert.equal(h.map.get("#hub-connections").textContent, "");
+    assert.equal(h.map.get("#hub-add-account").hidden, true);
+    assert.match(h.map.get("#hub-requests").textContent, /Revoke access/);
+  }
+});
+
+test("Registry changes remove vanished sources and onboarding on refresh", async () => {
+  const h = harness(); await flush(); assert.match(h.map.get("#hub-connections").textContent, /work@example.test/);
+  h.setRegistry({ providers: [], feature_flags: { hub_approvals: true, google_oauth: false, push: false } });
+  h.map.get("#hub-refresh").click(); await flush();
+  assert.equal(h.map.get("#hub-connections").textContent, ""); assert.equal(h.map.get("#hub-add-account").hidden, true);
+});
+
+test("A registry response arriving after logout cannot reveal previous account identities", async () => {
+  let resolveRegistry;
+  const pending = new Promise((resolve) => { resolveRegistry = resolve; });
+  const h = harness({ integrations: () => pending }); await flush();
+  h.setIdentity(null); h.windowEvents.storage({ key: null }); await flush();
+  resolveRegistry({ ok: true, status: 200, json: async () => registryFixture(fixture()) }); await flush();
+  assert.equal(h.map.get("#hub-connections").textContent, ""); assert.equal(h.map.get("#hub-add-account").hidden, true);
+});
+
+
+function calendarFixture(constraints, provider = "google-calendar", operation = "events.list") {
+  const data = fixture(); data.agents[0].status = "approved"; data.connections[0].provider_id = provider;
+  data.requests.push({ id: "calendar_grant", agent_id: "agent_a", agent_name: "Helper", connection_id: "connection_a", operation, reason: "Plan my week", status: "pending", created_at: data.agents[0].created_at, expires_at: data.agents[0].expires_at, constraints });
+  return data;
+}
+const calendarBounds = { calendar_id: "work-calendar", time_min: "2026-09-19T00:00:00+08:00", time_max: "2026-09-26T00:00:00+08:00" };
+
+test("Calendar approval displays exact calendar and bounded basic-field scope without broad account grant copy", async () => {
+  for (const provider of ["google-calendar", "microsoft-calendar"]) {
+    const data = calendarFixture(calendarBounds, provider), h = harness({ data, registry: { providers: [], feature_flags: { hub_approvals: true, google_oauth: false, push: false } } }); await flush();
+    const copy = h.map.get("#hub-requests").textContent;
+    assert.match(copy, /work-calendar/); assert.match(copy, /2026-09-19T00:00:00\+08:00/); assert.match(copy, /basic event or availability fields only/); assert.doesNotMatch(copy, /across all resources/);
+    assert.equal(descendants(h.map.get("#hub-requests")).find((e) => e.tagName === "button" && e.textContent === "Approve").disabled, false);
+  }
+});
+
+test("Unknown, missing, malformed, zoneless or overlong calendar constraints cannot be approved", async () => {
+  const cases = [undefined, null, {}, [], { ...calendarBounds, secret: "extra" }, { ...calendarBounds, time_min: "2026-09-19T00:00:00" }, { ...calendarBounds, time_max: "2026-09-27T00:00:00+08:00" }, { ...calendarBounds, time_max: calendarBounds.time_min }, { ...calendarBounds, time_min: "2026-02-30T00:00:00Z" }];
+  for (const constraints of cases) {
+    const h = harness({ data: calendarFixture(constraints), registry: null }); await flush();
+    const actions = descendants(h.map.get("#hub-requests")).filter((e) => e.tagName === "button");
+    assert.equal(actions.find((e) => e.textContent === "Approve").disabled, true);
+    assert.equal(Boolean(actions.find((e) => e.textContent === "Deny").disabled), false);
+    assert.match(h.map.get("#hub-requests").textContent, /invalid access constraints/);
+  }
+  const h = harness({ data: calendarFixture(calendarBounds, "gmail", "messages.get"), registry: null }); await flush();
+  assert.equal(descendants(h.map.get("#hub-requests")).find((e) => e.tagName === "button" && e.textContent === "Approve").disabled, true);
+});
+
+
+test("Configured CLI accounts remain visible without OAuth, but accounts without API operations stay hidden", async () => {
+  const data = fixture(), row = integrationRow("gmail", data.connections, { onboarding_method: "owner_cli" });
+  const h = harness({ registry: { providers: [row], feature_flags: { hub_approvals: true, google_oauth: false, push: false } } }); await flush();
+  assert.match(h.map.get("#hub-connections").textContent, /work@example.test/);
+  assert.equal(h.map.get("#hub-add-account").hidden, true);
+  row.connections[0].operations = [];
+  h.map.get("#hub-refresh").click(); await flush();
+  assert.equal(h.map.get("#hub-connections").textContent, "");
+  assert.equal(h.map.get("#hub-connections-section").hidden, true);
 });

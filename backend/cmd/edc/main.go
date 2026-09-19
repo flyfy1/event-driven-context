@@ -42,7 +42,7 @@ Commands:
   host run --plugin ID --plugin-dir PATH --plugin-token-file PATH (--once | --watch)
   mcp
   capabilities | agent connect | agent status
-  source list | add | disconnect
+  source integrations [--owner] | list | add | import | disconnect
   access request | list
   api call
 

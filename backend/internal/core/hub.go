@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"io"
 	"strings"
@@ -41,16 +42,17 @@ type HubConnection struct {
 	Status      string `json:"status"`
 }
 type HubRequest struct {
-	ID             string    `json:"id"`
-	AgentID        string    `json:"agent_id"`
-	AgentName      string    `json:"agent_name"`
-	ConnectionID   string    `json:"connection_id"`
-	ConnectionName string    `json:"connection_name"`
-	Operation      string    `json:"operation"`
-	Reason         string    `json:"reason"`
-	Status         string    `json:"status"`
-	CreatedAt      time.Time `json:"created_at"`
-	ExpiresAt      time.Time `json:"expires_at"`
+	Constraints    *HubConstraints `json:"constraints,omitempty"`
+	ID             string          `json:"id"`
+	AgentID        string          `json:"agent_id"`
+	AgentName      string          `json:"agent_name"`
+	ConnectionID   string          `json:"connection_id"`
+	ConnectionName string          `json:"connection_name"`
+	Operation      string          `json:"operation"`
+	Reason         string          `json:"reason"`
+	Status         string          `json:"status"`
+	CreatedAt      time.Time       `json:"created_at"`
+	ExpiresAt      time.Time       `json:"expires_at"`
 }
 type HubOverview struct {
 	Agents      []HubAgent      `json:"agents"`
@@ -266,8 +268,8 @@ func (s *Store) DisconnectHubConnection(ctx context.Context, id string) error {
 	return tx.Commit()
 }
 func (s *Store) HubRequests(ctx context.Context, owner, agentID string) ([]HubRequest, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT r.id,r.agent_id,a.name,r.connection_id,c.display_name,r.operation,r.reason,r.status,r.created_at,r.expires_at
- FROM hub_requests r JOIN hub_agents a ON a.id=r.agent_id JOIN hub_connections c ON c.id=r.connection_id
+	rows, err := s.db.QueryContext(ctx, `SELECT r.id,r.agent_id,a.name,r.connection_id,c.display_name,r.operation,r.reason,r.status,r.created_at,r.expires_at,COALESCE(rc.constraints_json,'null')
+ FROM hub_requests r JOIN hub_agents a ON a.id=r.agent_id JOIN hub_connections c ON c.id=r.connection_id LEFT JOIN hub_request_constraints rc ON rc.request_id=r.id
  WHERE a.owner_id=? AND (?='' OR a.id=?) ORDER BY r.created_at DESC,r.id`, owner, agentID, agentID)
 	if err != nil {
 		return nil, err
@@ -276,8 +278,12 @@ func (s *Store) HubRequests(ctx context.Context, owner, agentID string) ([]HubRe
 	out := []HubRequest{}
 	for rows.Next() {
 		var r HubRequest
+		var constraintJSON string
 		var created, expires int64
-		if err := rows.Scan(&r.ID, &r.AgentID, &r.AgentName, &r.ConnectionID, &r.ConnectionName, &r.Operation, &r.Reason, &r.Status, &created, &expires); err != nil {
+		if err := rows.Scan(&r.ID, &r.AgentID, &r.AgentName, &r.ConnectionID, &r.ConnectionName, &r.Operation, &r.Reason, &r.Status, &created, &expires, &constraintJSON); err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal([]byte(constraintJSON), &r.Constraints); err != nil {
 			return nil, err
 		}
 		r.CreatedAt = time.Unix(created, 0).UTC()
@@ -317,7 +323,7 @@ func (s *Store) HubOverview(ctx context.Context) (HubOverview, error) {
 	out.Requests, err = s.HubRequests(ctx, owner, "")
 	return out, err
 }
-func (s *Store) RequestHubAccess(ctx context.Context, a HubAgent, connection, operation, reason string, seconds int64) (HubRequest, error) {
+func (s *Store) RequestHubAccess(ctx context.Context, a HubAgent, connection, operation, reason string, seconds int64, constraints *HubConstraints) (HubRequest, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if a.Status != "approved" {
@@ -333,23 +339,31 @@ func (s *Store) RequestHubAccess(ctx context.Context, a HubAgent, connection, op
 	if c.Status != "configured" {
 		return HubRequest{}, &Error{"connection_required", "ask the owner to configure this account first"}
 	}
+	if err := validateHubConstraints(c.ProviderID, operation, constraints); err != nil {
+		return HubRequest{}, err
+	}
 	t := time.Now().UTC().Truncate(time.Second)
 	expires := t.Add(time.Duration(seconds) * time.Second)
 	if expires.After(a.ExpiresAt) {
 		expires = a.ExpiresAt
 	}
-	r := HubRequest{ID: newID("grant"), AgentID: a.ID, AgentName: a.Name, ConnectionID: c.ID, ConnectionName: c.DisplayName, Operation: operation, Reason: reason, Status: "pending", CreatedAt: t, ExpiresAt: expires}
+	r := HubRequest{ID: newID("grant"), AgentID: a.ID, AgentName: a.Name, ConnectionID: c.ID, ConnectionName: c.DisplayName, Operation: operation, Reason: reason, Constraints: constraints, Status: "pending", CreatedAt: t, ExpiresAt: expires}
 	// Return the existing pending/active request to avoid repeated notifications.
 	existing, err := s.HubRequests(ctx, a.OwnerID, a.ID)
 	if err != nil {
 		return r, err
 	}
 	for _, e := range existing {
-		if e.ConnectionID == connection && e.Operation == operation && (e.Status == "pending" || e.Status == "approved") {
+		if e.ConnectionID == connection && e.Operation == operation && sameHubConstraints(e.Constraints, constraints) && (e.Status == "pending" || e.Status == "approved") {
 			return e, nil
 		}
 	}
-	result, err := s.db.ExecContext(ctx, `INSERT INTO hub_requests(id,agent_id,connection_id,operation,reason,status,created_at,expires_at)
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return r, err
+	}
+	defer tx.Rollback()
+	result, err := tx.ExecContext(ctx, `INSERT INTO hub_requests(id,agent_id,connection_id,operation,reason,status,created_at,expires_at)
  SELECT ?,?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM hub_requests WHERE agent_id=? AND status IN ('pending','approved') AND expires_at>?)<200
  AND EXISTS(SELECT 1 FROM hub_agents WHERE id=? AND owner_id=? AND status='approved' AND expires_at>?)
  AND EXISTS(SELECT 1 FROM hub_connections WHERE id=? AND owner_id=? AND status='configured')`, r.ID, a.ID, c.ID, operation, reason, r.Status, t.Unix(), expires.Unix(), a.ID, t.Unix(), a.ID, a.OwnerID, t.Unix(), c.ID, a.OwnerID)
@@ -359,6 +373,15 @@ func (s *Store) RequestHubAccess(ctx context.Context, a HubAgent, connection, op
 	n, _ := result.RowsAffected()
 	if n != 1 {
 		return r, &Error{"rate_limited", "too many authorization requests"}
+	}
+	if constraints != nil {
+		raw, _ := json.Marshal(constraints)
+		if _, err = tx.ExecContext(ctx, "INSERT INTO hub_request_constraints(request_id,constraints_json) VALUES (?,?)", r.ID, string(raw)); err != nil {
+			return r, err
+		}
+	}
+	if err = tx.Commit(); err != nil {
+		return r, err
 	}
 	return r, nil
 }

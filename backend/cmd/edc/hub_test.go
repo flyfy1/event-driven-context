@@ -76,3 +76,38 @@ func TestHubCLIProducesMachineReadableAuthorizationError(t *testing.T) {
 		t.Fatal("missing structured recovery", out.String())
 	}
 }
+
+func TestHubCLIRegistryAndCalendarConstraints(t *testing.T) {
+	t.Setenv("EDC_TOKEN", "owner-or-agent-test")
+	var seenPath string
+	var seenBody map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		seenPath = r.URL.Path
+		if r.Body != nil {
+			json.NewDecoder(r.Body).Decode(&seenBody)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"ok":true}`))
+	}))
+	defer server.Close()
+	base := []string{"--server", server.URL, "--config", filepath.Join(t.TempDir(), "empty.json")}
+	for _, tt := range []struct {
+		args []string
+		path string
+	}{
+		{[]string{"source", "integrations", "--owner"}, "/v1/hub/integrations"},
+		{[]string{"source", "integrations"}, "/v1/hub/integrations-agent"},
+		{[]string{"access", "request", "--connection", "conn_test", "--operation", "events.list", "--reason", "Agenda", "--constraints", `{"calendar_id":"primary","time_min":"2026-09-21T00:00:00Z","time_max":"2026-09-22T00:00:00Z"}`}, "/v1/hub/requests"},
+	} {
+		var out, stderr bytes.Buffer
+		if err := run(t.Context(), append(append([]string{}, base...), tt.args...), streams{strings.NewReader(""), &out, &stderr}); err != nil {
+			t.Fatal(err)
+		}
+		if seenPath != tt.path {
+			t.Fatal("wrong endpoint", seenPath)
+		}
+	}
+	if seenBody["constraints"].(map[string]any)["calendar_id"] != "primary" {
+		t.Fatal("constraints omitted")
+	}
+}
