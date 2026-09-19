@@ -30,6 +30,8 @@ public final class AuthorizationsActivity extends Activity {
     private int generation;
     private boolean resumed;
     private boolean enableAfterPermission;
+    private boolean showHistory;
+    private String notificationTarget;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -38,6 +40,7 @@ public final class AuthorizationsActivity extends Activity {
         if (bound == null || (expectedAccount != null && !expectedAccount.equals(HubAuthorization.accountKey(bound)))) {
             startActivity(new Intent(this, MainActivity.class)); finish(); return;
         }
+        notificationTarget = getIntent().getStringExtra("request_id");
         ScrollView scroll = new ScrollView(this);
         content = new LinearLayout(this); content.setOrientation(LinearLayout.VERTICAL);
         int padding = (int) (20 * getResources().getDisplayMetrics().density);
@@ -51,6 +54,17 @@ public final class AuthorizationsActivity extends Activity {
             refresh();
             if (enableAfterPermission) { enableAfterPermission = false; enableReminders(); }
         }
+    }
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String account = intent.getStringExtra("account_key");
+        if (bound == null || (account != null && !account.equals(HubAuthorization.accountKey(bound)))) {
+            finish(); return;
+        }
+        setIntent(intent);
+        notificationTarget = intent.getStringExtra("request_id");
+        showHistory = false;
+        if (resumed) refresh();
     }
     @Override protected void onPause() { resumed = false; generation++; super.onPause(); }
     @Override protected void onDestroy() { generation++; io.shutdownNow(); super.onDestroy(); }
@@ -134,10 +148,35 @@ public final class AuthorizationsActivity extends Activity {
             }
         }
         status.setText(getString(R.string.hub_pending_count, pending));
-        addText(getString(R.string.hub_agents), 20);
-        for (int i = 0; i < agents.length(); i++) card("agents", agents.getJSONObject(i), connections);
-        addText(getString(R.string.hub_requests), 20);
-        for (int i = 0; i < requests.length(); i++) card("requests", requests.getJSONObject(i), connections);
+        addButton(getString(showHistory ? R.string.hub_show_pending : R.string.hub_show_history))
+                .setOnClickListener(v -> { showHistory = !showHistory; refresh(); });
+        boolean targetFound = false;
+        for (String kind : new String[]{"agents", "requests"}) {
+            JSONArray items = owner.getJSONArray(kind);
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject item = items.getJSONObject(i);
+                if ((kind + ":" + item.getString("id")).equals(notificationTarget)) {
+                    targetFound = true;
+                    addText(getString(HubAuthorization.pending(item.optString("status"), item.optString("expires_at"), now)
+                            ? R.string.hub_notification_request : R.string.hub_notification_resolved), 20);
+                    card(kind, item, connections);
+                }
+            }
+        }
+        if (notificationTarget != null && !targetFound) addText(getString(R.string.hub_notification_missing), 16);
+        if (pending == 0 && !showHistory) addText(getString(R.string.hub_no_pending), 18);
+        for (String kind : new String[]{"agents", "requests"}) {
+            JSONArray items = owner.getJSONArray(kind);
+            boolean heading = false;
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject item = items.getJSONObject(i);
+                if ((kind + ":" + item.getString("id")).equals(notificationTarget)
+                        || !HubAuthorization.visible(item.optString("status"), item.optString("expires_at"), now, showHistory)) continue;
+                if (!heading) { addText(getString("agents".equals(kind) ? R.string.hub_agents : R.string.hub_requests), 20); heading = true; }
+                card(kind, item, connections);
+            }
+        }
+        if (!showHistory) return;
         addText(getString(R.string.hub_connections), 20);
         if (connections.length() == 0) addText(getString(R.string.hub_no_connections), 16);
         for (int i = 0; i < connections.length(); i++) {
@@ -150,10 +189,12 @@ public final class AuthorizationsActivity extends Activity {
     private void card(String kind, JSONObject item, JSONArray connections) throws Exception {
         String id = item.getString("id"), state = item.getString("status"), expiry = item.optString("expires_at");
         boolean agent = "agents".equals(kind);
+        boolean accountAvailable = agent;
         String account = item.optString("connection_name", item.optString("connection_id"));
         for (int i = 0; i < connections.length(); i++) {
             JSONObject connection = connections.getJSONObject(i);
             if (connection.optString("id").equals(item.optString("connection_id"))) {
+                accountAvailable = !"disconnected".equals(connection.optString("status"));
                 account = connection.optString("display_name") + " · " + connection.optString("provider_id")
                         + " · " + connection.optString("account_id");
                 break;
@@ -162,14 +203,16 @@ public final class AuthorizationsActivity extends Activity {
         String description = agent ? item.optString("name") + "\n" + getString(R.string.hub_pairing_scope)
                 : getString(R.string.hub_request_details, item.optString("agent_name"), account,
                         item.optString("operation"), item.optString("reason"));
+        if (!agent) description += "\n" + getString(R.string.hub_operation_scope);
+        if (!accountAvailable) description += "\n" + getString(R.string.hub_account_unavailable);
         description += "\n" + getString(R.string.hub_expiry, expiry) + "\n" + state + "\nID: " + id;
         addText(description, 16);
         boolean pending = HubAuthorization.pending(state, expiry, System.currentTimeMillis());
         if (pending) {
             String details = description;
-            addButton(getString(R.string.hub_approve)).setOnClickListener(v -> confirm(kind, id, "approve", details, expiry));
+            if (accountAvailable) addButton(getString(R.string.hub_approve)).setOnClickListener(v -> confirm(kind, id, "approve", details, expiry));
             addButton(getString(R.string.hub_deny)).setOnClickListener(v -> confirm(kind, id, "deny", details, expiry));
-        } else if ("approved".equals(state) || "active".equals(state)) {
+        } else if (("approved".equals(state) || "active".equals(state)) && HubAuthorization.unexpired(expiry, System.currentTimeMillis())) {
             String details = description;
             addButton(getString(R.string.hub_revoke)).setOnClickListener(v -> confirm(kind, id, "revoke", details, expiry));
         }

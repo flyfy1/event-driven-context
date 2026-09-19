@@ -6,6 +6,10 @@ import java.time.Instant;
 
 /** Shared fail-closed checks for authorization UI and background reminders. */
 final class HubAuthorization {
+    static boolean visible(String status, String expiresAt, long now, boolean showHistory) {
+        return showHistory || pending(status, expiresAt, now);
+    }
+
     static boolean pending(String status, String expiresAt, long now) {
         return "pending".equals(status) && unexpired(expiresAt, now);
     }

@@ -29,4 +29,12 @@
     <string name="hub_pairing_scope">Approval grants this agent 7 days of identity access and visibility of connected account names. Data operations require separate approval. The pending expiry below is the pairing review deadline.</string>
     <string name="hub_push_ready">FCM client and server configured. Delivery still requires device permission and connectivity.</string>
     <string name="hub_push_server_missing">FCM client configured, but this server has no push delivery configuration. Periodic checks are available.</string>
+    <string name="hub_show_pending">Pending requests</string>
+    <string name="hub_show_history">Granted access and history</string>
+    <string name="hub_no_pending">No requests need your approval.</string>
+    <string name="hub_notification_request">Request from notification</string>
+    <string name="hub_notification_resolved">This request is no longer pending</string>
+    <string name="hub_notification_missing">This notification no longer matches an available request.</string>
+    <string name="hub_operation_scope">Scope: this operation across the selected account, not only the example in the reason. The reason is supplied by the agent.</string>
+    <string name="hub_account_unavailable">This account is unavailable. Approval is disabled.</string>
 </resources>

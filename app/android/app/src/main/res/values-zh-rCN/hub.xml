@@ -29,4 +29,12 @@
     <string name="hub_pairing_scope">批准后，Agent 将获得 7 天的身份访问权，并可查看已连接账号名称。数据操作仍需单独批准。下方待处理到期时间是配对审核截止时间。</string>
     <string name="hub_push_ready">FCM 客户端和服务器已配置。送达仍需要设备通知权限和网络。</string>
     <string name="hub_push_server_missing">FCM 客户端已配置，但此服务器尚未配置推送发送。可以使用定期检查。</string>
+    <string name="hub_show_pending">待审批申请</string>
+    <string name="hub_show_history">已授权及历史</string>
+    <string name="hub_no_pending">目前没有需要你审批的申请。</string>
+    <string name="hub_notification_request">通知对应的申请</string>
+    <string name="hub_notification_resolved">此申请已不再等待审批</string>
+    <string name="hub_notification_missing">此通知对应的申请已不可用。</string>
+    <string name="hub_operation_scope">授权范围：在所选账号内执行此操作，不仅限于申请原因中提及的内容。申请原因由 Agent 提供。</string>
+    <string name="hub_account_unavailable">此账号不可用，无法批准。</string>
 </resources>

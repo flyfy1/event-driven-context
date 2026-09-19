@@ -4,6 +4,17 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class HubAuthorizationTest {
+    @Test public void inboxDefaultsToActionableRequestsAndKeepsHistoryAccessible() {
+        long now = java.time.Instant.parse("2026-09-19T00:00:00Z").toEpochMilli();
+        String future = "2026-09-20T00:00:00Z";
+        assertTrue(HubAuthorization.visible("pending", future, now, false));
+        assertFalse(HubAuthorization.visible("pending", "2026-09-18T00:00:00Z", now, false));
+        assertFalse(HubAuthorization.visible("approved", future, now, false));
+        assertFalse(HubAuthorization.visible("pending", "invalid", now, false));
+        assertTrue(HubAuthorization.visible("approved", future, now, true));
+        assertTrue(HubAuthorization.visible("denied", future, now, true));
+    }
+
     private SessionStore.Session session(String endpoint, String owner, String token, long expiry) {
         return new SessionStore.Session(endpoint, owner, owner, token, null, null, null, expiry);
     }

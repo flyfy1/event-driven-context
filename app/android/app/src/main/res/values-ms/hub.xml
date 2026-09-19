@@ -29,4 +29,12 @@
     <string name="hub_pairing_scope">Kelulusan memberikan akses identiti selama 7 hari dan paparan nama akaun tersambung. Operasi data memerlukan kelulusan berasingan. Masa tamat di bawah ialah tarikh akhir semakan pasangan.</string>
     <string name="hub_push_ready">Klien dan pelayan FCM dikonfigurasi. Penghantaran masih memerlukan kebenaran peranti dan sambungan.</string>
     <string name="hub_push_server_missing">Klien FCM dikonfigurasi, tetapi pelayan ini belum menyediakan push. Semakan berkala tersedia.</string>
+    <string name="hub_show_pending">Permintaan menunggu</string>
+    <string name="hub_show_history">Akses diluluskan dan sejarah</string>
+    <string name="hub_no_pending">Tiada permintaan memerlukan kelulusan anda.</string>
+    <string name="hub_notification_request">Permintaan daripada pemberitahuan</string>
+    <string name="hub_notification_resolved">Permintaan ini tidak lagi menunggu</string>
+    <string name="hub_notification_missing">Permintaan untuk pemberitahuan ini tidak lagi tersedia.</string>
+    <string name="hub_operation_scope">Skop: operasi ini merentasi akaun yang dipilih, bukan hanya contoh dalam sebab. Sebab diberikan oleh ejen.</string>
+    <string name="hub_account_unavailable">Akaun ini tidak tersedia. Kelulusan dinyahdayakan.</string>
 </resources>

@@ -29,4 +29,12 @@
     <string name="hub_pairing_scope">अनुमति से एजेंट को 7 दिन की पहचान पहुँच और जुड़े खातों के नाम देखने की सुविधा मिलती है। डेटा कार्यों के लिए अलग अनुमति चाहिए। नीचे की समय सीमा जोड़ी बनाने की समीक्षा के लिए है।</string>
     <string name="hub_push_ready">FCM क्लाइंट और सर्वर कॉन्फ़िगर हैं। प्राप्ति के लिए डिवाइस अनुमति और कनेक्शन चाहिए।</string>
     <string name="hub_push_server_missing">FCM क्लाइंट कॉन्फ़िगर है, लेकिन सर्वर पर पुश कॉन्फ़िगर नहीं है। नियमित जाँच उपलब्ध है।</string>
+    <string name="hub_show_pending">लंबित अनुरोध</string>
+    <string name="hub_show_history">स्वीकृत पहुँच और इतिहास</string>
+    <string name="hub_no_pending">किसी अनुरोध को आपकी अनुमति की आवश्यकता नहीं है।</string>
+    <string name="hub_notification_request">सूचना का अनुरोध</string>
+    <string name="hub_notification_resolved">यह अनुरोध अब लंबित नहीं है</string>
+    <string name="hub_notification_missing">इस सूचना का अनुरोध अब उपलब्ध नहीं है।</string>
+    <string name="hub_operation_scope">दायरा: चुने गए खाते में यह कार्य, केवल कारण में बताए उदाहरण तक सीमित नहीं। कारण एजेंट ने दिया है।</string>
+    <string name="hub_account_unavailable">यह खाता उपलब्ध नहीं है। अनुमति देना बंद है।</string>
 </resources>
