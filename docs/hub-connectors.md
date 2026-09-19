@@ -59,6 +59,8 @@ Google Calendar event reads omit descriptions, attendees, attachments and locati
 
 `telegram-user`, `whatsapp-business`, `health-connect`, and `google-photos-picker` remain explicit `not_implemented` catalog entries with no operations and are hidden. They need, respectively, an MTProto user-session implementation, verified business-webhook ingestion, a native device collection bridge, and Picker session/media retrieval. Saving credentials does not enable these paths.
 
+Standalone WhatsApp Business signature/account validation helpers exist under `backend/internal/hubwebhooks`, without an HTTP route, persistence, replay detection or Agent API. Personal Telegram dependency feasibility is documented, not implemented. See [messaging readiness and prerequisites](hub-messaging-readiness.md) before continuing either source.
+
 ## Owner setup
 
 Set `EDC_HUB_CREDENTIAL_KEY` to a privately stored base64-encoded 32-byte key. Losing the key makes existing secrets unreadable; changing it is not a key migration. Do not place secrets in command arguments, logs, the repository or a conversation.

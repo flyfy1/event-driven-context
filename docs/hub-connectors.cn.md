@@ -59,6 +59,8 @@ Google Calendar 事件读取不含描述、参与者、附件和地点。忙闲�
 
 `telegram-user`、`whatsapp-business`、`health-connect`、`google-photos-picker` 仍为显式 `not_implemented`，没有操作并保持隐藏。它们分别需要 MTProto 用户会话实现、经过验证的商业 webhook 接入、原生设备采集桥接和 Picker 会话/媒体读取。保存凭据不会启用这些路径。
 
+`backend/internal/hubwebhooks` 已提供独立 WhatsApp Business 签名/账号校验函数，但没有 HTTP 路由、持久化、重放检测或 Agent API。个人 Telegram 依赖可行性已有文档，尚未实现。继续这两类数据源前，请查看[消息接入状态与前提](hub-messaging-readiness.cn.md)。
+
 ## 用户配置
 
 将 `EDC_HUB_CREDENTIAL_KEY` 设置为私密保存的 base64 编码 32 字节密钥。丢失密钥会导致既有凭据无法读取；修改密钥不是密钥迁移。不要把凭据放到命令参数、日志、仓库或对话中。

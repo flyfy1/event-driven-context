@@ -147,13 +147,15 @@ Current verification is local. Actual Google consent/refresh, live Graph/DAV/Saa
 
 ## Connector continuation queue
 
+The 2026-09-19 credential-free continuation is recorded in [Messaging connector readiness](hub-messaging-readiness.md): owner-selected imports are implemented, standalone WhatsApp webhook verification is prepared but not exposed, and personal Telegram feasibility is reviewed. The next steps below require the recorded owner configuration, representative exports, device or session/runtime decision; do not repeat completed preparation while those prerequisites are unchanged. Public publication remains blocked pending explicit owner approval.
+
 Continue one independently verifiable step at a time, recording exact evidence and committing/pushing task-owned changes:
 
 1. Configure owner-controlled Google OAuth and verify two accounts, provider reads, refresh and disconnection using non-sensitive test data.
 2. Verify Telegram Bot identity/peek with an explicitly provided test bot; do not consume another application's update queue.
 3. Verify owner-selected WhatsApp/ICS/Markdown exports with representative user-provided fixtures, including ambiguous timestamps; preserve snapshot-only claims.
-4. Implement WhatsApp Business verified webhook ingestion after the owner provides Meta application/phone configuration and a callback host.
-5. Evaluate personal Telegram MTProto authorization, encrypted session storage and library suitability separately from Bot API support.
+4. Integrate the tested standalone WhatsApp verification helper into durable webhook ingestion after the owner provides Meta application/phone configuration and a callback host; signature validation alone does not provide replay protection or account ownership verification.
+5. Confirm the proposed personal Telegram session/cache model and optional TDLib runtime with the owner before implementing interactive login and chat-scoped reads; feasibility is documented separately from Bot API support.
 6. Verify owner-configured Graph, DAV and SaaS read operations with non-sensitive test accounts; verify per-account isolation and honest incomplete-result handling.
 7. Configure Firebase, install the Android build on a user-selected device, and prove background notification → approval → CLI grant → revocation.
 
