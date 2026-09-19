@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hub_nav">Akses</string>
+    <string name="hub_title">Kebenaran Saya</string>
+    <string name="hub_reminder_explanation">Dayakan pemberitahuan kebenaran. Semakan berkala paling kerap setiap 15 minit dan mungkin dilewatkan oleh Android.</string>
+    <string name="hub_disable_reminders">Matikan pemberitahuan</string>
+    <string name="hub_enable_reminders">Dayakan pemberitahuan</string>
+    <string name="hub_notifications_blocked">Pemberitahuan disekat. Dayakannya dalam tetapan Android; permintaan masih boleh disemak di sini.</string>
+    <string name="hub_push_configured">Klien Firebase dikonfigurasi. Push jauh juga memerlukan pelayan mengkonfigurasi FCM; semakan berkala kekal tersedia.</string>
+    <string name="hub_push_unconfigured">Push jauh tidak dikonfigurasi dalam binaan ini. Pemberitahuan menggunakan semakan berkala.</string>
+    <string name="hub_loading">Memuatkan kebenaran…</string>
+    <string name="hub_invalid_response">Respons kebenaran pelayan tidak sah. Muat semula untuk mencuba lagi.</string>
+    <string name="hub_load_failed">Kebenaran tidak dapat dimuatkan. Semak sambungan dan log masuk semula jika sesi tamat.</string>
+    <string name="hub_pending_count">Menunggu: %1$d</string>
+    <string name="hub_agents">Ejen</string>
+    <string name="hub_requests">Permintaan akses data</string>
+    <string name="hub_connections">Akaun tersambung</string>
+    <string name="hub_no_connections">Tiada akaun tersambung.</string>
+    <string name="hub_request_details">Ejen: %1$s\nAkaun: %2$s\nOperasi: %3$s\nSebab: %4$s</string>
+    <string name="hub_expiry">Tamat: %1$s</string>
+    <string name="hub_approve">Luluskan</string>
+    <string name="hub_deny">Tolak</string>
+    <string name="hub_revoke">Batalkan</string>
+    <string name="hub_pairing_code">Masukkan kod yang dipaparkan oleh CLI anda</string>
+    <string name="hub_saving">Menyimpan keputusan…</string>
+    <string name="hub_decision_failed">Keputusan tidak dapat disahkan. Muat semula sebelum mencuba lagi; permintaan mungkin tamat atau berubah.</string>
+    <string name="hub_notification_title">Kebenaran memerlukan perhatian anda</string>
+    <string name="hub_notification_body">%1$d permintaan menunggu. Buka Kebenaran Saya untuk menyemak.</string>
+    <string name="hub_pairing_scope">Kelulusan memberikan akses identiti selama 7 hari dan paparan nama akaun tersambung. Operasi data memerlukan kelulusan berasingan. Masa tamat di bawah ialah tarikh akhir semakan pasangan.</string>
+    <string name="hub_push_ready">Klien dan pelayan FCM dikonfigurasi. Penghantaran masih memerlukan kebenaran peranti dan sambungan.</string>
+    <string name="hub_push_server_missing">Klien FCM dikonfigurasi, tetapi pelayan ini belum menyediakan push. Semakan berkala tersedia.</string>
+</resources>

@@ -36,6 +36,7 @@
 
 ## 产品与设计文档
 
+- [Agent 数据 Hub：CLI 能力发现、用户审批、多账号和 Android 提醒](docs/agent-hub.cn.md)
 - [Memory Recall 用户指南](docs/memory-recall.md)：安装检索 Skill，让 Agent 按需读取本地 Notes 并获取来源 Events。
 - [完整产品设计](docs/product.cn.md)：持续记录、按需提取 context、基于 skill 的输入处理与定时服务。
 - [技术设计](docs/technical-design.cn.md)：数据契约、规则、runner、检索、权限和故障恢复。

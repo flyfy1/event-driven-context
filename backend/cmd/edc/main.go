@@ -41,6 +41,10 @@ Commands:
   outbox [list|flush]
   host run --plugin ID --plugin-dir PATH --plugin-token-file PATH (--once | --watch)
   mcp
+  capabilities | agent connect | agent status
+  source list | add | disconnect
+  access request | list
+  api call
 
 Global flags precede COMMAND. Commands use the current directory binding when
 --project is omitted. Passwords are prompted without echo; --password-stdin
@@ -146,10 +150,15 @@ func (a *app) dispatch(command string, args []string) error {
 	if command == "register" || command == "login" {
 		return a.auth(command, args)
 	}
+	if command == "capabilities" || command == "agent" {
+		return a.hub(command, args)
+	}
 	if a.token == "" && command != "host" {
 		return fmt.Errorf("login first or set EDC_TOKEN")
 	}
 	switch command {
+	case "source", "access", "api":
+		return a.hub(command, args)
 	case "whoami":
 		if len(args) != 0 {
 			return fmt.Errorf("whoami takes no arguments")

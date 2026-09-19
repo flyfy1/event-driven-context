@@ -308,6 +308,27 @@ final class ApiClient {
         return output;
     }
 
+    void hubDevice(String method, String pushToken) throws IOException, JSONException {
+        JSONObject body = new JSONObject().put("token", pushToken);
+        if ("POST".equals(method)) body.put("platform", "android");
+        json(method, "/v1/hub/devices", body);
+    }
+
+    JSONObject hubDeviceStatus() throws IOException, JSONException {
+        return json("GET", "/v1/hub/devices/status", null);
+    }
+
+    JSONObject hubOwner() throws IOException, JSONException {
+        return json("GET", "/v1/hub/owner", null);
+    }
+
+    void hubDecision(String kind, String id, String decision, String verificationCode) throws IOException, JSONException {
+        if (!"agents".equals(kind) && !"requests".equals(kind)) throw new IllegalArgumentException("invalid authorization kind");
+        JSONObject body = new JSONObject().put("decision", decision);
+        if (verificationCode != null) body.put("verification_code", verificationCode);
+        json("POST", "/v1/hub/" + kind + "/" + Uri.encode(id) + "/decision", body);
+    }
+
     private JSONObject json(String method, String path, JSONObject body) throws IOException, JSONException {
         HttpURLConnection connection = open(method, path);
         if (body != null) {

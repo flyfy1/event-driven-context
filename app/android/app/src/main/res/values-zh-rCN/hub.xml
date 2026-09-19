@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hub_nav">授权</string>
+    <string name="hub_title">我的授权</string>
+    <string name="hub_reminder_explanation">开启授权通知。后台定期检查最快每 15 分钟一次，Android 可能延迟执行。</string>
+    <string name="hub_disable_reminders">关闭通知</string>
+    <string name="hub_enable_reminders">开启通知</string>
+    <string name="hub_notifications_blocked">通知被禁止。可在 Android 设置中开启；你仍可在这里查看申请。</string>
+    <string name="hub_push_configured">Firebase 客户端已配置。远程推送还需要服务器配置 FCM 发送；定期检查仍然可用。</string>
+    <string name="hub_push_unconfigured">此构建未配置远程推送。通知使用定期检查。</string>
+    <string name="hub_loading">正在加载授权…</string>
+    <string name="hub_invalid_response">服务器返回了无效的授权信息，请刷新重试。</string>
+    <string name="hub_load_failed">无法加载授权。请检查网络；若登录已过期，请重新登录。</string>
+    <string name="hub_pending_count">待处理：%1$d</string>
+    <string name="hub_agents">Agent</string>
+    <string name="hub_requests">数据访问申请</string>
+    <string name="hub_connections">已连接账号</string>
+    <string name="hub_no_connections">暂无已连接账号。</string>
+    <string name="hub_request_details">Agent：%1$s\n账号：%2$s\n操作：%3$s\n原因：%4$s</string>
+    <string name="hub_expiry">到期：%1$s</string>
+    <string name="hub_approve">允许</string>
+    <string name="hub_deny">拒绝</string>
+    <string name="hub_revoke">撤销</string>
+    <string name="hub_pairing_code">输入你的 CLI 显示的验证码</string>
+    <string name="hub_saving">正在保存决定…</string>
+    <string name="hub_decision_failed">无法确认操作结果。请刷新后再试；申请可能已过期或发生变化。</string>
+    <string name="hub_notification_title">有授权申请待处理</string>
+    <string name="hub_notification_body">%1$d 项待处理申请。打开“我的授权”查看。</string>
+    <string name="hub_pairing_scope">批准后，Agent 将获得 7 天的身份访问权，并可查看已连接账号名称。数据操作仍需单独批准。下方待处理到期时间是配对审核截止时间。</string>
+    <string name="hub_push_ready">FCM 客户端和服务器已配置。送达仍需要设备通知权限和网络。</string>
+    <string name="hub_push_server_missing">FCM 客户端已配置，但此服务器尚未配置推送发送。可以使用定期检查。</string>
+</resources>

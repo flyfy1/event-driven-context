@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hub_nav">अनुमतियाँ</string>
+    <string name="hub_title">मेरी अनुमतियाँ</string>
+    <string name="hub_reminder_explanation">अनुमति सूचनाएँ चालू करें। पृष्ठभूमि जाँच कम से कम 15 मिनट के अंतर पर होती है और Android इसे देर से चला सकता है।</string>
+    <string name="hub_disable_reminders">सूचनाएँ बंद करें</string>
+    <string name="hub_enable_reminders">सूचनाएँ चालू करें</string>
+    <string name="hub_notifications_blocked">सूचनाएँ अवरुद्ध हैं। इन्हें Android सेटिंग में चालू करें; अनुरोध यहाँ देखे जा सकते हैं।</string>
+    <string name="hub_push_configured">Firebase क्लाइंट कॉन्फ़िगर है। रिमोट पुश के लिए सर्वर पर FCM भेजना कॉन्फ़िगर होना चाहिए; नियमित जाँच भी उपलब्ध है।</string>
+    <string name="hub_push_unconfigured">इस बिल्ड में रिमोट पुश कॉन्फ़िगर नहीं है। सूचनाएँ नियमित जाँच का उपयोग करती हैं।</string>
+    <string name="hub_loading">अनुमतियाँ लोड हो रही हैं…</string>
+    <string name="hub_invalid_response">सर्वर का अनुमति उत्तर अमान्य है। फिर प्रयास करने के लिए रीफ़्रेश करें।</string>
+    <string name="hub_load_failed">अनुमतियाँ लोड नहीं हो सकीं। कनेक्शन जाँचें और सत्र समाप्त होने पर फिर साइन इन करें।</string>
+    <string name="hub_pending_count">लंबित: %1$d</string>
+    <string name="hub_agents">एजेंट</string>
+    <string name="hub_requests">डेटा पहुँच अनुरोध</string>
+    <string name="hub_connections">जुड़े खाते</string>
+    <string name="hub_no_connections">कोई खाता जुड़ा नहीं है।</string>
+    <string name="hub_request_details">एजेंट: %1$s\nखाता: %2$s\nकार्य: %3$s\nकारण: %4$s</string>
+    <string name="hub_expiry">समाप्ति: %1$s</string>
+    <string name="hub_approve">अनुमति दें</string>
+    <string name="hub_deny">अस्वीकार करें</string>
+    <string name="hub_revoke">अनुमति रद्द करें</string>
+    <string name="hub_pairing_code">अपने CLI में दिखाया गया कोड दर्ज करें</string>
+    <string name="hub_saving">निर्णय सहेजा जा रहा है…</string>
+    <string name="hub_decision_failed">निर्णय की पुष्टि नहीं हो सकी। फिर प्रयास से पहले रीफ़्रेश करें; अनुरोध बदल गया या समाप्त हो गया हो सकता है।</string>
+    <string name="hub_notification_title">अनुमति पर आपका ध्यान चाहिए</string>
+    <string name="hub_notification_body">%1$d अनुरोध लंबित हैं। समीक्षा के लिए मेरी अनुमतियाँ खोलें।</string>
+    <string name="hub_pairing_scope">अनुमति से एजेंट को 7 दिन की पहचान पहुँच और जुड़े खातों के नाम देखने की सुविधा मिलती है। डेटा कार्यों के लिए अलग अनुमति चाहिए। नीचे की समय सीमा जोड़ी बनाने की समीक्षा के लिए है।</string>
+    <string name="hub_push_ready">FCM क्लाइंट और सर्वर कॉन्फ़िगर हैं। प्राप्ति के लिए डिवाइस अनुमति और कनेक्शन चाहिए।</string>
+    <string name="hub_push_server_missing">FCM क्लाइंट कॉन्फ़िगर है, लेकिन सर्वर पर पुश कॉन्फ़िगर नहीं है। नियमित जाँच उपलब्ध है।</string>
+</resources>

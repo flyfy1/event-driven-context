@@ -18,6 +18,7 @@ final class SessionStore {
     private static final String PREFS = "active-session";
     private static final String ALIAS = "event-driven-context-session-v1";
     private final SharedPreferences prefs;
+    private final Context context;
 
     static final class Session {
         final String endpoint;
@@ -43,32 +44,40 @@ final class SessionStore {
     }
 
     SessionStore(Context context) {
+        this.context = context.getApplicationContext();
         prefs = context.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
-    synchronized void save(String endpoint, String userId, String username, String token, long expiresAt) throws Exception {
-        String normalized = normalizeEndpoint(endpoint);
-        String priorEndpoint = prefs.getString("endpoint", null);
-        String priorUser = prefs.getString("user_id", null);
-        String priorProject = prefs.getString("project_id", null);
-        String priorProjectName = prefs.getString("project_name", null);
-        String priorProjectTimezone = prefs.getString("project_timezone", null);
-        byte[][] encrypted = encrypt(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        SharedPreferences.Editor edit = prefs.edit()
-                .putString("endpoint", normalized)
-                .putString("user_id", userId)
-                .putString("username", username)
-                .putLong("expires_at", expiresAt)
-                .putString("token_iv", Base64.encodeToString(encrypted[0], Base64.NO_WRAP))
-                .putString("token_cipher", Base64.encodeToString(encrypted[1], Base64.NO_WRAP));
-        if (normalized.equals(priorEndpoint) && userId.equals(priorUser) && priorProject != null) {
-            edit.putString("project_id", priorProject).putString("project_name", priorProjectName)
-                    .putString("project_timezone", priorProjectTimezone);
-        } else {
-            edit.remove("project_id").remove("project_name").remove("project_timezone");
+    void save(String endpoint, String userId, String username, String token, long expiresAt) throws Exception {
+        synchronized (SessionStore.class) {
+            String normalized = normalizeEndpoint(endpoint);
+            String priorEndpoint = prefs.getString("endpoint", null);
+            String priorUser = prefs.getString("user_id", null);
+            String priorProject = prefs.getString("project_id", null);
+            String priorProjectName = prefs.getString("project_name", null);
+            String priorProjectTimezone = prefs.getString("project_timezone", null);
+            byte[][] encrypted = encrypt(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            SharedPreferences.Editor edit = prefs.edit()
+                    .putString("endpoint", normalized)
+                    .putString("user_id", userId)
+                    .putString("username", username)
+                    .putLong("expires_at", expiresAt)
+                    .putString("token_iv", Base64.encodeToString(encrypted[0], Base64.NO_WRAP))
+                    .putString("token_cipher", Base64.encodeToString(encrypted[1], Base64.NO_WRAP));
+            if (normalized.equals(priorEndpoint) && userId.equals(priorUser) && priorProject != null) {
+                edit.putString("project_id", priorProject).putString("project_name", priorProjectName)
+                        .putString("project_timezone", priorProjectTimezone);
+            } else {
+                edit.remove("project_id").remove("project_name").remove("project_timezone");
+            }
+            boolean saved = edit.commit();
+            if (!saved) throw new IllegalStateException("session was not persisted");
+
+            AuthorizationReminderWorker.cancel(context);
+            Session active = load();
+            AuthorizationReminderWorker.schedule(context, active);
+            HubPush.register(context, active);
         }
-        boolean saved = edit.commit();
-        if (!saved) throw new IllegalStateException("session was not persisted");
     }
 
     synchronized void selectProject(String projectId, String projectName, String projectTimezone) {
@@ -78,27 +87,33 @@ final class SessionStore {
         }
     }
 
-    synchronized Session load() {
-        String endpoint = prefs.getString("endpoint", null);
-        String userId = prefs.getString("user_id", null);
-        String iv = prefs.getString("token_iv", null);
-        String ciphertext = prefs.getString("token_cipher", null);
-        if (endpoint == null || userId == null || iv == null || ciphertext == null) return null;
-        try {
-            byte[] token = decrypt(Base64.decode(iv, Base64.NO_WRAP), Base64.decode(ciphertext, Base64.NO_WRAP));
-            return new Session(endpoint, userId, prefs.getString("username", ""),
-                    new String(token, java.nio.charset.StandardCharsets.UTF_8),
-                    prefs.getString("project_id", null), prefs.getString("project_name", null),
-                    prefs.getString("project_timezone", null),
-                    prefs.getLong("expires_at", 0));
-        } catch (Exception invalid) {
-            try { clear(); } catch (RuntimeException ignored) {}
-            return null;
+    Session load() {
+        synchronized (SessionStore.class) {
+            String endpoint = prefs.getString("endpoint", null);
+            String userId = prefs.getString("user_id", null);
+            String iv = prefs.getString("token_iv", null);
+            String ciphertext = prefs.getString("token_cipher", null);
+            if (endpoint == null || userId == null || iv == null || ciphertext == null) return null;
+            try {
+                byte[] token = decrypt(Base64.decode(iv, Base64.NO_WRAP), Base64.decode(ciphertext, Base64.NO_WRAP));
+                return new Session(endpoint, userId, prefs.getString("username", ""),
+                        new String(token, java.nio.charset.StandardCharsets.UTF_8),
+                        prefs.getString("project_id", null), prefs.getString("project_name", null),
+                        prefs.getString("project_timezone", null),
+                        prefs.getLong("expires_at", 0));
+            } catch (Exception invalid) {
+                try { clear(); } catch (RuntimeException ignored) {}
+                return null;
+            }
         }
     }
 
-    synchronized void clear() {
-        if (!prefs.edit().clear().commit()) throw new IllegalStateException("session was not cleared");
+    void clear() {
+        synchronized (SessionStore.class) {
+            if (!prefs.edit().clear().commit()) throw new IllegalStateException("session was not cleared");
+
+            AuthorizationReminderWorker.cancel(context);
+        }
     }
 
     static String normalizeEndpoint(String raw) {

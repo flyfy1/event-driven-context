@@ -82,7 +82,7 @@ func Open(path string, dataPaths ...string) (*Store, error) {
 	}
 	// A single connection makes PRAGMAs apply consistently and serializes this MVP's writes.
 	db.SetMaxOpenConns(1)
-	if _, err = db.Exec(schema); err != nil {
+	if _, err = db.Exec(schema + "\n" + hubSchema + "\n" + HubDeviceSchema + "\n" + HubGoogleSchema); err != nil {
 		db.Close()
 		return nil, err
 	}

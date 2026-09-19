@@ -242,6 +242,7 @@ function updateIdentity() {
   $("#logout-button").classList.toggle("hidden", !online);
   $("#auth-panel").classList.toggle("hidden", online);
   $("#workspace").classList.toggle("hidden", !online);
+  window.dispatchEvent(new CustomEvent("context:identity", { detail: { userId: state.user?.id || "", locale: state.locale } }));
 }
 
 async function loadProjects(selectID) {

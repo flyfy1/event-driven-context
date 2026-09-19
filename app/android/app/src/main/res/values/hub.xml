@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hub_nav">Access</string>
+    <string name="hub_title">My Authorizations</string>
+    <string name="hub_reminder_explanation">Enable authorization notifications. Periodic background checks run no more frequently than every 15 minutes and may be delayed by Android.</string>
+    <string name="hub_disable_reminders">Disable notifications</string>
+    <string name="hub_enable_reminders">Enable notifications</string>
+    <string name="hub_notifications_blocked">Notifications are blocked. Enable them in Android settings; you can still review requests here.</string>
+    <string name="hub_push_configured">Firebase client configured. Remote push also requires this server to configure FCM delivery; periodic checks remain available.</string>
+    <string name="hub_push_unconfigured">Remote push is not configured in this build. Notifications use periodic checks.</string>
+    <string name="hub_loading">Loading authorizations…</string>
+    <string name="hub_invalid_response">The server returned an invalid authorization response. Refresh to try again.</string>
+    <string name="hub_load_failed">Could not load authorizations. Check your connection and sign in again if the session expired.</string>
+    <string name="hub_pending_count">Pending: %1$d</string>
+    <string name="hub_agents">Agents</string>
+    <string name="hub_requests">Data access requests</string>
+    <string name="hub_connections">Connected accounts</string>
+    <string name="hub_no_connections">No connected accounts.</string>
+    <string name="hub_request_details">Agent: %1$s\nAccount: %2$s\nOperation: %3$s\nReason: %4$s</string>
+    <string name="hub_expiry">Expires: %1$s</string>
+    <string name="hub_approve">Approve</string>
+    <string name="hub_deny">Deny</string>
+    <string name="hub_revoke">Revoke</string>
+    <string name="hub_pairing_code">Enter the code shown by your CLI</string>
+    <string name="hub_saving">Saving decision…</string>
+    <string name="hub_decision_failed">Decision could not be confirmed. Refresh before trying again; the request may have expired or changed.</string>
+    <string name="hub_notification_title">Authorization needs your attention</string>
+    <string name="hub_notification_body">%1$d pending requests. Open My Authorizations to review.</string>
+    <string name="hub_pairing_scope">Approval grants this agent 7 days of identity access and visibility of connected account names. Data operations require separate approval. The pending expiry below is the pairing review deadline.</string>
+    <string name="hub_push_ready">FCM client and server configured. Delivery still requires device permission and connectivity.</string>
+    <string name="hub_push_server_missing">FCM client configured, but this server has no push delivery configuration. Periodic checks are available.</string>
+</resources>

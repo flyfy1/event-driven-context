@@ -224,7 +224,9 @@ public final class MainActivity extends Activity {
         Button record = navButton(getString(R.string.record)); record.setOnClickListener(v -> showRecord());
         Button review = navButton(getString(R.string.review)); review.setOnClickListener(v -> showReview());
         Button me = navButton(getString(R.string.me)); me.setOnClickListener(v -> showMe());
-        navigation.addView(record); navigation.addView(review); navigation.addView(me);
+        Button authorizations = navButton(getString(R.string.hub_nav));
+        authorizations.setOnClickListener(v -> startActivity(new Intent(this, AuthorizationsActivity.class)));
+        navigation.addView(record); navigation.addView(review); navigation.addView(authorizations); navigation.addView(me);
     }
 
     private void showRecord() {
@@ -451,7 +453,10 @@ public final class MainActivity extends Activity {
         Button logout = button(getString(R.string.logout));
         logout.setOnClickListener(v -> {
             SessionStore.Session old = sessions.load(); sessions.clear(); session = null;
-            if (old != null) io.execute(() -> new ApiClient(old.endpoint, old.token).logout());
+            if (old != null) io.execute(() -> {
+                HubPush.unregisterBlocking(this, old);
+                new ApiClient(old.endpoint, old.token).logout();
+            });
             showLogin();
         });
         page.addView(logout);

@@ -49,6 +49,7 @@ func V2HandlerWithConfig(store *core.Store, service v2.ServiceAPI, config Config
 	})))
 	RegisterV2Handlers(mux, store, service, config)
 	RegisterAdminHandlers(mux, store, service, config)
+	registerHubHandlers(mux, store, config)
 	if config.PublicBaseURL != "" {
 		registerOAuthHandlers(mux, store, config)
 	}
