@@ -37,6 +37,7 @@ Here, "local" means that data storage and execution run in an environment contro
 ## Product and Design Documents
 
 - [Agent data hub: CLI discovery, owner approvals, multiple accounts and Android reminders](docs/agent-hub.md)
+- [Proposal: personal information sources and the next Calendar integration](docs/proposals/personal-data-sources.md)
 - [Memory Recall user guide](docs/memory-recall.md): install the retrieval Skill so an Agent can read local Notes on demand and retrieve their source Events.
 - [Complete product design](docs/product.md): continuous capture, on-demand context extraction, Skill-based input processing, and scheduled services.
 - [Technical design](docs/technical-design.md): data contracts, rules, runner behavior, retrieval, permissions, and failure recovery.
