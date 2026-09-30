@@ -268,10 +268,10 @@ func mintV2MCPOAuthToken(t *testing.T, store *core.Store, userID, scope, issuer 
 	if err = store.CreateOAuthRequest(ctx, requestID, csrf, core.OAuthRequest{ClientID: client.ClientID, RedirectURI: redirect, CodeChallenge: challenge, Scope: scope, Resource: resource}, time.Now().Add(time.Minute)); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = store.ApproveOAuthRequest(ctx, requestID, csrf, userID, code, time.Now().Add(time.Minute)); err != nil {
+	if _, err = store.ApproveOAuthRequest(ctx, requestID, csrf, userID, code, time.Now().Add(time.Minute), time.Now().Add(time.Minute)); err != nil {
 		t.Fatal(err)
 	}
-	token, _, err := store.ExchangeOAuthCode(ctx, code, client.ClientID, redirect, verifier, resource, time.Minute)
+	token, _, err := store.ExchangeOAuthCode(ctx, code, client.ClientID, redirect, verifier, resource)
 	if err != nil {
 		t.Fatal(err)
 	}

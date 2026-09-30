@@ -98,6 +98,10 @@ func Open(path string, dataPaths ...string) (*Store, error) {
 		db.Close()
 		return nil, err
 	}
+	if err = ensureOAuthAccessExpiryColumn(db); err != nil {
+		db.Close()
+		return nil, err
+	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(rand.Text()), bcrypt.DefaultCost)
 	if err != nil {
 		db.Close()
@@ -213,6 +217,38 @@ func ensureIntegIdentitySchema(db *sql.DB) error {
 			UNIQUE(issuer, user_id)
 		);
 	`)
+	return err
+}
+
+func ensureOAuthAccessExpiryColumn(db *sql.DB) error {
+	rows, err := db.Query("PRAGMA table_info(oauth_authorization_codes)")
+	if err != nil {
+		return err
+	}
+	found := false
+	for rows.Next() {
+		var cid, notNull, primaryKey int
+		var name, columnType string
+		var defaultValue sql.NullString
+		if err = rows.Scan(&cid, &name, &columnType, &notNull, &defaultValue, &primaryKey); err != nil {
+			_ = rows.Close()
+			return err
+		}
+		if name == "access_expires_at" {
+			found = true
+		}
+	}
+	if err = rows.Err(); err != nil {
+		_ = rows.Close()
+		return err
+	}
+	if err = rows.Close(); err != nil {
+		return err
+	}
+	if found {
+		return nil
+	}
+	_, err = db.Exec("ALTER TABLE oauth_authorization_codes ADD COLUMN access_expires_at INTEGER NOT NULL DEFAULT 0")
 	return err
 }
 

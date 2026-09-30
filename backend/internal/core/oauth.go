@@ -149,7 +149,7 @@ func (s *Store) OAuthRequest(ctx context.Context, requestID, csrf string) (OAuth
 	return out, err
 }
 
-func (s *Store) ApproveOAuthRequest(ctx context.Context, requestID, csrf, userID, code string, expires time.Time) (OAuthRequest, error) {
+func (s *Store) ApproveOAuthRequest(ctx context.Context, requestID, csrf, userID, code string, codeExpires, accessExpires time.Time) (OAuthRequest, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return OAuthRequest{}, err
@@ -167,8 +167,8 @@ func (s *Store) ApproveOAuthRequest(ctx context.Context, requestID, csrf, userID
 		return out, err
 	}
 	now := time.Now().Unix()
-	if _, err = tx.ExecContext(ctx, `INSERT INTO oauth_authorization_codes(code_hash,client_id,user_id,redirect_uri,code_challenge,scope,resource,expires_at)
-		VALUES(?,?,?,?,?,?,?,?)`, digest([]byte(code)), out.ClientID, userID, out.RedirectURI, out.CodeChallenge, out.Scope, out.Resource, expires.Unix()); err != nil {
+	if _, err = tx.ExecContext(ctx, `INSERT INTO oauth_authorization_codes(code_hash,client_id,user_id,redirect_uri,code_challenge,scope,resource,expires_at,access_expires_at)
+		VALUES(?,?,?,?,?,?,?,?,?)`, digest([]byte(code)), out.ClientID, userID, out.RedirectURI, out.CodeChallenge, out.Scope, out.Resource, codeExpires.Unix(), oauthExpiryUnix(accessExpires)); err != nil {
 		return out, err
 	}
 	result, err := tx.ExecContext(ctx, "UPDATE oauth_requests SET used_at=? WHERE id_hash=? AND used_at IS NULL", now, digest([]byte(requestID)))
@@ -186,15 +186,16 @@ func pkceChallenge(verifier string) string {
 	return base64.RawURLEncoding.EncodeToString(sum[:])
 }
 
-func (s *Store) ExchangeOAuthCode(ctx context.Context, code, clientID, redirectURI, verifier, resource string, ttl time.Duration) (string, OAuthTokenInfo, error) {
+func (s *Store) ExchangeOAuthCode(ctx context.Context, code, clientID, redirectURI, verifier, resource string) (string, OAuthTokenInfo, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return "", OAuthTokenInfo{}, err
 	}
 	defer tx.Rollback()
 	var userID, storedClient, storedRedirect, challenge, scope, storedResource string
-	err = tx.QueryRowContext(ctx, `SELECT user_id,client_id,redirect_uri,code_challenge,scope,resource FROM oauth_authorization_codes
-		WHERE code_hash=? AND used_at IS NULL AND expires_at>?`, digest([]byte(code)), time.Now().Unix()).Scan(&userID, &storedClient, &storedRedirect, &challenge, &scope, &storedResource)
+	var accessExpires int64
+	err = tx.QueryRowContext(ctx, `SELECT user_id,client_id,redirect_uri,code_challenge,scope,resource,access_expires_at FROM oauth_authorization_codes
+		WHERE code_hash=? AND used_at IS NULL AND expires_at>?`, digest([]byte(code)), time.Now().Unix()).Scan(&userID, &storedClient, &storedRedirect, &challenge, &scope, &storedResource, &accessExpires)
 	challengeMatches := subtle.ConstantTimeCompare([]byte(pkceChallenge(verifier)), []byte(challenge)) == 1
 	if err != nil || storedClient != clientID || storedRedirect != redirectURI || storedResource != resource || !challengeMatches {
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -211,8 +212,8 @@ func (s *Store) ExchangeOAuthCode(ctx context.Context, code, clientID, redirectU
 		return "", OAuthTokenInfo{}, ErrUnauthenticated
 	}
 	token := "edco_" + strings.ToLower(strings.ReplaceAll(newID(""), "_", "")) + strings.ToLower(strings.ReplaceAll(newID(""), "_", ""))
-	expires := now.Add(ttl)
-	if _, err = tx.ExecContext(ctx, `INSERT INTO oauth_access_tokens(hash,client_id,user_id,scope,resource,expires_at,created_at) VALUES(?,?,?,?,?,?,?)`, digest([]byte(token)), clientID, userID, scope, resource, expires.Unix(), now.Unix()); err != nil {
+	expires := oauthExpiryTime(accessExpires)
+	if _, err = tx.ExecContext(ctx, `INSERT INTO oauth_access_tokens(hash,client_id,user_id,scope,resource,expires_at,created_at) VALUES(?,?,?,?,?,?,?)`, digest([]byte(token)), clientID, userID, scope, resource, accessExpires, now.Unix()); err != nil {
 		return "", OAuthTokenInfo{}, err
 	}
 	if err = tx.Commit(); err != nil {
@@ -235,7 +236,7 @@ func (s *Store) AuthenticateOAuth(ctx context.Context, token, resource string) (
 	if err != nil {
 		return OAuthTokenInfo{}, err
 	}
-	if expires <= time.Now().Unix() || out.Resource != resource {
+	if expires != 0 && expires <= time.Now().Unix() || out.Resource != resource {
 		return OAuthTokenInfo{}, ErrUnauthenticated
 	}
 	var scopeErr error
@@ -244,5 +245,22 @@ func (s *Store) AuthenticateOAuth(ctx context.Context, token, resource string) (
 	}
 	out.Scopes = strings.Fields(scope)
 	out.ExpiresAt = time.Unix(expires, 0)
+	if expires == 0 {
+		out.ExpiresAt = time.Time{}
+	}
 	return out, nil
+}
+
+func oauthExpiryUnix(expires time.Time) int64 {
+	if expires.IsZero() {
+		return 0
+	}
+	return expires.Unix()
+}
+
+func oauthExpiryTime(expires int64) time.Time {
+	if expires == 0 {
+		return time.Time{}
+	}
+	return time.Unix(expires, 0)
 }

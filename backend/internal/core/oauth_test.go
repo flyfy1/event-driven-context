@@ -38,10 +38,10 @@ func TestOAuthScopeNormalizationAndExpiredCode(t *testing.T) {
 	if err = s.CreateOAuthRequest(ctx, "request", "csrf", request, time.Now().Add(time.Minute)); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = s.ApproveOAuthRequest(ctx, "request", "csrf", user.ID, "expired-code", time.Now().Add(-time.Second)); err != nil {
+	if _, err = s.ApproveOAuthRequest(ctx, "request", "csrf", user.ID, "expired-code", time.Now().Add(-time.Second), time.Time{}); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err = s.ExchangeOAuthCode(ctx, "expired-code", client.ClientID, client.RedirectURIs[0], verifier, request.Resource, time.Hour); err == nil {
+	if _, _, err = s.ExchangeOAuthCode(ctx, "expired-code", client.ClientID, client.RedirectURIs[0], verifier, request.Resource); err == nil {
 		t.Fatal("expired authorization code accepted")
 	}
 }
