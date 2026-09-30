@@ -216,7 +216,7 @@ The core returns only raw events, files, and State published by plugins. The fol
 
 | Plugin | What it provides | Components | Processor location |
 |---|---|---|---|
-| `audio-transcribe` audio transcription | Verbatim transcripts with unclear passages marked | Processor + `derived` event | processor host |
+| `audio-transcribe` audio transcription | Verbatim transcripts with unclear passages marked | Processor + `derived` event | server-managed OpenAI by default on the hosted web flow; self-hosted can use processor host |
 | `project-brief` project brief | Goals, current decisions, constraints, todos, and unresolved questions, each with sources | State + usage skill + update processor | agent or processor host |
 | `daily-review` daily review | The day's progress, decisions, todos, and questions, each with sources | Scheduled processor + State published by date | processor host |
 | `evidence` evidence retrieval | For a question, returns relevant record excerpts, provenance, conflicts, and gaps | skill (the agent calls query interfaces as instructed) | calling agent |

@@ -527,7 +527,7 @@ Production deployment stops the service and writes both the SQLite backup API ou
 /var/lib/event-driven-context/backups/
 ```
 
-Ordinary writes and deterministic context queries do not call a model or execute event contents. Optional automatic Notes, explicitly requested transcription, or an installed processor may call a configured local or external model. Use `-automatic-notes=false`, leave `OPENAI_API_KEY` unset, and do not run a processor host when a model-free core is required. Current retrieval is based on deterministic keywords and explicit relationships; it does not claim semantic conflict detection or vector retrieval.
+Ordinary writes and deterministic context queries do not call a model or execute event contents. Optional automatic Notes, explicitly requested transcription, or an installed processor may call a configured local or external model. Use `-automatic-notes=false`, leave `OPENAI_API_KEY` unset, and do not run a processor host when a model-free core is required. When transcription is enabled, the server sends audio up to 25 MB to OpenAI `gpt-transcribe`; `OPENAI_TRANSCRIBE_MODEL` overrides the model and `OPENAI_BASE_URL` points at a compatible endpoint. Current retrieval is based on deterministic keywords and explicit relationships; it does not claim semantic conflict detection or vector retrieval.
 
 ## Directory Structure
 
