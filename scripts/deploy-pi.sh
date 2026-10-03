@@ -28,9 +28,10 @@ GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags="$B
 cp -R backend/plugins "$TEMP_DIR/plugins"
 cp -R backend/skills "$TEMP_DIR/skills"
 cp deploy/production/context-api-pi.service "$TEMP_DIR/$SERVICE.service"
+cp deploy/production/event-context-backup.sh deploy/production/event-context-backup.service deploy/production/event-context-backup.timer "$TEMP_DIR/"
 
 remote_exec "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
-scp -r "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/skills" "$TEMP_DIR/$SERVICE.service" "$TARGET:/tmp/$SERVICE-$RELEASE_ID/"
+scp -r "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/skills" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/event-context-backup.sh" "$TEMP_DIR/event-context-backup.service" "$TEMP_DIR/event-context-backup.timer" "$TARGET:/tmp/$SERVICE-$RELEASE_ID/"
 
 remote_exec "sudo -n bash -s -- '$RELEASE_ID' '$SERVICE' '$REMOTE_ROOT' '$REMOTE_DATA' '$PORT'" <<'REMOTE_SCRIPT'
 set -euo pipefail
@@ -48,7 +49,7 @@ old_target=""
 cleanup() { rm -rf "$stage_dir"; }
 trap cleanup EXIT
 
-if [[ ! -x "$stage_dir/edc" || ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/plugins/project-brief/manifest.json" || ! -f "$stage_dir/skills/audio-transcribe/SKILL.md" || ! -f "$stage_dir/skills/daily-review/SKILL.md" ]]; then
+if [[ ! -x "$stage_dir/edc" || ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/event-context-backup.timer" || ! -f "$stage_dir/plugins/project-brief/manifest.json" || ! -f "$stage_dir/skills/audio-transcribe/SKILL.md" || ! -f "$stage_dir/skills/daily-review/SKILL.md" ]]; then
   echo "incomplete staged release" >&2
   exit 1
 fi
@@ -90,6 +91,9 @@ chown -R "$runtime_user:$shared_group" "$release_dir"
 find "$release_dir" -type d -exec chmod 2775 {} +
 find "$release_dir/plugins" "$release_dir/skills" -type f -exec chmod 0644 {} +
 install -m 0644 "$stage_dir/$service.service" "/etc/systemd/system/$service.service"
+install -d -o root -g root -m 0755 /usr/local/lib/event-driven-context
+install -o root -g root -m 0755 "$stage_dir/event-context-backup.sh" /usr/local/lib/event-driven-context/event-context-backup.sh
+install -m 0644 "$stage_dir/event-context-backup.service" "$stage_dir/event-context-backup.timer" /etc/systemd/system/
 
 if [[ -L "$remote_root/current" ]]; then old_target="$(readlink -f "$remote_root/current")"; fi
 ln -sfn "$release_dir" "$remote_root/current"
@@ -101,6 +105,7 @@ if [[ -f "$remote_data/notes-indexer.token" ]]; then chmod 0600 "$remote_data/no
 
 systemctl daemon-reload
 systemctl enable --now "$service.service"
+systemctl enable --now event-context-backup.timer
 healthy=""
 for _ in $(seq 1 20); do
   if systemctl is-active --quiet "$service.service" && curl --fail --silent --show-error "http://127.0.0.1:${port}/healthz" >/dev/null; then

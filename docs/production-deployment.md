@@ -58,6 +58,10 @@ After every release, verify all of the following independently:
 
 The application database and `data/` directory are one consistency boundary. A usable backup includes a SQLite backup API output plus the entire stopped-writer data tree. Verify SQLite integrity and SHA-256 after every transfer.
 
+Besides the per-release backup, `make deploy-prod` installs `event-context-backup.timer`. Every day at about 03:45 Asia/Singapore it briefly stops `event-context.service`, writes `daily-context-<UTC>.db` (SQLite backup API plus `PRAGMA integrity_check`), `daily-data-<UTC>.tar.gz` and a `daily-<UTC>.sha256` manifest to `/var/lib/event-driven-context/backups`, restarts the service even on failure, and deletes `daily-*` files older than 14 days. The script is installed root-owned at `/usr/local/lib/event-driven-context/event-context-backup.sh`. Check it with `systemctl list-timers event-context-backup.timer` and `journalctl -u event-context-backup.service`.
+
+These backups share the Pi's disk. Copy them to another machine for disk-loss protection. `/etc/event-context.env` (including `EDC_HUB_CREDENTIAL_KEY`) is not part of the data backup; keep a private copy of that key elsewhere, because stored provider credentials cannot be decrypted without it.
+
 After Pi has accepted a production write, never roll back by starting GCE against its old copy. Freeze Pi writes, take a fresh consistent Pi backup, restore that newest backup to GCE, validate it locally, then move the Tunnel or DNS route and enable only the chosen writer. The legacy release command is deliberately guarded:
 
 ```sh

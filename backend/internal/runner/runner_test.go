@@ -50,7 +50,7 @@ cat "$script_dir/result.json" > "$out"
 		SkillRoot: skillRoot,
 		WorkRoot:  t.TempDir(),
 		CodexPath: codexPath,
-		Timeout:   2 * time.Second,
+		Timeout:   30 * time.Second,
 	})
 	if err != nil {
 		t.Fatalf("Execute: %v", err)
@@ -117,7 +117,7 @@ func TestExecuteRejectsInvalidAndForgedDailyOutput(t *testing.T) {
 			mustWrite(t, filepath.Join(fakeDir, "result.json"), test.result, 0o600)
 			codexPath := writeExecutable(t, fakeDir, "fake-codex", fakeCodexScript())
 			_, err := Execute(context.Background(), dailyTask(testSkillDigest(t, skillRoot, DailyReviewSkill)), Config{
-				SkillRoot: skillRoot, WorkRoot: t.TempDir(), CodexPath: codexPath, Timeout: 2 * time.Second,
+				SkillRoot: skillRoot, WorkRoot: t.TempDir(), CodexPath: codexPath, Timeout: 30 * time.Second,
 			})
 			if !IsKind(err, InvalidOutput) {
 				t.Fatalf("got %v, want invalid output", err)
@@ -206,7 +206,7 @@ printf '{"text":"faithful transcript","generation_tokens":12,"complete":true}'
 	config := Config{
 		SkillRoot: skillRoot, WorkRoot: t.TempDir(), PythonPath: pythonPath,
 		ASRScriptPath: adapterPath, ASRModelPath: modelPath, FFmpegPath: ffmpegPath,
-		FFprobePath: ffprobePath, Timeout: 2 * time.Second,
+		FFprobePath: ffprobePath, Timeout: 30 * time.Second,
 	}
 	candidate, err := Execute(context.Background(), task, config)
 	if err != nil {

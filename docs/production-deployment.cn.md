@@ -58,6 +58,10 @@ make deploy-prod
 
 应用数据库和 `data/` 是同一个一致性边界。可用备份必须同时包含 SQLite backup API 输出与完整的停写数据树。每次传输后都验证 SQLite integrity 与 SHA-256。
 
+除每次发布时的备份外，`make deploy-prod` 还会安装 `event-context-backup.timer`。它每天约在新加坡时间 03:45 短暂停止 `event-context.service`，向 `/var/lib/event-driven-context/backups` 写入 `daily-context-<UTC>.db`（SQLite backup API 并执行 `PRAGMA integrity_check`）、`daily-data-<UTC>.tar.gz` 与 `daily-<UTC>.sha256` 清单；即使失败也会重新启动服务，并删除超过 14 天的 `daily-*` 文件。脚本以 root 所有的方式安装在 `/usr/local/lib/event-driven-context/event-context-backup.sh`。可用 `systemctl list-timers event-context-backup.timer` 与 `journalctl -u event-context-backup.service` 检查。
+
+这些备份与服务位于同一块 Pi 磁盘，需另行复制到其他机器才能防范磁盘损坏。`/etc/event-context.env`（包括 `EDC_HUB_CREDENTIAL_KEY`）不在数据备份中；请在别处私密保存该密钥，否则已存储的提供方凭据将无法解密。
+
 Pi 接受生产写入后，不能直接启动使用旧数据的 GCE。必须先冻结 Pi 写入，创建新的 Pi 一致性备份，把最新备份恢复到 GCE，本地验证后再切 Tunnel 或 DNS，并确保只有选定的一方写入。旧发布命令刻意带保护：
 
 ```sh

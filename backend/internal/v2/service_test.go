@@ -463,3 +463,44 @@ func errorCode(err error) string {
 	}
 	return ""
 }
+
+func TestAutomaticPluginSurvivesRestartWithIndentedSnapshot(t *testing.T) {
+	f := newFixture(t)
+	manifest := Manifest{ID: "notes-indexer", Version: "0.1.0", Name: "Notes indexer", Processor: json.RawMessage(`{"runs_in":"host","entry":{"type":"agent","protocol":"edc-notes-v1"},"limits":{"timeout_seconds":300}}`), Permissions: Permissions{ReadEvents: []string{"note"}}}
+	first, _, err := f.service.EnsureAutomaticPlugin(f.aliceCtx, f.project.ID, manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = f.service.Close(); err != nil {
+		t.Fatal(err)
+	}
+	reopened, err := New(f.identity, filepath.Join(f.root, "data"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = reopened.Close() })
+	again, _, err := reopened.EnsureAutomaticPlugin(f.aliceCtx, f.project.ID, manifest)
+	if err != nil {
+		t.Fatalf("restart ensure err=%v", err)
+	}
+	if again.InstallationID != first.InstallationID {
+		t.Fatalf("restart created a new installation %s != %s", again.InstallationID, first.InstallationID)
+	}
+	changed := manifest
+	changed.Processor = json.RawMessage(`{"entry":{"type":"command"}}`)
+	if _, _, err = reopened.EnsureAutomaticPlugin(f.aliceCtx, f.project.ID, changed); errorCode(err) != "conflict" {
+		t.Fatalf("different processor err=%v", err)
+	}
+}
+
+func TestJSONEqualIgnoresFormattingAndKeyOrder(t *testing.T) {
+	if !jsonEqual(json.RawMessage(`{"b":1,"a":{"x":[1,2]}}`), json.RawMessage("{\n  \"a\": {\"x\": [1, 2]},\n  \"b\": 1\n}")) {
+		t.Fatal("equivalent JSON compared unequal")
+	}
+	if jsonEqual(json.RawMessage(`{"a":1}`), json.RawMessage(`{"a":2}`)) || jsonEqual(json.RawMessage(`9007199254740993`), json.RawMessage(`9007199254740992`)) {
+		t.Fatal("different JSON compared equal")
+	}
+	if jsonEqual(nil, json.RawMessage(`null`)) {
+		t.Fatal("missing value compared equal to null")
+	}
+}

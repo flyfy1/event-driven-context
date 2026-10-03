@@ -414,7 +414,19 @@ func objectMatches(have, want map[string]json.RawMessage) bool {
 	}
 	return true
 }
-func jsonEqual(a, b json.RawMessage) bool { return string(a) == string(b) }
+// jsonEqual compares JSON values semantically. Snapshots are persisted with
+// MarshalIndent, so raw bytes reloaded from disk differ in formatting.
+func jsonEqual(a, b json.RawMessage) bool {
+	if string(a) == string(b) {
+		return true
+	}
+	if len(a) == 0 || len(b) == 0 {
+		return false
+	}
+	ca, errA := canonicalJSON(a)
+	cb, errB := canonicalJSON(b)
+	return errA == nil && errB == nil && string(ca) == string(cb)
+}
 func refsTo(refs []Ref, id string) bool {
 	for _, r := range refs {
 		if r.ID == id {
