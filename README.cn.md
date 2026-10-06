@@ -360,7 +360,7 @@ edc setup --apply claude-code
 
 setup 不会添加 MCP；如果项目 `.mcp.json` 中存在旧的 `event-driven-context` 或 `event-context` 条目，会在保留其他 MCP 服务的前提下删除该旧条目。
 
-### 远程 Streamable HTTP：ChatGPT OAuth、OpenAI API 和通用 MCP 客户端
+### 远程 Streamable HTTP：ChatGPT / Claude 网页端 OAuth、OpenAI API 和通用 MCP 客户端
 
 服务器地址为 `https://YOUR_HOST/mcp`，客户端发送 Bearer 令牌。`GET` / `DELETE /mcp` 不承载会话，返回 405；服务使用无状态 Streamable HTTP，每个请求独立验证身份。
 
@@ -376,7 +376,7 @@ setup 不会添加 MCP；如果项目 `.mcp.json` 中存在旧的 `event-driven-
 }
 ```
 
-生产 MCP 地址是 `https://context-api.integ.life/mcp`。它同时保留上述静态 Bearer 接入，并提供 OAuth 2.1 Authorization Code + PKCE（只接受 S256）给 ChatGPT 等网页客户端：
+生产 MCP 地址是 `https://context-api.integ.life/mcp`。它同时保留上述静态 Bearer 接入，并提供 OAuth 2.1 Authorization Code + PKCE（只接受 S256）给 ChatGPT 和 Claude 等网页客户端：
 
 - Protected Resource Metadata：`https://context-api.integ.life/.well-known/oauth-protected-resource/mcp`（根路径版本也可用）。未认证 `/mcp` 的 `WWW-Authenticate` 会指向这里。
 - Authorization Server Metadata：`https://context-api.integ.life/.well-known/oauth-authorization-server`。
@@ -397,6 +397,14 @@ scope 不替代项目权限：即使有 `context:read` 或 `context:write`，调
 在 ChatGPT 开发者模式中新建自定义连接器，名称填写 `Event-driven Context`，URL 填写 `https://context-api.integ.life/mcp`，身份验证选择 OAuth，并使用服务器 discovery / Dynamic Client Registration，不填写静态 API token 或 client secret。ChatGPT 当前会在连接草稿中生成或提交一个精确 callback URL（通常是 `https://chatgpt.com/connector/oauth/<callback_id>`；旧连接可能使用 `https://chatgpt.com/connector_platform_oauth_redirect`）；本服务将 DCR 请求里的完整 URL 原样注册，授权请求必须逐字匹配，不支持通配符。
 
 ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 public client、带 `resource`、scope 和 S256 challenge 跳转到登录页。可以使用已有 Event-driven Context 用户名和密码登录，也可以在同一 OAuth 页面按现有用户名与密码规则创建账号；新账号只获得用户身份，不自动获得任何既有项目权限。OAuth 登录、注册、错误提示与授权确认页会按浏览器语言自动选择 English、简体中文、Bahasa Melayu 或 हिन्दी，并提供不丢失授权事务的手动切换。主站与 OAuth 通过只含 locale 的 `.integ.life` Cookie 保持用户选择一致；Cookie 不包含账号、令牌或其他身份信息。随后在授权页核对 client、resource 和 scope 后确认。ChatGPT 页面本身还会显示“未经 OpenAI 审查的自定义 MCP”风险提示；确认意味着允许第三方 MCP 读取或追加你有权访问的项目数据，应只在确认 URL、工具与 scope 后继续。
+
+#### Claude 网页端自定义连接器
+
+在 `claude.ai` 中打开 **Customize（自定义）→ Connectors（连接器）→ Add custom connector（添加自定义连接器）**。名称填写 `Event-driven Context`，MCP 地址使用公网可访问的 HTTPS URL，例如维护者部署的 `https://context-api.integ.life/mcp` 或自托管服务的 `https://YOUR_HOST/mcp`。选择 OAuth 登录；如出现 OAuth 客户端选项，选择 **Register automatically（自动注册）**，客户端 ID 和 secret 留空。完成登录与授权后，在新对话的 **+ → Connectors** 中启用连接器。工作区“接入”面板提供当前项目的验证提示词。
+
+Claude 使用现有的 discovery、public-client DCR 与 S256 PKCE 流程。精确回调 `https://claude.ai/api/mcp/auth_callback` 从 Claude 的 DCR 请求中注册，授权和换 token 时必须匹配，无需单独的端点或手动回调白名单。本服务不声明 CIMD，也不支持 refresh token；有限期 access token 过期后需重新连接。远程调用来自 Anthropic 服务器，因此不能使用仅 localhost 或私有网络可达的地址。Team 和 Enterprise 的连接器需先由有权限的组织管理员添加。
+
+参见 [Claude 自定义连接器接入说明](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) 与 [OAuth 要求](https://claude.com/docs/connectors/building/authentication)。
 
 ## Web 前端与发布
 

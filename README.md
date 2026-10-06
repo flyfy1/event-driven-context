@@ -371,7 +371,7 @@ edc setup --apply claude-code
 
 Setup does not add MCP. If the project's `.mcp.json` contains a legacy `event-driven-context` or `event-context` entry, setup removes that entry while preserving other MCP services.
 
-### Remote Streamable HTTP: ChatGPT OAuth, OpenAI API, and Generic MCP Clients
+### Remote Streamable HTTP: ChatGPT / Claude Web OAuth, OpenAI API, and Generic MCP Clients
 
 The server URL is:
 
@@ -399,7 +399,7 @@ The production MCP endpoint is:
 https://context-api.integ.life/mcp
 ```
 
-It continues to support the static Bearer-token access described above and also provides OAuth 2.1 Authorization Code + PKCE, accepting only S256, for browser-based clients such as ChatGPT:
+It continues to support the static Bearer-token access described above and also provides OAuth 2.1 Authorization Code + PKCE, accepting only S256, for browser-based clients such as ChatGPT and Claude Web:
 
 - Protected Resource Metadata: `https://context-api.integ.life/.well-known/oauth-protected-resource/mcp` (the root-path version is also supported). The `WWW-Authenticate` header returned by unauthenticated `/mcp` requests points here.
 - Authorization Server Metadata: `https://context-api.integ.life/.well-known/oauth-authorization-server`.
@@ -448,6 +448,14 @@ OAuth login, registration, error messages, and authorization confirmation pages 
 The user then verifies the client, resource, and scopes on the authorization page and confirms authorization.
 
 ChatGPT itself also displays a warning indicating that the custom MCP has not been reviewed by OpenAI. Confirming authorization allows the third-party MCP to read from or append to projects that the user is authorized to access. Proceed only after verifying the URL, tools, and scopes.
+
+#### Claude Web Custom Connector
+
+In Claude on `claude.ai`, open **Customize → Connectors → Add custom connector**. Name it `Event-driven Context` and use your publicly reachable HTTPS MCP URL, for example `https://context-api.integ.life/mcp` for the maintained deployment or `https://YOUR_HOST/mcp` for your own server. Choose OAuth sign-in and **Register automatically** if Claude offers an OAuth client choice; leave client ID and secret blank. Sign in and approve access, then enable the connector from **+ → Connectors** in a new chat. The workspace's Connect panel includes a verification prompt for the selected project.
+
+Claude uses the existing discovery and public-client DCR flow with S256 PKCE. The exact callback `https://claude.ai/api/mcp/auth_callback` is registered from Claude's DCR request; it must match during authorization and token exchange. No separate endpoint or manual callback allowlist is required. This server does not advertise CIMD or support refresh tokens; reconnect after a finite access token expires. Remote calls come from Anthropic's servers, so a localhost-only or private-network endpoint cannot be used here. Team and Enterprise connectors must first be added by an authorized organization administrator.
+
+See [Claude's custom connector setup](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) and [OAuth requirements](https://claude.com/docs/connectors/building/authentication).
 
 ## Web Frontend and Deployment
 

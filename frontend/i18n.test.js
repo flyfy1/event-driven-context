@@ -104,7 +104,9 @@ for (const api of ["https://context-api.integ.life", "http://127.0.0.1:8401"]) {
   for (const locale of supportedLocales) {
     const elements = new Map();
     const projectID = "prj_l4wcypqzs2be2pmyza3injqyw7";
+    const endpointElements = [{}, {}];
     const scope = {
+      document: { querySelectorAll: () => endpointElements },
       API: api, URL, state: { project: { id: projectID }, locale },
       window: { location: { href: "https://context.integ.life/workspace.html?project=prj_old&locale=en" } },
       $: selector => { if (!elements.has(selector)) elements.set(selector, {}); return elements.get(selector); },
@@ -118,6 +120,20 @@ for (const api of ["https://context-api.integ.life", "http://127.0.0.1:8401"]) {
     assert.equal(guide.searchParams.get("locale"), locale);
     assert.ok(elements.get("#agent-setup-prompt").textContent.includes(guide.href));
     assert.ok(elements.get("#agent-setup-prompt").textContent.includes(projectID));
+    assert.equal(elements.get("#integration-mcp-url").textContent, api + "/mcp");
+    for (const element of endpointElements) assert.equal(element.textContent, api + "/mcp");
+    for (const selector of ["#chatgpt-verify-prompt", "#claude-verify-prompt"]) {
+      const prompt = elements.get(selector).textContent;
+      assert.ok(prompt.includes(projectID));
+      assert.doesNotMatch(prompt, /\{project_id\}/);
+    }
+    // Switching project must refresh both remote clients' copied prompts.
+    scope.state.project = { id: "prj_next" };
+    vm.runInNewContext("renderIntegration();", scope);
+    for (const selector of ["#chatgpt-verify-prompt", "#claude-verify-prompt"]) {
+      assert.ok(elements.get(selector).textContent.includes("prj_next"));
+      assert.ok(!elements.get(selector).textContent.includes(projectID));
+    }
   }
 }
 

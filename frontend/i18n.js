@@ -860,7 +860,15 @@
   });
 
   Object.assign(translations.en, {
-    integrationHint: "Local Codex and Claude use the authenticated edc CLI; ChatGPT connects separately through MCP and OAuth.", connectionDetails: "Connection details", mcpEndpoint: "ChatGPT MCP endpoint", recommended: "Recommended", developerMode: "Developer mode",
+    customConnector: "Custom connector",
+    claudeSetupTitle: "Add a custom MCP connector",
+    claudeSetupBody: "Connect Claude on claude.ai to this project's Context server with OAuth.",
+    claudeStepOne: "Open Claude, go to Customize → Connectors, and choose Add custom connector.",
+    claudeStepThree: "Choose OAuth sign-in and “Register automatically” if prompted. Leave client ID and secret blank, then complete Integ.Life sign-in and authorization.",
+    claudeStepFour: "In a new chat, open + → Connectors, enable Event-driven Context, and run the verification prompt below.",
+    openClaudeConnector: "Open Claude ↗",
+    claudeAvailability: "Team and Enterprise connectors must first be added by an authorized administrator. Use a public HTTPS MCP URL; Claude connects from Anthropic's servers.",
+    integrationHint: "Local Codex and Claude Code use the authenticated edc CLI; ChatGPT and Claude Web connect through MCP and OAuth.", connectionDetails: "Connection details", mcpEndpoint: "Remote MCP endpoint", recommended: "Recommended", developerMode: "Developer mode",
     agentSetupTitle: "Set up the local CLI", agentSetupBody: "Open Claude Code or Codex in the working directory, then paste the instruction below. The agent will use your authenticated edc CLI directly and install the recorder Skill; it will not add MCP.",
     agentSetupStepOne: "Paste the project-specific instruction into your local coding agent.", agentSetupStepTwo: "Let the agent run edc whoami. If login is needed, complete edc login privately in your terminal.", agentSetupStepThree: "Do not stop at configuration: let the agent run edc query and verify this project.",
     pasteIntoAgent: "Paste into your agent", copyInstruction: "Copy instruction", openAgentGuide: "Open agent setup guide ↗", openRecorderSkill: "Read edc-recorder Skill ↗", downloadRecorderSkill: "Download Skill ↓",
@@ -868,10 +876,18 @@
     chatGPTStepOne: "Open the “Create connector” link below. Enable Developer mode if ChatGPT asks.", chatGPTStepTwoPrefix: "Set the name to", chatGPTStepTwoMiddle: ", and the MCP URL to", chatGPTStepThree: "Choose OAuth authentication, scan the tools, then complete Integ.Life sign-in and authorization.", chatGPTStepFour: "Create or save the connector. In a new chat, enable it for the message and run the verification prompt below.",
     openChatGPTConnector: "Open ChatGPT connector setup ↗", verifyConnection: "Verify the connection", copyPrompt: "Copy prompt", chatGPTAvailability: "Custom MCP connectors require an eligible ChatGPT plan and may be controlled by your workspace administrator.",
     agentSetupPrompt: "Read {guide_url} and set up Event-driven Context for project {project_id} in this working directory. Use the authenticated edc CLI directly; do not configure MCP for this local agent. Install the edc-recorder Skill from {skill_url}, inspect existing files first, and preserve unrelated entries. Never open the CLI credential file or ask me to paste a token into chat. If edc whoami is unauthenticated, ask me to run edc login privately. Finish with real edc project list, edc query, and edc state list calls for project {project_id}; report the result, not just that configuration exists.",
-    chatGPTVerifyPrompt: "Use Event-driven Context to list my projects, then read recent records from project {project_id}. Report the project name, newest record UUID, and any current project-brief State or lag. Do not write anything yet."
+    remoteVerifyPrompt: "Use Event-driven Context to list my projects, then read recent records from project {project_id}. Report the project name, newest record UUID, and any current project-brief State or lag. Do not write anything yet."
   });
   Object.assign(translations["zh-CN"], {
-    integrationHint: "本地 Codex 和 Claude 使用已登录的 edc CLI；ChatGPT 另行通过 MCP 和 OAuth 接入。", connectionDetails: "接入信息", mcpEndpoint: "ChatGPT MCP 地址", recommended: "推荐", developerMode: "开发者模式",
+    customConnector: "自定义连接器",
+    claudeSetupTitle: "添加自定义 MCP 连接器",
+    claudeSetupBody: "通过 OAuth 将 claude.ai 网页端连接到此项目的 Context 服务。",
+    claudeStepOne: "打开 Claude，进入 Customize（自定义）→ Connectors（连接器），选择 Add custom connector（添加自定义连接器）。",
+    claudeStepThree: "选择 OAuth 登录；如出现 OAuth 客户端选项，选择 Register automatically（自动注册）。客户端 ID 和 secret 留空，然后完成 Integ.Life 登录与授权。",
+    claudeStepFour: "在新对话中打开 + → Connectors，启用 Event-driven Context，再运行下方验证提示词。",
+    openClaudeConnector: "打开 Claude ↗",
+    claudeAvailability: "Team 和 Enterprise 的连接器需先由有权限的管理员添加。MCP 地址必须是公网可访问的 HTTPS 地址；Claude 从 Anthropic 服务器连接。",
+    integrationHint: "本地 Codex 和 Claude Code 使用已登录的 edc CLI；ChatGPT 和 Claude 网页端通过 MCP 和 OAuth 接入。", connectionDetails: "接入信息", mcpEndpoint: "远程 MCP 地址", recommended: "推荐", developerMode: "开发者模式",
     agentSetupTitle: "配置本地 CLI", agentSetupBody: "在工作目录中打开 Claude Code 或 Codex，再粘贴下面的指令。Agent 会直接使用已登录的 edc CLI，并安装记录 Skill；不会添加 MCP。",
     agentSetupStepOne: "把项目专属指令发给本地编程 Agent。", agentSetupStepTwo: "让 Agent 运行 edc whoami；如需登录，由你在终端里私密执行 edc login。", agentSetupStepThree: "不要停在“已配置”：让 Agent 运行 edc query，实际验证这个项目。",
     pasteIntoAgent: "复制给 Agent", copyInstruction: "复制指令", openAgentGuide: "打开 Agent 接入说明 ↗", openRecorderSkill: "查看 edc-recorder Skill ↗", downloadRecorderSkill: "下载 Skill ↓",
@@ -879,10 +895,18 @@
     chatGPTStepOne: "打开下方“新建连接器”链接；如果 ChatGPT 提示，请先开启开发者模式。", chatGPTStepTwoPrefix: "名称填写", chatGPTStepTwoMiddle: "，MCP 地址填写", chatGPTStepThree: "身份验证选择 OAuth，扫描工具，然后完成 Integ.Life 登录与授权。", chatGPTStepFour: "创建或保存连接器。在新对话中为当前消息启用它，再运行下方验证提示词。",
     openChatGPTConnector: "打开 ChatGPT 新建 Plugin ↗", verifyConnection: "验证接入", copyPrompt: "复制提示词", chatGPTAvailability: "自定义 MCP Plugin 需要 ChatGPT 支持的套餐，也可能受工作区管理员策略限制。",
     agentSetupPrompt: "请阅读 {guide_url}，在当前工作目录为项目 {project_id} 配置 Event-driven Context。直接使用已登录的 edc CLI，不要为这个本地 Agent 配置 MCP。从 {skill_url} 安装 edc-recorder Skill；先检查已有文件并保留无关内容。不要打开 CLI 凭据文件，也不要让我把 token 粘贴到对话中。如果 edc whoami 未登录，请让我在终端里私密执行 edc login。最后用 edc project list、edc query 和 edc state list 实际读取项目 {project_id}，汇报真实结果，不要只说配置存在。",
-    chatGPTVerifyPrompt: "使用 Event-driven Context 列出我的项目，然后读取项目 {project_id} 的最近记录。告诉我项目名称、最新记录 UUID，以及当前 project-brief State 或落后程度。本次只读，不要写入。"
+    remoteVerifyPrompt: "使用 Event-driven Context 列出我的项目，然后读取项目 {project_id} 的最近记录。告诉我项目名称、最新记录 UUID，以及当前 project-brief State 或落后程度。本次只读，不要写入。"
   });
   Object.assign(translations.ms, {
-    integrationHint: "Codex dan Claude setempat menggunakan CLI edc yang telah log masuk; ChatGPT menggunakan MCP dan OAuth secara berasingan.", connectionDetails: "Butiran sambungan", mcpEndpoint: "Endpoint MCP ChatGPT", recommended: "Disyorkan", developerMode: "Mod pembangun",
+    customConnector: "Penyambung tersuai",
+    claudeSetupTitle: "Tambah penyambung MCP tersuai",
+    claudeSetupBody: "Sambungkan Claude di claude.ai kepada pelayan Context projek ini melalui OAuth.",
+    claudeStepOne: "Buka Claude, pergi ke Customize → Connectors, kemudian pilih Add custom connector.",
+    claudeStepThree: "Pilih log masuk OAuth dan “Register automatically” jika diminta. Biarkan ID dan rahsia klien kosong, kemudian lengkapkan log masuk dan kebenaran Integ.Life.",
+    claudeStepFour: "Dalam sembang baharu, buka + → Connectors, dayakan Event-driven Context dan jalankan prompt pengesahan di bawah.",
+    openClaudeConnector: "Buka Claude ↗",
+    claudeAvailability: "Penyambung Team dan Enterprise mesti ditambah oleh pentadbir yang diberi kuasa terlebih dahulu. Gunakan URL MCP HTTPS awam; Claude menyambung dari pelayan Anthropic.",
+    integrationHint: "Codex dan Claude Code setempat menggunakan CLI edc yang telah log masuk; ChatGPT dan Claude Web menggunakan MCP dan OAuth.", connectionDetails: "Butiran sambungan", mcpEndpoint: "Endpoint MCP jauh", recommended: "Disyorkan", developerMode: "Mod pembangun",
     agentSetupTitle: "Sediakan CLI setempat", agentSetupBody: "Buka Claude Code atau Codex dalam direktori kerja, kemudian tampal arahan di bawah. Agent menggunakan CLI edc yang telah log masuk secara terus dan memasang Skill perakam; MCP tidak ditambah.",
     agentSetupStepOne: "Tampal arahan khusus projek ke dalam agent pengekodan setempat.", agentSetupStepTwo: "Biarkan agent menjalankan edc whoami. Jika perlu, jalankan edc login secara peribadi dalam terminal.", agentSetupStepThree: "Jangan berhenti pada konfigurasi: biarkan agent menjalankan edc query untuk mengesahkan projek ini.",
     pasteIntoAgent: "Tampal ke dalam agent", copyInstruction: "Salin arahan", openAgentGuide: "Buka panduan persediaan agent ↗", openRecorderSkill: "Baca Skill edc-recorder ↗", downloadRecorderSkill: "Muat turun Skill ↓",
@@ -890,10 +914,18 @@
     chatGPTStepOne: "Buka pautan ‘Create connector’ di bawah. Dayakan mod pembangun jika diminta.", chatGPTStepTwoPrefix: "Tetapkan nama kepada", chatGPTStepTwoMiddle: ", dan URL MCP kepada", chatGPTStepThree: "Pilih pengesahan OAuth, imbas alat, kemudian lengkapkan log masuk dan kebenaran Integ.Life.", chatGPTStepFour: "Cipta atau simpan penyambung. Dalam sembang baharu, dayakannya untuk mesej dan jalankan arahan pengesahan di bawah.",
     openChatGPTConnector: "Buka persediaan penyambung ChatGPT ↗", verifyConnection: "Sahkan sambungan", copyPrompt: "Salin prompt", chatGPTAvailability: "Penyambung MCP tersuai memerlukan pelan ChatGPT yang layak dan mungkin dikawal oleh pentadbir ruang kerja.",
     agentSetupPrompt: "Baca {guide_url} dan sediakan Event-driven Context untuk projek {project_id} dalam direktori kerja ini. Gunakan CLI edc yang telah log masuk secara terus; jangan konfigurasi MCP untuk agent setempat ini. Pasang Skill edc-recorder daripada {skill_url}, periksa fail sedia ada dan kekalkan kandungan lain. Jangan buka fail kelayakan CLI atau minta token dalam sembang. Jika edc whoami belum log masuk, minta saya menjalankan edc login secara peribadi. Akhiri dengan edc project list, edc query dan edc state list sebenar untuk projek {project_id}.",
-    chatGPTVerifyPrompt: "Gunakan Event-driven Context untuk menyenaraikan projek saya, kemudian baca rekod terbaru daripada projek {project_id}. Laporkan nama projek, UUID rekod terkini, dan State project-brief atau ketinggalan semasa. Jangan tulis apa-apa lagi."
+    remoteVerifyPrompt: "Gunakan Event-driven Context untuk menyenaraikan projek saya, kemudian baca rekod terbaru daripada projek {project_id}. Laporkan nama projek, UUID rekod terkini, dan State project-brief atau ketinggalan semasa. Jangan tulis apa-apa lagi."
   });
   Object.assign(translations.hi, {
-    integrationHint: "स्थानीय Codex और Claude लॉग-इन किए हुए edc CLI का उपयोग करते हैं; ChatGPT अलग से MCP और OAuth से जुड़ता है।", connectionDetails: "कनेक्शन विवरण", mcpEndpoint: "ChatGPT MCP endpoint", recommended: "सुझाया गया", developerMode: "डेवलपर मोड",
+    customConnector: "कस्टम connector",
+    claudeSetupTitle: "कस्टम MCP connector जोड़ें",
+    claudeSetupBody: "claude.ai पर Claude को OAuth से इस प्रोजेक्ट के Context सर्वर से जोड़ें।",
+    claudeStepOne: "Claude खोलें, Customize → Connectors पर जाएँ और Add custom connector चुनें।",
+    claudeStepThree: "OAuth sign-in चुनें और पूछे जाने पर “Register automatically” चुनें। Client ID और secret खाली छोड़ें, फिर Integ.Life sign-in और authorization पूरा करें।",
+    claudeStepFour: "नई chat में + → Connectors खोलें, Event-driven Context चालू करें और नीचे का verification prompt चलाएँ।",
+    openClaudeConnector: "Claude खोलें ↗",
+    claudeAvailability: "Team और Enterprise में अधिकृत administrator को पहले connector जोड़ना होगा। सार्वजनिक HTTPS MCP URL उपयोग करें; Claude Anthropic के सर्वर से जुड़ता है।",
+    integrationHint: "स्थानीय Codex और Claude Code लॉग-इन किए edc CLI का उपयोग करते हैं; ChatGPT और Claude Web MCP और OAuth से जुड़ते हैं।", connectionDetails: "कनेक्शन विवरण", mcpEndpoint: "Remote MCP endpoint", recommended: "सुझाया गया", developerMode: "डेवलपर मोड",
     agentSetupTitle: "स्थानीय CLI सेट करें", agentSetupBody: "वर्किंग डायरेक्टरी में Claude Code या Codex खोलें और निर्देश चिपकाएँ। Agent लॉग-इन किए edc CLI को सीधे उपयोग करेगा और recorder Skill इंस्टॉल करेगा; MCP नहीं जोड़ेगा।",
     agentSetupStepOne: "प्रोजेक्ट वाला निर्देश स्थानीय coding agent में चिपकाएँ।", agentSetupStepTwo: "Agent को edc whoami चलाने दें। लॉगिन चाहिए तो टर्मिनल में निजी रूप से edc login चलाएँ।", agentSetupStepThree: "सिर्फ configuration पर न रुकें: edc query से यह प्रोजेक्ट वास्तव में जाँचें।",
     pasteIntoAgent: "Agent में चिपकाएँ", copyInstruction: "निर्देश कॉपी करें", openAgentGuide: "Agent setup guide खोलें ↗", openRecorderSkill: "edc-recorder Skill पढ़ें ↗", downloadRecorderSkill: "Skill डाउनलोड करें ↓",
@@ -901,7 +933,7 @@
     chatGPTStepOne: "नीचे ‘Create connector’ लिंक खोलें। पूछे जाने पर Developer mode चालू करें।", chatGPTStepTwoPrefix: "नाम रखें", chatGPTStepTwoMiddle: ", और MCP URL रखें", chatGPTStepThree: "OAuth authentication चुनें, tools scan करें, फिर Integ.Life sign-in और authorization पूरा करें।", chatGPTStepFour: "Connector बनाएँ या सेव करें। नई chat में इस message के लिए इसे चालू करें और नीचे का verification prompt चलाएँ।",
     openChatGPTConnector: "ChatGPT connector setup खोलें ↗", verifyConnection: "कनेक्शन जाँचें", copyPrompt: "Prompt कॉपी करें", chatGPTAvailability: "Custom MCP connector के लिए योग्य ChatGPT plan चाहिए और workspace administrator इसे नियंत्रित कर सकता है।",
     agentSetupPrompt: "{guide_url} पढ़ें और इस working directory में project {project_id} के लिए Event-driven Context सेट करें। लॉग-इन किए edc CLI को सीधे उपयोग करें; इस local agent के लिए MCP configure न करें। {skill_url} से edc-recorder Skill इंस्टॉल करें, मौजूदा files जाँचें और असंबंधित content बचाएँ। CLI credential file न खोलें और chat में token न माँगें। edc whoami लॉग-इन न हो तो मुझसे terminal में निजी रूप से edc login चलाने को कहें। अंत में project {project_id} के लिए edc project list, edc query और edc state list वास्तव में चलाकर परिणाम बताएँ।",
-    chatGPTVerifyPrompt: "Event-driven Context से मेरे projects सूचीबद्ध करें, फिर project {project_id} के हाल के records पढ़ें। Project name, नवीनतम record UUID और मौजूदा project-brief State या lag बताएँ। अभी कुछ न लिखें।"
+    remoteVerifyPrompt: "Event-driven Context से मेरे projects सूचीबद्ध करें, फिर project {project_id} के हाल के records पढ़ें। Project name, नवीनतम record UUID और मौजूदा project-brief State या lag बताएँ। अभी कुछ न लिखें।"
   });
 
   Object.assign(translations.en, {

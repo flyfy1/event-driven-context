@@ -715,9 +715,14 @@ function renderIntegration() {
   guideURL.searchParams.set("locale", state.locale);
   const skillURL = new URL("./skills/edc-recorder/SKILL.md", window.location.href).href;
   $("#integration-project-id").textContent = projectID;
+  const mcpURL = API + "/mcp";
+  $("#integration-mcp-url").textContent = mcpURL;
+  document.querySelectorAll("[data-mcp-url]").forEach(element => { element.textContent = mcpURL; });
   $("#agent-setup-guide-link").href = guideURL.href;
   $("#agent-setup-prompt").textContent = t("agentSetupPrompt", { guide_url: guideURL.href, project_id: projectID, skill_url: skillURL });
-  $("#chatgpt-verify-prompt").textContent = t("chatGPTVerifyPrompt", { project_id: projectID });
+  const verifyPrompt = t("remoteVerifyPrompt", { project_id: projectID });
+  $("#chatgpt-verify-prompt").textContent = verifyPrompt;
+  $("#claude-verify-prompt").textContent = verifyPrompt;
 }
 async function loadMembers() {
   if (!state.project) return;

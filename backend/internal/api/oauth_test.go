@@ -16,16 +16,18 @@ import (
 	"time"
 
 	"event-driven-context/internal/core"
+	"event-driven-context/internal/v2"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
 const testOAuthIssuer = "https://context-api.integ.life"
 
 type oauthFixture struct {
-	store    *core.Store
-	server   *httptest.Server
-	client   *http.Client
-	clientID string
+	store       *core.Store
+	server      *httptest.Server
+	client      *http.Client
+	clientID    string
+	redirectURI string
 }
 
 func newOAuthFixture(t *testing.T, ttl time.Duration) *oauthFixture {
@@ -554,10 +556,14 @@ func (f *oauthFixture) exchangeAuthorizationCode(t *testing.T, code, verifier st
 
 func (f *oauthFixture) authorize(t *testing.T, scope string) (accessToken string) {
 	t.Helper()
+	redirectURI := f.redirectURI
+	if redirectURI == "" {
+		redirectURI = "https://client.example/callback"
+	}
 	verifier := strings.Repeat("v", 64)
 	sum := sha256.Sum256([]byte(verifier))
 	q := url.Values{
-		"response_type": {"code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"},
+		"response_type": {"code"}, "client_id": {f.clientID}, "redirect_uri": {redirectURI},
 		"state": {"client-state"}, "code_challenge": {base64.RawURLEncoding.EncodeToString(sum[:])},
 		"code_challenge_method": {"S256"}, "resource": {testOAuthIssuer + "/mcp"}, "scope": {scope},
 	}
@@ -596,11 +602,11 @@ func (f *oauthFixture) authorize(t *testing.T, scope string) (accessToken string
 		t.Fatalf("consent: %d", res.StatusCode)
 	}
 	callback, _ := url.Parse(res.Header.Get("Location"))
-	if callback.Query().Get("state") != "client-state" || callback.Query().Get("iss") != testOAuthIssuer {
+	if callback.Scheme+"://"+callback.Host+callback.Path != redirectURI || callback.Query().Get("state") != "client-state" || callback.Query().Get("iss") != testOAuthIssuer {
 		t.Fatalf("callback binding missing: %s", callback)
 	}
 	code := callback.Query().Get("code")
-	wrongResource := url.Values{"grant_type": {"authorization_code"}, "client_id": {f.clientID}, "redirect_uri": {"https://client.example/callback"}, "code": {code}, "code_verifier": {verifier}, "resource": {"https://wrong.example/mcp"}}
+	wrongResource := url.Values{"grant_type": {"authorization_code"}, "client_id": {f.clientID}, "redirect_uri": {redirectURI}, "code": {code}, "code_verifier": {verifier}, "resource": {"https://wrong.example/mcp"}}
 	res = f.do(t, http.MethodPost, "/oauth/token", "application/x-www-form-urlencoded", wrongResource.Encode())
 	res.Body.Close()
 	if res.StatusCode != http.StatusBadRequest {
@@ -738,5 +744,67 @@ func TestOAuthRejectsUnsupportedScopeAndResource(t *testing.T) {
 	res.Body.Close()
 	if res.StatusCode != http.StatusBadRequest {
 		t.Fatalf("wrong authorization resource accepted: %d", res.StatusCode)
+	}
+}
+
+// Exercise Claude's hosted callback and public-client registration against the
+// production V2 handler, including OAuth and actual MCP tool calls.
+func TestOAuthClaudeWebV2EndToEnd(t *testing.T) {
+	f := newOAuthFixture(t, 0)
+	service, err := v2.New(f.store, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = service.Close() })
+	server := httptest.NewTLSServer(V2HandlerWithConfig(f.store, service, Config{PublicBaseURL: testOAuthIssuer}))
+	t.Cleanup(server.Close)
+	f.server = server
+	f.client = server.Client()
+	f.client.Jar, _ = cookiejar.New(nil)
+	f.client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+	f.redirectURI = "https://claude.ai/api/mcp/auth_callback"
+	res := f.do(t, http.MethodPost, "/oauth/register", "application/json", `{"client_name":"Claude","redirect_uris":["https://claude.ai/api/mcp/auth_callback"],"grant_types":["authorization_code","refresh_token"],"response_types":["code"],"token_endpoint_auth_method":"none"}`)
+	var registration struct {
+		ClientID     string   `json:"client_id"`
+		RedirectURIs []string `json:"redirect_uris"`
+		GrantTypes   []string `json:"grant_types"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&registration)
+	res.Body.Close()
+	if res.StatusCode != http.StatusCreated || err != nil || registration.ClientID == "" || len(registration.RedirectURIs) != 1 || registration.RedirectURIs[0] != f.redirectURI || len(registration.GrantTypes) != 1 || registration.GrantTypes[0] != "authorization_code" {
+		t.Fatalf("Claude DCR: %d %+v %v", res.StatusCode, registration, err)
+	}
+	f.clientID = registration.ClientID
+	// authorize also checks the exact callback, rejects wrong audiences and
+	// PKCE verifiers, and prevents replay of the authorization code.
+	token := f.authorize(t, core.ScopeRead)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	httpClient := &http.Client{Transport: oauthBearerTransport{base: server.Client().Transport, token: token}}
+	session, err := mcp.NewClient(&mcp.Implementation{Name: "Claude", Version: "test"}, nil).Connect(ctx, &mcp.StreamableClientTransport{Endpoint: server.URL + "/mcp", HTTPClient: httpClient}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer session.Close()
+	tools, err := session.ListTools(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"list_projects", "query_events", "list_state", "record_events"} {
+		found := false
+		for _, tool := range tools.Tools {
+			found = found || tool.Name == name
+		}
+		if !found {
+			t.Fatalf("Claude cannot discover %s", name)
+		}
+	}
+	result, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "list_projects", Arguments: core.Empty{}})
+	if err != nil || result.IsError {
+		t.Fatalf("Claude read tool: %+v %v", result, err)
+	}
+	result, err = session.CallTool(ctx, &mcp.CallToolParams{Name: "create_project", Arguments: core.ProjectInput{Name: "not allowed"}})
+	if err != nil || !result.IsError {
+		t.Fatalf("Claude read-only token allowed a write: %+v %v", result, err)
 	}
 }

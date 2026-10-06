@@ -158,10 +158,10 @@
           </section>
 
           <section id="integration-panel" class="workspace-panel hidden" data-workspace-panel="integration" aria-labelledby="integration-title">
-            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Local Codex and Claude use the authenticated edc CLI; ChatGPT connects separately through MCP and OAuth.</p></div></div>
+            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="integrationEyebrow">CONNECT</p><h3 id="integration-title" data-i18n="integrationTitle">Connect this project</h3><p class="muted" data-i18n="integrationHint">Local Codex and Claude Code use the authenticated edc CLI; ChatGPT and Claude Web connect through MCP and OAuth.</p></div></div>
             <div class="integration-context-bar" aria-label="Connection details" data-i18n-aria-label="connectionDetails">
               <div><strong data-i18n="selectedProject">Selected project</strong><code id="integration-project-id"></code></div>
-              <div><strong data-i18n="mcpEndpoint">ChatGPT MCP endpoint</strong><code id="integration-mcp-url">https://context-api.integ.life/mcp</code><button class="quiet" type="button" data-copy-command="integration-mcp-url" data-i18n="copyCommand">Copy</button></div>
+              <div><strong data-i18n="mcpEndpoint">Remote MCP endpoint</strong><code id="integration-mcp-url">https://context-api.integ.life/mcp</code><button class="quiet" type="button" data-copy-command="integration-mcp-url" data-i18n="copyCommand">Copy</button></div>
             </div>
             <div class="connect-methods">
               <article class="connect-card agent-connect-card">
@@ -188,7 +188,7 @@
                 <p class="muted" data-i18n="chatGPTSetupBody">Open ChatGPT's Plugin connector form, enter the Context MCP URL, choose OAuth, and authorize your Integ.Life account.</p>
                 <ol class="connect-checklist chatgpt-steps">
                   <li data-i18n="chatGPTStepOne">Open the “Create connector” link below. Enable Developer mode if ChatGPT asks.</li>
-                  <li><span data-i18n="chatGPTStepTwoPrefix">Set the name to</span> <code>Event-driven Context</code><span data-i18n="chatGPTStepTwoMiddle">, and the MCP URL to</span> <code>https://context-api.integ.life/mcp</code>.</li>
+                  <li><span data-i18n="chatGPTStepTwoPrefix">Set the name to</span> <code>Event-driven Context</code><span data-i18n="chatGPTStepTwoMiddle">, and the MCP URL to</span> <code data-mcp-url>https://context-api.integ.life/mcp</code>.</li>
                   <li data-i18n="chatGPTStepThree">Choose OAuth authentication, scan the tools, then complete Integ.Life sign-in and authorization.</li>
                   <li data-i18n="chatGPTStepFour">Create or save the connector. In a new chat, enable it for the message and run the verification prompt below.</li>
                 </ol>
@@ -196,6 +196,22 @@
                 <div class="prompt-label" data-i18n="verifyConnection">Verify the connection</div>
                 <div class="command-row prompt-row"><code id="chatgpt-verify-prompt"></code><button class="quiet" type="button" data-copy-command="chatgpt-verify-prompt" data-i18n="copyPrompt">Copy prompt</button></div>
                 <p class="setup-note" data-i18n="chatGPTAvailability">Custom MCP connectors require an eligible ChatGPT plan and may be controlled by your workspace administrator.</p>
+              </article>
+
+              <article class="connect-card claude-connect-card">
+                <div class="connect-card-meta"><span>Claude Web</span><span class="status-badge" data-i18n="customConnector">Custom connector</span></div>
+                <h4 data-i18n="claudeSetupTitle">Add a custom MCP connector</h4>
+                <p class="muted" data-i18n="claudeSetupBody">Connect Claude on claude.ai to this project's Context server with OAuth.</p>
+                <ol class="connect-checklist">
+                  <li data-i18n="claudeStepOne">Open Claude, go to Customize → Connectors, and choose Add custom connector.</li>
+                  <li><span data-i18n="chatGPTStepTwoPrefix">Set the name to</span> <code>Event-driven Context</code><span data-i18n="chatGPTStepTwoMiddle">, and the MCP URL to</span> <code data-mcp-url>https://context-api.integ.life/mcp</code>.</li>
+                  <li data-i18n="claudeStepThree">Choose OAuth sign-in and “Register automatically” if prompted. Leave client ID and secret blank, then complete Integ.Life sign-in and authorization.</li>
+                  <li data-i18n="claudeStepFour">In a new chat, open + → Connectors, enable Event-driven Context, and run the verification prompt below.</li>
+                </ol>
+                <a class="primary-link" href="https://claude.ai" target="_blank" rel="noopener" data-i18n="openClaudeConnector">Open Claude ↗</a>
+                <div class="prompt-label" data-i18n="verifyConnection">Verify the connection</div>
+                <div class="command-row prompt-row"><code id="claude-verify-prompt"></code><button class="quiet" type="button" data-copy-command="claude-verify-prompt" data-i18n="copyPrompt">Copy prompt</button></div>
+                <p class="setup-note" data-i18n="claudeAvailability">Team and Enterprise connectors must first be added by an authorized administrator. Use a public HTTPS MCP URL; Claude connects from Anthropic's servers.</p>
               </article>
             </div>
             <section class="members-card integration-members-card" aria-labelledby="members-title">
