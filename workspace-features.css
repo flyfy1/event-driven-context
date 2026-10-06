@@ -249,7 +249,9 @@ select {
   border-radius: 7px;
   background: #fff;
 }
+.agent-connect-card { grid-column: 1 / -1; }
 .chatgpt-connect-card { border-top-color: var(--dark); }
+.claude-connect-card { border-top-color: #c96442; }
 .connect-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; font: 12px var(--mono); }
 .connect-card-meta > span:first-child { color: var(--muted); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .connect-card h4 { margin: 0 0 8px; font-size: 21px; }
