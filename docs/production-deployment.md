@@ -69,3 +69,5 @@ make deploy-legacy-gce
 ```
 
 This target sets the required `ALLOW_LEGACY_GCE_DEPLOY=1` flag. Its existence is rollback capacity, not permission to run two production writers.
+
+When running on the Pi itself, use `EDC_DEPLOY_SSH_TARGET=local make deploy-prod` for the same builds, stopped-writer backups, immutable release and health checks without SSH loopback authentication.

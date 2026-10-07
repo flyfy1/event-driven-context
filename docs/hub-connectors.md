@@ -33,7 +33,7 @@ Every provider supports separate connections for multiple accounts. Operations a
 | Provider ID | Operations | Setup and boundary |
 | --- | --- | --- |
 | `google-drive` | `files.list`, `files.get`, `files.export` | Google OAuth; metadata and Workspace text/CSV/PDF export, no binary download. |
-| `gmail` | `messages.list`, `messages.get` | Google OAuth; message IDs and MIME payload, no attachment download. |
+| `gmail` | `messages.list`, `messages.get`, `attachments.get` | Google OAuth; message IDs, MIME payload and selected attachment base64url bytes. |
 | `google-calendar` | `calendars.list`, `events.list`, `freebusy.query` | Google OAuth; event/basic busy data with mandatory calendar and time-window grants. |
 | `google-tasks` | `tasklists.list`, `tasks.list` | Google OAuth; one page of task lists or tasks. |
 | `google-contacts` | `contacts.list` | Google OAuth; names, email addresses and phone numbers. |
@@ -51,15 +51,17 @@ Every provider supports separate connections for multiple accounts. Operations a
 | `rss-feed` | `entries.list` | Owner JSON credential `{ "url": "https://example.com/feed.xml" }`; RSS/Atom, no crawling. |
 | `caldav`, `icloud-calendar` | `calendars.query` | Owner collection credentials; original ICS from an explicit window of at most seven days, without recurrence expansion. |
 | `carddav`, `icloud-contacts` | `contacts.list` | Owner collection credentials; bounded contact fields, optional name/email query. |
-| `whatsapp-import` | `records.list` | Owner-selected chat text export; messages and raw provenance, not live WhatsApp access. |
+| `whatsapp-import` | `records.list` | Owner-selected chat text or ZIP export; retained originals and message provenance, not live access. |
+| `telegram-import` | `records.list` | Telegram Desktop JSON snapshot; original messages/chat IDs, not a live session. |
+| `wechat-import` | `records.list` | Owner-prepared UTF-8 CSV; not official export or encrypted backup access. |
 | `calendar-import` | `records.list` | Owner-selected ICS snapshot; original events/recurrence fields, no recurrence expansion. |
 | `markdown-import` | `records.list` | Owner-selected Markdown snapshot; original document content. |
 
 Google Calendar event reads omit descriptions, attendees, attachments and locations. Free/busy output is limited to the requested calendar and clips busy intervals to the approved request. Unknown upstream calendar availability is an error, not an empty free interval. Graph reads project selected fields and strip continuation/download URLs. Calendar and Graph pages report incompleteness without accepting a provider continuation URL. Other providers support only the cursor fields advertised by their schemas; an empty page is not evidence that an account is empty.
 
-`telegram-user`, `whatsapp-business`, `health-connect`, and `google-photos-picker` remain explicit `not_implemented` catalog entries with no operations and are hidden. They need, respectively, an MTProto user-session implementation, verified business-webhook ingestion, a native device collection bridge, and Picker session/media retrieval. Saving credentials does not enable these paths.
+Google Docs/Sheets/Chat, Microsoft Contacts/OneNote/Teams, Asana, Airtable, Linear, GitLab, Box, Discord Bot, Feishu/Lark and durable `whatsapp-business` webhook ingestion are additionally implemented. See [Data source CLI](data-source-cli.md) for complete operations, account setup, paging boundaries and CLI commands. New live providers still require owner-authorized account acceptance.
 
-Standalone WhatsApp Business signature/account validation helpers exist under `backend/internal/hubwebhooks`, without an HTTP route, persistence, replay detection or Agent API. Personal Telegram dependency feasibility is documented, not implemented. See [messaging readiness and prerequisites](hub-messaging-readiness.md) before continuing either source.
+`telegram-user`, `health-connect`, and `google-photos-picker` remain hidden `not_implemented` entries, requiring a user-session implementation, device bridge and Picker session/media retrieval respectively. See [messaging readiness](hub-messaging-readiness.md).
 
 ## Owner setup
 
@@ -80,9 +82,9 @@ DAV setup uses JSON credentials with exactly `url`, `username`, and `password`. 
 
 Configure `EDC_HUB_GOOGLE_CLIENT_ID`, `EDC_HUB_GOOGLE_CLIENT_SECRET`, `EDC_HUB_GOOGLE_REDIRECT_URL`, the encryption key, and the relevant APIs. Register the exact `/v1/hub/google/callback` URL with Google. Allow credentials only from trusted frontend origins; frontend requests include cookies. `GET /v1/hub/google/status` reports validated local configuration, not live Google availability.
 
-Owner `POST /v1/hub/google/start` accepts `provider_id` and `display_name`. The flow binds one-use state and encrypted PKCE to the owner, initiating browser and selected provider, with ten-minute expiry. It checks all returned scopes. Drive/Gmail verify account identity with their provider APIs; Calendar/Tasks/Contacts use OpenID Connect userinfo with `openid`. Tokens are encrypted and refresh on use near expiry, with compare-and-swap protection against reconnect/disconnect races.
+Owner `POST /v1/hub/google/start` accepts `provider_id` and `display_name`. The flow binds one-use state and encrypted PKCE to the owner, initiating browser and selected provider, with ten-minute expiry. It checks all returned scopes. Drive/Gmail verify account identity with their provider APIs; Calendar/Tasks/Contacts/Docs/Sheets/Chat use OpenID Connect userinfo with `openid`. Tokens are encrypted and refresh on use near expiry, with compare-and-swap protection against reconnect/disconnect races.
 
-Requested scopes are `drive.readonly`, `gmail.readonly`, Calendar's `calendar.calendarlist.readonly` + `calendar.events.readonly` + `calendar.events.freebusy`, `tasks.readonly`, or `contacts.readonly`, as appropriate. The new personal-data providers also request `openid`. Calendar onboarding currently requests the event and free/busy scopes together, even if an Agent later requests only free/busy. Google consent is account-wide; the Hub enforces narrower Agent grants separately. Selected-file Picker and availability-only OAuth onboarding are not implemented.
+Requested scopes are `drive.readonly`, `gmail.readonly`, Calendar's `calendar.calendarlist.readonly` + `calendar.events.readonly` + `calendar.events.freebusy`, `tasks.readonly`, `contacts.readonly`, `documents.readonly`, `spreadsheets.readonly`, or Chat’s `chat.spaces.readonly` + `chat.messages.readonly`, as appropriate. The new personal-data providers also request `openid`. Calendar onboarding currently requests the event and free/busy scopes together, even if an Agent later requests only free/busy. Google consent is account-wide; the Hub enforces narrower Agent grants separately. Selected-file Picker and availability-only OAuth onboarding are not implemented.
 
 ## Scoped Calendar grants
 

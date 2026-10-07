@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -18,12 +19,13 @@ import (
 const HubImportMaxBytes = 1 << 20
 
 type HubImportInput struct {
-	ProviderID  string `json:"provider_id"`
-	AccountID   string `json:"account_id"`
-	DisplayName string `json:"display_name"`
-	Filename    string `json:"filename"`
-	Format      string `json:"format"`
-	Content     string `json:"content"`
+	ProviderID    string `json:"provider_id"`
+	AccountID     string `json:"account_id"`
+	DisplayName   string `json:"display_name"`
+	Filename      string `json:"filename"`
+	Format        string `json:"format"`
+	Content       string `json:"content"`
+	ContentBase64 string `json:"content_base64,omitempty"`
 }
 type HubImportMetadata struct {
 	ID          string    `json:"id"`
@@ -74,7 +76,7 @@ type hubImportManifest struct {
 var hubImportID = regexp.MustCompile(`^import_[a-z0-9]{20,64}$`)
 
 func hubImportFormat(provider, format string) bool {
-	return provider == "whatsapp-import" && format == "whatsapp-text" || provider == "calendar-import" && format == "ics" || provider == "markdown-import" && format == "markdown"
+	return provider == "telegram-import" && format == "telegram-json" || provider == "wechat-import" && format == "wechat-csv" || provider == "whatsapp-import" && (format == "whatsapp-text" || format == "whatsapp-zip") || provider == "calendar-import" && format == "ics" || provider == "markdown-import" && format == "markdown"
 }
 func hubImportFailure() error {
 	return &Error{Code: "storage_unavailable", Message: "import snapshot is unavailable"}
@@ -91,18 +93,28 @@ func (s *Store) ImportHubSnapshot(ctx context.Context, in HubImportInput, key []
 	if !hubImportFormat(in.ProviderID, in.Format) || !hubText(in.AccountID, 254) || !hubText(in.DisplayName, 150) || !hubText(in.Filename, 255) || strings.ContainsAny(in.Filename, "/\\") || in.Filename == "." || in.Filename == ".." {
 		return out, Invalid("supported provider, format, account, display name and plain filename are required")
 	}
-	if len(in.Content) == 0 || len(in.Content) > HubImportMaxBytes || !utf8.ValidString(in.Content) || strings.ContainsRune(in.Content, '\x00') {
+	source := []byte(in.Content)
+	if in.Format == "whatsapp-zip" {
+		if in.Content != "" || in.ContentBase64 == "" || len(in.ContentBase64) > base64.StdEncoding.EncodedLen(HubImportArchiveMaxBytes) {
+			return out, Invalid("ZIP requires bounded content_base64 only")
+		}
+		var err error
+		source, err = base64.StdEncoding.Strict().DecodeString(in.ContentBase64)
+		if err != nil || len(source) == 0 || len(source) > HubImportArchiveMaxBytes {
+			return out, Invalid("ZIP must be valid base64, max 10 MiB")
+		}
+	} else if in.ContentBase64 != "" || len(source) == 0 || len(source) > HubImportMaxBytes || !utf8.Valid(source) || bytes.ContainsRune(source, 0) {
 		return out, Invalid("import content must be non-empty UTF-8 text, max 1 MiB, without NUL")
 	}
 	if _, err := hubCipher(key); err != nil {
 		return out, err
 	}
-	records, parsing, limitations, err := parseHubImport(in.Format, in.Content)
+	records, parsing, limitations, err := parseHubImportSource(in.Format, source)
 	if err != nil {
 		return out, err
 	}
-	checksum := sha256.Sum256([]byte(in.Content))
-	metadata := HubImportMetadata{ID: newID("import"), ProviderID: in.ProviderID, Filename: in.Filename, Format: in.Format, CreatedAt: time.Now().UTC(), Bytes: len(in.Content), SHA256: hex.EncodeToString(checksum[:]), RecordCount: len(records), Snapshot: true, Live: false, Parsing: parsing, Limitations: limitations}
+	checksum := sha256.Sum256(source)
+	metadata := HubImportMetadata{ID: newID("import"), ProviderID: in.ProviderID, Filename: in.Filename, Format: in.Format, CreatedAt: time.Now().UTC(), Bytes: len(source), SHA256: hex.EncodeToString(checksum[:]), RecordCount: len(records), Snapshot: true, Live: false, Parsing: parsing, Limitations: limitations}
 	manifest := hubImportManifest{Metadata: metadata, OwnerID: owner, AccountID: in.AccountID}
 	payload, err := json.Marshal(manifest)
 	if err != nil {
@@ -113,7 +125,7 @@ func (s *Store) ImportHubSnapshot(ctx context.Context, in HubImportInput, key []
 		return out, err
 	}
 	defer root.Close()
-	if err = writeHubImportFile(root, metadata.ID+".source", []byte(in.Content)); err != nil {
+	if err = writeHubImportFile(root, metadata.ID+".source", source); err != nil {
 		return out, err
 	}
 	// Even a later failure leaves the original immutable, never replacing another snapshot.
@@ -224,15 +236,15 @@ func (s *Store) ExecuteHubImport(ctx context.Context, c HubConnection, secret st
 	if json.Unmarshal(raw, &manifest) != nil || manifest.OwnerID != ref.OwnerID || manifest.AccountID != ref.AccountID || manifest.Metadata.ID != ref.ID || manifest.Metadata.ProviderID != ref.ProviderID || !hubImportFormat(ref.ProviderID, manifest.Metadata.Format) || !manifest.Metadata.Snapshot || manifest.Metadata.Live {
 		return out, ErrActionForbidden
 	}
-	source, err := readHubImportFile(root, ref.ID+".source", HubImportMaxBytes)
+	source, err := readHubImportFile(root, ref.ID+".source", HubImportArchiveMaxBytes)
 	if err != nil {
 		return out, err
 	}
 	hash := sha256.Sum256(source)
-	if !utf8.Valid(source) || len(source) != manifest.Metadata.Bytes || hex.EncodeToString(hash[:]) != manifest.Metadata.SHA256 {
+	if len(source) != manifest.Metadata.Bytes || hex.EncodeToString(hash[:]) != manifest.Metadata.SHA256 {
 		return out, hubImportFailure()
 	}
-	records, _, _, err := parseHubImport(manifest.Metadata.Format, string(source))
+	records, _, _, err := parseHubImportSource(manifest.Metadata.Format, source)
 	if err != nil || len(records) != manifest.Metadata.RecordCount {
 		return out, hubImportFailure()
 	}
@@ -285,6 +297,10 @@ func sourceLines(content string) []string {
 func parseHubImport(format, content string) ([]HubImportRecord, string, []string, error) {
 	records := []HubImportRecord{}
 	switch format {
+	case "telegram-json":
+		return parseTelegramExport(content)
+	case "wechat-csv":
+		return parseWeChatCSV(content)
 	case "markdown":
 		records = append(records, HubImportRecord{Kind: "markdown", Raw: content})
 		return records, "original_document", []string{"Owner-selected snapshot; no live filesystem access or synchronization"}, nil

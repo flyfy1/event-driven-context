@@ -17,8 +17,8 @@ func registerHubImportHandlers(mux *http.ServeMux, store *core.Store) {
 }
 func registerHubImportWithKey(mux *http.ServeMux, store *core.Store, key []byte) {
 	mux.Handle("POST /v1/hub/imports", authenticated(store, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// JSON escaping can expand a 1 MiB text snapshot by up to six times.
-		r.Body = http.MaxBytesReader(w, r.Body, 6*core.HubImportMaxBytes+16384)
+		// Allow bounded base64 ZIP uploads and escaped UTF-8 text snapshots.
+		r.Body = http.MaxBytesReader(w, r.Body, core.HubImportRequestMaxBytes)
 		var in core.HubImportInput
 		if err := decode(r, &in); err != nil {
 			hubFail(w, err)

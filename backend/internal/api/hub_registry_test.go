@@ -73,9 +73,9 @@ func TestHubRegistryOwnerIsolationAndManualVisibility(t *testing.T) {
 			t.Fatalf("manual adapter not usable: %+v", p)
 		}
 	}
-	unimplemented := registryProvider(t, out, "whatsapp-business")
-	if unimplemented.Visible || unimplemented.HiddenReason != "adapter_unavailable" || len(unimplemented.Connections) != 0 || len(unimplemented.Provider.Operations) != 0 {
-		t.Fatal("unimplemented adapter visible")
+	invalid := registryProvider(t, out, "whatsapp-business")
+	if invalid.Visible || invalid.HiddenReason != "credential_unavailable" || len(invalid.Connections) != 0 || len(invalid.Provider.Operations) == 0 {
+		t.Fatal("invalid webhook credential advertised as usable")
 	}
 	drive := registryProvider(t, out, "google-drive")
 	if drive.Visible || drive.HiddenReason != "no_configured_accounts" {

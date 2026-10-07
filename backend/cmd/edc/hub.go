@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -19,7 +20,11 @@ const hubHelp = `Agent Hub commands (structured JSON output):
   capabilities                         Discover providers, operations and schemas
   agent connect --owner USERNAME --name NAME --output NEW_CONFIG
   agent status                         Inspect pairing / revocation / expiry
-  source list                          Discover owner's accounts after pairing
+  source catalog [--provider ID] [--available-only]
+  source operations (--provider ID | --connection ID [--owner])
+  source connect --provider ID [--name NAME] [--open]
+  source read --connection ID --operation OP [--args JSON]
+  source list [--owner]                Discover accounts
   source integrations                  Discover deployment/account/API availability
   source integrations --owner          Inspect owner integration registry
   access request --connection ID --operation OP --reason TEXT [--duration 1h] [--constraints JSON]
@@ -136,6 +141,10 @@ func (a *app) hub(command string, args []string) error {
 			return fmt.Errorf("source requires list, add or disconnect")
 		}
 		switch args[0] {
+		case "catalog", "operations", "connect":
+			return a.sourceDiscover(args[0], args[1:])
+		case "read":
+			return a.sourceRead(args[1:])
 		case "integrations":
 			if len(args) == 1 {
 				return a.hubJSON("GET", "/v1/hub/integrations-agent", nil)
@@ -145,6 +154,9 @@ func (a *app) hub(command string, args []string) error {
 			}
 			return fmt.Errorf("source integrations accepts only --owner")
 		case "list":
+			if len(args) == 2 && args[1] == "--owner" {
+				return a.sourceDiscover("list", args[1:])
+			}
 			if len(args) != 1 {
 				return fmt.Errorf("source list takes no arguments")
 			}
@@ -155,8 +167,8 @@ func (a *app) hub(command string, args []string) error {
 			provider := f.String("provider", "", "import provider ID")
 			account := f.String("account", "", "owner-declared source account")
 			name := f.String("name", "", "connection display name")
-			format := f.String("format", "", "whatsapp-text, ics or markdown")
-			path := f.String("file", "", "owner-selected UTF-8 file")
+			format := f.String("format", "", "whatsapp-text, whatsapp-zip, telegram-json, wechat-csv, ics or markdown")
+			path := f.String("file", "", "owner-selected export file")
 			if err := f.Parse(args[1:]); err != nil {
 				return err
 			}
@@ -168,11 +180,21 @@ func (a *app) hub(command string, args []string) error {
 				return fmt.Errorf("could not open import file")
 			}
 			defer file.Close()
-			data, err := io.ReadAll(io.LimitReader(file, core.HubImportMaxBytes+1))
-			if err != nil || len(data) > core.HubImportMaxBytes {
-				return fmt.Errorf("import file must be readable and at most 1 MiB")
+			maxBytes := core.HubImportMaxBytes
+			if *format == "whatsapp-zip" {
+				maxBytes = core.HubImportArchiveMaxBytes
 			}
-			return a.hubJSON("POST", "/v1/hub/imports", map[string]string{"provider_id": *provider, "account_id": *account, "display_name": *name, "format": *format, "filename": filepath.Base(*path), "content": string(data)})
+			data, err := io.ReadAll(io.LimitReader(file, int64(maxBytes+1)))
+			if err != nil || len(data) > maxBytes {
+				return fmt.Errorf("import file must be readable and within its format size limit")
+			}
+			in := core.HubImportInput{ProviderID: *provider, AccountID: *account, DisplayName: *name, Format: *format, Filename: filepath.Base(*path)}
+			if *format == "whatsapp-zip" {
+				in.ContentBase64 = base64.StdEncoding.EncodeToString(data)
+			} else {
+				in.Content = string(data)
+			}
+			return a.hubJSON("POST", "/v1/hub/imports", in)
 		case "add":
 			f := flag.NewFlagSet("source add", flag.ContinueOnError)
 			f.SetOutput(a.io.err)

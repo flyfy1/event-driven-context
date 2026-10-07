@@ -73,11 +73,13 @@ Use the actual calendar ID from that account; `primary` is the Google example, n
 
 ## Owner web and Android
 
-The workspace header links to `hub.html` (**My authorizations**) and shows the pending count while signed in. The page lists agents, API requests, and registry-visible individual connected accounts. It supports pairing-code verification, approve/deny/revoke, and account disconnection. It refreshes every 30 seconds while visible. Google Drive, Gmail, Calendar, Tasks and Contacts have browser OAuth onboarding when their server configuration is available; repeat onboarding for additional accounts.
+The workspace header links to `hub.html` (**My authorizations**) and shows the pending count while signed in. The page lists agents, API requests, and registry-visible individual connected accounts. It supports pairing-code verification, approve/deny/revoke, and account disconnection. It refreshes every 30 seconds while visible. Google Drive, Gmail, Calendar, Tasks, Contacts, Docs, Sheets and Chat have browser OAuth onboarding when their server configuration is available; repeat onboarding for additional accounts.
 
 Android uses the existing owner session for a native My Authorizations screen. Notifications are opt-in per account and server. Default builds support periodic checks, subject to Android scheduling. Optional FCM sends only a generic wake-up; the app retrieves pending requests with authentication before showing them. See [Android setup and acceptance](android-hub.md). Web reminders are in-page reminders, not background Web Push.
 
 ## Provider and account separation
+
+Google Docs/Sheets/Chat, Microsoft Contacts/OneNote/Teams, Asana, Airtable, Linear, GitLab, Box, Discord Bot, Feishu/Lark and WhatsApp Business have additional operations; see [Data source CLI](data-source-cli.md).
 
 A connection has an independent `id`, `provider_id`, verified or owner-declared `account_id`, display name, owner and status. Multiple accounts of the same provider are supported. Google browser onboarding verifies the account with the provider. Manual credentials are for operator setup and do not establish live account verification. `configured` means a credential exists; it does not prove a successful read.
 
@@ -87,7 +89,7 @@ A connection has an independent `id`, `provider_id`, verified or owner-declared 
 - SaaS: Todoist, Notion, Dropbox, Readwise Reader, GitHub and Slack, using owner-supplied tokens and explicit read operations.
 - Telegram Bot: bot identity and non-acknowledging update peek, limited by the Bot API and existing webhook use.
 - Imported snapshots: WhatsApp exported chats, ICS calendar files and Markdown notes.
-- Personal Telegram sessions, WhatsApp Business ingestion, Android Health Connect and Google Photos Picker remain explicitly unavailable until implemented. They are hidden from ordinary source controls.
+- Personal Telegram sessions, Android Health Connect and Google Photos Picker remain explicitly unavailable until implemented. They are hidden from ordinary source controls.
 
 See [connector details and official references](hub-connectors.md). A capability being implemented, a provider being configured, and an agent being authorized are separate states.
 
@@ -110,7 +112,7 @@ For controlled operator setup, existing owner credentials can add a connection u
 
 Graph, DAV and SaaS adapters currently use manual owner setup rather than browser onboarding or automatic refresh. Use the provider IDs, required scopes and credential shape in [connector details](hub-connectors.md). DAV takes a JSON credential containing `url`, `username` and `password` for one collection; iCloud requires an app-specific password, never the primary Apple password. Local configuration, saved credentials and passing tests do not establish live account verification.
 
-Authorization metadata and encrypted secrets live in the identity SQLite database; provider read responses are returned on demand and are not appended to immutable project events. Imports additionally persist immutable original files and snapshot metadata in the deployer's data directory. Keep the encryption key in private deployment configuration and back it up separately from the database. Losing it makes stored secrets unreadable; replacing it without migration is not key rotation. No automatic key migration is implemented.
+Authorization metadata and encrypted secrets live in the identity SQLite database; provider read responses are returned on demand and are not appended to immutable project events. WhatsApp Business additionally retains encrypted webhook receipts and records in this database. Imports additionally persist immutable original files and snapshot metadata in the deployer's data directory. Keep the encryption key in private deployment configuration and back it up separately from the database. Losing it makes stored secrets unreadable; replacing it without migration is not key rotation. No automatic key migration is implemented.
 
 ## Owner-selected imports
 
@@ -147,14 +149,14 @@ Current verification is local. Actual Google consent/refresh, live Graph/DAV/Saa
 
 ## Connector continuation queue
 
-The 2026-09-19 credential-free continuation is recorded in [Messaging connector readiness](hub-messaging-readiness.md): owner-selected imports are implemented, standalone WhatsApp webhook verification is prepared but not exposed, and personal Telegram feasibility is reviewed. The next steps below require the recorded owner configuration, representative exports, device or session/runtime decision; do not repeat completed preparation while those prerequisites are unchanged. Public publication remains blocked pending explicit owner approval.
+The 2026-10-07 source adapters, CLI discovery/onboarding/operation reads and durable WhatsApp ingestion are described in [Data source CLI](data-source-cli.md) and [messaging readiness](hub-messaging-readiness.md). Implementation and live-account acceptance remain separate. Publication is owner-authorized; account registration still requires an owner-selected identity and provider verification.
 
 Continue one independently verifiable step at a time, recording exact evidence and committing/pushing task-owned changes:
 
 1. Configure owner-controlled Google OAuth and verify two accounts, provider reads, refresh and disconnection using non-sensitive test data.
 2. Verify Telegram Bot identity/peek with an explicitly provided test bot; do not consume another application's update queue.
 3. Verify owner-selected WhatsApp/ICS/Markdown exports with representative user-provided fixtures, including ambiguous timestamps; preserve snapshot-only claims.
-4. Integrate the tested standalone WhatsApp verification helper into durable webhook ingestion after the owner provides Meta application/phone configuration and a callback host; signature validation alone does not provide replay protection or account ownership verification.
+4. Accept the implemented durable WhatsApp webhook ingestion after the owner provides Meta application/phone configuration and a callback host; signature validation alone does not provide replay protection or account ownership verification.
 5. Confirm the proposed personal Telegram session/cache model and optional TDLib runtime with the owner before implementing interactive login and chat-scoped reads; feasibility is documented separately from Bot API support.
 6. Verify owner-configured Graph, DAV and SaaS read operations with non-sensitive test accounts; verify per-account isolation and honest incomplete-result handling.
 7. Configure Firebase, install the Android build on a user-selected device, and prove background notification → approval → CLI grant → revocation.

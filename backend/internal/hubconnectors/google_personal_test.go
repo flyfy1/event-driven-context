@@ -72,7 +72,7 @@ func TestGooglePersonalRejectsScopeBypass(t *testing.T) {
 }
 func TestGoogleNewScopesAndVerifiedSubject(t *testing.T) {
 	g := GoogleOAuth{ClientID: "client", ClientSecret: "secret", RedirectURL: "https://hub.example/callback"}
-	for _, provider := range []string{"google-calendar", "google-tasks", "google-contacts"} {
+	for _, provider := range []string{"google-calendar", "google-tasks", "google-contacts", "google-docs", "google-sheets", "google-chat"} {
 		link, err := g.AuthorizationURL(strings.Repeat("s", 32), strings.Repeat("v", 43), []string{provider})
 		if err != nil {
 			t.Fatal(err)

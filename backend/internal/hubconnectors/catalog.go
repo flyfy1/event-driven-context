@@ -19,6 +19,7 @@ type Operation struct {
 }
 
 type Provider struct {
+	DocumentationURL     string      `json:"documentation_url,omitempty"`
 	ID                   string      `json:"id"`
 	Name                 string      `json:"name"`
 	AuthMode             string      `json:"auth_mode"`
@@ -88,10 +89,11 @@ func Catalog() []Provider {
 			}},
 		{ID: "gmail", Name: "Gmail", AuthMode: "oauth2", ImplementationStatus: "adapter_available", MultipleAccounts: true,
 			Requirements: []string{"Google OAuth application and enabled Gmail API", "Owner consent to restricted gmail.readonly scope; deployment verification requirements must be reviewed"},
-			Limitations:  []string{"Mailbox query filters do not narrow Google's OAuth authorization", "Single-page reads; no OAuth onboarding, refresh, attachment download or durable sync in this package"},
+			Limitations:  []string{"Mailbox query filters do not narrow Google's OAuth authorization", "Single-page reads; attachments are capped by the response-size limit; no durable sync in this package"},
 			Operations: []Operation{
 				{ID: "messages.list", Description: "List message IDs and thread IDs for one page", ReadOnly: true, ScopeAlternatives: mailScopes, InputSchema: schema(map[string]any{"query": textParam(4096), "page_token": textParam(4096), "limit": limitParam()})},
 				{ID: "messages.get", Description: "Read one full message including MIME payload", ReadOnly: true, ScopeAlternatives: mailScopes, InputSchema: schema(map[string]any{"message_id": textParam(256)}, "message_id")},
+				{ID: "attachments.get", Description: "Read one message attachment as base64url, capped at 10 MiB response", ReadOnly: true, ScopeAlternatives: mailScopes, InputSchema: schema(map[string]any{"message_id": textParam(256), "attachment_id": textParam(4096)}, "message_id", "attachment_id")},
 			}},
 		{ID: "telegram-bot", Name: "Telegram Bot", AuthMode: "bot_token", ImplementationStatus: "adapter_available", MultipleAccounts: true,
 			Requirements: []string{"Owner-provided bot token", "Polling requires no active webhook and coordination with any other bot consumer"},
@@ -101,10 +103,17 @@ func Catalog() []Provider {
 				{ID: "updates.peek", Description: "Read currently queued bot updates without acknowledgment", ReadOnly: true, InputSchema: schema(map[string]any{"limit": limitParam()})},
 			}},
 		{ID: "telegram-user", Name: "Telegram Personal Account", AuthMode: "mtproto_user_session", ImplementationStatus: "not_implemented", MultipleAccounts: true, Operations: []Operation{}, Requirements: []string{"Telegram API application credentials and user-authorized MTProto session"}, Limitations: []string{"Bot tokens cannot substitute for personal account authorization; session storage and ingestion are not implemented"}},
-		{ID: "whatsapp-business", Name: "WhatsApp Business", AuthMode: "business_webhook", ImplementationStatus: "not_implemented", MultipleAccounts: true, Operations: []Operation{}, Requirements: []string{"Meta business application, WhatsApp Business account and phone number", "Verified webhook ingestion and secret storage"}, Limitations: []string{"Business webhook ingestion is not implemented; this is not a personal chat-history API"}},
+		{ID: "whatsapp-business", Name: "WhatsApp Business", AuthMode: "business_webhook", ImplementationStatus: "adapter_available", MultipleAccounts: true,
+			DocumentationURL: "https://developers.facebook.com/documentation/business-messaging/whatsapp/webhooks/overview",
+			Operations: []Operation{
+				{ID: "events.list", Description: "Read retained signed webhook messages and delivery statuses", ReadOnly: true, InputSchema: schema(map[string]any{"after_sequence": map[string]any{"type": "integer", "minimum": 0}, "limit": limitParam()})},
+				{ID: "receipts.get", Description: "Read one authenticated original webhook receipt", ReadOnly: true, InputSchema: schema(map[string]any{"receipt_id": textParam(100)}, "receipt_id")}},
+			Requirements: []string{"Owner Meta application, WhatsApp Business account and phone number", "Encrypted JSON credential: app_secret, verify_token, waba_id, phone_number_id", "Configure GET/POST callback /v1/hub/webhooks/whatsapp/CONNECTION_ID and subscribe to messages"},
+			Limitations:  []string{"Only messages/statuses received after webhook subscription; no personal or historical chat API", "No message sending or media download; received originals are encrypted and retained", "Exact envelope replay and message/status duplicates are deduplicated atomically"}},
 	}
 	providers = append(providers, googlePersonalProviders()...)
 	providers = append(providers, saasProviders()...)
+	providers = append(providers, expandedProviders()...)
 	providers = append(providers, graphProviders()...)
 	providers = append(providers, feedProviders()...)
 	providers = append(providers, davProviders()...)

@@ -253,6 +253,9 @@ func (c *Client) saasRequest(ctx context.Context, providerID, operationID, metho
 		return Result{}, &Error{Code: "invalid_request"}
 	}
 	allowed := map[string][]string{"todoist": {"api.todoist.com"}, "notion": {"api.notion.com"}, "dropbox": {"api.dropboxapi.com", "content.dropboxapi.com"}, "readwise-reader": {"readwise.io"}, "github": {"api.github.com"}, "slack": {"slack.com"}}
+	if host, ok := expandedHosts[providerID]; ok {
+		allowed[providerID] = []string{host}
+	}
 	hostOK := false
 	for _, host := range allowed[providerID] {
 		if u.Host == host {
@@ -325,6 +328,16 @@ func (c *Client) saasRequest(ctx context.Context, providerID, operationID, metho
 			}
 			return Result{}, &Error{Code: code}
 		}
+	}
+	if providerID == "gitlab" {
+		next := res.Header.Get("X-Next-Page")
+		if next != "" {
+			n, e := strconv.Atoi(next)
+			if e != nil || n < 1 || n > 1000000 {
+				return Result{}, &Error{Code: "invalid_upstream_pagination"}
+			}
+		}
+		b, _ = json.Marshal(map[string]any{"items": json.RawMessage(b), "next_cursor": next})
 	}
 	if providerID == "github" && operationID != "contents.get" {
 		cursor, err := githubNextCursor(res.Header.Get("Link"), u)

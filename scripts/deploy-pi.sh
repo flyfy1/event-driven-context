@@ -11,7 +11,11 @@ readonly TEMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
 remote_exec() {
-  ssh -o BatchMode=yes "$TARGET" "$1"
+  if [[ "$TARGET" == "local" ]]; then
+    bash -c "$1"
+  else
+    ssh -o BatchMode=yes "$TARGET" "$1"
+  fi
 }
 
 if [[ -n "$(git status --porcelain)" ]]; then
@@ -31,7 +35,11 @@ cp deploy/production/context-api-pi.service "$TEMP_DIR/$SERVICE.service"
 cp deploy/production/event-context-backup.sh deploy/production/event-context-backup.service deploy/production/event-context-backup.timer "$TEMP_DIR/"
 
 remote_exec "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
-scp -r "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/skills" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/event-context-backup.sh" "$TEMP_DIR/event-context-backup.service" "$TEMP_DIR/event-context-backup.timer" "$TARGET:/tmp/$SERVICE-$RELEASE_ID/"
+if [[ "$TARGET" == "local" ]]; then
+  cp -R "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/skills" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/event-context-backup.sh" "$TEMP_DIR/event-context-backup.service" "$TEMP_DIR/event-context-backup.timer" "/tmp/$SERVICE-$RELEASE_ID/"
+else
+  scp -r "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/skills" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/event-context-backup.sh" "$TEMP_DIR/event-context-backup.service" "$TEMP_DIR/event-context-backup.timer" "$TARGET:/tmp/$SERVICE-$RELEASE_ID/"
+fi
 
 remote_exec "sudo -n bash -s -- '$RELEASE_ID' '$SERVICE' '$REMOTE_ROOT' '$REMOTE_DATA' '$PORT'" <<'REMOTE_SCRIPT'
 set -euo pipefail

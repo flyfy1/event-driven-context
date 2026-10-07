@@ -1,6 +1,7 @@
 package api
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -176,5 +177,68 @@ func TestHubImportV2EscapedOneMiBPayloadUsesOnlyImportBodyAllowance(t *testing.T
 	oversized := f.request(t, "POST", "/v1/hub/imports", f.token, "application/json", v2JSONBody(t, input))
 	if oversized.Code != http.StatusBadRequest {
 		t.Fatal("decoded content larger than 1 MiB was accepted", oversized.Code)
+	}
+}
+
+// Cover the real HTTP execution switch for personal sources as well as core parsing.
+func TestPersonalChatImportsV2ReadBoundaries(t *testing.T) {
+	f, _, owner := registryFixture(t)
+	registration, err := f.store.RegisterHubAgent(context.Background(), f.alice.Username, "Personal fixture reader")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = f.store.DecideHubAgent(owner, registration.ID, "approve", registration.VerificationCode); err != nil {
+		t.Fatal(err)
+	}
+	agent, err := f.store.HubAgent(context.Background(), registration.Token, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var archive bytes.Buffer
+	z := zip.NewWriter(&archive)
+	chat, _ := z.CreateHeader(&zip.FileHeader{Name: "_chat.txt", Method: zip.Store})
+	chat.Write([]byte("19/09/2026, 10:00 - Fixture: Fixture WhatsApp text\n"))
+	media, _ := z.CreateHeader(&zip.FileHeader{Name: "media.bin", Method: zip.Store})
+	media.Write(bytes.Repeat([]byte{0}, 3<<20))
+	if err := z.Close(); err != nil {
+		t.Fatal(err)
+	}
+	for _, in := range []core.HubImportInput{
+		{ProviderID: "whatsapp-import", AccountID: "fixture-zip", DisplayName: "Personal ZIP", Filename: "chat.zip", Format: "whatsapp-zip", ContentBase64: base64.StdEncoding.EncodeToString(archive.Bytes())},
+		{ProviderID: "telegram-import", AccountID: "fixture-personal", DisplayName: "Personal Telegram", Filename: "result.json", Format: "telegram-json", Content: `{"id":123,"name":"Fixture","messages":[{"id":1,"type":"message","date":"2026-10-07T12:00:00","from":"Fixture","text":"Fixture Telegram text"}]}`},
+		{ProviderID: "wechat-import", AccountID: "fixture-personal", DisplayName: "Prepared WeChat", Filename: "chat.csv", Format: "wechat-csv", Content: "timestamp,sender,text\n2026-10-07,Fixture,Fixture WeChat text\n"},
+	} {
+		w := f.request(t, "POST", "/v1/hub/imports", f.token, "application/json", v2JSONBody(t, in))
+		if w.Code != 201 {
+			t.Fatal(in.ProviderID, w.Code, w.Body.String())
+		}
+		result := decodeV2Response[core.HubImportResult](t, w)
+		execute := map[string]any{"connection_id": result.Connection.ID, "operation": "records.list", "args": map[string]any{"limit": 1}}
+		w = f.request(t, "POST", "/v1/hub/execute", registration.Token, "application/json", v2JSONBody(t, execute))
+		if w.Code != 403 {
+			t.Fatal("unapproved personal read", w.Code)
+		}
+		req, err := f.store.RequestHubAccess(context.Background(), agent, result.Connection.ID, "records.list", "Fixture read", 3600, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err = f.store.DecideHubRequest(owner, req.ID, "approve"); err != nil {
+			t.Fatal(err)
+		}
+		w = f.request(t, "POST", "/v1/hub/execute", registration.Token, "application/json", v2JSONBody(t, execute))
+		if w.Code != 200 {
+			t.Fatal("personal read", w.Code, w.Body.String())
+		}
+		page := decodeV2Response[struct{ Data core.HubImportPage }](t, w)
+		if page.Data.Import.Live || !page.Data.Import.Snapshot || len(page.Data.Records) != 1 {
+			t.Fatal("dishonest personal connection", w.Body.String())
+		}
+		if err = f.store.DisconnectHubConnection(owner, result.Connection.ID); err != nil {
+			t.Fatal(err)
+		}
+		w = f.request(t, "POST", "/v1/hub/execute", registration.Token, "application/json", v2JSONBody(t, execute))
+		if w.Code == 200 {
+			t.Fatal("disconnected personal read")
+		}
 	}
 }

@@ -69,3 +69,5 @@ make deploy-legacy-gce
 ```
 
 该目标会设置所需的 `ALLOW_LEGACY_GCE_DEPLOY=1`。它提供回滚能力，不代表允许同时运行两个生产写入者。
+
+在 Pi 主机本身运行时，使用 `EDC_DEPLOY_SSH_TARGET=local make deploy-prod`，执行相同构建、停止写入备份、不可变发布及健康检查，不依赖 SSH 回环登录。

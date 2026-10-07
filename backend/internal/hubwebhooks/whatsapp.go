@@ -1,7 +1,6 @@
-// Package hubwebhooks provides unwired webhook validation helpers. It registers
-// no HTTP routes, persists no messages, and does not enable any Hub connector.
-// Successful signature verification proves neither freshness nor uniqueness:
-// replay detection and atomic ingestion remain responsibilities of a future host.
+// Package hubwebhooks validates webhook signatures and trusted account bindings.
+// The API host registers routes; core atomically retains encrypted originals and
+// deduplicates records. Signature verification alone does not prove freshness.
 package hubwebhooks
 
 import (

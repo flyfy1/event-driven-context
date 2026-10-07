@@ -42,7 +42,7 @@ Commands:
   host run --plugin ID --plugin-dir PATH --plugin-token-file PATH (--once | --watch)
   mcp
   capabilities | agent connect | agent status
-  source integrations [--owner] | list | add | import | disconnect
+  source catalog | operations | connect | read | integrations | list | add | import | disconnect
   access request | list
   api call
 
@@ -150,7 +150,7 @@ func (a *app) dispatch(command string, args []string) error {
 	if command == "register" || command == "login" {
 		return a.auth(command, args)
 	}
-	if command == "capabilities" || command == "agent" {
+	if command == "capabilities" || command == "agent" || command == "source" && len(args) > 0 && (args[0] == "catalog" || args[0] == "operations") {
 		return a.hub(command, args)
 	}
 	if a.token == "" && command != "host" {

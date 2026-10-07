@@ -73,11 +73,13 @@ edc --config ./agent-private.json api call \
 
 ## 用户网页与 Android
 
-工作区顶部提供 `hub.html`（**我的授权**）入口，登录后显示待处理数量。页面按 Agent、API 申请和注册表中可见的独立账号展示，支持验证码核对、批准、拒绝、撤销及断开账号。页面可见时每 30 秒刷新。对应服务端配置可用时，Google Drive、Gmail、Calendar、Tasks 和 Contacts 支持浏览器 OAuth 接入；重复操作即可连接多个账号。
+工作区顶部提供 `hub.html`（**我的授权**）入口，登录后显示待处理数量。页面按 Agent、API 申请和注册表中可见的独立账号展示，支持验证码核对、批准、拒绝、撤销及断开账号。页面可见时每 30 秒刷新。对应服务端配置可用时，Google Drive、Gmail、Calendar、Tasks、Contacts、Docs、Sheets 和 Chat 支持浏览器 OAuth 接入；重复操作即可连接多个账号。
 
 Android 复用用户登录态，提供原生“我的授权”页面。通知按账号和服务地址单独开启。默认构建使用受 Android 调度影响的定时检查；可选 FCM 仅发送通用唤醒信号，App 登录获取待办后才展示通知。参见 [Android 配置与验收](android-hub.cn.md)。网页提醒是页面内提醒，不是后台 Web Push。
 
 ## 数据源与账号分离
+
+新增 Google Docs/Sheets/Chat、Microsoft Contacts/OneNote/Teams、Asana、Airtable、Linear、GitLab、Box、Discord Bot、飞书/Lark 和 WhatsApp Business；配置与操作见[数据源 CLI](data-source-cli.cn.md)。
 
 每个连接分别具有 `id`、`provider_id`、已验证或由用户声明的 `account_id`、显示名、所有者和状态。同一种数据源支持多个账号。Google 浏览器接入会向数据源核实账号；手动凭证用于运维配置，不能证明真实账号访问已验证。`configured` 仅表示已保存凭证，不代表读取成功。
 
@@ -87,7 +89,7 @@ Android 复用用户登录态，提供原生“我的授权”页面。通知按
 - SaaS：Todoist、Notion、Dropbox、Readwise Reader、GitHub 和 Slack，使用用户提供的 token 和明确的只读操作。
 - Telegram Bot：机器人身份查询和不确认消费的更新预览，受 Bot API 和已有 webhook 限制。
 - 导入快照：WhatsApp 聊天导出、ICS 日历文件和 Markdown 笔记。
-- 个人 Telegram 会话、WhatsApp Business 消息接收、Android Health Connect 和 Google Photos Picker 在实现前仍明确不可用，并从普通数据源控件中隐藏。
+- 个人 Telegram 会话、Android Health Connect 和 Google Photos Picker 在实现前仍明确不可用，并从普通数据源控件中隐藏。
 
 参见[连接器细节及官方参考](hub-connectors.cn.md)。能力已实现、数据源已配置和 Agent 已获授权是三个不同状态。
 
@@ -110,7 +112,7 @@ Android 复用用户登录态，提供原生“我的授权”页面。通知按
 
 Graph、DAV 和 SaaS 适配器目前采用用户手动配置，不提供浏览器接入或自动刷新。数据源 ID、所需权限和凭证格式参见[连接器细节](hub-connectors.cn.md)。DAV 使用包含 `url`、`username`、`password` 的 JSON 凭证指定一个集合；iCloud 必须使用 App 专用密码，不能使用 Apple 主密码。本地配置、已保存凭证和测试通过都不证明真实账号访问已验证。
 
-授权元数据和加密凭证存储在身份 SQLite 数据库中；第三方读取结果按需返回，不追加到不可变项目事件中。导入功能还会在部署者的数据目录保存不可变原始文件和快照元数据。加密密钥保存在私密部署配置中，并与数据库分开备份。丢失密钥会导致旧凭证无法读取；不迁移数据而更换密钥不等于密钥轮换，目前没有自动迁移机制。
+授权元数据和加密凭证存储在身份 SQLite 数据库中；第三方读取结果按需返回，不追加到不可变项目事件中。WhatsApp Business webhook 额外保留加密原始回执和事件。导入功能还会在部署者的数据目录保存不可变原始文件和快照元数据。加密密钥保存在私密部署配置中，并与数据库分开备份。丢失密钥会导致旧凭证无法读取；不迁移数据而更换密钥不等于密钥轮换，目前没有自动迁移机制。
 
 ## 用户主动选择的导入
 
@@ -147,14 +149,14 @@ edc --config ./agent-private.json api call \
 
 ## 连接器持续推进队列
 
-2026-09-19 不需要真实凭据的续作记录见[消息连接器接入状态](hub-messaging-readiness.cn.md)：用户选择的导入已实现，独立 WhatsApp webhook 校验已准备但未开放，个人 Telegram 可行性已评估。下列后续步骤需要记录中的用户配置、代表性导出、设备或会话/运行时决策；前提未变化时不要重复已完成的准备工作。公开发布仍等待用户明确批准。
+2026-10-07 新增的数据源读取、CLI 发现/接入/操作查询与 WhatsApp 持久化接收见[数据源 CLI](data-source-cli.cn.md)和[消息接入状态](hub-messaging-readiness.cn.md)。代码实现和真实账号验收分开；发布已获用户授权，账号注册仍需要用户选定的身份及验证。
 
 每次完成一个可独立验证的步骤，记录准确证据，并提交、推送本任务文件：
 
 1. 配置用户控制的 Google OAuth，用非敏感测试资料验证两个账号、读取、刷新和断开。
 2. 使用用户明确提供的测试机器人验证 Telegram Bot 身份与预览，不消费其他应用的更新队列。
 3. 使用用户提供的代表性样本验证 WhatsApp/ICS/Markdown 导出，包括不明确的时间戳，并保持仅为快照的说明。
-4. 用户提供 Meta 应用、号码和回调主机后，将已测试的独立 WhatsApp 校验函数接入持久化 webhook 接收；签名校验本身不提供重放保护或账号所有权验证。
+4. 用户提供 Meta 应用、号码和回调主机后，验收已实现的 WhatsApp 持久化 webhook 接收；签名校验本身不提供重放保护或账号所有权验证。
 5. 实现交互登录和聊天范围读取前，先由用户确认建议的个人 Telegram 会话/缓存模型及可选 TDLib 运行时；可行性说明与 Bot API 支持分开。
 6. 使用非敏感测试账号验证用户配置的 Graph、DAV 和 SaaS 读取，检查账号隔离和结果不完整时的准确提示。
 7. 配置 Firebase，在用户指定的 Android 设备安装并验证后台通知 → 审批 → CLI 获权 → 撤销。

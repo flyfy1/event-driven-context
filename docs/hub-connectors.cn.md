@@ -33,7 +33,7 @@ edc --config ./agent-private.json source integrations
 | Provider ID | 操作 | 配置方式与边界 |
 | --- | --- | --- |
 | `google-drive` | `files.list`, `files.get`, `files.export` | Google OAuth；元数据和 Workspace 文本/CSV/PDF 导出，不下载二进制文件。 |
-| `gmail` | `messages.list`, `messages.get` | Google OAuth；邮件 ID 与 MIME 正文，不下载附件。 |
+| `gmail` | `messages.list`, `messages.get`, `attachments.get` | Google OAuth；邮件 ID、MIME 正文和指定附件的 base64url 字节。 |
 | `google-calendar` | `calendars.list`, `events.list`, `freebusy.query` | Google OAuth；基础事件/忙闲数据，必须授权指定日历和时间范围。 |
 | `google-tasks` | `tasklists.list`, `tasks.list` | Google OAuth；单页任务列表或任务。 |
 | `google-contacts` | `contacts.list` | Google OAuth；姓名、邮箱和电话。 |
@@ -51,15 +51,17 @@ edc --config ./agent-private.json source integrations
 | `rss-feed` | `entries.list` | 用户 JSON 凭据 `{ "url": "https://example.com/feed.xml" }`；RSS/Atom，不抓取全文。 |
 | `caldav`, `icloud-calendar` | `calendars.query` | 用户提供集合凭据；查询最多七天时间范围内的原始 ICS，不展开重复事件。 |
 | `carddav`, `icloud-contacts` | `contacts.list` | 用户提供集合凭据；有限联系人字段，可按姓名/邮箱查询。 |
-| `whatsapp-import` | `records.list` | 用户选择聊天文本导出；消息和原始来源信息，不是 WhatsApp 实时接入。 |
+| `whatsapp-import` | `records.list` | 用户选择聊天文本或 ZIP 导出；保留原始文件和消息来源，不是实时接入。 |
+| `telegram-import` | `records.list` | Telegram Desktop JSON 快照；保留原始消息/聊天 ID，不是实时会话。 |
+| `wechat-import` | `records.list` | 用户整理的 UTF-8 CSV；不是官方导出或加密备份读取。 |
 | `calendar-import` | `records.list` | 用户选择 ICS 快照；保留原始事件/重复规则，不展开重复事件。 |
 | `markdown-import` | `records.list` | 用户选择 Markdown 快照；原始文档内容。 |
 
 Google Calendar 事件读取不含描述、参与者、附件和地点。忙闲输出仅含指定日历，并将忙碌区间裁剪到批准的请求范围。上游日历忙闲状态未知时返回错误，不会把它当作空闲。Graph 仅读取选定字段，去掉分页/预授权下载 URL。Calendar 和 Graph 在单页不完整时明确标记，不接受上游后续页面 URL。其他数据源只支持 schema 公布的游标字段；空页不代表整个账号没有数据。
 
-`telegram-user`、`whatsapp-business`、`health-connect`、`google-photos-picker` 仍为显式 `not_implemented`，没有操作并保持隐藏。它们分别需要 MTProto 用户会话实现、经过验证的商业 webhook 接入、原生设备采集桥接和 Picker 会话/媒体读取。保存凭据不会启用这些路径。
+新增 Google Docs/Sheets/Chat、Microsoft Contacts/OneNote/Teams、Asana、Airtable、Linear、GitLab、Box、Discord Bot、飞书/Lark，以及带持久化 webhook 的 `whatsapp-business`。完整操作、账号配置、分页边界和 CLI 命令见[数据源 CLI](data-source-cli.cn.md)。所有新增实时数据源仍需真实账号授权验收。
 
-`backend/internal/hubwebhooks` 已提供独立 WhatsApp Business 签名/账号校验函数，但没有 HTTP 路由、持久化、重放检测或 Agent API。个人 Telegram 依赖可行性已有文档，尚未实现。继续这两类数据源前，请查看[消息接入状态与前提](hub-messaging-readiness.cn.md)。
+`telegram-user`、`health-connect`、`google-photos-picker` 仍为 `not_implemented` 且隐藏，分别需要用户会话、设备桥接和 Picker 会话/媒体读取。参见[消息接入状态](hub-messaging-readiness.cn.md)。
 
 ## 用户配置
 
@@ -80,9 +82,9 @@ DAV 使用恰好包含 `url`、`username` 和 `password` 的 JSON 凭据。URL �
 
 配置 `EDC_HUB_GOOGLE_CLIENT_ID`、`EDC_HUB_GOOGLE_CLIENT_SECRET`、`EDC_HUB_GOOGLE_REDIRECT_URL`、加密密钥及对应 API。在 Google 中注册准确的 `/v1/hub/google/callback` URL。只对可信前端来源允许携带凭据，前端请求需包含 cookie。`GET /v1/hub/google/status` 返回经过校验的本地配置状态，不代表 Google 实际可用。
 
-用户 `POST /v1/hub/google/start` 接受 `provider_id` 和 `display_name`。流程通过一次性 state 和加密 PKCE 绑定用户、发起浏览器和选定数据源，十分钟过期，并检查全部返回 scope。Drive/Gmail 使用自身 API 验证账号，Calendar/Tasks/Contacts 通过 `openid` 和 OpenID Connect userinfo 验证。Token 加密保存，在接近过期时按需刷新，采用比较并交换避免与重连/断开竞争。
+用户 `POST /v1/hub/google/start` 接受 `provider_id` 和 `display_name`。流程通过一次性 state 和加密 PKCE 绑定用户、发起浏览器和选定数据源，十分钟过期，并检查全部返回 scope。Drive/Gmail 使用自身 API 验证账号，Calendar/Tasks/Contacts/Docs/Sheets/Chat 通过 `openid` 和 OpenID Connect userinfo 验证。Token 加密保存，在接近过期时按需刷新，采用比较并交换避免与重连/断开竞争。
 
-对应 scope 为 `drive.readonly`、`gmail.readonly`、Calendar 的 `calendar.calendarlist.readonly` + `calendar.events.readonly` + `calendar.events.freebusy`、`tasks.readonly` 或 `contacts.readonly`。新增个人数据源还请求 `openid`。Calendar 当前同时请求事件和忙闲 scope，即使 Agent 随后只申请忙闲。Google 同意范围是账号级，Hub 单独强制执行更窄的 Agent 授权。尚未实现选定文件 Picker 和仅忙闲的 OAuth 接入模式。
+对应 scope 为 `drive.readonly`、`gmail.readonly`、Calendar 的 `calendar.calendarlist.readonly` + `calendar.events.readonly` + `calendar.events.freebusy`、`tasks.readonly` 、`contacts.readonly`、`documents.readonly`、`spreadsheets.readonly` 或 Chat 的 `chat.spaces.readonly` + `chat.messages.readonly`。新增个人数据源还请求 `openid`。Calendar 当前同时请求事件和忙闲 scope，即使 Agent 随后只申请忙闲。Google 同意范围是账号级，Hub 单独强制执行更窄的 Agent 授权。尚未实现选定文件 Picker 和仅忙闲的 OAuth 接入模式。
 
 ## 有范围的 Calendar 授权
 

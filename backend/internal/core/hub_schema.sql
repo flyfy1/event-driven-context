@@ -20,3 +20,17 @@ CREATE TABLE IF NOT EXISTS hub_request_constraints (
  request_id TEXT PRIMARY KEY REFERENCES hub_requests(id),
  constraints_json TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS hub_webhook_receipts (
+ id TEXT PRIMARY KEY, connection_id TEXT NOT NULL REFERENCES hub_connections(id),
+ sha256 TEXT NOT NULL, encrypted_body BLOB NOT NULL, recorded_at INTEGER NOT NULL,
+ UNIQUE(connection_id,sha256)
+);
+CREATE TABLE IF NOT EXISTS hub_webhook_events (
+ sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+ connection_id TEXT NOT NULL REFERENCES hub_connections(id),
+ receipt_id TEXT NOT NULL REFERENCES hub_webhook_receipts(id),
+ event_key TEXT NOT NULL, kind TEXT NOT NULL, encrypted_body BLOB NOT NULL,
+ recorded_at INTEGER NOT NULL, UNIQUE(connection_id,event_key)
+);
+CREATE INDEX IF NOT EXISTS hub_webhook_events_connection ON hub_webhook_events(connection_id,sequence);

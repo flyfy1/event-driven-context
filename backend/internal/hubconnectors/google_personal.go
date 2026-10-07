@@ -27,6 +27,12 @@ func GoogleScopes(provider string) []string {
 		return []string{"openid", base + "tasks.readonly"}
 	case "google-contacts":
 		return []string{"openid", base + "contacts.readonly"}
+	case "google-docs":
+		return []string{"openid", base + "documents.readonly"}
+	case "google-sheets":
+		return []string{"openid", base + "spreadsheets.readonly"}
+	case "google-chat":
+		return []string{"openid", base + "chat.spaces.readonly", base + "chat.messages.readonly"}
 	}
 	return nil
 }

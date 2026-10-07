@@ -99,12 +99,19 @@ func registerHubRegistryHandlers(mux *http.ServeMux, store *core.Store) {
 				}
 				// Local decryption is a deployment readiness check, not a live provider probe.
 				// Discard the plaintext immediately; neither metadata nor logs expose it.
-				if _, err := store.HubCredential(ctx, account, key); err != nil {
+				secret, err := store.HubCredential(ctx, account, key)
+				if err != nil {
 					if e, ok := err.(*core.Error); ok && e.Code == "service_unavailable" || errors.Is(err, core.ErrNotFound) {
 						credentialUnavailable = true
 						continue
 					}
 					return hubIntegrationRegistry{}, err
+				}
+				if provider.ID == "whatsapp-business" {
+					if _, err := hubWhatsAppVerifier(account, secret); err != nil {
+						credentialUnavailable = true
+						continue
+					}
 				}
 				item.ConnectedAccountCount++
 				connection := hubIntegrationConnection{HubConnection: account, Operations: []hubIntegrationOperation{}}

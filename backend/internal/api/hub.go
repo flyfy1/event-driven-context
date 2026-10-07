@@ -31,6 +31,7 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 	if keyErr != nil {
 		key = nil
 	}
+	registerHubWhatsAppHandlers(mux, store, key)
 	mux.HandleFunc("GET /v1/hub/capabilities", func(w http.ResponseWriter, r *http.Request) {
 		respond(w, 200, map[string]any{"providers": hubconnectors.Catalog(), "authorization": map[string]any{"agent_registration": "POST /v1/hub/agents", "request_access": "POST /v1/hub/requests", "owner_approval_page": approvalURL, "owner_session_required": true, "scope": "one connection and one operation; calendar event/availability reads require calendar_id and time_min/time_max constraints", "max_duration_seconds": 604800}, "credential_storage_configured": len(key) == 32})
 	})
@@ -136,7 +137,15 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 		}
 		var result hubconnectors.Result
 		switch c.ProviderID {
-		case "whatsapp-import", "calendar-import", "markdown-import":
+		case "whatsapp-business":
+			page, e := store.ReadHubWhatsApp(r.Context(), c, key, in.Operation, in.Args)
+			if e != nil {
+				hubFail(w, e)
+				return
+			}
+			result.ContentType = "application/json"
+			result.Body, err = json.Marshal(page)
+		case "whatsapp-import", "telegram-import", "wechat-import", "calendar-import", "markdown-import":
 			if in.Operation != "records.list" {
 				hubFail(w, core.Invalid("unsupported import operation"))
 				return
@@ -215,6 +224,13 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 		if in.Credential != "" && len(p.Operations) == 0 {
 			hubFail(w, core.Invalid("this provider does not yet support API execution"))
 			return
+		}
+		if in.ProviderID == "whatsapp-business" && in.Credential != "" {
+			_, err := hubWhatsAppVerifier(core.HubConnection{ID: "validation", OwnerID: core.UserID(r.Context())}, in.Credential)
+			if err != nil {
+				hubFail(w, core.Invalid("WhatsApp requires app_secret, verify_token, waba_id and phone_number_id"))
+				return
+			}
 		}
 		out, err := store.AddHubConnection(r.Context(), core.HubConnection{ProviderID: in.ProviderID, AccountID: in.AccountID, DisplayName: in.DisplayName}, in.Credential, key)
 		v2RespondResult(w, 201, out, err)

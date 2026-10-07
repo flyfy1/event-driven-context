@@ -50,6 +50,7 @@ func NewClient(client *http.Client) *Client {
 }
 
 var resourceID = regexp.MustCompile(`^[A-Za-z0-9_-]{1,256}$`)
+var attachmentID = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 var botToken = regexp.MustCompile(`^[0-9]+:[A-Za-z0-9_-]+$`)
 
 // Execute performs one allowlisted provider operation. The caller must check
@@ -83,6 +84,9 @@ func (c *Client) Execute(ctx context.Context, providerID, operationID, credentia
 	}
 	if len(credential) == 0 || len(credential) > 8192 || strings.ContainsAny(credential, " \t\r\n\x00") {
 		return Result{}, &Error{Code: "invalid_credential"}
+	}
+	if _, ok := expandedHosts[providerID]; ok {
+		return c.executeExpanded(ctx, providerID, operationID, credential, args)
 	}
 	if googlePersonal(providerID) {
 		return c.executeGooglePersonal(ctx, providerID, operationID, credential, args)
@@ -130,7 +134,15 @@ func (c *Client) Execute(ctx context.Context, providerID, operationID, credentia
 				return Result{}, &Error{Code: "invalid_resource_id"}
 			}
 			endpoint += "/" + id
-			q.Set("format", "full")
+			if operationID == "attachments.get" {
+				attachment := args["attachment_id"].(string)
+				if !attachmentID.MatchString(attachment) {
+					return Result{}, &Error{Code: "invalid_resource_id"}
+				}
+				endpoint += "/attachments/" + attachment
+			} else {
+				q.Set("format", "full")
+			}
 		}
 	case "telegram-bot":
 		if !botToken.MatchString(credential) {

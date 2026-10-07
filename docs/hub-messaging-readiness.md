@@ -2,28 +2,19 @@
 
 [English](hub-messaging-readiness.md) | [简体中文](hub-messaging-readiness.cn.md)
 
-Status checked on 2026-09-19. This records the bounded, credential-free continuation of [Agent Hub](agent-hub.md). Neither a successful fixture nor a signed test payload establishes a live account connection.
+Status updated on 2026-10-07. This records the credential-free implementation and acceptance prerequisites of [Agent Hub](agent-hub.md). Neither a successful fixture nor a signed test payload establishes a live account connection.
 
 ## WhatsApp export imports
 
 The owner-selected `whatsapp-import` path is implemented. It preserves immutable originals and account provenance, supports multiple owner-scoped connections, and requires a separate Agent grant for `records.list`. Full HTTP fixture tests cover approval, reading and grant invalidation on reimport. No private conversation was used. Representative owner-provided exports remain necessary to validate real regional timestamp and export variants; the parser does not guess ambiguous local dates into UTC.
 
-## WhatsApp Business verification preparation
+## WhatsApp Business ingestion
 
-`backend/internal/hubwebhooks` contains standalone verification helpers. They are deliberately not registered as an HTTP endpoint or wired into connection setup, persistence or Agent execution. `whatsapp-business` remains `not_implemented`, with no callable operations, and stays hidden.
+The signed webhook receiver and Agent reads are implemented. Owner setup validates private app secret, verification token and WABA/phone binding. GET/POST `/v1/hub/webhooks/whatsapp/{id}` answers the challenge and authenticates exact raw payload bytes before parsing. Each change must match the configured account; duplicate headers/query fields, ambiguous JSON and bodies above 1 MiB are rejected.
 
-The verifier is constructed from private application configuration and one trusted binding: owner ID, Hub connection ID, WABA ID, and business phone-number ID. Create a separate binding for each account; never infer the owner from webhook data. The subscription challenge checks the configured verification token and `subscribe` mode. POST verification uses the application's secret and the exact raw body for `X-Hub-Signature-256`, before interpreting JSON. Verification tokens and application secrets serve different purposes.
+Core atomically stores encrypted immutable receipts and message/status records. Account-scoped hashes deduplicate identical envelopes; message IDs and structured status identities deduplicate repackaged deliveries. Reconfiguration is checked within the ingestion transaction and revokes earlier grants; disconnect blocks further receipt and reads. `events.list` is sequence-paginated; `receipts.get` preserves original bytes as base64 and hash. Both require independent Agent approval. Synthetic API/core tests cover challenge, tampering, wrong phone, replay, pagination, encryption, atomic batch rejection, rotation, account/grant isolation and revocation. See [CLI and complete setup](data-source-cli.md).
 
-Signed envelopes must contain the expected WhatsApp object, supported message changes, and the configured WABA and phone on every change. Mixed-account batches fail as a whole. The helper bounds payloads at 1 MiB, rejects ambiguous JSON, and returns a defensive copy of authenticated bytes with binding provenance and a content hash. Message/status content remains untrusted data. A valid signature and content hash do **not** establish freshness, deduplicate delivery, or prove that an owner controls a business account.
-
-Before live ingestion can be enabled, the host still needs:
-
-1. An owner-authorized Meta application and private secret, verification token, WABA/phone binding and selected HTTPS callback host. None was created or accessed during this stage.
-2. An HTTP boundary that bounds the raw body, rejects duplicate signature headers/query parameters, handles the verification response as plain text, and applies safe logging and request limits.
-3. Owner-only setup and verified provider identity, atomic append-only persistence, durable account-scoped duplicate detection, retry-safe acknowledgments, and disconnect/reconnect behavior. A global message ID or body hash alone must not route data between owners.
-4. A separate, bounded Agent read API and operation approval, with actual multi-account webhook, replay, revocation and failure acceptance. Approval notification delivery must remain separate from provider event receipt.
-
-The receiver must not be enabled merely because the helper passes tests. Full ingestion remains blocked on the owner-selected Meta setup and callback environment. Protocol references: [Meta's webhook verification description](https://whatsapp.github.io/WhatsApp-Nodejs-SDK/api-reference/webhooks/start/) (archived SDK documentation, used only for the verification contract) and [WhatsApp Business platform](https://developers.facebook.com/documentation/business-messaging/whatsapp/overview).
+Live acceptance still needs the owner's Meta app, verified business phone, HTTPS callback subscription and provider-side test delivery. No real Meta account was created or accessed. Signature verification and deduplication do not prove freshness or independent account ownership. Personal WhatsApp history and media downloads are excluded. Official reference: [Meta-owned webhook payload collection](https://www.postman.com/meta/whatsapp-business-platform/folder/tduohwq/webhook-payload-reference).
 
 ## Personal Telegram feasibility
 
@@ -41,17 +32,16 @@ Proposed boundaries before implementation:
 
 The next step requires the owner's decision to accept this session/cache model and optional native runtime, then a deployment-owned API application and a user-authorized test login. No library dependency, login flow, worker or personal-history API was added. `telegram-user` remains unavailable and hidden.
 
-## Continuation gates
+## Remaining acceptance
 
-Verification uses synthetic messages and keys only. The webhook package tests cover exact-body tampering, wrong/malformed signatures, authentication before JSON parsing, cross-account and mixed-account batches, ambiguous/oversized/deep JSON, subscription challenges, immutable returned bytes and repeated deliveries. Run `go -C backend test -race ./internal/hubwebhooks`, `make check`, and `make build`. There is no live Meta acceptance or new browser/Android flow to verify in this preparation stage.
+Run `make check` and `make build`. Fixtures use synthetic messages/keys only and do not establish live account consent. CLI, server and frontend publication are authorized by the owner; verify the actual deployed routes separately.
 
-| Queue item | Current evidence | Missing external input |
+| Queue item | Implemented evidence | Missing external input |
 | --- | --- | --- |
-| WhatsApp/ICS/Markdown imports | Parser, storage and full HTTP fixture tests | Owner-selected representative exports for real-data acceptance |
-| WhatsApp Business | Standalone signature/account verification tests; no ingestion route | Authorized Meta configuration and callback host |
-| Personal Telegram | Official-protocol and dependency feasibility review | Session/cache/runtime decision, application credentials and authorized test login |
-| Google and other live adapters | Existing bounded adapter/authorization tests | Owner-configured test accounts, OAuth/API enablement and live consent |
-| Android notifications | Existing unit/build/lint evidence | Firebase configuration and user-selected device acceptance |
-| Public publication | Local commits only | Explicit permission to publish these commits to the public repository |
+| WhatsApp/ICS/Markdown/Telegram/prepared WeChat CSV imports | Parser, storage and full HTTP fixture tests | Representative owner-selected exports; WeChat requires readable CSV, not a native backup |
+| WhatsApp Business | Signed receiver, atomic encrypted retention, replay detection and authorized reads | Owner Meta application/phone setup and live subscription |
+| Personal Telegram | Official-protocol and TDLib feasibility review | Session/runtime decision, application credentials and authorized login |
+| Google and other live sources | Fixed-endpoint reads, schemas, CLI discovery and authorization tests | OAuth application, API enablement and owner consent/tokens |
+| Android notifications | Existing unit/build/lint evidence | Firebase setup and selected device acceptance |
 
-Subsequent scheduled checks should wait for a changed prerequisite, not repeat fixture implementations, request real credentials in chat, or claim a blocked source is connected. No deployment, publication, subscription, private-account access or third-party message was performed here.
+Account registration requires the owner's selected email/name and provider verification. Do not ask for secrets or codes in chat. Complete independent implementation work while awaiting those inputs; never claim a fixture is a connected private account.
