@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1280" viewBox="0 0 1600 1280" role="img" aria-labelledby="title description">
+<title id="title">数据 Hub 架构</title>
+<desc id="description">用户接入与 Agent 操作授权独立管理；项目 MCP 使用独立权限。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#4e6378"/></marker></defs>
+<style>text {font-family: "Noto Sans CJK SC", "Noto Sans", sans-serif; fill: #142b43} .line {fill:none;stroke:#4e6378;stroke-width:2.2}</style>
+<rect width="1600" height="1280" fill="#ffffff"/>
+<text x="60" y="55" font-size="32" font-weight="700" style="fill:#142b43" text-anchor="start">Event-driven Context</text>
+<text x="60" y="90" font-size="23" font-weight="400" style="fill:#4e6378" text-anchor="start">数据 Hub 架构与多账号授权 · v0.1.2</text>
+<rect x="60" y="130" width="410" height="105" rx="14" fill="#edf7f4" stroke="#9bcebf" stroke-width="1.5"/>
+<text x="80" y="164" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">用户</text>
+<text x="80" y="195" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">网页 / Android / 用户 CLI</text>
+<text x="80" y="223" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">登录 · 接入账号 · 审批</text>
+<rect x="550" y="130" width="490" height="105" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="570" y="164" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">Agent 与脚本</text>
+<text x="570" y="195" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">edc + 独立私密 Agent 凭证</text>
+<text x="570" y="223" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">发现连接 · 申请操作 · 读取</text>
+<rect x="1140" y="130" width="400" height="105" rx="14" fill="#f2effa" stroke="#beb2db" stroke-width="1.5"/>
+<text x="1160" y="164" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">ChatGPT / Claude Web</text>
+<text x="1160" y="195" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">Context 项目工具</text>
+<text x="1160" y="223" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">项目 MCP OAuth 凭证</text>
+<rect x="40" y="295" width="1520" height="640" rx="14" fill="#f8fafc" stroke="#b9c8d7" stroke-width="1.5"/>
+<text x="330" y="326" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="start">部署者控制的服务端与文件系统</text>
+<rect x="70" y="345" width="970" height="550" rx="14" fill="#fff" stroke="#d2dce7" stroke-width="1.5"/>
+<rect x="1130" y="345" width="400" height="550" rx="14" fill="#fff" stroke="#beb2db" stroke-width="1.5" stroke-dasharray="7 5"/>
+<rect x="100" y="370" width="370" height="120" rx="14" fill="#edf7f4" stroke="#9bcebf" stroke-width="1.5"/>
+<text x="120" y="404" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">用户接入与审批 API</text>
+<text x="120" y="435" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">用户会话；Google OAuth + PKCE</text>
+<text x="120" y="463" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">数据源凭据与授权审批</text>
+<rect x="550" y="370" width="460" height="120" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="570" y="404" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">Agent 读取权限校验</text>
+<text x="570" y="435" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">Agent + 用户 + 连接 + 操作</text>
+<text x="570" y="463" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">有效期 + 限制条件；前后各检查一次</text>
+<rect x="100" y="550" width="910" height="120" rx="14" fill="#f3f7fb" stroke="#c6d4e2" stroke-width="1.5"/>
+<text x="120" y="584" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">数据源适配与接收</text>
+<text x="120" y="615" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">固定 API 端点 · 用户选定文件的导入解析器 · 签名 webhook 接收器</text>
+<text x="120" y="643" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">凭据留在服务端；结果有大小限制；不自动写入项目 Events</text>
+<rect x="100" y="755" width="430" height="120" rx="14" fill="#f3f7fb" stroke="#c6d4e2" stroke-width="1.5"/>
+<text x="120" y="789" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">SQLite</text>
+<text x="120" y="820" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">身份、连接与授权</text>
+<text x="120" y="848" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">加密凭据与 Business 原始回执</text>
+<rect x="580" y="755" width="430" height="120" rx="14" fill="#fff8ec" stroke="#dfc392" stroke-width="1.5"/>
+<text x="600" y="789" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">&lt;data&gt;/hub-imports</text>
+<text x="600" y="820" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">不可变原件与清单</text>
+<text x="600" y="848" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">明文文件；私密文件权限</text>
+<rect x="1160" y="370" width="340" height="120" rx="14" fill="#f2effa" stroke="#beb2db" stroke-width="1.5"/>
+<text x="1180" y="404" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">项目 /mcp</text>
+<text x="1180" y="435" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">Context OAuth scope</text>
+<text x="1180" y="463" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">+ 项目成员权限</text>
+<rect x="1160" y="605" width="340" height="150" rx="14" fill="#f2effa" stroke="#beb2db" stroke-width="1.5"/>
+<text x="1180" y="639" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">项目存储</text>
+<text x="1180" y="670" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">Events / Files / metadata</text>
+<text x="1180" y="698" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">通过产品接口只能追加</text>
+<text x="1180" y="726" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">派生 State 与处理</text>
+<text x="1155" y="814" font-size="18" font-weight="700" style="fill:#142b43" text-anchor="start">项目与 Hub 授权独立。</text>
+<text x="1155" y="844" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">不会自动归档数据源到项目。</text>
+<path d="M265 235 L265 370" class="line" marker-end="url(#arrow)"/>
+<path d="M795 235 L795 370" class="line" marker-end="url(#arrow)"/>
+<path d="M1340 235 L1340 370" class="line" marker-end="url(#arrow)"/>
+<path d="M285 490 L285 550" class="line" marker-end="url(#arrow)"/>
+<path d="M780 490 L780 550" class="line" marker-end="url(#arrow)"/>
+<path d="M315 670 L315 755" class="line" marker-end="url(#arrow)"/>
+<path d="M795 670 L795 755" class="line" marker-end="url(#arrow)"/>
+<path d="M1330 490 L1330 605" class="line" marker-end="url(#arrow)"/>
+<text x="338" y="713" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">服务端私密存储</text>
+<text x="60" y="982" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="start">数据输入：按需 API 读取 / 用户主动上传 / webhook 推送</text>
+<path d="M225 1040 L225 1010 L1365 1010" class="line"/>
+<path d="M1070 1010 L1070 610 L1010 610" class="line" marker-end="url(#arrow)"/>
+<path d="M605 1040 L605 1010" class="line"/>
+<path d="M985 1040 L985 1010" class="line"/>
+<path d="M1365 1040 L1365 1010" class="line"/>
+<rect x="60" y="1040" width="330" height="130" rx="14" fill="#edf7f4" stroke="#9bcebf" stroke-width="1.5"/>
+<text x="80" y="1074" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">Google 账号</text>
+<text x="80" y="1105" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">Gmail / GCal / Drive / ...</text>
+<text x="80" y="1133" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">按服务、账号完成浏览器 OAuth</text>
+<text x="80" y="1161" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">托管 token 刷新</text>
+<rect x="440" y="1040" width="330" height="130" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="460" y="1074" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">手动提供的数据源凭据</text>
+<text x="460" y="1105" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">Graph / SaaS / Bot / DAV</text>
+<text x="460" y="1133" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">用户 token 或 App 专用密码</text>
+<text x="460" y="1161" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">运维负责续期</text>
+<rect x="820" y="1040" width="330" height="130" rx="14" fill="#fff8ec" stroke="#dfc392" stroke-width="1.5"/>
+<text x="840" y="1074" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">个人聊天导出</text>
+<text x="840" y="1105" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">WhatsApp / Telegram / 微信</text>
+<text x="840" y="1133" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">TXT / ZIP / JSON / CSV</text>
+<text x="840" y="1161" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">用户选定快照；不实时同步</text>
+<rect x="1200" y="1040" width="330" height="130" rx="14" fill="#f2effa" stroke="#beb2db" stroke-width="1.5"/>
+<text x="1220" y="1074" font-size="22" font-weight="700" style="fill:#142b43" text-anchor="start">WhatsApp Business</text>
+<text x="1220" y="1105" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">Meta 签名 + WABA / 号码绑定</text>
+<text x="1220" y="1133" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">仅新收到的 webhook 推送</text>
+<text x="1220" y="1161" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">加密保留原始推送</text>
+<text x="60" y="1218" font-size="20" font-weight="700" style="fill:#142b43" text-anchor="start">一个连接 = 用户 + 数据源 + 账号。一次授权 = Agent + 连接 + 操作 + 有效期 + 已支持的限制条件。</text>
+<text x="60" y="1254" font-size="18" font-weight="400" style="fill:#4e6378" text-anchor="start">自托管控制持久化位置；转交给外部模型的内容仍可能离开此部署。</text>
+</svg>

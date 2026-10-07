@@ -36,6 +36,7 @@
 
 ## 产品与设计文档
 
+- [数据 Hub 架构与多账号授权](docs/hub-architecture.cn.md)：架构图、账号隔离、数据源接入、Agent 权限与存储边界。
 - [Agent 数据 Hub：CLI 能力发现、用户审批、多账号和 Android 提醒](docs/agent-hub.cn.md)
 - [数据源 CLI](docs/data-source-cli.cn.md)：发现能力、接入多账号、查看授权和读取 Gmail、WhatsApp Business、文档、任务及聊天数据。
 - [提案：个人信息源接入与下一步 Calendar 实施方案](docs/proposals/personal-data-sources.cn.md)

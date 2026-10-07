@@ -2,6 +2,8 @@
 
 [English](data-source-cli.md) | [简体中文](data-source-cli.cn.md)
 
+组件架构与授权时序图见[架构与多账号授权](hub-architecture.cn.md)。
+
 `edc` CLI 可以发现数据源 schema、接入用户控制的账号、查看 Agent 实际授权，并读取指定数据。可连接本地、自托管服务或 HTTPS 部署。目录中的条目表示代码支持，不证明真实账号已经接通。从 [GitHub Releases](https://github.com/flyfy1/event-driven-context/releases/latest) 安装，或运行 `make build` 后使用 `./bin/edc`。以下命令从 CLI v0.1.2 提供。
 
 ## 发现、接入与读取

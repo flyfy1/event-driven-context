@@ -2,6 +2,8 @@
 
 [English](agent-hub.md) | [简体中文](agent-hub.cn.md)
 
+See [architecture and account authorization](hub-architecture.md) for diagrams, per-source onboarding and the distinction between source consent and Agent grants.
+
 ## MVP contract
 
 - **User:** A person operating multiple agents and multiple external accounts.
@@ -116,7 +118,7 @@ Authorization metadata and encrypted secrets live in the identity SQLite databas
 
 ## Owner-selected imports
 
-Use the owner's normal configuration to import a selected UTF-8 file of at most 1 MiB. The CLI reads only the given file; it does not scan folders or retrieve attachments.
+Use the owner's normal configuration to import a selected UTF-8 file of at most 1 MiB, or a WhatsApp ZIP of at most 10 MiB containing one UTF-8 chat text of at most 1 MiB. Telegram Desktop JSON and prepared WeChat CSV are also supported. The CLI reads only the given file; it does not scan folders or retrieve attachments. See [personal chat imports](data-source-cli.md#personal-chat-history-first).
 
 ```sh
 edc --config ./owner-private.json source import \
@@ -145,7 +147,7 @@ Every import preserves a new original with private permissions. Reimporting the 
 
 The implementation includes tests for agent/user credential separation, cross-owner access, distinct accounts, exact operation grants, code verification, expiry, revocation, reconnect invalidation, OAuth state/PKCE, provider request bounds, redirects, registry visibility and malformed-state handling, scoped calendar windows, snapshot provenance and pagination, push token ownership, stale web/mobile sessions, and untrusted-text rendering. Run `make check` and `make build`; see Android instructions for its independent checks.
 
-Current verification is local. Actual Google consent/refresh, live Graph/DAV/SaaS/Telegram reads, public deployment, installed Android UI and FCM delivery require external configuration or devices; no live-provider or production success is implied by local tests.
+The [v0.1.2 release](https://github.com/flyfy1/event-driven-context/releases/tag/v0.1.2) records CLI publication and deployment checks. Actual Google consent/refresh, live Graph/DAV/SaaS/Telegram reads, installed Android UI and FCM delivery still require account or device acceptance; local tests and deployment checks do not establish those live-provider results.
 
 ## Connector continuation queue
 

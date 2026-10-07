@@ -2,6 +2,8 @@
 
 [English](data-source-cli.md) | [简体中文](data-source-cli.cn.md)
 
+See [architecture and account authorization](hub-architecture.md) for the component and authorization diagrams.
+
 The `edc` CLI can discover provider schemas, connect owner-controlled accounts, inspect an agent's effective grants, and read selected source data. It runs against a local/self-hosted server or an HTTPS deployment. A catalog entry is implementation support, not proof of account access. Install the CLI from [GitHub Releases](https://github.com/flyfy1/event-driven-context/releases/latest), or run `make build` and use `./bin/edc`. CLI v0.1.2 includes the commands below.
 
 ## Discover, connect and read

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="998" viewBox="0 0 1500 998" role="img" aria-labelledby="title description">
+<title id="title">Google 账号授权时序</title>
+<desc id="description">为每个选定的服务、账号重复流程；Agent 操作授权仍需单独批准。</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#4e6378"/></marker></defs>
+<style>text {font-family: "Noto Sans CJK SC", "Noto Sans", sans-serif; fill: #142b43} .line {fill:none;stroke:#4e6378;stroke-width:2.2}</style>
+<rect width="1500" height="998" fill="#ffffff"/>
+<text x="50" y="50" font-size="30" font-weight="700" style="fill:#142b43" text-anchor="start">Google 账号授权时序</text>
+<text x="50" y="88" font-size="21" font-weight="400" style="fill:#4e6378" text-anchor="start">为每个选定的服务、账号重复流程；Agent 操作授权仍需单独批准。</text>
+<rect x="22.0" y="125" width="216" height="65" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="130.0" y="166" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="middle">用户浏览器</text>
+<path d="M130.0 190 L130.0 903" class="line" stroke-dasharray="6 5"/>
+<rect x="435.33333333333326" y="125" width="216" height="65" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="543.3333333333333" y="166" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="middle">Context Hub</text>
+<path d="M543.3333333333333 190 L543.3333333333333 903" class="line" stroke-dasharray="6 5"/>
+<rect x="848.6666666666666" y="125" width="216" height="65" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="956.6666666666666" y="166" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="middle">Google</text>
+<path d="M956.6666666666666 190 L956.6666666666666 903" class="line" stroke-dasharray="6 5"/>
+<rect x="1262.0" y="125" width="216" height="65" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="1370.0" y="166" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="middle">私密存储</text>
+<path d="M1370.0 190 L1370.0 903" class="line" stroke-dasharray="6 5"/>
+<text x="336.66666666666663" y="235" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">1. 用户会话启动，指定数据源</text>
+<path d="M130.0 247 L543.3333333333333 247" class="line" marker-end="url(#arrow)"/>
+<text x="956.6666666666666" y="312" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">2. state + PKCE 绑定用户和数据源；10 分钟单次有效</text>
+<path d="M543.3333333333333 324 L1370.0 324" class="line" marker-end="url(#arrow)"/>
+<text x="336.66666666666663" y="389" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">3. 授权 URL + 回调 cookie</text>
+<path d="M543.3333333333333 401 L130.0 401" class="line" marker-end="url(#arrow)" stroke-dasharray="6 5"/>
+<text x="543.3333333333333" y="466" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">4. 选择账号，批准该服务的 scope</text>
+<path d="M130.0 478 L956.6666666666666 478" class="line" marker-end="url(#arrow)"/>
+<text x="543.3333333333333" y="543" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">5. 携带 code + state 重定向</text>
+<path d="M956.6666666666666 555 L130.0 555" class="line" marker-end="url(#arrow)" stroke-dasharray="6 5"/>
+<text x="336.66666666666663" y="620" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">6. 回调 + 匹配的浏览器 cookie</text>
+<path d="M130.0 632 L543.3333333333333 632" class="line" marker-end="url(#arrow)"/>
+<text x="750.0" y="697" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">7. PKCE 换 token，验证 scope 与账号</text>
+<path d="M543.3333333333333 709 L956.6666666666666 709" class="line" marker-end="url(#arrow)"/>
+<text x="956.6666666666666" y="774" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">8. 加密保存连接；重新连接撤销旧授权</text>
+<path d="M543.3333333333333 786 L1370.0 786" class="line" marker-end="url(#arrow)"/>
+<text x="336.66666666666663" y="851" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">9. 账号连接完成；尚未授予 Agent 读取权限</text>
+<path d="M543.3333333333333 863 L130.0 863" class="line" marker-end="url(#arrow)" stroke-dasharray="6 5"/>
+<text x="50" y="966" font-size="20" font-weight="700" style="fill:#167862" text-anchor="start">应用凭据只标识应用；各账号的同意才授予数据源访问权。</text>
+</svg>

@@ -2,6 +2,8 @@
 
 [English](google-hub-setup.md) | [简体中文](google-hub-setup.cn.md)
 
+各账号的 OAuth 时序与 Integ.Auth 登录的区别，见[架构与多账号授权](hub-architecture.cn.md)。已有 Google Web client 可以新增 Hub 回调，同时保留身份登录回调。
+
 一个部署方控制的 Google OAuth 应用可接入多个 Gmail 和 Calendar 账号，每个连接分别加密保存，并独立授予 Agent 权限。创建应用与授予邮箱访问分开。通过部署方控制的 Google 账号登录 [Google Cloud Console](https://console.cloud.google.com/)，不要共享账号密码或验证码。
 
 1. 选择/创建项目，配置 OAuth 同意屏幕（应用名、支持邮箱、受众及联系人）。外部应用处于测试模式时，把计划接入的每个 Google 账号加入测试用户。受限 Gmail scope 面向更广用户分发时可能需要验证；测试/刷新行为取决于 Google 策略。

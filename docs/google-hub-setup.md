@@ -2,6 +2,8 @@
 
 [English](google-hub-setup.md) | [简体中文](google-hub-setup.cn.md)
 
+See [architecture and account authorization](hub-architecture.md) for the per-account OAuth sequence and separation from Integ.Auth login. An existing Google Web client may register the additional Hub callback while retaining its identity-login callback.
+
 One deployer-controlled Google OAuth application supports multiple Gmail and Calendar accounts, each with independent encrypted connections and Agent grants. Creating the application is separate from granting mailbox access. Use a Google account controlled by the deployer in [Google Cloud Console](https://console.cloud.google.com/); do not share account passwords or codes.
 
 1. Choose/create a project and configure its OAuth consent screen (app name, support email, audience and contact). For a testing external application, add each intended Google account as a test user. Restricted Gmail scopes may require verification for wider distribution; testing/refresh behavior depends on Google policy.

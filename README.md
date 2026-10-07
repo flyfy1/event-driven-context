@@ -36,6 +36,7 @@ Here, "local" means that data storage and execution run in an environment contro
 
 ## Product and Design Documents
 
+- [Data hub architecture and account authorization](docs/hub-architecture.md): diagrams, account isolation, source onboarding, Agent permissions and storage boundaries.
 - [Agent data hub: CLI discovery, owner approvals, multiple accounts and Android reminders](docs/agent-hub.md)
 - [Data source CLI](docs/data-source-cli.md): discover capabilities, connect multiple accounts, inspect grants and read mail, WhatsApp Business, documents, tasks and chats.
 - [Proposal: personal information sources and the next Calendar integration](docs/proposals/personal-data-sources.md)

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1229" viewBox="0 0 1500 1229" role="img" aria-labelledby="title description">
+<title id="title">Agent pairing and operation authorization</title>
+<desc id="description">Pairing permits discovery; each read operation needs a separate owner grant.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#4e6378"/></marker></defs>
+<style>text {font-family: "Noto Sans CJK SC", "Noto Sans", sans-serif; fill: #142b43} .line {fill:none;stroke:#4e6378;stroke-width:2.2}</style>
+<rect width="1500" height="1229" fill="#ffffff"/>
+<text x="50" y="50" font-size="30" font-weight="700" style="fill:#142b43" text-anchor="start">Agent pairing and operation authorization</text>
+<text x="50" y="88" font-size="21" font-weight="400" style="fill:#4e6378" text-anchor="start">Pairing permits discovery; each read operation needs a separate owner grant.</text>
+<rect x="22.0" y="125" width="216" height="65" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="130.0" y="166" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="middle">Agent CLI</text>
+<path d="M130.0 190 L130.0 1134" class="line" stroke-dasharray="6 5"/>
+<rect x="435.33333333333326" y="125" width="216" height="65" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="543.3333333333333" y="166" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="middle">Owner</text>
+<path d="M543.3333333333333 190 L543.3333333333333 1134" class="line" stroke-dasharray="6 5"/>
+<rect x="848.6666666666666" y="125" width="216" height="65" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="956.6666666666666" y="166" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="middle">Context Hub</text>
+<path d="M956.6666666666666 190 L956.6666666666666 1134" class="line" stroke-dasharray="6 5"/>
+<rect x="1262.0" y="125" width="216" height="65" rx="14" fill="#edf4fc" stroke="#a1bedf" stroke-width="1.5"/>
+<text x="1370.0" y="166" font-size="21" font-weight="700" style="fill:#142b43" text-anchor="middle">Source / snapshot</text>
+<path d="M1370.0 190 L1370.0 1134" class="line" stroke-dasharray="6 5"/>
+<text x="543.3333333333333" y="235" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">1. Register pairing request</text>
+<path d="M130.0 247 L956.6666666666666 247" class="line" marker-end="url(#arrow)"/>
+<text x="543.3333333333333" y="312" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">2. Private credential + verification code; pending 15 minutes</text>
+<path d="M956.6666666666666 324 L130.0 324" class="line" marker-end="url(#arrow)" stroke-dasharray="6 5"/>
+<text x="750.0" y="389" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">3. Compare code; approve pairing</text>
+<path d="M543.3333333333333 401 L956.6666666666666 401" class="line" marker-end="url(#arrow)"/>
+<text x="543.3333333333333" y="466" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">4. Discover configured connections</text>
+<path d="M130.0 478 L956.6666666666666 478" class="line" marker-end="url(#arrow)"/>
+<text x="543.3333333333333" y="543" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">5. Request connection + operation + duration + constraints</text>
+<path d="M130.0 555 L956.6666666666666 555" class="line" marker-end="url(#arrow)"/>
+<text x="750.0" y="620" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">6. Approve this operation request</text>
+<path d="M543.3333333333333 632 L956.6666666666666 632" class="line" marker-end="url(#arrow)"/>
+<text x="543.3333333333333" y="697" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">7. source read with exact connection + operation</text>
+<path d="M130.0 709 L956.6666666666666 709" class="line" marker-end="url(#arrow)"/>
+<text x="940.6666666666666" y="774" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="end">8. Check identity, grant and bounds</text>
+<path d="M956.6666666666666 786 L1004.6666666666666 786 L1004.6666666666666 808 L956.6666666666666 808" class="line" marker-end="url(#arrow)"/>
+<text x="1163.3333333333333" y="851" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">9. Bounded read; server-held credential</text>
+<path d="M956.6666666666666 863 L1370.0 863" class="line" marker-end="url(#arrow)"/>
+<text x="1163.3333333333333" y="928" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">10. Return source result</text>
+<path d="M1370.0 940 L956.6666666666666 940" class="line" marker-end="url(#arrow)" stroke-dasharray="6 5"/>
+<text x="940.6666666666666" y="1005" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="end">11. Recheck access before delivery</text>
+<path d="M956.6666666666666 1017 L1004.6666666666666 1017 L1004.6666666666666 1039 L956.6666666666666 1039" class="line" marker-end="url(#arrow)"/>
+<text x="543.3333333333333" y="1082" font-size="19" font-weight="400" style="fill:#142b43" text-anchor="middle">12. Return data without provider credentials</text>
+<path d="M956.6666666666666 1094 L130.0 1094" class="line" marker-end="url(#arrow)" stroke-dasharray="6 5"/>
+<text x="50" y="1197" font-size="20" font-weight="700" style="fill:#167862" text-anchor="start">Mailbox A approval does not cover mailbox B. Calendar content requires calendar/time constraints.</text>
+</svg>

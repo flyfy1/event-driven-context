@@ -2,6 +2,8 @@
 
 [English](agent-hub.md) | [简体中文](agent-hub.cn.md)
 
+架构图、各数据源接入方式，以及数据源同意与 Agent 授权的区别，见[架构与多账号授权](hub-architecture.cn.md)。
+
 ## MVP 约定
 
 - **用户：** 同时使用多个 Agent 和多个外部账号的人。
@@ -116,7 +118,7 @@ Graph、DAV 和 SaaS 适配器目前采用用户手动配置，不提供浏览�
 
 ## 用户主动选择的导入
 
-使用用户的普通配置，导入主动选择的 UTF-8 文件，最大 1 MiB。CLI 仅读取指定文件，不扫描文件夹，也不抓取附件。
+使用用户的普通配置，导入主动选择的 UTF-8 文件，最大 1 MiB；或导入最大 10 MiB 的 WhatsApp ZIP，其中须有一个最大 1 MiB 的 UTF-8 聊天文本。也支持 Telegram Desktop JSON 和整理好的微信 CSV。CLI 仅读取指定文件，不扫描文件夹，也不抓取附件。参见[个人聊天导入](data-source-cli.cn.md#个人聊天记录优先)。
 
 ```sh
 edc --config ./owner-private.json source import \
@@ -145,7 +147,7 @@ edc --config ./agent-private.json api call \
 
 实现包含 Agent 与用户凭证分离、跨用户隔离、多账号、准确操作授权、验证码、过期、撤销、重新连接后授权失效、OAuth state/PKCE、第三方请求大小与重定向限制、注册表可见性与无效状态处理、限定日历时间窗口、快照来源与分页、推送 token 归属、网页和手机旧会话响应、不可信文本渲染等测试。运行 `make check` 和 `make build`；Android 使用其独立检查命令。
 
-当前验证属于本地范围。真实 Google 同意与刷新、真实 Graph/DAV/SaaS/Telegram 读取、公开部署、Android 安装后界面与 FCM 到达，都需要外部配置或设备；本地测试不代表真实数据源或生产成功。
+[v0.1.2 发布](https://github.com/flyfy1/event-driven-context/releases/tag/v0.1.2)记录了 CLI 发布与部署检查。真实 Google 同意与刷新、真实 Graph/DAV/SaaS/Telegram 读取、Android 安装后界面与 FCM 到达，仍需对应账号或设备验收；本地测试及部署检查不代表这些真实数据源结果。
 
 ## 连接器持续推进队列
 
