@@ -49,7 +49,7 @@ function harness(options = {}) {
     createElement: (tag) => new Element(tag),
     querySelectorAll: (selector) => selector === "#hub-content button" ? ["agents", "requests", "connections"].flatMap((key) => descendants(map.get("#hub-" + key)).filter((el) => el.tagName === "button")) : [],
     addEventListener: (type, listener) => { docEvents[type] = listener; } };
-  const location = new URL("http://localhost:8080/hub.html");
+  const location = new URL("http://localhost:8080/hub.html" + (options.query || ""));
   location.assign = (url) => navigations.push(url);
   map.get("#hub-google-provider").value = "google-drive";
   const context = {
@@ -277,4 +277,19 @@ test("Configured CLI accounts remain visible without OAuth, but accounts without
   h.map.get("#hub-refresh").click(); await flush();
   assert.equal(h.map.get("#hub-connections").textContent, "");
   assert.equal(h.map.get("#hub-connections-section").hidden, true);
+});
+
+
+test("CLI source deep link selects a supported provider and prefills once", async () => {
+  const h = harness({ query: "?provider=gmail&name=Work%20%26%20private" }); await flush();
+  assert.equal(h.map.get("#hub-google-provider").value, "gmail");
+  assert.equal(h.map.get("#hub-google-name").value, "Work & private");
+  assert.equal(h.map.get("#hub-add-account").open, true);
+  h.map.get("#hub-add-account").open = false;
+  h.map.get("#hub-google-name").value = "Changed by owner";
+  h.map.get("#hub-refresh").click(); await flush();
+  assert.equal(h.map.get("#hub-add-account").open, false);
+  assert.equal(h.map.get("#hub-google-name").value, "Changed by owner");
+  const unsupported = harness({ query: "?provider=whatsapp-business&name=Unknown" }); await flush();
+  assert.equal(unsupported.map.get("#hub-google-name").value, "");
 });

@@ -169,13 +169,22 @@
     return integrations.providers.filter((row) => runnable(row) && row.visible === true && row.connected_account_count > 0)
       .flatMap((row) => row.connections.filter((c) => c.status === "configured" && c.operations.length > 0).map((connection) => ({ connection, provider: row.provider })));
   }
+  let sourcePrefillHandled = false;
   function renderIntegrations() {
     if (!page) return;
     const options = onboardingProviders(), connections = visibleConnections();
     const picker = $("#hub-google-provider"), selected = picker.value;
     picker.replaceChildren();
     for (const row of options) { const option = node("option", row.provider.name); option.value = row.provider.id; picker.append(option); }
-    picker.value = options.some((row) => row.provider.id === selected) ? selected : options[0]?.provider.id || "";
+    const requested = params.get("provider");
+    picker.value = options.some((row) => row.provider.id === selected) ? selected : options.some((row) => row.provider.id === requested) ? requested : options[0]?.provider.id || "";
+    if (!sourcePrefillHandled && options.some((row) => row.provider.id === requested)) {
+      sourcePrefillHandled = true;
+      picker.value = requested;
+      $("#hub-add-account").open = true;
+      const nameInput = $("#hub-google-name");
+      if (nameInput && !nameInput.value && params.get("name")) nameInput.value = params.get("name").slice(0,150);
+    }
     $("#hub-add-account").hidden = options.length === 0;
     if (!options.length) $("#hub-add-account").open = false;
     $("#hub-integrations-message").textContent = integrationsFailed ? t("integrationsUnavailable") : "";
