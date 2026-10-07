@@ -45,3 +45,9 @@ Run `make check` and `make build`. Fixtures use synthetic messages/keys only and
 | Android notifications | Existing unit/build/lint evidence | Firebase setup and selected device acceptance |
 
 Account registration requires the owner's selected email/name and provider verification. Do not ask for secrets or codes in chat. Complete independent implementation work while awaiting those inputs; never claim a fixture is a connected private account.
+
+## 2026-10-07 publication verification
+
+CLI v0.1.2 and backend source commit `b020c1991bfaca742b6b21daaa43fe2d6d32a22f` were published. GitHub release artifacts for Linux/macOS, ARM64/AMD64 passed CI; the downloaded Linux ARM64 checksum and real CLI catalog call were verified. The public Pi API returned v0.1.2 and 41 available adapters; a health request ID matched the Pi journal, and database integrity was `ok`. The public Hub JavaScript matched this source commit. `make check`, `make build`, focused race tests and desktop/mobile browser fixtures passed.
+
+The deployed Google application is not enabled yet. Existing deployment-owned Google application credentials were located in Integ.Auth configuration, but an unauthenticated upstream probe returned `redirect_uri_mismatch` for the Context callback. Registration of `https://context-api.integ.life/v1/hub/google/callback` in that application's allowed redirects remains required. No Gmail/Calendar consent or personal chat data was obtained. Fixture and deployment evidence must remain distinct from provider-account acceptance.

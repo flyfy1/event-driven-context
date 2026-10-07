@@ -45,3 +45,9 @@ Bot API token 不能提供个人 Telegram 会话。Telegram 文档要求应用 `
 | Android 通知 | 既有单元测试/构建/lint | Firebase 配置和指定设备验收 |
 
 注册账号仍需服务验证，不能在聊天中索取密钥或验证码。等待这些输入时继续独立实现，不能声称模拟测试接通了私密账号。
+
+## 2026-10-07 发布验收
+
+CLI v0.1.2 和服务端源提交 `b020c1991bfaca742b6b21daaa43fe2d6d32a22f` 已发布。GitHub 的 Linux/macOS、ARM64/AMD64 构建通过 CI；下载的 Linux ARM64 校验和及真实 CLI 目录调用已验证。公开 Pi API 返回 v0.1.2 和 41 种可用适配器，健康请求 ID 匹配 Pi 日志，数据库完整性为 `ok`。公开 Hub JavaScript 与该源提交一致。`make check`、`make build`、针对性竞态测试及桌面/移动浏览器模拟测试通过。
+
+部署中的 Google 应用暂未启用。已在 Integ.Auth 配置找到部署方控制的应用凭据，但未登录的上游探测针对 Context 回调返回 `redirect_uri_mismatch`。仍需将 `https://context-api.integ.life/v1/hub/google/callback` 注册到该应用允许的回调列表。尚未取得 Gmail/Calendar 同意或个人聊天数据；模拟及部署证据与真实账号验收分开。
