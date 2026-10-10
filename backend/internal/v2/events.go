@@ -126,16 +126,8 @@ func (s *Service) recordEventsLocked(projectID string, in RecordEventsInput, aut
 			}
 			item.Content.MediaType, item.Content.Filename, item.Content.SizeBytes, item.Content.SHA256 = f.MediaType, f.Filename, f.SizeBytes, f.SHA256
 		}
-		candidate, err := cloneSnapshot(s.data)
-		if err != nil {
-			return out, err
-		}
+		candidate := cloneSnapshotForProject(s.data, projectID)
 		cp := candidate.Projects[projectID]
-		if cp == nil {
-			cp = &projectData{}
-			normalizeProjectData(cp)
-			candidate.Projects[projectID] = cp
-		}
 		cp.LatestSequence++
 		e := Event{ID: item.ID, ProjectID: projectID, Type: item.Type, Content: item.Content, Metadata: item.Metadata, Source: item.Source, Refs: item.Refs, OccurredAt: item.OccurredAt, Sequence: cp.LatestSequence, RecordedAt: nowUTC(), Actor: auth.actor}
 		cp.Events = append(cp.Events, e)
@@ -144,7 +136,7 @@ func (s *Service) recordEventsLocked(projectID string, in RecordEventsInput, aut
 			f.Referenced = true
 			cp.Files[f.ID] = f
 		}
-		if err = s.persistSnapshotLocked(candidate); err != nil {
+		if err := s.persistSnapshotLocked(candidate); err != nil {
 			return out, err
 		}
 		s.data = candidate
@@ -414,8 +406,9 @@ func objectMatches(have, want map[string]json.RawMessage) bool {
 	}
 	return true
 }
-// jsonEqual compares JSON values semantically. Snapshots are persisted with
-// MarshalIndent, so raw bytes reloaded from disk differ in formatting.
+
+// jsonEqual compares JSON values semantically, including indented snapshots
+// whose raw bytes reloaded from disk differ in formatting.
 func jsonEqual(a, b json.RawMessage) bool {
 	if string(a) == string(b) {
 		return true
