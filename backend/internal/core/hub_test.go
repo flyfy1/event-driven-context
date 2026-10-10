@@ -243,3 +243,71 @@ func TestHubExpiredRegistrationsDoNotExhaustLifetimeQuota(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestHubRegistrationOpaqueAndBounded(t *testing.T) {
+	s, owner, _, first, _ := hubFixture(t)
+	assertInert := func(a HubAgentRegistration) {
+		t.Helper()
+		if a.OwnerID != "" || a.Status != "pending" || a.Token == "" || a.ID == "" || len(a.VerificationCode) != 10 || a.ExpiresAt.Sub(a.CreatedAt) != 15*time.Minute {
+			t.Fatalf("invalid decoy: %+v", a.HubAgent)
+		}
+		for _, approved := range []bool{false, true} {
+			if _, err := s.HubAgent(owner, a.Token, approved); !errors.Is(err, ErrUnauthenticated) {
+				t.Fatalf("decoy authenticated: %v", err)
+			}
+		}
+		if err := s.DecideHubAgent(owner, a.ID, "approve", a.VerificationCode); !errors.Is(err, ErrNotFound) {
+			t.Fatalf("decoy approval: %v", err)
+		}
+	}
+	for i := 0; i < 12; i++ {
+		start := time.Now()
+		a, err := s.RegisterHubAgent(owner, "missing-owner", "Test Agent")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if time.Since(start) < 100*time.Millisecond {
+			t.Fatal("missing owner bypassed timing floor")
+		}
+		assertInert(a)
+	}
+	// Concurrent inserts must never exceed the cap, even when requests race.
+	results := make(chan HubAgentRegistration, 20)
+	errs := make(chan error, 20)
+	for i := 0; i < 20; i++ {
+		go func() {
+			a, err := s.RegisterHubAgent(owner, "hub-owner", "Test Agent")
+			results <- a
+			errs <- err
+		}()
+	}
+	for i := 0; i < 20; i++ {
+		a := <-results
+		if err := <-errs; err != nil {
+			t.Fatal(err)
+		}
+		if a.OwnerID == "" {
+			assertInert(a)
+		}
+	}
+	var count int
+	if err := s.db.QueryRow("SELECT COUNT(*) FROM hub_agents").Scan(&count); err != nil || count != 10 {
+		t.Fatalf("stored registrations: %d, %v", count, err)
+	}
+	// A different owner still has room.
+	other, err := s.RegisterHubAgent(owner, "hub-other", "Other Agent")
+	if err != nil || other.OwnerID == "" {
+		t.Fatalf("owner isolation: %v", err)
+	}
+	// An expired pending row frees a slot at the expiry boundary.
+	if _, err := s.db.Exec("UPDATE hub_agents SET expires_at=? WHERE id=?", time.Now().Unix(), first.ID); err != nil {
+		t.Fatal(err)
+	}
+	fresh, err := s.RegisterHubAgent(owner, "hub-owner", "Fresh Agent")
+	if err != nil || fresh.OwnerID == "" {
+		t.Fatalf("expired row counted: %v", err)
+	}
+	if _, err := s.HubAgent(owner, fresh.Token, false); err != nil {
+		t.Fatal(err)
+	}
+}

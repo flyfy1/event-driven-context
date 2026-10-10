@@ -73,25 +73,37 @@ func (s *Store) RegisterHubAgent(ctx context.Context, owner, name string) (HubAg
 	if !hubText(owner, 254) || !hubText(name, 100) {
 		return HubAgentRegistration{}, Invalid("owner and agent name are required")
 	}
-	var uid string
-	if err := s.db.QueryRowContext(ctx, "SELECT id FROM users WHERE username=?", owner).Scan(&uid); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return HubAgentRegistration{}, ErrNotFound
+	// Pad ordinary lookup/write differences without holding a database lock.
+	// This is a minimum duration, not a constant-time guarantee under load.
+	deadline := time.NewTimer(100 * time.Millisecond)
+	defer deadline.Stop()
+	defer func() {
+		select {
+		case <-deadline.C:
+		case <-ctx.Done():
 		}
+	}()
+	var uid string
+	if err := s.db.QueryRowContext(ctx, "SELECT id FROM users WHERE username=?", owner).Scan(&uid); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return HubAgentRegistration{}, err
 	}
 	t := time.Now().UTC().Truncate(time.Second)
 	a := HubAgent{ID: newID("agent"), OwnerID: uid, Name: name, VerificationCode: strings.ToUpper(rand.Text()[:10]), Status: "pending", CreatedAt: t, ExpiresAt: t.Add(15 * time.Minute)}
 	token := "edc_agent_" + rand.Text() + rand.Text()
 	result, err := s.db.ExecContext(ctx, `INSERT INTO hub_agents(id,owner_id,name,token_hash,verification_code,status,created_at,expires_at)
- SELECT ?,?,?,?,?,?,?,? WHERE (SELECT COUNT(*) FROM hub_agents WHERE owner_id=? AND status='pending' AND expires_at>?)<10
- AND (SELECT COUNT(*) FROM hub_agents WHERE owner_id=? AND status IN ('approved','pending') AND expires_at>?)<1000`, a.ID, uid, name, digest([]byte(token)), a.VerificationCode, a.Status, t.Unix(), a.ExpiresAt.Unix(), uid, t.Unix(), uid, t.Unix())
+ SELECT ?,?,?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM users WHERE id=?) AND (SELECT COUNT(*) FROM hub_agents WHERE owner_id=? AND status='pending' AND expires_at>?)<10
+ AND (SELECT COUNT(*) FROM hub_agents WHERE owner_id=? AND status IN ('approved','pending') AND expires_at>?)<1000`, a.ID, uid, name, digest([]byte(token)), a.VerificationCode, a.Status, t.Unix(), a.ExpiresAt.Unix(), uid, uid, t.Unix(), uid, t.Unix())
 	if err != nil {
 		return HubAgentRegistration{}, err
 	}
-	n, _ := result.RowsAffected()
+	n, err := result.RowsAffected()
+	if err != nil {
+		return HubAgentRegistration{}, err
+	}
 	if n != 1 {
-		return HubAgentRegistration{}, &Error{"rate_limited", "too many agent registrations"}
+		// Missing owners and full queues receive the same unpersisted credential.
+		// Clear the internal notification target; no owner should be notified.
+		a.OwnerID = ""
 	}
 	return HubAgentRegistration{a, token}, nil
 }

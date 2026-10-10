@@ -2,10 +2,13 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"net/http/httptest"
+	"reflect"
 	"testing"
+	"time"
 
 	"event-driven-context/internal/core"
 )
@@ -93,5 +96,38 @@ func TestHubOwnerApprovalAndAgentBoundaries(t *testing.T) {
 	w = request("POST", "/v1/hub/execute", agent.Token, "", map[string]any{"connection_id": c.ID, "operation": "messages.list", "args": map[string]any{}})
 	if w.Code != 403 {
 		t.Fatal("revoked execution", w.Code)
+	}
+}
+
+func TestHubRegistrationResponseDoesNotDiscloseOwner(t *testing.T) {
+	f := newV2APIFixture(t)
+	// Fill the owner's queue without consuming the HTTP gate's independent IP budget.
+	for i := 0; i < 9; i++ {
+		if _, err := f.store.RegisterHubAgent(context.Background(), f.alice.Username, "Queued Agent"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var shape map[string]any
+	for _, owner := range []string{f.alice.Username, "missing-owner", f.alice.Username} {
+		start := time.Now()
+		w := f.request(t, "POST", "/v1/hub/agents", "", "application/json", v2JSONBody(t, map[string]string{"owner": owner, "name": "Test Agent"}))
+		if w.Code != 201 {
+			t.Fatalf("registration: %d %s", w.Code, w.Body.String())
+		}
+		if time.Since(start) < 100*time.Millisecond {
+			t.Fatal("registration bypassed timing floor")
+		}
+		out := decodeV2Response[map[string]any](t, w)
+		if len(out) != 8 || out["status"] != "pending" || out["name"] != "Test Agent" || out["approval_url"] == "" {
+			t.Fatalf("unexpected shape: %v", out)
+		}
+		if shape != nil {
+			for key, value := range shape {
+				if reflect.TypeOf(out[key]) != reflect.TypeOf(value) {
+					t.Fatalf("field %s differs", key)
+				}
+			}
+		}
+		shape = out
 	}
 }

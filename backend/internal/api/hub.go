@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/json"
@@ -49,7 +50,10 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 			hubFail(w, err)
 			return
 		}
-		notifyHubOwner(r.Context(), store, out.OwnerID)
+		if out.OwnerID != "" {
+			// Push delivery must not expose owner existence through response latency.
+			go notifyHubOwner(context.WithoutCancel(r.Context()), store, out.OwnerID)
+		}
 		respond(w, 201, struct {
 			core.HubAgentRegistration
 			ApprovalURL string `json:"approval_url"`
