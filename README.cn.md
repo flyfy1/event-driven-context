@@ -478,3 +478,9 @@ backend/skills/               版本固定且启动时校验摘要的 Skill 快�
 docs/                        产品、技术与交互设计文档
 scripts/                     构建与发布辅助脚本
 ```
+
+Skill 源文件归属：
+
+- `backend/plugins/daily-review/skills/daily-review/SKILL.md` 是每日回顾的权威源文件。Processorhost 从插件包读取它；`deploy-pi.sh` 会暂存该插件包。独立 runner 读取 `backend/skills/daily-review/SKILL.md` 中内容相同的快照。两个 host 各自提供输出 schema。
+- `backend/skills/edc-recorder/SKILL.md` 是记录技能的权威源文件，由 `edc setup` 嵌入。`frontend/skills/edc-recorder/SKILL.md` 是其静态下载副本，由 `scripts/deploy-frontend.sh` 与 `memory-recall` 一起发布。
+- 编辑权威源文件后，将其复制到对应的快照或下载位置。`make check` 运行的 `frontend/skills.test.js` 会检查两组文件是否逐字节相同。API 发布不会暂存独立 runner 的技能文件。

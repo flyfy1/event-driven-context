@@ -89,7 +89,6 @@ test('both entry points bundle routing and the public guide uses the CLI recorde
   assert.match(index,/edc push/);
   assert.match(index,/Use the CLI directly/);
   assert.match(index,/--type note/);
-  assert.equal(fs.readFileSync(path.join(__dirname,'skills/edc-recorder/SKILL.md'),'utf8'),fs.readFileSync(path.join(__dirname,'../backend/skills/edc-recorder/SKILL.md'),'utf8'));
 });
 
 // Execute the shipped landing controller, including its startup session check.

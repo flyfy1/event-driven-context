@@ -556,3 +556,9 @@ backend/skills/               Version-pinned Skill snapshots whose digests are c
 docs/                        Product, technical, and interaction design documents
 scripts/                     Build and deployment helpers
 ```
+
+Skill source ownership:
+
+- `backend/plugins/daily-review/skills/daily-review/SKILL.md` is canonical for daily review. Processorhost reads it from the plugin package; `deploy-pi.sh` stages that package. The standalone runner reads the identical snapshot in `backend/skills/daily-review/SKILL.md`. Both hosts supply their own output schema.
+- `backend/skills/edc-recorder/SKILL.md` is canonical for recording and is embedded by `edc setup`. `frontend/skills/edc-recorder/SKILL.md` is its static download copy, published by `scripts/deploy-frontend.sh` alongside `memory-recall`.
+- Edit the canonical file, then copy it to its snapshot/download location. `frontend/skills.test.js`, run by `make check`, enforces byte-for-byte equality for both pairs. API releases do not stage the standalone runner's skills.

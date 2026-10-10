@@ -16,7 +16,7 @@ readonly SOURCE_REVISION="$(git rev-parse --short=12 HEAD)"
 git clone --quiet --branch gh-pages "git@github.com:${REPOSITORY}.git" "$TEMP_DIR/site"
 # frontend/.nojekyll disables Markdown rendering so SKILL.md and agent-setup.md
 # remain downloadable source files with their original YAML front matter.
-# Skill pages are published independently on gh-pages. All application assets,
+# Other Skill pages are published independently on gh-pages. All application assets,
 # including the admin dashboard and agent guide, live in frontend/ and are
 # released together.
 rsync -a --delete \
@@ -27,9 +27,11 @@ rsync -a --delete \
   --exclude '/skills/' \
   frontend/ "$TEMP_DIR/site/"
 
-# This repository owns memory-recall; preserve independently published siblings.
-mkdir -p "$TEMP_DIR/site/skills/memory-recall"
-rsync -a --delete frontend/skills/memory-recall/ "$TEMP_DIR/site/skills/memory-recall/"
+# Publish repository-owned skills; preserve independently published siblings.
+for skill in memory-recall edc-recorder; do
+  mkdir -p "$TEMP_DIR/site/skills/$skill"
+  rsync -a --delete "frontend/skills/$skill/" "$TEMP_DIR/site/skills/$skill/"
+done
 
 # GitHub Pages serves JavaScript and CSS with long browser/CDN cache lifetimes.
 # Give every local asset reference a release-specific URL so returning browsers
