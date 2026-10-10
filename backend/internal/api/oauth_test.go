@@ -32,6 +32,11 @@ type oauthFixture struct {
 
 func newOAuthFixture(t *testing.T, ttl time.Duration) *oauthFixture {
 	t.Helper()
+	return newOAuthFixtureWithRegistration(t, ttl, true)
+}
+
+func newOAuthFixtureWithRegistration(t *testing.T, ttl time.Duration, allowRegistration bool) *oauthFixture {
+	t.Helper()
 	store, err := core.Open(t.TempDir() + "/context.db")
 	if err != nil {
 		t.Fatal(err)
@@ -39,7 +44,7 @@ func newOAuthFixture(t *testing.T, ttl time.Duration) *oauthFixture {
 	if _, err = store.Register(context.Background(), core.Credentials{Username: "alice", Email: "alice@example.com", Password: "integration-password-123"}); err != nil {
 		t.Fatal(err)
 	}
-	h := httptest.NewTLSServer(HandlerWithConfig(store, Config{PublicBaseURL: testOAuthIssuer, OAuthAccessTokenTTL: ttl}))
+	h := httptest.NewTLSServer(HandlerWithConfig(store, Config{AllowRegistration: allowRegistration, PublicBaseURL: testOAuthIssuer, OAuthAccessTokenTTL: ttl}))
 	jar, _ := cookiejar.New(nil)
 	client := h.Client()
 	client.Jar = jar
@@ -806,5 +811,34 @@ func TestOAuthClaudeWebV2EndToEnd(t *testing.T) {
 	result, err = session.CallTool(ctx, &mcp.CallToolParams{Name: "create_project", Arguments: core.ProjectInput{Name: "not allowed"}})
 	if err != nil || !result.IsError {
 		t.Fatalf("Claude read-only token allowed a write: %+v %v", result, err)
+	}
+}
+
+func TestOAuthRegistrationDisabled(t *testing.T) {
+	f := newOAuthFixtureWithRegistration(t, time.Hour, false)
+	requestID, _ := f.startAuthorization(t, "disabled-signup", strings.Repeat("v", 64))
+	for locale, copy := range oauthCopies {
+		res := f.do(t, http.MethodGet, oauthRequestLocation(requestID, locale), "", "")
+		page, _ := io.ReadAll(res.Body)
+		res.Body.Close()
+		if res.StatusCode != http.StatusOK || bytes.Contains(page, []byte(`value="register"`)) || !bytes.Contains(page, []byte(copy.Errors["registration_disabled"])) {
+			t.Fatalf("disabled signup page (%s): %d %s", locale, res.StatusCode, page)
+		}
+		form := url.Values{"request_id": {requestID}, "lang": {locale}, "decision": {"register"}, "username": {"blocked-user"}, "email": {"blocked@example.com"}, "password": {"registration-password-123"}}
+		res = f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+		page, _ = io.ReadAll(res.Body)
+		res.Body.Close()
+		if res.StatusCode != http.StatusForbidden || !bytes.Contains(page, []byte(copy.Errors["registration_disabled"])) {
+			t.Fatalf("disabled signup submission (%s): %d %s", locale, res.StatusCode, page)
+		}
+	}
+	if _, err := f.store.Login(context.Background(), core.Credentials{Username: "blocked-user", Password: "registration-password-123"}); err == nil {
+		t.Fatal("OAuth bypassed registration policy")
+	}
+	form := url.Values{"request_id": {requestID}, "decision": {"login"}, "username": {"alice"}, "password": {"integration-password-123"}}
+	res := f.do(t, http.MethodPost, "/oauth/authorize", "application/x-www-form-urlencoded", form.Encode())
+	res.Body.Close()
+	if res.StatusCode != http.StatusSeeOther {
+		t.Fatalf("existing account login: %d", res.StatusCode)
 	}
 }

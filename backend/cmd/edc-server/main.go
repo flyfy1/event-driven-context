@@ -31,6 +31,7 @@ func main() {
 	}
 }
 func run() (runErr error) {
+	allowRegistration := flag.Bool("allow-registration", false, "allow public account registration; disabled by default")
 	addr := flag.String("addr", "127.0.0.1:8080", "HTTP listen address")
 	dbPath := flag.String("db", "data/context.db", "SQLite database path")
 	dataDir := flag.String("data", "data", "directory for immutable event and uploaded-file data")
@@ -125,7 +126,7 @@ func run() (runErr error) {
 			return fmt.Errorf("configure OpenAI transcription: %w", err)
 		}
 	}
-	httpServer := &http.Server{Addr: *addr, Handler: api.V2HandlerWithConfig(store, service, api.Config{AllowedOrigins: allowed, TrustedProxies: proxyPrefixes, PublicBaseURL: *publicBaseURL, IntegAuth: integAuth, AdminUsers: adminUsers, AudioTranscriber: audioTranscriber}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 3 * time.Minute, WriteTimeout: 3 * time.Minute, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	httpServer := &http.Server{Addr: *addr, Handler: api.V2HandlerWithConfig(store, service, api.Config{AllowRegistration: *allowRegistration, AllowedOrigins: allowed, TrustedProxies: proxyPrefixes, PublicBaseURL: *publicBaseURL, IntegAuth: integAuth, AdminUsers: adminUsers, AudioTranscriber: audioTranscriber}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 3 * time.Minute, WriteTimeout: 3 * time.Minute, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {
 		return err

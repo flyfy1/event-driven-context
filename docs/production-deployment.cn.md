@@ -14,6 +14,8 @@
 
 服务模板为本地 tunnel 连接设置 `-trusted-proxies 127.0.0.1/32`，使认证限速使用转发的客户端 IP。该参数接受逗号分隔的 CIDR，默认不信任任何代理；只应添加受控的代理跳点。参见 [README 代理信任规则](../README.cn.md#验证与当前边界)。
 
+维护者的公开 MCP OAuth 流程提供本地账号注册，因此两个生产 unit 模板（`context-api-pi.service`，由 `make deploy-prod` 使用，以及旧 GCE 的 `context-api.service`）都显式设置 `-allow-registration`，保留 README 中说明的注册行为。主站登录使用 Integ.Auth，并不调用 `POST /v1/auth/register`；该标志控制本地密码账号的 API/CLI 和 OAuth 页面注册，不影响身份提供方登录及账号创建或 OAuth 动态客户端注册。自托管默认关闭注册：按 [README 首次设置](../README.cn.md#五分钟本机启动) 临时启用标志，通过 `edc register` 创建第一个账号后，去掉标志并使用相同的数据路径重启。仅在有意允许公开注册时保留此标志。
+
 核心采用文件系统单写入者契约。切流后绝不能让 Pi 与 GCE 同时承担写入。
 
 ## 当前已验证部署

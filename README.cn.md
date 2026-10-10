@@ -65,7 +65,8 @@ mkdir -p data
   -addr 127.0.0.1:8080 \
   -db "$PWD/data/context.db" \
   -data "$PWD/data" \
-  -automatic-notes=false
+  -automatic-notes=false \
+  -allow-registration
 ```
 
 在另一个终端验证服务并创建第一个账号：
@@ -79,6 +80,8 @@ export EDC_SERVER=http://127.0.0.1:8080
 ```
 
 密码会在终端中无回显输入。这个私有部署不需要域名、TLS 证书、OAuth provider、模型密钥或外部数据库。`-automatic-notes=false` 明确禁止服务启动可选的 Codex Notes indexer。`SIGINT` / `SIGTERM` 会优雅停止服务。
+
+账号注册默认关闭。以上首次设置命令临时使用 `-allow-registration`，以便通过 `edc register` 创建第一个账号。完成后停止服务，并使用相同的 `-db` 与 `-data` 路径、去掉 `-allow-registration` 重新启动；已有账号仍可登录。仅在可信的本机或私有网络内开放首次注册。后续创建账号时需再次由部署者明确启用该标志。关闭时，`POST /v1/auth/register` 返回 HTTP 403 和 `registration_disabled`，OAuth 页面也禁止本地账号注册。此开关不影响 OAuth 动态客户端注册，也不改变已配置的 Integ.Auth 身份提供方登录及账号创建策略；该提供方的访问策略由部署者单独管理。
 
 ### Linux 生产部署
 
@@ -190,6 +193,8 @@ sudo systemctl start event-driven-context
 仓库中的 `make deploy-prod`、`make deploy-frontend`、`deploy/production/` 与 `integ.life` 名称描述维护者自己的环境。它们可作为实现参考，但不是自行部署的前提或通用部署命令。
 
 ## CLI：跑通共同记录
+
+以下 `edc register` 命令要求服务器临时启用 `-allow-registration`。
 
 注册和登录会在终端无回显地读取密码；注册还需要唯一邮箱。用户名为 3–64 个小写字母、数字、`_ . -`，密码为 12–72 字节。不提供命令行密码参数，自动化可通过 `--password-stdin` 输入。
 
@@ -307,7 +312,7 @@ V2 服务通过无需认证的 `GET /.well-known/edc-cli` 公布当前推荐版�
 
 | 方法与路径 | 输入 / 用途 |
 |---|---|
-| `POST /v1/auth/register` | `{username,password}`，返回用户 |
+| `POST /v1/auth/register` | `{username,email,password}`，返回用户；需要 `-allow-registration`，否则返回 403 `registration_disabled` |
 | `POST /v1/auth/login` | `{username,password}`，返回用户、令牌和到期时间 |
 | `POST /v1/auth/logout` | 吊销当前令牌 |
 | `GET /v1/me` | 当前身份 |
@@ -398,7 +403,7 @@ scope 不替代项目权限：即使有 `context:read` 或 `context:write`，调
 
 在 ChatGPT 开发者模式中新建自定义连接器，名称填写 `Event-driven Context`，URL 填写 `https://context-api.integ.life/mcp`，身份验证选择 OAuth，并使用服务器 discovery / Dynamic Client Registration，不填写静态 API token 或 client secret。ChatGPT 当前会在连接草稿中生成或提交一个精确 callback URL（通常是 `https://chatgpt.com/connector/oauth/<callback_id>`；旧连接可能使用 `https://chatgpt.com/connector_platform_oauth_redirect`）；本服务将 DCR 请求里的完整 URL 原样注册，授权请求必须逐字匹配，不支持通配符。
 
-ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 public client、带 `resource`、scope 和 S256 challenge 跳转到登录页。可以使用已有 Event-driven Context 用户名和密码登录，也可以在同一 OAuth 页面按现有用户名与密码规则创建账号；新账号只获得用户身份，不自动获得任何既有项目权限。OAuth 登录、注册、错误提示与授权确认页会按浏览器语言自动选择 English、简体中文、Bahasa Melayu 或 हिन्दी，并提供不丢失授权事务的手动切换。主站与 OAuth 通过只含 locale 的 `.integ.life` Cookie 保持用户选择一致；Cookie 不包含账号、令牌或其他身份信息。随后在授权页核对 client、resource 和 scope 后确认。ChatGPT 页面本身还会显示“未经 OpenAI 审查的自定义 MCP”风险提示；确认意味着允许第三方 MCP 读取或追加你有权访问的项目数据，应只在确认 URL、工具与 scope 后继续。
+ChatGPT 会先收到 401 challenge，再发现两个 well-known JSON、注册 public client、带 `resource`、scope 和 S256 challenge 跳转到登录页。可以使用已有 Event-driven Context 用户名和密码登录，也可以在部署者启用 `-allow-registration` 后，在同一 OAuth 页面按现有用户名与密码规则创建账号；新账号只获得用户身份，不自动获得任何既有项目权限。OAuth 登录、注册、错误提示与授权确认页会按浏览器语言自动选择 English、简体中文、Bahasa Melayu 或 हिन्दी，并提供不丢失授权事务的手动切换。主站与 OAuth 通过只含 locale 的 `.integ.life` Cookie 保持用户选择一致；Cookie 不包含账号、令牌或其他身份信息。随后在授权页核对 client、resource 和 scope 后确认。ChatGPT 页面本身还会显示“未经 OpenAI 审查的自定义 MCP”风险提示；确认意味着允许第三方 MCP 读取或追加你有权访问的项目数据，应只在确认 URL、工具与 scope 后继续。
 
 #### Claude 网页端自定义连接器
 

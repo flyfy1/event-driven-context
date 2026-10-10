@@ -24,8 +24,8 @@ func authRequest(h http.Handler, peer, username string) *httptest.ResponseRecord
 
 func TestAuthGateIPIsolation(t *testing.T) {
 	for name, h := range map[string]http.Handler{
-		"v1": HandlerWithConfig(nil, Config{}),
-		"v2": V2HandlerWithConfig(nil, nil, Config{}),
+		"v1": HandlerWithConfig(nil, Config{AllowRegistration: true}),
+		"v2": V2HandlerWithConfig(nil, nil, Config{AllowRegistration: true}),
 	} {
 		t.Run(name, func(t *testing.T) {
 			// Invalid JSON avoids calling the store but still spends IP tokens.

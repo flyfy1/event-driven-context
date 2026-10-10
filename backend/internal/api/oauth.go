@@ -32,7 +32,7 @@ var pkcePattern = regexp.MustCompile(`^[A-Za-z0-9._~-]{43,128}$`)
 var oauthPage = template.Must(template.New("oauth").Parse(`<!doctype html>
 <html lang="{{.Language}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Event-driven Context OAuth</title><style>
 body{font:16px system-ui,sans-serif;background:#f5f5f2;color:#20221f;margin:0}.card{max-width:520px;margin:8vh auto;padding:32px;background:#fff;border:1px solid #d9ddd5;border-radius:16px;box-shadow:0 8px 30px #00000010}h1{font-size:24px;margin-top:0}.muted{color:#60665e}.notice{padding:12px;background:#f2f5ee;border-radius:8px}.error{color:#a21b1b}label{display:block;margin:16px 0 6px}input[type=text],input[type=email],input[type=password],input[type=number],select{box-sizing:border-box;width:100%;font:inherit;padding:10px;border:1px solid #aeb5aa;border-radius:8px}fieldset{margin:22px 0 0;padding:14px 16px 16px;border:1px solid #d9ddd5;border-radius:10px}.choice{display:flex;align-items:center;gap:8px;margin:10px 0}.choice input{margin:0}.duration{display:grid;grid-template-columns:auto minmax(80px,1fr) minmax(110px,1fr);align-items:center;gap:8px;margin-top:10px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}button,.button{display:inline-block;font:inherit;padding:10px 18px;border:0;border-radius:8px;background:#265c3b;color:#fff;text-decoration:none;cursor:pointer}.secondary{background:#6b7169}.languages{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;font-size:14px}.languages a{color:#265c3b}code{word-break:break-all}
-</style></head><body><main class="card">{{if .Expired}}<h1>{{.Copy.ExpiredTitle}}</h1><p class="notice">{{.Copy.ExpiredMessage}}</p>{{else}}<nav class="languages" aria-label="{{.Copy.LanguageLabel}}"><span>{{.Copy.LanguageLabel}}:</span><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=en" hreflang="en">English</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=zh-CN" hreflang="zh-CN">简体中文</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=ms" hreflang="ms">Bahasa Melayu</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=hi" hreflang="hi">हिन्दी</a></nav><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} {{.Copy.ClientRequest}}</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">{{.Copy.SignInNotice}}</p><p><a class="button" href="{{.IntegLoginURL}}">{{.Copy.IntegLoginLabel}}</a></p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><label for="username">{{.Copy.UsernameLabel}}</label><input id="username" name="username" autocomplete="username" required><label for="email">{{.Copy.EmailLabel}}</label><input id="email" name="email" type="email" autocomplete="email"><label for="password">{{.Copy.PasswordLabel}}</label><input id="password" name="password" type="password" autocomplete="current-password" required><p class="muted">{{.Copy.NewAccountHint}}</p><div class="actions"><button type="submit" name="decision" value="login">{{.Copy.SignInLabel}}</button><button class="secondary" type="submit" name="decision" value="register">{{.Copy.CreateAccountLabel}}</button><button class="secondary" type="submit" name="decision" value="deny" formnovalidate>{{.Copy.CancelLabel}}</button></div></form>{{else}}<p>{{.Copy.SignedInAs}} <strong>{{.Username}}</strong>.</p><p class="notice">{{.Copy.ApproveAccess}}</p><ul>{{range .Scopes}}<li><strong>{{.Name}}</strong> — {{.Description}}</li>{{end}}</ul><p class="muted">{{.Copy.AccessPrefix}} <code>{{.Resource}}</code> {{.Copy.AccessSuffix}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><fieldset><legend>{{.Copy.ExpirationLabel}}</legend><label class="choice"><input type="radio" name="expiry_mode" value="never" checked> {{.Copy.NeverExpiresLabel}}</label><label class="choice"><input type="radio" name="expiry_mode" value="duration"> {{.Copy.DurationLabel}}</label><div class="duration"><span></span><input name="expiry_value" type="number" min="1" max="876000" value="1" inputmode="numeric" aria-label="{{.Copy.DurationValueLabel}}"><select name="expiry_unit" aria-label="{{.Copy.DurationUnitLabel}}"><option value="hours">{{.Copy.HoursLabel}}</option><option value="days">{{.Copy.DaysLabel}}</option></select></div><p class="muted">{{.Copy.ExpirationHint}}</p></fieldset><div class="actions"><button type="submit" name="decision" value="approve">{{.Copy.AuthorizeLabel}}</button><button class="secondary" type="submit" name="decision" value="deny">{{.Copy.CancelLabel}}</button></div></form>{{end}}{{end}}</main></body></html>`))
+</style></head><body><main class="card">{{if .Expired}}<h1>{{.Copy.ExpiredTitle}}</h1><p class="notice">{{.Copy.ExpiredMessage}}</p>{{else}}<nav class="languages" aria-label="{{.Copy.LanguageLabel}}"><span>{{.Copy.LanguageLabel}}:</span><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=en" hreflang="en">English</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=zh-CN" hreflang="zh-CN">简体中文</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=ms" hreflang="ms">Bahasa Melayu</a><a href="/oauth/authorize?request_id={{.RequestID}}&amp;lang=hi" hreflang="hi">हिन्दी</a></nav><h1>Event-driven Context</h1><p class="muted">{{.ClientName}} {{.Copy.ClientRequest}}</p>{{if .Error}}<p class="error">{{.Error}}</p>{{end}}{{if .Login}}<p class="notice">{{.Copy.SignInNotice}}</p><p><a class="button" href="{{.IntegLoginURL}}">{{.Copy.IntegLoginLabel}}</a></p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><label for="username">{{.Copy.UsernameLabel}}</label><input id="username" name="username" autocomplete="username" required>{{if .AllowRegistration}}<label for="email">{{.Copy.EmailLabel}}</label><input id="email" name="email" type="email" autocomplete="email">{{end}}<label for="password">{{.Copy.PasswordLabel}}</label><input id="password" name="password" type="password" autocomplete="current-password" required>{{if .AllowRegistration}}<p class="muted">{{.Copy.NewAccountHint}}</p>{{else}}<p class="notice">{{index .Copy.Errors "registration_disabled"}}</p>{{end}}<div class="actions"><button type="submit" name="decision" value="login">{{.Copy.SignInLabel}}</button>{{if .AllowRegistration}}<button class="secondary" type="submit" name="decision" value="register">{{.Copy.CreateAccountLabel}}</button>{{end}}<button class="secondary" type="submit" name="decision" value="deny" formnovalidate>{{.Copy.CancelLabel}}</button></div></form>{{else}}<p>{{.Copy.SignedInAs}} <strong>{{.Username}}</strong>.</p><p class="notice">{{.Copy.ApproveAccess}}</p><ul>{{range .Scopes}}<li><strong>{{.Name}}</strong> — {{.Description}}</li>{{end}}</ul><p class="muted">{{.Copy.AccessPrefix}} <code>{{.Resource}}</code> {{.Copy.AccessSuffix}}</p><form method="post" action="/oauth/authorize"><input type="hidden" name="request_id" value="{{.RequestID}}"><input type="hidden" name="lang" value="{{.Language}}"><fieldset><legend>{{.Copy.ExpirationLabel}}</legend><label class="choice"><input type="radio" name="expiry_mode" value="never" checked> {{.Copy.NeverExpiresLabel}}</label><label class="choice"><input type="radio" name="expiry_mode" value="duration"> {{.Copy.DurationLabel}}</label><div class="duration"><span></span><input name="expiry_value" type="number" min="1" max="876000" value="1" inputmode="numeric" aria-label="{{.Copy.DurationValueLabel}}"><select name="expiry_unit" aria-label="{{.Copy.DurationUnitLabel}}"><option value="hours">{{.Copy.HoursLabel}}</option><option value="days">{{.Copy.DaysLabel}}</option></select></div><p class="muted">{{.Copy.ExpirationHint}}</p></fieldset><div class="actions"><button type="submit" name="decision" value="approve">{{.Copy.AuthorizeLabel}}</button><button class="secondary" type="submit" name="decision" value="deny">{{.Copy.CancelLabel}}</button></div></form>{{end}}{{end}}</main></body></html>`))
 
 type oauthCopy struct {
 	LanguageLabel, ClientRequest, SignInNotice, IntegLoginLabel, UsernameLabel, EmailLabel       string
@@ -60,7 +60,7 @@ var oauthCopies = map[string]oauthCopy{
 		AccessPrefix: "Access is limited to", AccessSuffix: ". Project membership rules still apply.", AuthorizeLabel: "Authorize",
 		ExpirationLabel: "Access duration", NeverExpiresLabel: "Never expires (default)", DurationLabel: "Expire after", DurationValueLabel: "Duration", DurationUnitLabel: "Duration unit", HoursLabel: "hour(s)", DaysLabel: "day(s)", ExpirationHint: "Choose a finite duration for temporary or shared-device access.",
 		ExpiredTitle: "Authorization request unavailable", ExpiredMessage: "This request was already completed or expired. Return to the app that opened this page and start the connection again.",
-		Errors: map[string]string{"invalid_credentials": "Invalid username or password.", "invalid_username": "Username must be 3–64 lowercase letters, digits, _, . or -.", "invalid_email": "Enter a valid email address to create an account.", "invalid_password": "Password must be 12–72 bytes.", "username_exists": "Username or email already exists. Sign in or choose another one.", "registration_failed": "Could not create account. Please try again.", "invalid_expiry": "Choose never expires, or enter a whole number of hours or days."},
+		Errors: map[string]string{"registration_disabled": "Account registration is disabled. Contact the server administrator.", "invalid_credentials": "Invalid username or password.", "invalid_username": "Username must be 3–64 lowercase letters, digits, _, . or -.", "invalid_email": "Enter a valid email address to create an account.", "invalid_password": "Password must be 12–72 bytes.", "username_exists": "Username or email already exists. Sign in or choose another one.", "registration_failed": "Could not create account. Please try again.", "invalid_expiry": "Choose never expires, or enter a whole number of hours or days."},
 	},
 	"zh-CN": {
 		LanguageLabel: "语言", ClientRequest: "正在通过 OAuth 请求访问。",
@@ -72,7 +72,7 @@ var oauthCopies = map[string]oauthCopy{
 		AccessPrefix: "访问权限仅限于", AccessSuffix: "。项目成员权限规则仍然适用。", AuthorizeLabel: "授权",
 		ExpirationLabel: "访问有效期", NeverExpiresLabel: "永不过期（默认）", DurationLabel: "在以下时间后过期", DurationValueLabel: "时长", DurationUnitLabel: "时长单位", HoursLabel: "小时", DaysLabel: "天", ExpirationHint: "临时使用或共享设备建议选择有限有效期。",
 		ExpiredTitle: "授权请求不可用", ExpiredMessage: "此请求已完成或已过期。请返回打开此页面的应用，重新发起连接。",
-		Errors: map[string]string{"invalid_credentials": "用户名或密码错误。", "invalid_username": "用户名须为 3–64 位小写字母、数字、_、. 或 -。", "invalid_email": "请输入有效邮箱以创建账号。", "invalid_password": "密码须为 12–72 字节。", "username_exists": "用户名或邮箱已存在，请登录或更换。", "registration_failed": "无法创建账号，请重试。", "invalid_expiry": "请选择永不过期，或填写整数小时/天数。"},
+		Errors: map[string]string{"registration_disabled": "账号注册已关闭，请联系服务器管理员。", "invalid_credentials": "用户名或密码错误。", "invalid_username": "用户名须为 3–64 位小写字母、数字、_、. 或 -。", "invalid_email": "请输入有效邮箱以创建账号。", "invalid_password": "密码须为 12–72 字节。", "username_exists": "用户名或邮箱已存在，请登录或更换。", "registration_failed": "无法创建账号，请重试。", "invalid_expiry": "请选择永不过期，或填写整数小时/天数。"},
 	},
 	"ms": {
 		LanguageLabel: "Bahasa", ClientRequest: "meminta akses melalui OAuth.",
@@ -84,7 +84,7 @@ var oauthCopies = map[string]oauthCopy{
 		AccessPrefix: "Akses terhad kepada", AccessSuffix: ". Peraturan keahlian projek masih terpakai.", AuthorizeLabel: "Benarkan",
 		ExpirationLabel: "Tempoh akses", NeverExpiresLabel: "Tidak tamat tempoh (lalai)", DurationLabel: "Tamat selepas", DurationValueLabel: "Tempoh", DurationUnitLabel: "Unit tempoh", HoursLabel: "jam", DaysLabel: "hari", ExpirationHint: "Pilih tempoh terhad untuk akses sementara atau peranti yang dikongsi.",
 		ExpiredTitle: "Permintaan kebenaran tidak tersedia", ExpiredMessage: "Permintaan ini telah selesai atau tamat tempoh. Kembali ke aplikasi yang membuka halaman ini dan mulakan sambungan semula.",
-		Errors: map[string]string{"invalid_credentials": "Nama pengguna atau kata laluan tidak sah.", "invalid_username": "Nama pengguna mesti terdiri daripada 3–64 huruf kecil, nombor, _, . atau -.", "invalid_email": "Masukkan alamat e-mel yang sah untuk mencipta akaun.", "invalid_password": "Kata laluan mesti terdiri daripada 12–72 bait.", "username_exists": "Nama pengguna atau e-mel sudah wujud. Log masuk atau pilih yang lain.", "registration_failed": "Akaun tidak dapat dicipta. Sila cuba lagi.", "invalid_expiry": "Pilih tidak tamat tempoh, atau masukkan bilangan jam atau hari dalam nombor bulat."},
+		Errors: map[string]string{"registration_disabled": "Pendaftaran akaun dinyahdayakan. Hubungi pentadbir pelayan.", "invalid_credentials": "Nama pengguna atau kata laluan tidak sah.", "invalid_username": "Nama pengguna mesti terdiri daripada 3–64 huruf kecil, nombor, _, . atau -.", "invalid_email": "Masukkan alamat e-mel yang sah untuk mencipta akaun.", "invalid_password": "Kata laluan mesti terdiri daripada 12–72 bait.", "username_exists": "Nama pengguna atau e-mel sudah wujud. Log masuk atau pilih yang lain.", "registration_failed": "Akaun tidak dapat dicipta. Sila cuba lagi.", "invalid_expiry": "Pilih tidak tamat tempoh, atau masukkan bilangan jam atau hari dalam nombor bulat."},
 	},
 	"hi": {
 		LanguageLabel: "भाषा", ClientRequest: "OAuth के माध्यम से पहुँच का अनुरोध कर रहा है।",
@@ -96,7 +96,7 @@ var oauthCopies = map[string]oauthCopy{
 		AccessPrefix: "पहुँच केवल", AccessSuffix: "तक सीमित है। प्रोजेक्ट सदस्यता नियम लागू रहते हैं।", AuthorizeLabel: "अनुमति दें",
 		ExpirationLabel: "पहुँच की अवधि", NeverExpiresLabel: "कभी समाप्त नहीं (डिफ़ॉल्ट)", DurationLabel: "इतने समय बाद समाप्त करें", DurationValueLabel: "अवधि", DurationUnitLabel: "अवधि की इकाई", HoursLabel: "घंटे", DaysLabel: "दिन", ExpirationHint: "अस्थायी या साझा डिवाइस पहुँच के लिए सीमित अवधि चुनें।",
 		ExpiredTitle: "अनुमति अनुरोध उपलब्ध नहीं है", ExpiredMessage: "यह अनुरोध पहले ही पूरा हो चुका है या समाप्त हो गया है। उस ऐप पर लौटें जिसने यह पेज खोला था और कनेक्शन फिर से शुरू करें।",
-		Errors: map[string]string{"invalid_credentials": "उपयोगकर्ता नाम या पासवर्ड गलत है।", "invalid_username": "उपयोगकर्ता नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - होने चाहिए।", "invalid_email": "खाता बनाने के लिए एक मान्य ईमेल पता दर्ज करें।", "invalid_password": "पासवर्ड 12–72 बाइट का होना चाहिए।", "username_exists": "यह उपयोगकर्ता नाम या ईमेल पहले से मौजूद है। साइन इन करें या दूसरा चुनें।", "registration_failed": "खाता नहीं बनाया जा सका। फिर से प्रयास करें।", "invalid_expiry": "कभी समाप्त नहीं विकल्प चुनें, या घंटों/दिनों की पूर्ण संख्या दर्ज करें।"},
+		Errors: map[string]string{"registration_disabled": "खाता पंजीकरण बंद है। सर्वर व्यवस्थापक से संपर्क करें।", "invalid_credentials": "उपयोगकर्ता नाम या पासवर्ड गलत है।", "invalid_username": "उपयोगकर्ता नाम में 3–64 छोटे अंग्रेज़ी अक्षर, अंक, _, . या - होने चाहिए।", "invalid_email": "खाता बनाने के लिए एक मान्य ईमेल पता दर्ज करें।", "invalid_password": "पासवर्ड 12–72 बाइट का होना चाहिए।", "username_exists": "यह उपयोगकर्ता नाम या ईमेल पहले से मौजूद है। साइन इन करें या दूसरा चुनें।", "registration_failed": "खाता नहीं बनाया जा सका। फिर से प्रयास करें।", "invalid_expiry": "कभी समाप्त नहीं विकल्प चुनें, या घंटों/दिनों की पूर्ण संख्या दर्ज करें।"},
 	},
 }
 
@@ -105,6 +105,7 @@ type oauthPageData struct {
 	Copy                                                                      oauthCopy
 	Scopes                                                                    []oauthScopeDisplay
 	Login                                                                     bool
+	AllowRegistration                                                         bool
 	Expired                                                                   bool
 }
 
@@ -114,9 +115,11 @@ func registerOAuthHandlers(mux *http.ServeMux, store *core.Store, config Config)
 	mux.HandleFunc("GET /.well-known/oauth-protected-resource/mcp", func(w http.ResponseWriter, _ *http.Request) { oauthProtectedResource(w, base) })
 	mux.HandleFunc("GET /.well-known/oauth-authorization-server", func(w http.ResponseWriter, _ *http.Request) { oauthAuthorizationServer(w, base) })
 	mux.HandleFunc("POST /oauth/register", func(w http.ResponseWriter, r *http.Request) { oauthRegister(w, r, store) })
-	mux.HandleFunc("GET /oauth/authorize", func(w http.ResponseWriter, r *http.Request) { oauthAuthorizeGet(w, r, store, base) })
+	mux.HandleFunc("GET /oauth/authorize", func(w http.ResponseWriter, r *http.Request) {
+		oauthAuthorizeGet(w, r, store, base, config.AllowRegistration)
+	})
 	mux.Handle("POST /oauth/authorize", newAuthGate(config.TrustedProxies).wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		oauthAuthorizePost(w, r, store, base, config.OAuthAccessTokenTTL)
+		oauthAuthorizePost(w, r, store, base, config.OAuthAccessTokenTTL, config.AllowRegistration)
 	})))
 	mux.HandleFunc("POST /oauth/token", func(w http.ResponseWriter, r *http.Request) {
 		oauthToken(w, r, store, base)
@@ -222,9 +225,9 @@ func oauthRegistrationGrantTypesSupported(grantTypes []string) bool {
 	return hasAuthorizationCode
 }
 
-func oauthAuthorizeGet(w http.ResponseWriter, r *http.Request, store *core.Store, base string) {
+func oauthAuthorizeGet(w http.ResponseWriter, r *http.Request, store *core.Store, base string, allowRegistration bool) {
 	if requestID := r.URL.Query().Get("request_id"); requestID != "" {
-		renderOAuthRequest(w, r, store, base, requestID, "")
+		renderOAuthRequest(w, r, store, base, requestID, "", allowRegistration)
 		return
 	}
 	q := r.URL.Query()
@@ -248,7 +251,7 @@ func oauthAuthorizeGet(w http.ResponseWriter, r *http.Request, store *core.Store
 	http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 }
 
-func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Store, base string, accessTTLOverride time.Duration) {
+func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Store, base string, accessTTLOverride time.Duration, allowRegistration bool) {
 	if err := r.ParseForm(); err != nil {
 		oauthError(w, http.StatusBadRequest, "invalid_request", "invalid form")
 		return
@@ -272,15 +275,19 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 		credentials := core.Credentials{Username: r.FormValue("username"), Password: r.FormValue("password")}
 		login, loginErr := store.Login(r.Context(), credentials)
 		if loginErr != nil {
-			renderOAuthRequest(w, r, store, base, requestID, "invalid_credentials")
+			renderOAuthRequest(w, r, store, base, requestID, "invalid_credentials", allowRegistration)
 			return
 		}
 		setOAuthSessionCookie(w, base, login)
 		http.Redirect(w, r, oauthRequestLocation(requestID, oauthLanguage(r)), http.StatusSeeOther)
 	case "register":
+		if !allowRegistration {
+			renderOAuthRequest(w, r, store, base, requestID, "registration_disabled", allowRegistration)
+			return
+		}
 		credentials := core.Credentials{Username: r.FormValue("username"), Email: r.FormValue("email"), Password: r.FormValue("password")}
 		if _, registerErr := store.Register(r.Context(), credentials); registerErr != nil {
-			renderOAuthRequest(w, r, store, base, requestID, oauthRegistrationErrorKey(registerErr))
+			renderOAuthRequest(w, r, store, base, requestID, oauthRegistrationErrorKey(registerErr), allowRegistration)
 			return
 		}
 		login, loginErr := store.Login(r.Context(), credentials)
@@ -303,7 +310,7 @@ func oauthAuthorizePost(w http.ResponseWriter, r *http.Request, store *core.Stor
 		}
 		accessExpires, expiryErr := oauthAccessExpiry(r.FormValue("expiry_mode"), r.FormValue("expiry_value"), r.FormValue("expiry_unit"), accessTTLOverride)
 		if expiryErr != nil {
-			renderOAuthRequest(w, r, store, base, requestID, "invalid_expiry")
+			renderOAuthRequest(w, r, store, base, requestID, "invalid_expiry", allowRegistration)
 			return
 		}
 		code := randomSecret("edc_code_")
@@ -401,7 +408,7 @@ func oauthRegistrationErrorKey(err error) string {
 	return "registration_failed"
 }
 
-func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Store, base, requestID, errorKey string) {
+func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Store, base, requestID, errorKey string, allowRegistration bool) {
 	csrf, _ := r.Cookie(oauthCSRFCookieName(requestID))
 	if csrf == nil {
 		renderOAuthExpired(w, r, base)
@@ -425,7 +432,7 @@ func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Stor
 	}
 	data := oauthPageData{
 		RequestID: requestID, ClientName: request.ClientName, Resource: request.Resource, Scopes: scopes,
-		Login: true, Language: language, Copy: copy, IntegLoginURL: integAuthOAuthStartLocation(requestID, language),
+		AllowRegistration: allowRegistration, Login: true, Language: language, Copy: copy, IntegLoginURL: integAuthOAuthStartLocation(requestID, language),
 	}
 	if errorKey != "" {
 		data.Error = copy.Errors[errorKey]
@@ -441,7 +448,9 @@ func renderOAuthRequest(w http.ResponseWriter, r *http.Request, store *core.Stor
 	w.Header().Set("Content-Language", language)
 	w.Header().Set("Content-Security-Policy", oauthAuthorizationCSP(request.RedirectURI))
 	w.Header().Set("Referrer-Policy", "no-referrer")
-	if errorKey != "" {
+	if errorKey == "registration_disabled" {
+		w.WriteHeader(http.StatusForbidden)
+	} else if errorKey != "" {
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 	_ = oauthPage.Execute(w, data)

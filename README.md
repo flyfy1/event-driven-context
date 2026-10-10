@@ -65,7 +65,8 @@ mkdir -p data
   -addr 127.0.0.1:8080 \
   -db "$PWD/data/context.db" \
   -data "$PWD/data" \
-  -automatic-notes=false
+  -automatic-notes=false \
+  -allow-registration
 ```
 
 In another terminal, verify the server and create the first account:
@@ -79,6 +80,8 @@ export EDC_SERVER=http://127.0.0.1:8080
 ```
 
 Passwords are prompted for without echo. This private deployment needs no domain, TLS certificate, OAuth provider, model key, or external database. `-automatic-notes=false` makes the boundary explicit: the server will not start the optional Codex-backed Notes indexer. `SIGINT` or `SIGTERM` shuts the server down gracefully.
+
+Account registration is disabled by default. The first-time setup command above temporarily uses `-allow-registration` so `edc register` can create the first account. Afterwards, stop the server and restart with the same `-db` and `-data` paths but without `-allow-registration`; existing accounts can still log in. Keep initial registration on a trusted loopback or private network. Creating later accounts requires the deployer to explicitly enable the flag again. When disabled, `POST /v1/auth/register` returns HTTP 403 with `registration_disabled`, and the OAuth page also blocks local account signup. This switch does not affect OAuth dynamic client registration or the configured Integ.Auth identity-provider login and provisioning policy; deployers manage that provider’s access policy separately.
 
 ### Production Linux Deployment
 
@@ -190,6 +193,8 @@ To upgrade, build the new revision, stop the service, take the backup above, rep
 The repository's `make deploy-prod`, `make deploy-frontend`, `deploy/production/`, and `integ.life` names describe the maintainers' environment. They are useful implementation references, not prerequisites or general-purpose self-hosting commands.
 
 ## CLI: Shared Recording Workflow
+
+The `edc register` commands below require the server to temporarily enable `-allow-registration`.
 
 Registration and login read the password from the terminal without echoing it; registration also requires a unique email address. Usernames must contain 3–64 lowercase letters, numbers, `_ . -`; passwords must be 12–72 bytes. Passwords cannot be supplied as command-line arguments. Automation can provide passwords through `--password-stdin`.
 
@@ -312,7 +317,7 @@ Except for registration, login, and healthz, all endpoints require `Authorizatio
 
 | Method and Path | Input / Purpose |
 |---|---|
-| `POST /v1/auth/register` | `{username,password}`, returns the user |
+| `POST /v1/auth/register` | `{username,email,password}`, returns the user; requires `-allow-registration`, otherwise 403 `registration_disabled` |
 | `POST /v1/auth/login` | `{username,password}`, returns the user, token, and expiration time |
 | `POST /v1/auth/logout` | Revokes the current token |
 | `GET /v1/me` | Current identity |
@@ -443,7 +448,7 @@ The service registers the complete URL from the DCR request exactly as provided.
 
 ChatGPT first receives a 401 challenge, then discovers the two well-known JSON documents, registers a public client, and redirects to the login page with the `resource`, scope, and S256 challenge.
 
-Users can log in using an existing Event-driven Context username and password, or create an account from the same OAuth page according to the existing username and password rules. A new account receives only a user identity and is not automatically granted access to any existing project.
+Users can log in using an existing Event-driven Context username and password, or, when the deployer enables `-allow-registration`, create an account from the same OAuth page according to the existing username and password rules. A new account receives only a user identity and is not automatically granted access to any existing project.
 
 OAuth login, registration, error messages, and authorization confirmation pages automatically use English, Simplified Chinese, Bahasa Melayu, or हिन्दी according to the browser language, with manual language switching that does not lose the authorization transaction. The main site and OAuth preserve the user's selection through a locale-only `.integ.life` cookie; it contains no account information, token, or other identity data.
 

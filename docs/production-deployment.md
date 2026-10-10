@@ -14,6 +14,8 @@ English | [简体中文](production-deployment.cn.md)
 
 The service template sets `-trusted-proxies 127.0.0.1/32` for the local tunnel connection so authentication limiting uses forwarded client IPs. The flag accepts comma-separated CIDRs and defaults to trusting nothing; only add controlled proxy hops. See the [README proxy trust rules](../README.md#verification-and-current-boundaries).
 
+The maintainers’ public MCP OAuth flow offers local account signup, so both production unit templates (`context-api-pi.service`, used by `make deploy-prod`, and the legacy GCE `context-api.service`) explicitly set `-allow-registration` to preserve the signup behavior documented in the README. The main website signs in through Integ.Auth and does not call `POST /v1/auth/register`; this flag controls local password-account registration through the API/CLI and OAuth page, not identity-provider login/provisioning or OAuth dynamic client registration. Self-hosting defaults to closed registration: temporarily enable the flag as in the [README first-time setup](../README.md#run-locally-in-five-minutes), create the first account with `edc register`, then remove the flag and restart with the same data paths. Retain the flag only when public signup is intentional.
+
 The core has a single-writer filesystem contract. Never run the Pi and GCE services as simultaneous writers after cutover.
 
 ## Current Verified Deployment

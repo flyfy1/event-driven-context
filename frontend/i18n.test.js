@@ -138,3 +138,14 @@ for (const api of ["https://context-api.integ.life", "http://127.0.0.1:8401"]) {
 }
 
 console.log(`frontend i18n checks passed: ${supportedLocales.length} locales, ${englishKeys.length} keys`);
+
+// API failures must display the registration policy in the selected locale.
+const apiErrorSource = app.slice(app.indexOf("function apiError("), app.indexOf("async function request("));
+for (const locale of supportedLocales) {
+  const scope = { t: (key, values) => translate(locale, key, values) };
+  vm.runInNewContext(apiErrorSource, scope);
+  const error = scope.apiError({ error: { code: "registration_disabled", message: "server fallback" } }, 403);
+  assert.equal(error.message, translations[locale].registrationDisabled);
+  assert.equal(error.status, 403);
+  assert.equal(error.code, "registration_disabled");
+}

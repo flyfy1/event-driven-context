@@ -31,7 +31,7 @@ func TestDailyScheduledWindowPublishesOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = service.Close() })
-	server := httptest.NewServer(api.V2Handler(store, service, nil))
+	server := httptest.NewServer(api.V2HandlerWithConfig(store, service, api.Config{AllowRegistration: true}))
 	t.Cleanup(server.Close)
 
 	client, err := v2client.New(server.URL, "")

@@ -35,7 +35,7 @@ func server(t *testing.T) (*core.Store, *httptest.Server) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { s.Close() })
-	h := httptest.NewServer(Handler(s, nil))
+	h := httptest.NewServer(HandlerWithConfig(s, Config{AllowRegistration: true}))
 	t.Cleanup(h.Close)
 	return s, h
 }
@@ -555,7 +555,7 @@ func TestRealCLIAndStdioMCP(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = service.Close() })
-	h := httptest.NewServer(V2Handler(store, service, nil))
+	h := httptest.NewServer(V2HandlerWithConfig(store, service, Config{AllowRegistration: true}))
 	t.Cleanup(h.Close)
 
 	dir := t.TempDir()

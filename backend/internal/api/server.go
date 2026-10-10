@@ -27,6 +27,7 @@ func Handler(store *core.Store, allowedOrigins []string) http.Handler {
 }
 
 type Config struct {
+	AllowRegistration   bool
 	AllowedOrigins      []string
 	TrustedProxies      []netip.Prefix
 	PublicBaseURL       string
@@ -41,7 +42,7 @@ func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { respond(w, 200, map[string]string{"status": "ok"}) })
 	gate := newAuthGate(config.TrustedProxies)
-	mux.Handle("POST /v1/auth/register", gate.wrap(jsonEndpoint(201, store.Register)))
+	mux.Handle("POST /v1/auth/register", registrationHandler(store, gate, config.AllowRegistration))
 	mux.Handle("POST /v1/auth/login", gate.login(store.Login))
 	mux.Handle("POST /v1/auth/logout", authenticated(store, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := store.Logout(r.Context(), requestSessionToken(r)); err != nil {
@@ -396,4 +397,13 @@ func fail(w http.ResponseWriter, err error) {
 		e = &core.Error{Code: "internal", Message: "internal server error"}
 	}
 	respond(w, status, map[string]any{"error": e})
+}
+
+func registrationHandler(store *core.Store, gate *authGate, allow bool) http.Handler {
+	if allow {
+		return gate.wrap(jsonEndpoint(http.StatusCreated, store.Register))
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		respond(w, http.StatusForbidden, map[string]any{"error": core.Error{Code: "registration_disabled", Message: "Account registration is disabled. Contact the server administrator."}})
+	})
 }

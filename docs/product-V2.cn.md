@@ -633,7 +633,7 @@ edc host run
 
 | 方法与路径 | 用途 | 对应 MCP 工具 |
 |---|---|---|
-| `POST /v1/auth/register` | CLI 兼容注册；不作为网页入口 | — |
+| `POST /v1/auth/register` | 本地账号注册；需要 `-allow-registration`（默认 false），否则返回 403 `registration_disabled`；不作为网页入口 | — |
 | `POST /v1/auth/login` | CLI 兼容登录，返回 Bearer 令牌 | — |
 | `GET /v1/auth/integ/start` | 网页进入 Integ.Life 中心登录，保留 locale 与同源 `return_to` | — |
 | `GET /v1/auth/integ/callback` | 服务端校验 PKCE/state、绑定身份并签发 Context Session | — |
