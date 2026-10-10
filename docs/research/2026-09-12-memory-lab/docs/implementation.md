@@ -1,5 +1,9 @@
 # 给主开发任务的最小实施建议
 
+> Raw datasets, answers, snapshots, logs, and bundles referenced here now live in the
+> [release archive](../README.md#raw-artifact-archive). Extract it at the repository root
+> before following historical artifact paths or reproduction commands.
+
 建议先沿用现有 Event / refs / State / plugin 契约。研究脚本只在独立实验目录中运行，不能直接复制后当作生产插件。代码观察以 `sources/product-snapshot.json` 的内容摘要为准；主仓库同时开发，当前 HEAD 可能已经变化。
 
 ## 第一条可验收的路径

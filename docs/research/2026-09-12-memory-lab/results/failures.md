@@ -1,16 +1,20 @@
 # 代表性失败与评分误差
 
+> Raw datasets, answers, snapshots, logs, and bundles referenced here now live in the
+> [release archive](../README.md#raw-artifact-archive). Extract it at the repository root
+> before following historical artifact paths or reproduction commands.
+
 这些例子在查看结果后按诊断价值选出，不能用例子的比例估算总体正确率。原始自动分数保持不变，正文判断与接口格式分开。
 
 | 情形 | 观察到的回答/保存问题 | 含义与可审计工件 |
 |---|---|---|
-| B：最初预算 | 最初为 50000，后来改为 30000；问最初值时答 30000。摘要里仍有最初事件 ID，但对应金额没有保住。 | 引用标记召回不是事实保真。[完整案例](failures/product-0-historical-B.json) |
-| B：音频歧义 | 原转录为“小林/小宁，听不清”，回答“林”并标 known。 | 无依据消除歧义；这里是合成文本，不是 ASR 实验。[完整案例](failures/product-0-audio_unclear-B.json) |
-| B：音频更正 | 新事件已澄清小宁，但摘要没有保住更正，仍说无法确定。 | 有证据却没取到，不能算正确拒答。[完整案例](failures/product-0-audio_corrected-B.json) |
-| A：成员冲突 | 把 4/20 称为“最终”，把 4/10 称为“早期”，实际没有 supersedes 或双方认可。 | 时间顺序被擅自解释成权威或裁决。[完整案例](failures/product-0-member_conflict-A.json) |
-| D：未知状态标签 | 正文说明没有选定引擎/测试数据，却输出 status=known。四组均出现同类情况。 | 正文拒答正确，JSON 状态失败；不能称为事实幻觉。[完整案例](failures/product-0-unknown-D.json) |
-| C：未确认建议 | 正文区分 25000 当前预算与未确认 99000 建议，但标 conflict，且禁用词命中。 | 禁用字串命中不是断言错误预算；仍有结构化状态问题。[完整案例](failures/product-0-untrusted_update-C.json) |
-| B：迟到补记 | 原文说“上周”，摘要丢失这句，回答反而要求当前日期。 | 问题只需相对时间表达；不是标准未知题。[完整案例](failures/product-0-late_arrival-B.json) |
+| B：最初预算 | 最初为 50000，后来改为 30000；问最初值时答 30000。摘要里仍有最初事件 ID，但对应金额没有保住。 | 引用标记召回不是事实保真。完整案例 (`failures/product-0-historical-B.json`; [in the raw artifact archive](../README.md#raw-artifact-archive)) |
+| B：音频歧义 | 原转录为“小林/小宁，听不清”，回答“林”并标 known。 | 无依据消除歧义；这里是合成文本，不是 ASR 实验。完整案例 (`failures/product-0-audio_unclear-B.json`; [in the raw artifact archive](../README.md#raw-artifact-archive)) |
+| B：音频更正 | 新事件已澄清小宁，但摘要没有保住更正，仍说无法确定。 | 有证据却没取到，不能算正确拒答。完整案例 (`failures/product-0-audio_corrected-B.json`; [in the raw artifact archive](../README.md#raw-artifact-archive)) |
+| A：成员冲突 | 把 4/20 称为“最终”，把 4/10 称为“早期”，实际没有 supersedes 或双方认可。 | 时间顺序被擅自解释成权威或裁决。完整案例 (`failures/product-0-member_conflict-A.json`; [in the raw artifact archive](../README.md#raw-artifact-archive)) |
+| D：未知状态标签 | 正文说明没有选定引擎/测试数据，却输出 status=known。四组均出现同类情况。 | 正文拒答正确，JSON 状态失败；不能称为事实幻觉。完整案例 (`failures/product-0-unknown-D.json`; [in the raw artifact archive](../README.md#raw-artifact-archive)) |
+| C：未确认建议 | 正文区分 25000 当前预算与未确认 99000 建议，但标 conflict，且禁用词命中。 | 禁用字串命中不是断言错误预算；仍有结构化状态问题。完整案例 (`failures/product-0-untrusted_update-C.json`; [in the raw artifact archive](../README.md#raw-artifact-archive)) |
+| B：迟到补记 | 原文说“上周”，摘要丢失这句，回答反而要求当前日期。 | 问题只需相对时间表达；不是标准未知题。完整案例 (`failures/product-0-late_arrival-B.json`; [in the raw artifact archive](../README.md#raw-artifact-archive)) |
 
 ## 方法级反例
 
