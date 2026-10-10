@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"os"
 	"os/exec"
@@ -33,6 +34,7 @@ func run() (runErr error) {
 	addr := flag.String("addr", "127.0.0.1:8080", "HTTP listen address")
 	dbPath := flag.String("db", "data/context.db", "SQLite database path")
 	dataDir := flag.String("data", "data", "directory for immutable event and uploaded-file data")
+	trustedProxies := flag.String("trusted-proxies", "", "comma-separated trusted proxy CIDRs for client IP headers; empty trusts nothing")
 	origins := flag.String("allowed-origins", "", "comma-separated browser origins; empty rejects all Origin-bearing requests")
 	publicBaseURL := flag.String("public-base-url", "", "public HTTPS origin used for OAuth discovery; empty disables OAuth endpoints")
 	migrateUserID := flag.String("set-user-email-user-id", "", "one-time migration: exact existing user ID")
@@ -43,6 +45,10 @@ func run() (runErr error) {
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return fmt.Errorf("unexpected arguments")
+	}
+	proxyPrefixes, err := parseTrustedProxies(*trustedProxies)
+	if err != nil {
+		return err
 	}
 	store, err := core.Open(*dbPath, *dataDir)
 	if err != nil {
@@ -119,7 +125,7 @@ func run() (runErr error) {
 			return fmt.Errorf("configure OpenAI transcription: %w", err)
 		}
 	}
-	httpServer := &http.Server{Addr: *addr, Handler: api.V2HandlerWithConfig(store, service, api.Config{AllowedOrigins: allowed, PublicBaseURL: *publicBaseURL, IntegAuth: integAuth, AdminUsers: adminUsers, AudioTranscriber: audioTranscriber}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 3 * time.Minute, WriteTimeout: 3 * time.Minute, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
+	httpServer := &http.Server{Addr: *addr, Handler: api.V2HandlerWithConfig(store, service, api.Config{AllowedOrigins: allowed, TrustedProxies: proxyPrefixes, PublicBaseURL: *publicBaseURL, IntegAuth: integAuth, AdminUsers: adminUsers, AudioTranscriber: audioTranscriber}), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 3 * time.Minute, WriteTimeout: 3 * time.Minute, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	ln, err := net.Listen("tcp", *addr)
 	if err != nil {
 		return err
@@ -184,4 +190,19 @@ func envTrue(name string) bool {
 	default:
 		return false
 	}
+}
+
+func parseTrustedProxies(value string) ([]netip.Prefix, error) {
+	if strings.TrimSpace(value) == "" {
+		return nil, nil
+	}
+	var prefixes []netip.Prefix
+	for _, cidr := range strings.Split(value, ",") {
+		prefix, err := netip.ParsePrefix(strings.TrimSpace(cidr))
+		if err != nil {
+			return nil, fmt.Errorf("invalid trusted-proxies CIDR %q: %w", cidr, err)
+		}
+		prefixes = append(prefixes, prefix.Masked())
+	}
+	return prefixes, nil
 }

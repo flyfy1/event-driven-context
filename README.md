@@ -520,7 +520,9 @@ The OAuth public origin is automatically added to the allowed list.
 
 The MCP SDK enables loopback Host validation by default. If a reverse proxy connects to a loopback upstream, the proxy must set the upstream Host header to that upstream address.
 
-The application rate-limits concurrent password authentication and global authentication attempts. DCR volume is also limited. The public entry point should still apply per-client abuse controls.
+Authentication attempts are limited per client IP, with an additional normalized-username limit on `POST /v1/auth/login` (lowercase, trimmed whitespace). Each bucket allows a burst of 20 attempts and refills one token every two seconds. Each gate retains at most 10,000 keys, removes keys idle for ten minutes on the next request, and evicts the least recently used key at capacity. A process-wide cap of four concurrent gated requests protects password hashing CPU. DCR volume is also limited.
+
+`-trusted-proxies` accepts comma-separated proxy CIDRs and defaults to empty (trust nothing). Without a trusted direct peer, rate limiting uses `RemoteAddr` and ignores forwarded headers. For a trusted peer, it uses the rightmost untrusted hop in `X-Forwarded-For` (or the leftmost hop if all are trusted); `X-Real-IP` is used only when `X-Forwarded-For` is absent. Malformed forwarding falls back to the direct peer. For the local IPv4 reverse proxy shown above, add `-trusted-proxies 127.0.0.1/32` to `ExecStart`. Include `::1/128` only if the proxy connects over IPv6 loopback. Trust only controlled proxy hops that overwrite or correctly append these headers; configure any upstream CDN trust at the proxy or explicitly include its verified CIDRs. The public entry point should still apply abuse controls.
 
 SQLite is used only for identity and authorization, including OAuth clients, transactions, codes, and tokens. Event and State queries use the server-owned V2 snapshot in the data directory, which is appropriate for the current small-team stage.
 

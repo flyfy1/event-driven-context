@@ -12,6 +12,8 @@ English | [简体中文](production-deployment.cn.md)
 - Releases: `/opt/event-driven-context/releases/<timestamp>-<commit>` with `/opt/event-driven-context/current` as the active symlink.
 - Secrets: `/etc/event-context.env`, root-readable only. Never copy its values into Git, logs, worklogs, or chat.
 
+The service template sets `-trusted-proxies 127.0.0.1/32` for the local tunnel connection so authentication limiting uses forwarded client IPs. The flag accepts comma-separated CIDRs and defaults to trusting nothing; only add controlled proxy hops. See the [README proxy trust rules](../README.md#verification-and-current-boundaries).
+
 The core has a single-writer filesystem contract. Never run the Pi and GCE services as simultaneous writers after cutover.
 
 ## Current Verified Deployment

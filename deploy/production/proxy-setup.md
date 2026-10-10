@@ -1,6 +1,15 @@
 # Context HTTPS proxy setup
 
 The API listens on loopback port 8401. Public browser access requires a proxy.
+The API unit sets `-trusted-proxies 127.0.0.1/32` for Caddy's local IPv4
+connection. The flag accepts comma-separated CIDRs and defaults to trusting
+nothing. Only trusted direct peers may supply client IP headers: the API uses
+the rightmost untrusted `X-Forwarded-For` hop, or the leftmost if all are trusted,
+and falls back to `X-Real-IP` only when that chain is absent. Malformed forwarding
+falls back to the direct peer. Caddy must overwrite or correctly append forwarding
+headers. If another CDN/proxy is in front of Caddy, configure its verified proxy
+trust at Caddy or explicitly include its verified CIDRs; otherwise that upstream
+peer remains the rate-limit identity. Do not trust arbitrary forwarding headers.
 The dedicated unit here loads only the Context site, without importing unrelated
 sites from `/etc/caddy/sites-enabled`. It owns ports 80 and 443 and must not run
 alongside another proxy on those ports.

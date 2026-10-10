@@ -29,9 +29,9 @@ func V2HandlerWithConfig(store *core.Store, service v2.ServiceAPI, config Config
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		respond(w, http.StatusOK, map[string]string{"status": "ok", "api": "v2", "version": buildinfo.Version})
 	})
-	gate := newAuthGate()
+	gate := newAuthGate(config.TrustedProxies)
 	mux.Handle("POST /v1/auth/register", gate.wrap(jsonEndpoint(http.StatusCreated, store.Register)))
-	mux.Handle("POST /v1/auth/login", gate.wrap(jsonEndpoint(http.StatusOK, store.Login)))
+	mux.Handle("POST /v1/auth/login", gate.login(store.Login))
 	mux.Handle("POST /v1/auth/logout", authenticated(store, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := store.Logout(r.Context(), requestSessionToken(r)); err != nil {
 			failV2(w, err)

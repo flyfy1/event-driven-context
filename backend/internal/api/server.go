@@ -10,9 +10,9 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"net/netip"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 	"unicode/utf8"
 
@@ -28,6 +28,7 @@ func Handler(store *core.Store, allowedOrigins []string) http.Handler {
 
 type Config struct {
 	AllowedOrigins      []string
+	TrustedProxies      []netip.Prefix
 	PublicBaseURL       string
 	OAuthAccessTokenTTL time.Duration
 	Automation          *automation.Coordinator
@@ -39,9 +40,9 @@ type Config struct {
 func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { respond(w, 200, map[string]string{"status": "ok"}) })
-	gate := newAuthGate()
+	gate := newAuthGate(config.TrustedProxies)
 	mux.Handle("POST /v1/auth/register", gate.wrap(jsonEndpoint(201, store.Register)))
-	mux.Handle("POST /v1/auth/login", gate.wrap(jsonEndpoint(200, store.Login)))
+	mux.Handle("POST /v1/auth/login", gate.login(store.Login))
 	mux.Handle("POST /v1/auth/logout", authenticated(store, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := store.Logout(r.Context(), requestSessionToken(r)); err != nil {
 			fail(w, err)
@@ -395,43 +396,4 @@ func fail(w http.ResponseWriter, err error) {
 		e = &core.Error{Code: "internal", Message: "internal server error"}
 	}
 	respond(w, status, map[string]any{"error": e})
-}
-
-// Global bounds on password hashing work; a public deployment should also apply
-// per-client limits at its ingress. Never trust a caller's X-Forwarded-For here.
-type authGate struct {
-	mu     sync.Mutex
-	tokens float64
-	last   time.Time
-	slots  chan struct{}
-}
-
-func newAuthGate() *authGate {
-	return &authGate{tokens: 20, last: time.Now(), slots: make(chan struct{}, 4)}
-}
-func (g *authGate) wrap(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		g.mu.Lock()
-		t := time.Now()
-		g.tokens = min(20, g.tokens+t.Sub(g.last).Seconds()/2)
-		g.last = t
-		ok := g.tokens >= 1
-		if ok {
-			g.tokens--
-		}
-		g.mu.Unlock()
-		if !ok {
-			w.Header().Set("Retry-After", "2")
-			respond(w, 429, map[string]any{"error": core.Error{Code: "rate_limited", Message: "too many authentication requests"}})
-			return
-		}
-		select {
-		case g.slots <- struct{}{}:
-			defer func() { <-g.slots }()
-			h.ServeHTTP(w, r)
-		default:
-			w.Header().Set("Retry-After", "2")
-			respond(w, 429, map[string]any{"error": core.Error{Code: "rate_limited", Message: "authentication busy"}})
-		}
-	})
 }

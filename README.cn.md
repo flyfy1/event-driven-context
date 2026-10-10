@@ -455,7 +455,11 @@ make build
 
 测试覆盖真实 CLI 与 stdio MCP 子进程、官方 MCP HTTP 客户端、OAuth、跨项目隔离、媒体幂等与原始字节、UTF-8 context 预算和显式关系、automation fencing/recovery，以及固定 runner 的输入与输出校验。
 
-服务默认仅绑定 loopback。`-public-base-url` 只接受不带 path 的 HTTPS origin；留空会关闭 OAuth discovery/endpoint，静态 Bearer MCP 仍可用。浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单；OAuth 自身 public origin 自动加入允许列表。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。应用限制密码认证并发与全局速率；DCR 总量也有限制，公网入口仍应按客户端限制滥用。
+服务默认仅绑定 loopback。`-public-base-url` 只接受不带 path 的 HTTPS origin；留空会关闭 OAuth discovery/endpoint，静态 Bearer MCP 仍可用。浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单；OAuth 自身 public origin 自动加入允许列表。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。
+
+认证请求按客户端 IP 限速，`POST /v1/auth/login` 还按规范化用户名限速（转小写并去除首尾空白）。每个桶允许突发 20 次请求，每两秒补充一个令牌。每个 gate 最多保留 10,000 个键，在下次请求时清理空闲十分钟的键，达到容量时淘汰最久未使用的键。进程级最多四个受限请求并发执行，以保护密码哈希的 CPU 开销。DCR 总量也有限制。
+
+`-trusted-proxies` 接受逗号分隔的代理 CIDR，默认为空（不信任任何代理）。直接连接方不受信任时，限速使用 `RemoteAddr`，忽略转发头。直接连接方受信任时，使用 `X-Forwarded-For` 中最右侧的不受信任跳点（全部受信任时使用最左侧跳点）；仅在缺少 `X-Forwarded-For` 时使用 `X-Real-IP`。转发信息格式错误时回退到直接连接方。上面的本地 IPv4 反向代理应在 `ExecStart` 中添加 `-trusted-proxies 127.0.0.1/32`；仅当代理通过 IPv6 loopback 连接时才加入 `::1/128`。只信任受控且会覆盖或正确追加这些头的代理跳点；上游 CDN 的信任应在代理中配置，或显式加入其经过核实的 CIDR。公网入口仍应实施防滥用控制。
 
 SQLite 仅用于身份与授权，包括 OAuth client、事务、code 与 token；Event 与 State 查询使用数据目录中由服务持有的 V2 snapshot，适合当前的小团队阶段。备份必须同时包含一致性 SQLite 备份与 `data/` 整个目录；运行时不要只复制 WAL 模式的主文件，也不要只复制 event 文件而遗漏授权数据库。生产部署会在停止服务后，以 SQLite backup API 和 data tar archive 写入 `/var/lib/event-driven-context/backups/`。
 

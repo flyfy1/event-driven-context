@@ -115,7 +115,7 @@ func registerOAuthHandlers(mux *http.ServeMux, store *core.Store, config Config)
 	mux.HandleFunc("GET /.well-known/oauth-authorization-server", func(w http.ResponseWriter, _ *http.Request) { oauthAuthorizationServer(w, base) })
 	mux.HandleFunc("POST /oauth/register", func(w http.ResponseWriter, r *http.Request) { oauthRegister(w, r, store) })
 	mux.HandleFunc("GET /oauth/authorize", func(w http.ResponseWriter, r *http.Request) { oauthAuthorizeGet(w, r, store, base) })
-	mux.Handle("POST /oauth/authorize", newAuthGate().wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("POST /oauth/authorize", newAuthGate(config.TrustedProxies).wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		oauthAuthorizePost(w, r, store, base, config.OAuthAccessTokenTTL)
 	})))
 	mux.HandleFunc("POST /oauth/token", func(w http.ResponseWriter, r *http.Request) {

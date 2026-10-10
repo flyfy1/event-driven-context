@@ -52,3 +52,20 @@ func TestReadMigrationEmailRequiresPrivateRegularFile(t *testing.T) {
 		t.Fatal("world-readable migration file accepted")
 	}
 }
+
+func TestParseTrustedProxies(t *testing.T) {
+	for _, value := range []string{"", "127.0.0.1/32", " 127.0.0.1/32, ::1/128 "} {
+		got, err := parseTrustedProxies(value)
+		if err != nil {
+			t.Fatalf("%q: %v", value, err)
+		}
+		if value != "" && len(got) == 0 {
+			t.Fatal("missing prefixes")
+		}
+	}
+	for _, value := range []string{"127.0.0.1", "garbage", "127.0.0.1/33", "127.0.0.1/32,"} {
+		if _, err := parseTrustedProxies(value); err == nil {
+			t.Fatalf("accepted %q", value)
+		}
+	}
+}

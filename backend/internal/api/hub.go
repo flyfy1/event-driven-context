@@ -35,7 +35,7 @@ func registerHubHandlers(mux *http.ServeMux, store *core.Store, config Config) {
 	mux.HandleFunc("GET /v1/hub/capabilities", func(w http.ResponseWriter, r *http.Request) {
 		respond(w, 200, map[string]any{"providers": hubconnectors.Catalog(), "authorization": map[string]any{"agent_registration": "POST /v1/hub/agents", "request_access": "POST /v1/hub/requests", "owner_approval_page": approvalURL, "owner_session_required": true, "scope": "one connection and one operation; calendar event/availability reads require calendar_id and time_min/time_max constraints", "max_duration_seconds": 604800}, "credential_storage_configured": len(key) == 32})
 	})
-	mux.Handle("POST /v1/hub/agents", newAuthGate().wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("POST /v1/hub/agents", newAuthGate(config.TrustedProxies).wrap(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var in struct {
 			Owner string `json:"owner"`
 			Name  string `json:"name"`

@@ -12,6 +12,8 @@
 - Release：`/opt/event-driven-context/releases/<timestamp>-<commit>`，`/opt/event-driven-context/current` 指向当前版本。
 - 密钥：只允许 root 读取的 `/etc/event-context.env`。不得把其值写入 Git、日志、工作记录或对话。
 
+服务模板为本地 tunnel 连接设置 `-trusted-proxies 127.0.0.1/32`，使认证限速使用转发的客户端 IP。该参数接受逗号分隔的 CIDR，默认不信任任何代理；只应添加受控的代理跳点。参见 [README 代理信任规则](../README.cn.md#验证与当前边界)。
+
 核心采用文件系统单写入者契约。切流后绝不能让 Pi 与 GCE 同时承担写入。
 
 ## 当前已验证部署
