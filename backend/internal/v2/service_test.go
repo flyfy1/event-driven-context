@@ -474,6 +474,15 @@ func TestAutomaticPluginSurvivesRestartWithIndentedSnapshot(t *testing.T) {
 	if err = f.service.Close(); err != nil {
 		t.Fatal(err)
 	}
+	// Exercise the existing indented representation even though new writes are compact.
+	index := filepath.Join(f.root, "data", "v2", "index.json")
+	raw, err := json.MarshalIndent(f.service.data, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(index, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
 	reopened, err := New(f.identity, filepath.Join(f.root, "data"))
 	if err != nil {
 		t.Fatal(err)
@@ -485,6 +494,22 @@ func TestAutomaticPluginSurvivesRestartWithIndentedSnapshot(t *testing.T) {
 	}
 	if again.InstallationID != first.InstallationID {
 		t.Fatalf("restart created a new installation %s != %s", again.InstallationID, first.InstallationID)
+	}
+	result, err := reopened.RecordEvents(f.aliceCtx, f.project.ID, RecordEventsInput{Events: []EventInput{textInput(eventOne, "compact write")}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	created(t, result)
+	raw, err = os.ReadFile(index)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var compact bytes.Buffer
+	if err := json.Compact(&compact, raw); err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(raw, compact.Bytes()) {
+		t.Fatal("snapshot is not compact JSON")
 	}
 	changed := manifest
 	changed.Processor = json.RawMessage(`{"entry":{"type":"command"}}`)
