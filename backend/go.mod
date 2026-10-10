@@ -1,6 +1,6 @@
 module event-driven-context
 
-go 1.26.5
+go 1.26.9
 
 require (
 	github.com/google/jsonschema-go v0.4.3

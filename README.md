@@ -52,7 +52,7 @@ Here, "local" means that data storage and execution run in an environment contro
 
 The deployment unit is one `edc-server` process plus two paths you control: the SQLite identity database selected by `-db`, and the durable data directory selected by `-data`. SQLite uses a pure-Go driver, so there is no separate database server or CGO dependency. The data directory has an exclusive writer lock; run only one server process against it.
 
-Building from source requires Go 1.26.5 or later. `make check` also uses the Node.js runtime for frontend tests, but the server itself does not require Node.js.
+Building from source requires Go 1.26.9 or later. `make check` also uses the Node.js runtime for frontend tests, but the server itself does not require Node.js.
 
 ### Run Locally in Five Minutes
 
