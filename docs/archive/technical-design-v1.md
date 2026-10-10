@@ -472,7 +472,7 @@ Skill output must distinguish progress, decisions, open_questions, and suggestio
 
 ### 9.1 Current P1 Interfaces
 
-The following interfaces are wired into the local code. The service must start with an explicit `-skill-root <absolute path to backend/skills>` to enable automation; see the P1 review record for the complete validation boundary. The public interactive MCP adds only query_context and does not expose runner control interfaces.
+The following interfaces describe the historical V1 implementation; see the P1 review record for its validation boundary. The V2 `edc-server` no longer accepts `-skill-root` or starts the V1 automation coordinator. The separate `edc-runner` still uses `-skill-root` / `EDC_RUNNER_SKILL_ROOT`, and the local audio transcription adapter uses `EDC_RUNNER_SKILL_ROOT`; both require the relevant packages in `backend/skills`. The API deployment scripts do not install or start those components and do not stage their skill files. The V1 public interactive MCP added only query_context and did not expose runner control interfaces.
 
 | Interface or tool | Purpose | Authorization |
 |---|---|---|

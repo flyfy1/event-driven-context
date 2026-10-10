@@ -472,7 +472,7 @@ skill 输出需区分 progress、decisions、open_questions 和 suggestions，�
 
 ### 9.1 当前 P1 接口
 
-以下接口已在本地代码中接线。服务启动必须显式传入 `-skill-root <backend/skills 的绝对路径>` 才启用自动化；完整验证边界见 P1 审查记录。公开交互 MCP 只增加 query_context，不暴露 runner 控制接口。
+以下接口描述历史 V1 实现；其验证边界见 P1 审查记录。V2 `edc-server` 不再接受 `-skill-root`，也不会启动 V1 自动化协调器。独立的 `edc-runner` 仍使用 `-skill-root` / `EDC_RUNNER_SKILL_ROOT`，本地音频转写适配器使用 `EDC_RUNNER_SKILL_ROOT`；两者都需要 `backend/skills` 中对应的技能包。API 部署脚本不安装或启动这些组件，也不暂存其技能文件。V1 公开交互 MCP 只增加 query_context，不暴露 runner 控制接口。
 
 | 接口或工具 | 用途 | 权限 |
 |---|---|---|

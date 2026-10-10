@@ -48,18 +48,17 @@ BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 BUILD_LDFLAGS="-s -w -X event-driven-context/internal/buildinfo.Commit=$BUILD_COMMIT -X event-driven-context/internal/buildinfo.BuiltAt=$BUILD_DATE"
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags="$BUILD_LDFLAGS" -o "$TEMP_DIR/edc-server" ./cmd/edc-server
 GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags="$BUILD_LDFLAGS" -o "$TEMP_DIR/edc" ./cmd/edc
+# API releases do not run edc-runner or the local ASR adapter; their skills are provisioned separately.
 cp -R backend/plugins "$TEMP_DIR/plugins"
 cp deploy/production/context-api.service "$TEMP_DIR/$SERVICE.service"
 cp deploy/production/context-api.caddy "$TEMP_DIR/$SERVICE.Caddyfile"
 cp deploy/production/event-context-proxy.service "$TEMP_DIR/$PROXY_SERVICE.service"
 cp deploy/production/context-service-admin "$TEMP_DIR/context-service-admin"
 cp deploy/production/context-service-admin.sudoers "$TEMP_DIR/context-service-admin.sudoers"
-cp -R backend/skills "$TEMP_DIR/skills"
 
 remote_exec "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
 remote_copy \
-  "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/$SERVICE.Caddyfile" "$TEMP_DIR/$PROXY_SERVICE.service" "$TEMP_DIR/context-service-admin" "$TEMP_DIR/context-service-admin.sudoers" \
-  "$TEMP_DIR/skills"
+  "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/$SERVICE.Caddyfile" "$TEMP_DIR/$PROXY_SERVICE.service" "$TEMP_DIR/context-service-admin" "$TEMP_DIR/context-service-admin.sudoers"
 
 remote_exec "sudo -n bash -s -- '$RELEASE_ID' '$SERVICE' '$REMOTE_ROOT' '$REMOTE_DATA' '$PORT'" <<'REMOTE_SCRIPT'
 set -euo pipefail
@@ -77,7 +76,7 @@ notes_was_active=""
 
 cleanup() { rm -rf "$stage_dir"; }
 trap cleanup EXIT
-if [[ ! -x "$stage_dir/edc" || ! -f "$stage_dir/plugins/notes-indexer/manifest.json" || ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/$service.Caddyfile" || ! -f "$stage_dir/event-context-proxy.service" || ! -x "$stage_dir/context-service-admin" || ! -f "$stage_dir/context-service-admin.sudoers" || ! -f "$stage_dir/skills/audio-transcribe/SKILL.md" || ! -f "$stage_dir/skills/daily-review/SKILL.md" ]]; then
+if [[ ! -x "$stage_dir/edc" || ! -f "$stage_dir/plugins/notes-indexer/manifest.json" || ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/$service.Caddyfile" || ! -f "$stage_dir/event-context-proxy.service" || ! -x "$stage_dir/context-service-admin" || ! -f "$stage_dir/context-service-admin.sudoers" ]]; then
   echo "incomplete staged release" >&2
   exit 1
 fi
@@ -128,9 +127,6 @@ install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc-server" "$
 install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc" "$release_dir/edc"
 cp -R "$stage_dir/plugins" "$release_dir/plugins"
 chown -R "$runtime_user:$shared_group" "$release_dir/plugins"
-install -d -o "$runtime_user" -g "$shared_group" -m 0755 "$release_dir/skills/audio-transcribe" "$release_dir/skills/daily-review"
-install -o "$runtime_user" -g "$shared_group" -m 0644 "$stage_dir/skills/audio-transcribe/SKILL.md" "$release_dir/skills/audio-transcribe/SKILL.md"
-install -o "$runtime_user" -g "$shared_group" -m 0644 "$stage_dir/skills/daily-review/SKILL.md" "$release_dir/skills/daily-review/SKILL.md"
 install -m 0644 "$stage_dir/$service.service" "/etc/systemd/system/$service.service"
 install -m 0644 "$stage_dir/$service.Caddyfile" "/etc/caddy/$service.Caddyfile"
 install -m 0644 "$stage_dir/event-context-proxy.service" "/etc/systemd/system/event-context-proxy.service"

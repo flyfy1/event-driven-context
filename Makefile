@@ -15,7 +15,7 @@ check:
 	go -C backend test -race ./...
 	node --test frontend/*.test.js
 run:
-	go -C backend run ./cmd/edc-server -skill-root skills
+	go -C backend run ./cmd/edc-server
 deploy-prod:
 	./scripts/deploy-pi.sh
 deploy-legacy-gce:

@@ -38,9 +38,6 @@ func run() (runErr error) {
 	migrateUserID := flag.String("set-user-email-user-id", "", "one-time migration: exact existing user ID")
 	migrateUsername := flag.String("set-user-email-username", "", "one-time migration: exact existing username")
 	migrateEmailFile := flag.String("set-user-email-file", "", "one-time migration: 0600 file containing the confirmed email")
-	// Kept as a parsed compatibility flag while deployments move to V2. The V2
-	// server does not expose or start the legacy automation coordinator.
-	_ = flag.String("skill-root", "", "deprecated V1 automation skill directory; ignored by the V2 server")
 	automaticNotes := flag.Bool("automatic-notes", true, "index all projects automatically with one shared worker")
 	notesCodex := flag.String("notes-codex", os.Getenv("EDC_NOTES_CODEX"), "authenticated Codex executable for automatic notes")
 	flag.Parse()

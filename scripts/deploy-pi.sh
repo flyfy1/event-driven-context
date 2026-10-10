@@ -29,16 +29,16 @@ BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 BUILD_LDFLAGS="-s -w -X event-driven-context/internal/buildinfo.Commit=$BUILD_COMMIT -X event-driven-context/internal/buildinfo.BuiltAt=$BUILD_DATE"
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags="$BUILD_LDFLAGS" -o "$TEMP_DIR/edc-server" ./cmd/edc-server
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go -C backend build -trimpath -ldflags="$BUILD_LDFLAGS" -o "$TEMP_DIR/edc" ./cmd/edc
+# API releases do not run edc-runner or the local ASR adapter; their skills are provisioned separately.
 cp -R backend/plugins "$TEMP_DIR/plugins"
-cp -R backend/skills "$TEMP_DIR/skills"
 cp deploy/production/context-api-pi.service "$TEMP_DIR/$SERVICE.service"
 cp deploy/production/event-context-backup.sh deploy/production/event-context-backup.service deploy/production/event-context-backup.timer "$TEMP_DIR/"
 
 remote_exec "install -d -m 0700 '/tmp/$SERVICE-$RELEASE_ID'"
 if [[ "$TARGET" == "local" ]]; then
-  cp -R "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/skills" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/event-context-backup.sh" "$TEMP_DIR/event-context-backup.service" "$TEMP_DIR/event-context-backup.timer" "/tmp/$SERVICE-$RELEASE_ID/"
+  cp -R "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/event-context-backup.sh" "$TEMP_DIR/event-context-backup.service" "$TEMP_DIR/event-context-backup.timer" "/tmp/$SERVICE-$RELEASE_ID/"
 else
-  scp -r "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/skills" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/event-context-backup.sh" "$TEMP_DIR/event-context-backup.service" "$TEMP_DIR/event-context-backup.timer" "$TARGET:/tmp/$SERVICE-$RELEASE_ID/"
+  scp -r "$TEMP_DIR/edc-server" "$TEMP_DIR/edc" "$TEMP_DIR/plugins" "$TEMP_DIR/$SERVICE.service" "$TEMP_DIR/event-context-backup.sh" "$TEMP_DIR/event-context-backup.service" "$TEMP_DIR/event-context-backup.timer" "$TARGET:/tmp/$SERVICE-$RELEASE_ID/"
 fi
 
 remote_exec "sudo -n bash -s -- '$RELEASE_ID' '$SERVICE' '$REMOTE_ROOT' '$REMOTE_DATA' '$PORT'" <<'REMOTE_SCRIPT'
@@ -57,7 +57,7 @@ old_target=""
 cleanup() { rm -rf "$stage_dir"; }
 trap cleanup EXIT
 
-if [[ ! -x "$stage_dir/edc" || ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/event-context-backup.timer" || ! -f "$stage_dir/plugins/project-brief/manifest.json" || ! -f "$stage_dir/skills/audio-transcribe/SKILL.md" || ! -f "$stage_dir/skills/daily-review/SKILL.md" ]]; then
+if [[ ! -x "$stage_dir/edc" || ! -x "$stage_dir/edc-server" || ! -f "$stage_dir/$service.service" || ! -f "$stage_dir/event-context-backup.timer" || ! -f "$stage_dir/plugins/project-brief/manifest.json" ]]; then
   echo "incomplete staged release" >&2
   exit 1
 fi
@@ -94,10 +94,10 @@ fi
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root" "$remote_root/releases" "$release_dir"
 install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc-server" "$release_dir/edc-server"
 install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc" "$release_dir/edc"
-cp -R "$stage_dir/plugins" "$stage_dir/skills" "$release_dir/"
+cp -R "$stage_dir/plugins" "$release_dir/"
 chown -R "$runtime_user:$shared_group" "$release_dir"
 find "$release_dir" -type d -exec chmod 2775 {} +
-find "$release_dir/plugins" "$release_dir/skills" -type f -exec chmod 0644 {} +
+find "$release_dir/plugins" -type f -exec chmod 0644 {} +
 install -m 0644 "$stage_dir/$service.service" "/etc/systemd/system/$service.service"
 install -d -o root -g root -m 0755 /usr/local/lib/event-driven-context
 install -o root -g root -m 0755 "$stage_dir/event-context-backup.sh" /usr/local/lib/event-driven-context/event-context-backup.sh
