@@ -164,6 +164,7 @@ func RegisterAutomationHandlers(mux *http.ServeMux, store *core.Store, coordinat
 			return
 		}
 		defer file.Close()
+		extendTransferDeadlines(w, core.MaxMediaBytes, false)
 		w.Header().Set("Content-Type", info.MediaType)
 		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": info.Filename}))
 		w.Header().Set("Content-Length", strconv.Itoa(info.SizeBytes))

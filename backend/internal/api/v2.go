@@ -473,6 +473,7 @@ func v2StateKey(r *http.Request) string { return r.PathValue("plugin_id") + "/" 
 
 func v2FileUploadEndpoint(service v2.ServiceAPI) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		extendTransferDeadlines(w, v2.MaxFileBytes+v2MultipartOverhead, true)
 		mediaType, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if err != nil || mediaType != "multipart/form-data" || params["boundary"] == "" {
 			failV2(w, v2Invalid("Content-Type must be multipart/form-data with boundary"))
@@ -546,6 +547,7 @@ func v2FileDownloadEndpoint(service v2.ServiceAPI) http.Handler {
 			return
 		}
 		defer file.Close()
+		extendTransferDeadlines(w, v2.MaxFileBytes, false)
 		w.Header().Set("Content-Type", info.MediaType)
 		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": info.Filename}))
 		w.Header().Set("Content-Length", strconv.FormatInt(info.SizeBytes, 10))

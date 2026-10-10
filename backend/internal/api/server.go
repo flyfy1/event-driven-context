@@ -102,6 +102,7 @@ func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 			return
 		}
 		defer file.Close()
+		extendTransferDeadlines(w, core.MaxMediaBytes, false)
 		w.Header().Set("Content-Type", info.MediaType)
 		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": info.Filename}))
 		w.Header().Set("Content-Length", strconv.Itoa(info.SizeBytes))
@@ -174,15 +175,7 @@ func HandlerWithConfig(store *core.Store, config Config) http.Handler {
 
 func mediaEventEndpoint(store *core.Store) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		controller := http.NewResponseController(w)
-		if err := controller.SetReadDeadline(time.Now().Add(3 * time.Minute)); err != nil && !errors.Is(err, http.ErrNotSupported) {
-			slog.Debug("could not extend media upload deadline", "error", err)
-		}
-		// Server.WriteTimeout starts when headers are read, so a slow but valid
-		// upload also needs a bounded route-specific response deadline.
-		if err := controller.SetWriteDeadline(time.Now().Add(190 * time.Second)); err != nil && !errors.Is(err, http.ErrNotSupported) {
-			slog.Debug("could not extend media response deadline", "error", err)
-		}
+		extendTransferDeadlines(w, core.MaxMediaRequestBytes, true)
 		mediaType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if err != nil || mediaType != "multipart/form-data" {
 			fail(w, core.Invalid("Content-Type must be multipart/form-data"))
