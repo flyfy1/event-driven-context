@@ -462,7 +462,7 @@ make build
 
 服务默认仅绑定 loopback。`-public-base-url` 只接受不带 path 的 HTTPS origin；留空会关闭 OAuth discovery/endpoint，静态 Bearer MCP 仍可用。浏览器 Origin 默认全拒绝，可用 `-allowed-origins https://YOUR_HOST` 配置明确名单；OAuth 自身 public origin 自动加入允许列表。MCP SDK 默认启用 loopback Host 检查，反向代理若连接 loopback 上游，应将上游 Host 设为该上游地址。
 
-认证请求按客户端 IP 限速，`POST /v1/auth/login` 还按规范化用户名限速（转小写并去除首尾空白）。每个桶允许突发 20 次请求，每两秒补充一个令牌。每个 gate 最多保留 10,000 个键，在下次请求时清理空闲十分钟的键，达到容量时淘汰最久未使用的键。进程级最多四个受限请求并发执行，以保护密码哈希的 CPU 开销。DCR 总量也有限制。
+认证请求按客户端 IP 限速，`POST /v1/auth/login` 还按规范化用户名限速（转小写并去除首尾空白）。IP 桶对每次请求扣减令牌；用户名桶在登录前检查预算，仅在凭据无效时扣减令牌，因此成功登录不会消耗其预算。用户名桶耗尽时，会在检查凭据前以 HTTP 429 拒绝登录。每个桶容量为 20 个令牌，每两秒补充一个令牌。每个 gate 最多保留 10,000 个键，在下次请求时清理空闲十分钟的键，达到容量时淘汰最久未使用的键。进程级最多四个受限请求并发执行，以保护密码哈希的 CPU 开销。DCR 总量也有限制。
 
 `-trusted-proxies` 接受逗号分隔的代理 CIDR，默认为空（不信任任何代理）。直接连接方不受信任时，限速使用 `RemoteAddr`，忽略转发头。直接连接方受信任时，使用 `X-Forwarded-For` 中最右侧的不受信任跳点（全部受信任时使用最左侧跳点）；仅在缺少 `X-Forwarded-For` 时使用 `X-Real-IP`。转发信息格式错误时回退到直接连接方。上面的本地 IPv4 反向代理应在 `ExecStart` 中添加 `-trusted-proxies 127.0.0.1/32`；仅当代理通过 IPv6 loopback 连接时才加入 `::1/128`。只信任受控且会覆盖或正确追加这些头的代理跳点；上游 CDN 的信任应在代理中配置，或显式加入其经过核实的 CIDR。公网入口仍应实施防滥用控制。
 
