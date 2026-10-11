@@ -1,4 +1,4 @@
-import './vendor/integ-ui-0.4.0/static.js';
+import './vendor/integ-ui-0.5.0/static.js';
 const header = document.querySelector('header.header, header.topbar');
 if (header) {
   const bar = document.createElement('integ-family-bar');
@@ -13,6 +13,14 @@ if (header) {
     if (child.classList.contains('brand')) continue;
     actions.append(child);
   }
+  actions.querySelectorAll('select').forEach(control => {
+    // Select the label when present so its translated accessible name survives.
+    (control.closest('label') || control).setAttribute('data-il-compact','language');
+    if (!control.getAttribute('aria-label')) control.setAttribute('aria-label','Language');
+  });
+  actions.querySelectorAll('.workspace-link,#logout-button').forEach(control => {
+    control.setAttribute('data-il-compact','account');
+  });
   bar.append(actions);
   header.replaceWith(bar);
   new MutationObserver(() => bar.setAttribute('locale', document.documentElement.lang || 'en'))

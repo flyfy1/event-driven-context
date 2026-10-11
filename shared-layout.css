@@ -6,3 +6,8 @@ integ-family-bar { display:block; }
 .il-family-bar label { margin:0; }
 .il-dialog h2,.il-dialog h3 { letter-spacing:normal; }
 @media(max-width:760px) { .il-family-bar [data-il-actions] { gap:8px; } .il-family-bar [data-il-actions]>nav { flex-basis:100%; font-size:13px; } }
+
+.il-family-bar [data-il-actions],.il-family-bar .header-actions { gap:4px; flex-wrap:nowrap; }
+.il-family-bar .status { font-size:12px; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.il-family-bar .il-icon-slot:has(>.hidden),.il-family-bar .il-icon-slot:has(>[hidden]) { display:none; }
+@media(max-width:700px) { .il-family-bar [data-il-actions]>nav { display:none; } .il-family-bar .status { max-width:90px; } .il-family-bar .quiet { padding:8px; font-size:12px; } }

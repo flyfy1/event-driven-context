@@ -2,9 +2,9 @@
   "schema": "integ.life/build-version/v1",
   "repository": "flyfy1/event-driven-context",
   "service": "context.integ.life",
-  "version": "git-061e47462bba",
-  "commit": "061e47462bba",
+  "version": "git-48f989ccd156",
+  "commit": "48f989ccd156",
   "dirty": false,
-  "uiVersion": "0.4.0",
-  "builtAt": "2026-10-11T08:20:11.818710+00:00"
+  "uiVersion": "0.5.0",
+  "builtAt": "2026-10-11T08:46:45.191601+00:00"
 }
