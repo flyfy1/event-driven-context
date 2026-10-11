@@ -1,0 +1,42 @@
+{
+  "name": "@integ-life/ui",
+  "version": "0.5.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.jsx"
+    },
+    "./styles.css": "./styles.css",
+    "./package.json": "./package.json",
+    "./static": {
+      "types": "./static.d.ts",
+      "default": "./static.js"
+    }
+  },
+  "files": [
+    "index.jsx",
+    "index.d.ts",
+    "labels.js",
+    "styles.css",
+    "README.md",
+    "logos.js",
+    "logos",
+    "static.js",
+    "static.d.ts",
+    "icons.js"
+  ],
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  }
+}

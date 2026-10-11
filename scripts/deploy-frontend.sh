@@ -46,7 +46,7 @@ import json, sys
 from pathlib import Path
 from datetime import datetime, timezone
 site = Path(sys.argv[1])
-ui = json.loads((site / "vendor/integ-ui-0.4.0/package.json").read_text())["version"]
+ui = json.loads((site / "vendor/integ-ui-0.5.0/package.json").read_text())["version"]
 (site / "build-version.json").write_text(json.dumps({
     "schema": "integ.life/build-version/v1", "repository": "flyfy1/event-driven-context",
     "service": "context.integ.life", "version": "git-" + sys.argv[2], "commit": sys.argv[2],
