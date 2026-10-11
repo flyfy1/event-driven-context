@@ -41,6 +41,19 @@ while IFS= read -r -d '' html_file; do
   perl -0pi -e 's{((?:src|href)="\./[^"?]+\.(?:css|js))(?:\?v=[^"]*)?(")}{$1 . "?v=" . $ENV{FRONTEND_RELEASE} . $2}ge' "$html_file"
 done < <(find "$TEMP_DIR/site" -path "$TEMP_DIR/site/skills" -prune -o -type f -name '*.html' -print0)
 
+python3 - "$TEMP_DIR/site" "$SOURCE_REVISION" <<'PYVERSION'
+import json, sys
+from pathlib import Path
+from datetime import datetime, timezone
+site = Path(sys.argv[1])
+ui = json.loads((site / "vendor/integ-ui-0.4.0/package.json").read_text())["version"]
+(site / "build-version.json").write_text(json.dumps({
+    "schema": "integ.life/build-version/v1", "repository": "flyfy1/event-driven-context",
+    "service": "context.integ.life", "version": "git-" + sys.argv[2], "commit": sys.argv[2],
+    "dirty": False, "uiVersion": ui, "builtAt": datetime.now(timezone.utc).isoformat()
+}, indent=2) + "\n")
+PYVERSION
+
 git -C "$TEMP_DIR/site" add --all
 if git -C "$TEMP_DIR/site" diff --cached --quiet; then
   echo "Frontend already published"
