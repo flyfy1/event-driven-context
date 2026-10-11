@@ -1,0 +1,8 @@
+integ-family-bar { display:block; }
+.il-family-bar [data-il-actions],.il-family-bar [data-il-actions] > nav,.il-family-bar .header-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.il-family-bar .status { margin:0; }
+.il-family-bar :is(a,button,select) { min-height:40px; }
+.il-family-bar .quiet,.il-family-bar .workspace-link { display:inline-flex; align-items:center; padding:8px 12px; color:var(--il-text); border:1px solid var(--il-border); border-radius:8px; background:var(--il-surface); text-decoration:none; }
+.il-family-bar label { margin:0; }
+.il-dialog h2,.il-dialog h3 { letter-spacing:normal; }
+@media(max-width:760px) { .il-family-bar [data-il-actions] { gap:8px; } .il-family-bar [data-il-actions]>nav { flex-basis:100%; font-size:13px; } }

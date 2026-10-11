@@ -1,0 +1,10 @@
+{
+  "schema": "integ.life/build-version/v1",
+  "repository": "flyfy1/event-driven-context",
+  "service": "context.integ.life",
+  "version": "git-061e47462bba",
+  "commit": "061e47462bba",
+  "dirty": false,
+  "uiVersion": "0.4.0",
+  "builtAt": "2026-10-11T08:20:11.818710+00:00"
+}

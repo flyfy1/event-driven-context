@@ -122,7 +122,7 @@ function apiError(payload, statusCode) {
   const code = payload && payload.error && payload.error.code;
   const serviceMessage = payload && payload.error && payload.error.message;
   const key = {
-    unauthenticated: "sessionExpired", forbidden: "forbidden", not_found: "notFound",
+    registration_disabled: "registrationDisabled", unauthenticated: "sessionExpired", forbidden: "forbidden", not_found: "notFound",
     conflict: "conflict", invalid_input: "invalidInput", too_large: "fileTooLargeV2",
     invalid_ref: "invalidRef", unsupported_media_type: "unsupportedMediaType",
     state_version_mismatch: "stateVersionMismatch", forbidden_namespace: "forbiddenNamespace",
