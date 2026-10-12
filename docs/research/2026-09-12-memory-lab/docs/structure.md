@@ -1,5 +1,9 @@
 # 推荐的最小 memory 结构
 
+> Raw datasets, answers, snapshots, logs, and bundles referenced here now live in the
+> [release archive](../README.md#raw-artifact-archive). Extract it at the repository root
+> before following historical artifact paths or reproduction commands.
+
 本建议将实测能力、代码检查和未验证部分分开。最终量化结果见 `REPORT.md` 与 `results/summary.md`。独立原型不是可直接部署的插件。
 
 ## 职责与组织

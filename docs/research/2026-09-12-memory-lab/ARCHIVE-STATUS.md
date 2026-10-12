@@ -1,5 +1,9 @@
 # 实验归档已完成
 
+> Raw datasets, answers, snapshots, logs, and bundles referenced here now live in the
+> [release archive](README.md#raw-artifact-archive). Extract it at the repository root
+> before following historical artifact paths or reproduction commands.
+
 归档时间：2026-09-12T02:39:31.631363+00:00
 
 入口：[研究报告](REPORT.md)、[复现与目录索引](README.md)、[执行记录](results/execution.md)、[过程日志索引](results/process-notes.md)、[完整结果](results/summary.md)。
