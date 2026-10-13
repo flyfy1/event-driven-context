@@ -38,11 +38,11 @@ var manifestJSON = []byte(`{
 
 // Run uses one slot and round-robin discovery: one batch per project per sweep.
 // Checkpoints survive restarts; failed projects back off without starving others.
-func Run(ctx context.Context, store *core.Store, service *v2.Service, codex string) {
-	runLoop(ctx, store, service, codex, 15*time.Second, noteindexer.Run)
+func Run(ctx context.Context, store *core.Store, service *v2.Service, agent string) {
+	runLoop(ctx, store, service, agent, 15*time.Second, noteindexer.Run)
 }
 
-func runLoop(ctx context.Context, store *core.Store, service *v2.Service, codex string, interval time.Duration, execute func(context.Context, noteindexer.Client, noteindexer.Options) (noteindexer.Result, error)) {
+func runLoop(ctx context.Context, store *core.Store, service *v2.Service, agent string, interval time.Duration, execute func(context.Context, noteindexer.Client, noteindexer.Options) (noteindexer.Result, error)) {
 	var manifest v2.Manifest
 	if err := json.Unmarshal(manifestJSON, &manifest); err != nil {
 		panic(err)
@@ -83,7 +83,7 @@ func runLoop(ctx context.Context, store *core.Store, service *v2.Service, codex 
 			principal, _, e := service.EnsureAutomaticPlugin(runCtx, target.ProjectID, manifest)
 			var result noteindexer.Result
 			if e == nil {
-				result, e = execute(ctx, client{service, principal}, noteindexer.Options{ProjectID: target.ProjectID, CodexPath: codex})
+				result, e = execute(ctx, client{service, principal}, noteindexer.Options{ProjectID: target.ProjectID, AgentPath: agent})
 			}
 			if ctx.Err() != nil {
 				return

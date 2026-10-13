@@ -10,7 +10,7 @@ Group=context-admins
 UMask=0007
 WorkingDirectory=/var/lib/event-driven-context
 Environment=HOME=/home/yycy
-Environment=EDC_NOTES_CODEX=/home/yycy/.local/bin/codex
+Environment=EDC_NOTES_AGENT=/home/yycy/.local/bin/muse
 EnvironmentFile=-/etc/event-context.env
 ExecStart=/opt/event-driven-context/current/edc-server -addr 127.0.0.1:8401 -db /var/lib/event-driven-context/context.db -data /var/lib/event-driven-context/data -skill-root /opt/event-driven-context/current/skills -allowed-origins https://context.integ.life -public-base-url https://context-api.integ.life
 Restart=on-failure
@@ -19,7 +19,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/var/lib/event-driven-context -/home/yycy/.codex
+ReadWritePaths=/var/lib/event-driven-context -/home/yycy/.config/muse -/home/yycy/.local/share/muse -/home/yycy/.cache/muse
 
 [Install]
 WantedBy=multi-user.target

@@ -7,7 +7,7 @@ import (
 )
 
 const PromptVersion = "2"
-const Model = "gpt-5.6-luna"
+const Model = "muse-wonder-1.0"
 const Reasoning = "medium"
 
 //go:embed prompts/system.md

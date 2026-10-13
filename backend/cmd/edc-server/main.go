@@ -42,7 +42,7 @@ func run() (runErr error) {
 	// server does not expose or start the legacy automation coordinator.
 	_ = flag.String("skill-root", "", "deprecated V1 automation skill directory; ignored by the V2 server")
 	automaticNotes := flag.Bool("automatic-notes", true, "index all projects automatically with one shared worker")
-	notesCodex := flag.String("notes-codex", os.Getenv("EDC_NOTES_CODEX"), "authenticated Codex executable for automatic notes")
+	notesAgent := flag.String("notes-agent", os.Getenv("EDC_NOTES_AGENT"), "authenticated Muse Code executable for automatic notes")
 	flag.Parse()
 	if flag.NArg() != 0 {
 		return fmt.Errorf("unexpected arguments")
@@ -130,13 +130,13 @@ func run() (runErr error) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if *automaticNotes {
-		command := *notesCodex
+		command := *notesAgent
 		if command == "" {
-			command = "codex"
+			command = "muse"
 		}
 		resolved, lookupErr := exec.LookPath(command)
 		if lookupErr != nil {
-			slog.Error("automatic notes unavailable: configure --notes-codex", "error", lookupErr)
+			slog.Error("automatic notes unavailable: configure --notes-agent", "error", lookupErr)
 		} else {
 			workerCtx, cancelWorker := context.WithCancel(ctx)
 			workerDone := make(chan struct{})

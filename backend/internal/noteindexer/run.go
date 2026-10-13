@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"sort"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -23,7 +22,7 @@ import (
 )
 
 type Options struct {
-	ProjectID, CodexPath string
+	ProjectID, AgentPath string
 	Timeout              time.Duration
 }
 type Result struct {
@@ -56,8 +55,8 @@ func Run(ctx context.Context, client Client, opts Options) (result Result, err e
 		defer cancel()
 		_ = client.CancelNotesOrganization(cleanup, opts.ProjectID, run.RunID)
 	}()
-	if opts.CodexPath == "" {
-		return result, fmt.Errorf("--agent-command must point to Codex")
+	if opts.AgentPath == "" {
+		return result, fmt.Errorf("--agent-command must point to Muse Code")
 	}
 	if run.RunID == "" || run.Snapshot.ProjectID != opts.ProjectID {
 		return result, fmt.Errorf("invalid organizer snapshot")
@@ -100,20 +99,31 @@ func Run(ctx context.Context, client Client, opts Options) (result Result, err e
 	defer server.Close()
 	url := "http://" + listener.Addr().String() + "/mcp"
 	promptData, _ := json.Marshal(map[string]any{"project_id": opts.ProjectID, "timezone": run.Timezone, "after_sequence": run.AfterSequence, "through_sequence": run.ThroughSequence, "batch_events": len(run.Events), "task": "Read the organization policies and relevant evidence with the provided tools; update the draft and finish."})
-	// Developer instructions are fixed code. Organization policy is fetched as
-	// tool data, so users cannot replace the operating boundary by editing notes.
-	args := []string{"exec", "--ignore-user-config", "--ignore-rules", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--json", "-m", Model, "-c", `model_reasoning_effort="` + Reasoning + `"`, "-c", `approval_policy="never"`, "-c", `web_search="disabled"`, "-c", "developer_instructions=" + strconv.Quote(systemPrompt), "-c", "mcp_servers.notes.url=" + strconv.Quote(url), "-c", `mcp_servers.notes.bearer_token_env_var="EDC_NOTES_RUN_SECRET"`, "-c", `mcp_servers.notes.required=true`, "-c", `mcp_servers.notes.default_tools_approval_mode="approve"`}
-	for _, feature := range []string{"shell_tool", "apps", "plugins", "multi_agent", "hooks", "memories", "browser_use", "computer_use", "image_generation", "view_image", "skill_search", "goals", "sleep_tool", "workspace_dependencies", "tool_suggest"} {
-		args = append(args, "--disable", feature)
+	// Keep the fixed developer prompt and the project-scoped MCP boundary.
+	// The credential is resolved from an environment variable, never argv.
+	promptPath := work + "/prompt.json"
+	if err = os.WriteFile(promptPath, promptData, 0600); err != nil {
+		return result, err
 	}
-	args = append(args, "--enable", "skip_host_skill_discovery", "-")
-	if err = execute(ctx, opts.Timeout, opts.CodexPath, args, string(promptData), work, secret); err != nil {
+	serverConfig, _ := json.Marshal(map[string]any{
+		"transport": "streamable_http", "url": url, "enabled": true, "mode": "required",
+		"headers": map[string]string{"Authorization": "${EDC_NOTES_AUTHORIZATION}"},
+	})
+	developerPrompt, _ := json.Marshal(systemPrompt)
+	args := []string{"exec", "--json", "--model", Model, "--contributor-mode", "off",
+		"--reasoning-effort", Reasoning, "--workspace", work, "--prompt-file", promptPath,
+		"--no-session-log", "--no-foreign-personal-context", "--disable-shell", "--disable-write",
+		"--disable-web-tools", "--disable-reminders", "--disable-approval", "--max-model-steps", "64",
+		"-c", "run.developer_prompt=" + string(developerPrompt),
+		"-c", `run.toolset=["mcp__notes__*"]`, "-c", "mcp_servers.notes=" + string(serverConfig)}
+
+	if err = execute(ctx, opts.Timeout, opts.AgentPath, args, string(promptData), work, secret); err != nil {
 		return result, err
 	}
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	if !d.finished {
-		return result, fmt.Errorf("Codex exited without successfully validating the draft with finish")
+		return result, fmt.Errorf("Muse exited without successfully validating the draft with finish")
 	}
 	old := map[string]string{}
 	for _, f := range run.Snapshot.Files {
@@ -149,15 +159,15 @@ func execute(ctx context.Context, timeout time.Duration, command string, args []
 	cmd.Dir = dir
 	cmd.Stdin = strings.NewReader(prompt)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	for _, key := range []string{"PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "TZ", "TMPDIR", "CODEX_HOME"} {
+	for _, key := range []string{"PATH", "HOME", "USER", "LOGNAME", "LANG", "LC_ALL", "TZ", "TMPDIR"} {
 		if value, ok := os.LookupEnv(key); ok {
 			cmd.Env = append(cmd.Env, key+"="+value)
 		}
 	}
-	cmd.Env = append(cmd.Env, "EDC_NOTES_RUN_SECRET="+secret)
-	var stderr bytes.Buffer
+	cmd.Env = append(cmd.Env, "EDC_NOTES_AUTHORIZATION=Bearer "+secret, "MUSE_LOGIN=0", "MUSE_NO_AUTO_UPDATE=1")
+	var stderr, stdout bytes.Buffer
 	cmd.Stderr = &cappedWriter{buffer: &stderr, left: 64 << 10}
-	cmd.Stdout = &cappedWriter{left: 4 << 20}
+	cmd.Stdout = &cappedWriter{buffer: &stdout, left: 4 << 20}
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -166,9 +176,9 @@ func execute(ctx context.Context, timeout time.Duration, command string, args []
 	select {
 	case err := <-done:
 		if err != nil {
-			return fmt.Errorf("Codex organizer failed: %w: %s", err, clip(strings.ReplaceAll(stderr.String(), secret, "[redacted]"), 2000))
+			return fmt.Errorf("Muse organizer failed: %w: %s", err, clip(strings.ReplaceAll(stderr.String(), secret, "[redacted]"), 2000))
 		}
-		return nil
+		return requireCompleted(stdout.String())
 	case <-runCtx.Done():
 		_ = syscall.Kill(-cmd.Process.Pid, syscall.SIGTERM)
 		select {
@@ -181,6 +191,26 @@ func execute(ctx context.Context, timeout time.Duration, command string, args []
 	}
 }
 
+// A process exiting zero is insufficient: require Muse's terminal run status.
+func requireCompleted(events string) error {
+	terminal := ""
+	for _, line := range strings.Split(events, "\n") {
+		var event struct {
+			PayloadType string `json:"payload_type"`
+			Payload     struct {
+				Terminal string `json:"terminal"`
+			} `json:"payload"`
+		}
+		if json.Unmarshal([]byte(line), &event) == nil && strings.HasPrefix(event.PayloadType, "run.terminal.") {
+			terminal = event.Payload.Terminal
+		}
+	}
+	if terminal != "completed" {
+		return fmt.Errorf("Muse did not emit a completed terminal event")
+	}
+	return nil
+}
+
 type cappedWriter struct {
 	buffer *bytes.Buffer
 	left   int
@@ -188,7 +218,7 @@ type cappedWriter struct {
 
 func (w *cappedWriter) Write(p []byte) (int, error) {
 	if len(p) > w.left {
-		return 0, fmt.Errorf("Codex output limit exceeded")
+		return 0, fmt.Errorf("Muse output limit exceeded")
 	}
 	w.left -= len(p)
 	if w.buffer != nil {

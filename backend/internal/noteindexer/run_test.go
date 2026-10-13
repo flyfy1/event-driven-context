@@ -24,8 +24,10 @@ func TestRunnerNeverPublishesFailedOrUnfinishedChildren(t *testing.T) {
 		name, script, want string
 		timeout            time.Duration
 	}{
-		{"child failure", "printf '%s' \"$EDC_NOTES_RUN_SECRET\" >&2\nexit 7\n", "[redacted]", 10 * time.Second},
-		{"exit without finish", "exit 0\n", "without successfully validating", 10 * time.Second},
+		{"child failure", "printf '%s' \"$EDC_NOTES_AUTHORIZATION\" >&2\nexit 7\n", "[redacted]", 10 * time.Second},
+		{"exit without finish", "echo '{\"payload_type\":\"run.terminal.completed\",\"payload\":{\"terminal\":\"completed\"}}'\n", "without successfully validating", 10 * time.Second},
+		{"exit without terminal", "exit 0\n", "completed terminal event", 10 * time.Second},
+		{"failed terminal with zero exit", "echo '{\"payload_type\":\"run.terminal.failed\",\"payload\":{\"terminal\":\"failed\"}}'\n", "completed terminal event", 10 * time.Second},
 		{"timeout", "sleep 5\n", "", 50 * time.Millisecond},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -53,14 +55,14 @@ func TestRunnerNeverPublishesFailedOrUnfinishedChildren(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			child := filepath.Join(t.TempDir(), "codex-fixture")
+			child := filepath.Join(t.TempDir(), "muse-fixture")
 			// The fixture runs through the real process launcher; broad credentials must
 			// not reach it, while the short-lived draft-tool credential is available.
-			script := "#!/bin/sh\nif [ -n \"$EDC_TOKEN$EDC_PLUGIN_TOKEN$OPENAI_API_KEY\" ]; then echo inherited-broad-token >&2; exit 94; fi\nif [ -z \"$EDC_NOTES_RUN_SECRET\" ]; then echo missing-run-token >&2; exit 95; fi\n" + tc.script
+			script := "#!/bin/sh\nif [ -n \"$EDC_TOKEN$EDC_PLUGIN_TOKEN$OPENAI_API_KEY\" ]; then echo inherited-broad-token >&2; exit 94; fi\nif [ -z \"$EDC_NOTES_AUTHORIZATION\" ]; then echo missing-run-token >&2; exit 95; fi\n" + tc.script
 			if err = os.WriteFile(child, []byte(script), 0700); err != nil {
 				t.Fatal(err)
 			}
-			_, err = Run(context.Background(), client, Options{ProjectID: "prj_one", CodexPath: child, Timeout: tc.timeout})
+			_, err = Run(context.Background(), client, Options{ProjectID: "prj_one", AgentPath: child, Timeout: tc.timeout})
 			if err == nil {
 				t.Fatal("failed or unfinished run succeeded")
 			}

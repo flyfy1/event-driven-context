@@ -35,7 +35,7 @@ func runNotes(ctx context.Context, client *v2client.Client, opts Options, spec p
 	if opts.Timeout < 0 || opts.Timeout > 10*time.Minute {
 		return result, fmt.Errorf("notes-indexer timeout must not exceed 10m")
 	}
-	out, err := noteindexer.Run(ctx, client, noteindexer.Options{ProjectID: opts.ProjectID, CodexPath: opts.AgentCommand, Timeout: opts.Timeout})
+	out, err := noteindexer.Run(ctx, client, noteindexer.Options{ProjectID: opts.ProjectID, AgentPath: opts.AgentCommand, Timeout: opts.Timeout})
 	result.Noop, result.Reason = out.Noop, out.Reason
 	result.ProcessedEvents, result.ThroughSequence = out.ProcessedEvents, out.ThroughSequence
 	result.NotesRevision = out.Revision
