@@ -9,3 +9,5 @@ Implemented a first overview tab in the static Context workspace. The presentati
 Validation and commit are recorded in the final task response.
 
 Follow-up: added per-subproject expand/collapse controls with stable project-child keys, localized labels, mobile-safe action layout, and a model test for key stability.
+
+Follow-up: added status filtering for blocked, running, and queued work with visible subproject counts and a matching filter helper test.

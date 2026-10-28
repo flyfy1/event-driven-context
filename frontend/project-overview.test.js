@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { buildProjectOverview, overviewChildKey } = require("./project-overview.js");
+const { buildProjectOverview, overviewChildKey, filterOverviewChildren } = require("./project-overview.js");
 
 test("integ.life overview exposes the requested project hierarchy", () => {
   const overview = buildProjectOverview({ id: "p1", name: "integ.life", description: "Personal OS" });
@@ -12,6 +12,12 @@ test("integ.life overview exposes the requested project hierarchy", () => {
 
 test("overview child keys are stable for collapse state", () => {
   assert.equal(overviewChildKey("p1", "visual"), "p1:visual");
+});
+
+test("status filter keeps a subproject when one task matches", () => {
+  const overview = buildProjectOverview({ id: "p1", name: "integ.life" });
+  assert.deepEqual(filterOverviewChildren(overview.children, "blocked").map((item) => item.id), ["lingulet"]);
+  assert.deepEqual(filterOverviewChildren(overview.children, "all"), overview.children);
 });
 
 test("other projects retain a useful single child workspace", () => {

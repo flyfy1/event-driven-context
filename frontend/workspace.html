@@ -85,7 +85,7 @@
           </nav>
 
           <section id="overview-panel" class="workspace-panel" data-workspace-panel="overview" aria-labelledby="overview-title">
-            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="overviewEyebrow">PROJECT OVERVIEW</p><h3 id="overview-title" data-i18n="overviewTitle">Project map</h3><p class="muted" data-i18n="overviewHint">See subprojects, active work, recent activity, blockers and next steps in one place.</p></div><button id="overview-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
+            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="overviewEyebrow">PROJECT OVERVIEW</p><h3 id="overview-title" data-i18n="overviewTitle">Project map</h3><p class="muted" data-i18n="overviewHint">See subprojects, active work, recent activity, blockers and next steps in one place.</p></div><div class="overview-toolbar"><label><span data-i18n="overviewFilterLabel">Filter</span><select id="overview-filter" aria-label="Filter overview" data-i18n-aria-label="overviewFilterLabel"><option value="all" data-i18n="overviewFilterAll">All</option><option value="blocked" data-i18n="overviewFilterBlocked">Blocked</option><option value="running" data-i18n="overviewFilterRunning">Running</option><option value="queued" data-i18n="overviewFilterQueued">Queued</option></select></label><button id="overview-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div></div>
             <div id="project-overview" class="project-overview" aria-live="polite"></div>
           </section>
 

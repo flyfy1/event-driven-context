@@ -20,5 +20,9 @@
   }
 
   function overviewChildKey(projectID, childID) { return `${projectID || "project"}:${childID}`; }
-  return { buildProjectOverview, overviewChildKey };
+  function filterOverviewChildren(children, status) {
+    if (!status || status === "all") return children;
+    return children.filter((child) => child.status === status || child.tasks.some((task) => task.status === status));
+  }
+  return { buildProjectOverview, overviewChildKey, filterOverviewChildren };
 });

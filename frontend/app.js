@@ -1,6 +1,6 @@
 const { resolveAPI, sessionStorageKey, audioMediaType, contextFileKind, fileTitle, buildMetadata, buildMetadataFilter, buildReferences, localDateTimeValue, pathWithLocale, uuidV7 } = window.ContextWorkspaceUtils;
 const { configurationFor, defaultFor } = window.ContextWorkspacePluginConfig;
-const { overviewChildKey } = window.ContextProjectOverview;
+const { overviewChildKey, filterOverviewChildren } = window.ContextProjectOverview;
 const { normalizeLocale, resolveLocalePreference, translate } = window.ContextI18n;
 const API = resolveAPI(window.location.hostname, new URLSearchParams(window.location.search).get("api"));
 const TOKEN_KEY = sessionStorageKey("event-context.token", API);
@@ -49,6 +49,7 @@ const state = {
 };
 const filesWorkspace = window.createFilesWorkspace({ request, t });
 const overviewCollapsed = new Set();
+let overviewFilter = "all";
 const returnedFromCentralAuth = new URLSearchParams(location.search).get("auth") === "complete";
 if (returnedFromCentralAuth) {
   state.token = null; state.user = null;
@@ -326,6 +327,7 @@ function renderProjectOverview() {
   root.replaceChildren();
   if (!state.project) return appendEmpty(root, state.projectsStatus === "loading" ? "loadingProjects" : "overviewEmpty");
   const overview = window.ContextProjectOverview.buildProjectOverview(state.project);
+  const visibleChildren = filterOverviewChildren(overview.children, overviewFilter);
   const summary = document.createElement("div"); summary.className = "overview-summary";
   const title = document.createElement("div"); title.className = "overview-summary-title";
   const heading = document.createElement("h4"); heading.textContent = overview.name;
@@ -334,12 +336,12 @@ function renderProjectOverview() {
   const description = document.createElement("p"); description.className = "muted"; description.textContent = overview.description || t("noProjectDescription");
   summary.append(title, description);
   const metrics = document.createElement("div"); metrics.className = "overview-metrics";
-  for (const [label, value] of [[t("overviewSubprojects"), overview.children.length], [t("overviewTasks"), overview.children.reduce((count, child) => count + child.tasks.length, 0)], [t("overviewBlockers"), overview.children.filter((child) => child.blocker).length]]) {
+  for (const [label, value] of [[t("overviewSubprojects"), `${visibleChildren.length}/${overview.children.length}`], [t("overviewTasks"), visibleChildren.reduce((count, child) => count + child.tasks.length, 0)], [t("overviewBlockers"), visibleChildren.filter((child) => child.blocker).length]]) {
     const metric = document.createElement("span"); metric.className = "overview-metric"; metric.innerHTML = `<strong>${value}</strong><small>${label}</small>`; metrics.append(metric);
   }
   summary.append(metrics); root.append(summary);
   const tree = document.createElement("div"); tree.className = "overview-tree";
-  for (const child of overview.children) {
+  for (const child of visibleChildren) {
     const card = document.createElement("article"); card.className = "overview-child";
     const childKey = overviewChildKey(overview.id, child.id);
     const collapsed = overviewCollapsed.has(childKey);
@@ -363,6 +365,7 @@ function renderProjectOverview() {
     for (const task of child.tasks) { const item = document.createElement("li"); const taskTitle = document.createElement("span"); taskTitle.textContent = task.title; const taskStatus = document.createElement("span"); taskStatus.className = "overview-task-status"; taskStatus.textContent = `${task.kind} · ${overviewStatusLabel(task.status)}`; item.append(taskTitle, taskStatus); tasks.append(item); }
     card.append(tasks); tree.append(card);
   }
+  if (!visibleChildren.length) appendEmpty(tree, "overviewNoMatches");
   root.append(tree);
 }
 
@@ -1194,6 +1197,7 @@ $("#dismiss-plugin-token").addEventListener("click", () => {
 });
 $("#refresh-button").addEventListener("click", () => loadProjects());
 $("#overview-refresh").addEventListener("click", () => { renderProjectOverview(); loadProjects(); });
+$("#overview-filter").addEventListener("change", (event) => { overviewFilter = event.target.value; renderProjectOverview(); });
 $("#project-unavailable-retry").addEventListener("click", () => loadProjects());
 
 window.addEventListener("popstate", restoreRoute);
