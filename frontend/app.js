@@ -7,7 +7,7 @@ const USER_KEY = sessionStorageKey("event-context.user", API);
 const LOCALE_KEY = "event-context.locale";
 const SHARED_LOCALE_COOKIE = "event_context_locale";
 const MAX_FILE_BYTES = 50 << 20;
-const VIEWS = new Set(["records", "files", "state", "integration", "plugins"]);
+const VIEWS = new Set(["overview", "records", "files", "state", "integration", "plugins"]);
 const BROWSER_TIMEZONE = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 const $ = (selector, root = document) => root.querySelector(selector);
 
@@ -33,7 +33,7 @@ const state = {
   token: localStorage.getItem(TOKEN_KEY),
   user: storedUser(),
   locale: resolveLocalePreference(requestedLocale, sharedLocale(), localStorage.getItem(LOCALE_KEY), navigator.languages || [navigator.language]),
-  view: VIEWS.has(location.hash.slice(1)) ? location.hash.slice(1) : "records",
+  view: VIEWS.has(location.hash.slice(1)) ? location.hash.slice(1) : "overview",
   routeProjectID: new URLSearchParams(location.search).get("project") || "", routeError: false,
   projects: [], project: null, projectsStatus: "idle", projectsError: "", projectsRequest: 0,
   sessionEpoch: 0, projectVersion: 0,
@@ -175,6 +175,7 @@ function setLocale(locale, persist) {
   updateIdentity();
   renderProjects();
   renderProject();
+  renderProjectOverview();
   renderEvents();
   renderMetadata();
   renderStates();
@@ -209,7 +210,7 @@ function restoreRoute() {
   if (!id && target) { state.routeProjectID = target; syncRoute(); }
 }
 function setView(view, historyMode = "replace") {
-  state.view = VIEWS.has(view) ? view : "records";
+  state.view = VIEWS.has(view) ? view : "overview";
   document.querySelectorAll("[data-workspace-view]").forEach((button) => {
     const selected = button.dataset.workspaceView === state.view;
     button.classList.toggle("selected", selected);
@@ -287,7 +288,7 @@ async function selectProject(id, historyMode = "push") {
   $("#add-member-form").reset();
   state.pendingEventID = ""; state.cursor = ""; state.events = []; state.states = []; state.members = []; state.plugins = []; state.selectedPluginID = ""; state.eventCache.clear();
   state.eventsStatus = state.metadataStatus = state.statesStatus = state.membersStatus = state.pluginsStatus = "loading";
-  renderProjects(); renderProject(); renderEvents(); renderMetadata(); renderStates(); renderMembers(); renderPlugins(); renderIntegration();
+  renderProjects(); renderProject(); renderProjectOverview(); renderEvents(); renderMetadata(); renderStates(); renderMembers(); renderPlugins(); renderIntegration();
   if (!state.project) return;
   await Promise.allSettled([loadEvents(), loadMetadata(), loadStates(), loadMembers(), loadPlugins()]);
 }
@@ -312,6 +313,50 @@ function renderProject() {
   $("#project-timezone-form").classList.add("hidden");
   $("#edit-project-timezone").classList.remove("hidden");
   setMessage("#project-timezone-message");
+}
+
+function overviewStatusLabel(status) {
+  return t({ active: "overviewStatusActive", monitoring: "overviewStatusMonitoring", in_progress: "overviewTaskInProgress", queued: "overviewTaskQueued", blocked: "overviewTaskBlocked", running: "overviewTaskRunning", ready: "overviewTaskReady" }[status] || "overviewStatusActive");
+}
+function renderProjectOverview() {
+  const root = $("#project-overview");
+  if (!root) return;
+  root.replaceChildren();
+  if (!state.project) return appendEmpty(root, state.projectsStatus === "loading" ? "loadingProjects" : "overviewEmpty");
+  const overview = window.ContextProjectOverview.buildProjectOverview(state.project);
+  const summary = document.createElement("div"); summary.className = "overview-summary";
+  const title = document.createElement("div"); title.className = "overview-summary-title";
+  const heading = document.createElement("h4"); heading.textContent = overview.name;
+  const status = document.createElement("span"); status.className = "overview-status active"; status.textContent = overviewStatusLabel(overview.status);
+  title.append(heading, status);
+  const description = document.createElement("p"); description.className = "muted"; description.textContent = overview.description || t("noProjectDescription");
+  summary.append(title, description);
+  const metrics = document.createElement("div"); metrics.className = "overview-metrics";
+  for (const [label, value] of [[t("overviewSubprojects"), overview.children.length], [t("overviewTasks"), overview.children.reduce((count, child) => count + child.tasks.length, 0)], [t("overviewBlockers"), overview.children.filter((child) => child.blocker).length]]) {
+    const metric = document.createElement("span"); metric.className = "overview-metric"; metric.innerHTML = `<strong>${value}</strong><small>${label}</small>`; metrics.append(metric);
+  }
+  summary.append(metrics); root.append(summary);
+  const tree = document.createElement("div"); tree.className = "overview-tree";
+  for (const child of overview.children) {
+    const card = document.createElement("article"); card.className = "overview-child";
+    const cardHeading = document.createElement("div"); cardHeading.className = "overview-child-heading";
+    const childTitle = document.createElement("div"); childTitle.className = "overview-child-title";
+    const childName = document.createElement("h4"); childName.textContent = child.name;
+    const childStatus = document.createElement("span"); childStatus.className = "overview-status"; childStatus.textContent = overviewStatusLabel(child.status);
+    childTitle.append(childName, childStatus);
+    const open = document.createElement("button"); open.type = "button"; open.className = "quiet"; open.textContent = t("overviewOpenRecords"); open.addEventListener("click", () => setView("records", "push"));
+    cardHeading.append(childTitle, open); card.append(cardHeading);
+    const summaryText = document.createElement("p"); summaryText.className = "muted overview-child-summary"; summaryText.textContent = child.summary; card.append(summaryText);
+    const columns = document.createElement("div"); columns.className = "overview-child-columns";
+    for (const [label, value] of [[t("overviewRecentActivity"), child.activity], [t("overviewBlocker"), child.blocker || t("overviewNoBlocker")], [t("overviewNextStep"), child.next]]) {
+      const item = document.createElement("div"); item.className = "overview-detail"; const small = document.createElement("small"); small.textContent = label; const text = document.createElement("p"); text.textContent = value; item.append(small, text); columns.append(item);
+    }
+    card.append(columns);
+    const tasks = document.createElement("ul"); tasks.className = "overview-tasks";
+    for (const task of child.tasks) { const item = document.createElement("li"); const taskTitle = document.createElement("span"); taskTitle.textContent = task.title; const taskStatus = document.createElement("span"); taskStatus.className = "overview-task-status"; taskStatus.textContent = `${task.kind} · ${overviewStatusLabel(task.status)}`; item.append(taskTitle, taskStatus); tasks.append(item); }
+    card.append(tasks); tree.append(card);
+  }
+  root.append(tree);
 }
 
 async function loadEvents(options) {
@@ -1141,6 +1186,7 @@ $("#dismiss-plugin-token").addEventListener("click", () => {
   state.pluginToken = ""; $("#plugin-token").textContent = ""; $("#plugin-token-panel").classList.add("hidden");
 });
 $("#refresh-button").addEventListener("click", () => loadProjects());
+$("#overview-refresh").addEventListener("click", () => { renderProjectOverview(); loadProjects(); });
 $("#project-unavailable-retry").addEventListener("click", () => loadProjects());
 
 window.addEventListener("popstate", restoreRoute);

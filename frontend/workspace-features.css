@@ -152,6 +152,26 @@
 }
 .workspace-nav button.selected { border-bottom-color: var(--leaf); color: var(--leaf); font-weight: 750; }
 .workspace-panel { min-width: 0; }
+.project-overview { display: grid; gap: 18px; }
+.overview-summary { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.overview-summary h4, .overview-child h4 { margin: 0; }
+.overview-summary-title, .overview-child-heading, .overview-child-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
+.overview-summary-title { justify-content: flex-start; }
+.overview-status, .overview-task-status { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; padding: 4px 8px; background: var(--wash); color: var(--ink-soft); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.overview-status.active { color: var(--leaf); }
+.overview-metrics { display: flex; flex-wrap: wrap; gap: 8px; }
+.overview-metric { display: grid; gap: 2px; min-width: 92px; padding: 10px 12px; border-radius: 12px; background: var(--wash); }
+.overview-metric strong { font-size: 20px; }
+.overview-metric small, .overview-detail small { color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.overview-tree { display: grid; gap: 12px; padding-left: 18px; border-left: 2px solid var(--line); }
+.overview-child { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.overview-child-summary { margin: 0; }
+.overview-child-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.overview-detail { min-width: 0; padding: 10px 12px; border-radius: 12px; background: var(--wash); }
+.overview-detail p { margin: 5px 0 0; overflow-wrap: anywhere; }
+.overview-tasks { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.overview-tasks li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+@media (max-width: 700px) { .overview-child-columns { grid-template-columns: 1fr; } .overview-child-heading { align-items: flex-start; flex-direction: column; } .overview-tasks li { align-items: flex-start; flex-direction: column; gap: 4px; } }
 .section-heading-inline {
   display: flex;
   align-items: start;
