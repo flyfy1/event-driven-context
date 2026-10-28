@@ -1,5 +1,6 @@
 const { resolveAPI, sessionStorageKey, audioMediaType, contextFileKind, fileTitle, buildMetadata, buildMetadataFilter, buildReferences, localDateTimeValue, pathWithLocale, uuidV7 } = window.ContextWorkspaceUtils;
 const { configurationFor, defaultFor } = window.ContextWorkspacePluginConfig;
+const { overviewChildKey } = window.ContextProjectOverview;
 const { normalizeLocale, resolveLocalePreference, translate } = window.ContextI18n;
 const API = resolveAPI(window.location.hostname, new URLSearchParams(window.location.search).get("api"));
 const TOKEN_KEY = sessionStorageKey("event-context.token", API);
@@ -47,6 +48,7 @@ const state = {
   eventCache: new Map(), pluginToken: ""
 };
 const filesWorkspace = window.createFilesWorkspace({ request, t });
+const overviewCollapsed = new Set();
 const returnedFromCentralAuth = new URLSearchParams(location.search).get("auth") === "complete";
 if (returnedFromCentralAuth) {
   state.token = null; state.user = null;
@@ -339,13 +341,18 @@ function renderProjectOverview() {
   const tree = document.createElement("div"); tree.className = "overview-tree";
   for (const child of overview.children) {
     const card = document.createElement("article"); card.className = "overview-child";
+    const childKey = overviewChildKey(overview.id, child.id);
+    const collapsed = overviewCollapsed.has(childKey);
     const cardHeading = document.createElement("div"); cardHeading.className = "overview-child-heading";
     const childTitle = document.createElement("div"); childTitle.className = "overview-child-title";
     const childName = document.createElement("h4"); childName.textContent = child.name;
     const childStatus = document.createElement("span"); childStatus.className = "overview-status"; childStatus.textContent = overviewStatusLabel(child.status);
     childTitle.append(childName, childStatus);
+    const actions = document.createElement("div"); actions.className = "overview-child-actions";
+    const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "quiet"; toggle.textContent = t(collapsed ? "overviewExpand" : "overviewCollapse"); toggle.setAttribute("aria-expanded", String(!collapsed)); toggle.addEventListener("click", () => { if (overviewCollapsed.has(childKey)) overviewCollapsed.delete(childKey); else overviewCollapsed.add(childKey); renderProjectOverview(); });
     const open = document.createElement("button"); open.type = "button"; open.className = "quiet"; open.textContent = t("overviewOpenRecords"); open.addEventListener("click", () => setView("records", "push"));
-    cardHeading.append(childTitle, open); card.append(cardHeading);
+    actions.append(toggle, open); cardHeading.append(childTitle, actions); card.append(cardHeading);
+    if (collapsed) { tree.append(card); continue; }
     const summaryText = document.createElement("p"); summaryText.className = "muted overview-child-summary"; summaryText.textContent = child.summary; card.append(summaryText);
     const columns = document.createElement("div"); columns.className = "overview-child-columns";
     for (const [label, value] of [[t("overviewRecentActivity"), child.activity], [t("overviewBlocker"), child.blocker || t("overviewNoBlocker")], [t("overviewNextStep"), child.next]]) {

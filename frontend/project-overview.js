@@ -19,5 +19,6 @@
     return { id: project && project.id || "", name, status: "active", description: String(project && project.description || ""), children };
   }
 
-  return { buildProjectOverview };
+  function overviewChildKey(projectID, childID) { return `${projectID || "project"}:${childID}`; }
+  return { buildProjectOverview, overviewChildKey };
 });

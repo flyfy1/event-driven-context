@@ -1003,6 +1003,7 @@
     hi: { overviewTab: "अवलोकन", overviewEyebrow: "प्रोजेक्ट अवलोकन", overviewTitle: "प्रोजेक्ट मानचित्र", overviewHint: "सबप्रोजेक्ट, सक्रिय काम, हाल की गतिविधि, बाधाएँ और अगले कदम एक जगह देखें।", overviewSubprojects: "सबप्रोजेक्ट", overviewTasks: "कार्य / रन", overviewBlockers: "बाधाएँ", overviewStatusActive: "सक्रिय", overviewStatusMonitoring: "निगरानी", overviewTaskInProgress: "चल रहा है", overviewTaskQueued: "कतार में", overviewTaskBlocked: "रुका हुआ", overviewTaskRunning: "रनिंग", overviewTaskReady: "तैयार", overviewOpenRecords: "रिकॉर्ड खोलें", overviewRecentActivity: "हाल की गतिविधि", overviewBlocker: "बाधा", overviewNoBlocker: "कोई बाधा नहीं", overviewNextStep: "अगला कदम", overviewEmpty: "अवलोकन देखने के लिए प्रोजेक्ट चुनें।" }
   };
   for (const [locale, values] of Object.entries(overviewTranslations)) Object.assign(translations[locale], values);
+  for (const [locale, values] of Object.entries({ en: { overviewCollapse: "Collapse", overviewExpand: "Expand" }, "zh-CN": { overviewCollapse: "收起", overviewExpand: "展开" }, ms: { overviewCollapse: "Ciutkan", overviewExpand: "Kembangkan" }, hi: { overviewCollapse: "समेटें", overviewExpand: "विस्तार करें" } })) Object.assign(translations[locale], values);
 
   function normalizeLocale(raw) {
     const value = String(raw || "").trim().toLowerCase();

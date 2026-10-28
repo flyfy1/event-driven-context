@@ -19,5 +19,6 @@ This first slice is a UI projection of the project workspace. It does not write 
 - A non-`integ.life` project still gets a useful Context workspace child.
 - The layout remains readable at narrow mobile widths and all status information is text-accessible.
 - The overview can open the existing Records view for follow-up work.
+- Each subproject can be collapsed or expanded; the control exposes its state to assistive technology.
 
 _Codex development: 2026-10-28._

@@ -7,3 +7,5 @@
 Implemented a first overview tab in the static Context workspace. The presentation model seeds `integ.life` with Knowledge visual, Knowledge graph, Lingulet, and Deployment & traffic. Each child includes status, recent activity, blocker, next step, and a task/run row. Other projects receive a generic Context workspace child. Added responsive styling, four locale translations, a Records link, and focused model tests.
 
 Validation and commit are recorded in the final task response.
+
+Follow-up: added per-subproject expand/collapse controls with stable project-child keys, localized labels, mobile-safe action layout, and a model test for key stability.
