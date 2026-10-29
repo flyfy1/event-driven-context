@@ -21,5 +21,8 @@ This first slice is a UI projection of the project workspace. It does not write 
 - The overview can open the existing Records view for follow-up work.
 - Each subproject can be collapsed or expanded; the control exposes its state to assistive technology.
 - The overview filter can show all, blocked, running, or queued subprojects and updates the visible count.
+- Operational subprojects expose a status that can be reviewed without opening another view: the latest deployment or traffic signal, the most recent commit when known, and a plain-language failure or blocker reason when one exists.
+- A missing deployment or traffic signal is rendered as an explicit unknown state; the overview does not imply that a route is healthy when it has not been checked.
+- The overview keeps the project → subproject → task/run boundary when filtering, so a matching task keeps its parent subproject visible.
 
-_Codex development: 2026-10-28._
+_Codex development: 2026-10-29._
