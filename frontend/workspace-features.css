@@ -167,6 +167,20 @@
 .overview-metric { display: grid; gap: 2px; min-width: 92px; padding: 10px 12px; border-radius: 12px; background: var(--wash); }
 .overview-metric strong { font-size: 20px; }
 .overview-metric small, .overview-detail small { color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.overview-deployment { display: grid; gap: 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+.overview-deployment-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.overview-deployment-heading small { color: var(--ink-soft); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.overview-deployment-heading h4 { margin: 2px 0 0; }
+.overview-deployment-status { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; padding: 4px 9px; background: var(--wash); color: var(--ink-soft); font-size: 11px; font-weight: 750; white-space: nowrap; }
+.overview-deployment-status.healthy { background: var(--mint); color: var(--leaf); }
+.overview-deployment-status.failed, .overview-deployment-status.blocked { background: #fff0ed; color: #a13d2c; }
+.overview-deployment-status.monitoring { background: #fff8df; color: #7a5208; }
+.overview-deployment-details { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.overview-deployment-detail { display: grid; gap: 3px; min-width: 0; padding: 9px 10px; border-radius: 10px; background: var(--wash); }
+.overview-deployment-detail small { color: var(--ink-soft); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+.overview-deployment-detail strong { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.overview-deployment-blocker { margin: 0; padding: 9px 10px; border-left: 3px solid #d28b24; background: #fff8df; color: #6b4b14; font-size: 13px; }
+.overview-deployment-blocker.clear { border-left-color: var(--leaf); background: var(--mint); color: var(--dark); }
 .overview-tree { display: grid; gap: 12px; padding-left: 18px; border-left: 2px solid var(--line); }
 .overview-child { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
 .overview-child-summary { margin: 0; }
@@ -175,7 +189,41 @@
 .overview-detail p { margin: 5px 0 0; overflow-wrap: anywhere; }
 .overview-tasks { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .overview-tasks li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
-@media (max-width: 700px) { .overview-child-columns { grid-template-columns: 1fr; } .overview-child-heading { align-items: flex-start; flex-direction: column; } .overview-tasks li { align-items: flex-start; flex-direction: column; gap: 4px; } }
+@media (max-width: 700px) {
+  .overview-child-columns { grid-template-columns: 1fr; }
+  .overview-child-heading, .overview-deployment-heading { align-items: flex-start; flex-direction: column; }
+  .overview-deployment-details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overview-child-actions { width: 100%; }
+  .overview-child-actions .quiet { flex: 1 1 0; }
+  .overview-tasks li { align-items: flex-start; flex-direction: column; gap: 4px; }
+}
+
+/* Keep the project map usable when the workspace collapses to one column. */
+@media (max-width: 560px) {
+  .section-heading-inline { flex-direction: column; gap: 14px; }
+  .section-heading-inline > div:first-child { min-width: 0; }
+  .overview-toolbar {
+    align-items: stretch;
+    width: 100%;
+    padding-top: 2px;
+  }
+  .overview-toolbar label { flex: 1 1 150px; min-width: 0; }
+  .overview-toolbar select { width: 100%; min-height: 44px; }
+  .overview-toolbar .quiet { flex: 1 1 120px; min-height: 44px; }
+  .overview-summary { padding: 15px; border-radius: 12px; }
+  .overview-summary-title { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .overview-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .overview-metric { min-width: 0; padding: 9px 10px; }
+  .overview-metric strong { font-size: 18px; }
+  .overview-metric small, .overview-detail small { font-size: 10px; letter-spacing: .04em; }
+  .overview-tree { padding-left: 10px; }
+  .overview-child { padding: 13px; border-radius: 12px; }
+  .overview-status, .overview-task-status { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+}
 .section-heading-inline {
   display: flex;
   align-items: start;
