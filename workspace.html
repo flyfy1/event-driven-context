@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Append and query immutable context with your team." data-i18n-content="metaDescription" />
     <title>Event Driven Context</title>
-    <link rel="stylesheet" href="./styles.css?v=48f989ccd156" />
-    <link rel="stylesheet" href="./vendor/code-editor.css?v=48f989ccd156" />
-    <link rel="stylesheet" href="./workspace-features.css?v=48f989ccd156" />
-    <link rel="stylesheet" href="./i18n.css?v=48f989ccd156" />
-    <link rel="stylesheet" href="./source-ribbon.css?v=48f989ccd156" />
-  <script defer src="./analytics.js?v=48f989ccd156"></script>
-<link rel="stylesheet" href="./vendor/integ-ui-0.5.0/styles.css?v=48f989ccd156" />
-<link rel="stylesheet" href="./shared-layout.css?v=48f989ccd156" />
-<script type="module" src="./shared-layout.js?v=48f989ccd156"></script>
+    <link rel="stylesheet" href="./styles.css?v=d458521913ce" />
+    <link rel="stylesheet" href="./vendor/code-editor.css?v=d458521913ce" />
+    <link rel="stylesheet" href="./workspace-features.css?v=d458521913ce" />
+    <link rel="stylesheet" href="./i18n.css?v=d458521913ce" />
+    <link rel="stylesheet" href="./source-ribbon.css?v=d458521913ce" />
+  <script defer src="./analytics.js?v=d458521913ce"></script>
+<link rel="stylesheet" href="./vendor/integ-ui-0.5.0/styles.css?v=d458521913ce" />
+<link rel="stylesheet" href="./shared-layout.css?v=d458521913ce" />
+<script type="module" src="./shared-layout.js?v=d458521913ce"></script>
 </head>
   <body>
     <div class="source-ribbon"><a href="https://github.com/flyfy1/event-driven-context" target="_blank" rel="noopener noreferrer" aria-label="View source on GitHub (opens in a new tab)">View source on GitHub</a></div>
@@ -76,12 +76,18 @@
         <section id="project-view" class="project-view hidden">
           <div class="project-heading"><div><p id="project-owner" class="eyebrow"></p><div class="project-title-row"><h2 id="project-title"></h2><button id="edit-project-name" class="quiet" type="button" data-i18n="renameProject">Rename</button></div><form id="project-name-form" class="project-name-form hidden" novalidate><label><span data-i18n="projectName">Project name</span><input id="project-name-input" required maxlength="200" /></label><div class="actions"><button id="cancel-project-name" class="quiet" type="button" data-i18n="cancel">Cancel</button><button class="primary" type="submit" data-i18n="saveProjectName">Save name</button></div></form><p id="project-name-message" class="message" aria-live="polite"></p><p id="project-description-display" class="muted"></p><div class="project-timezone"><span data-i18n="projectTimezone">Project time zone</span><strong id="project-timezone-display"></strong><button id="edit-project-timezone" class="quiet" type="button" data-i18n="changeTimezone">Change</button></div><form id="project-timezone-form" class="project-timezone-form hidden"><label><span data-i18n="projectTimezone">Project time zone</span><select id="project-timezone-select" required></select></label><div class="actions"><button id="cancel-project-timezone" class="quiet" type="button" data-i18n="cancel">Cancel</button><button class="primary" type="submit" data-i18n="saveTimezone">Save time zone</button></div></form><p id="project-timezone-message" class="message" aria-live="polite"></p></div><button id="refresh-button" class="quiet" type="button" data-i18n="refresh">Refresh</button></div>
           <nav class="workspace-nav" aria-label="Project sections" data-i18n-aria-label="projectSections">
-            <button class="selected" type="button" data-workspace-view="records" aria-controls="records-panel" aria-selected="true" data-i18n="recordsTab">Records</button>
+            <button class="selected" type="button" data-workspace-view="overview" aria-controls="overview-panel" aria-selected="true" data-i18n="overviewTab">Overview</button>
+            <button type="button" data-workspace-view="records" aria-controls="records-panel" aria-selected="false" data-i18n="recordsTab">Records</button>
             <button type="button" data-workspace-view="files" aria-controls="files-panel" aria-selected="false" data-i18n="filesTab">Files</button>
             <button type="button" data-workspace-view="state" aria-controls="state-panel" aria-selected="false" data-i18n="stateTab">State</button>
             <button type="button" data-workspace-view="integration" aria-controls="integration-panel" aria-selected="false" data-i18n="integrationTab">Connect</button>
             <button type="button" data-workspace-view="plugins" aria-controls="plugins-panel" aria-selected="false" data-i18n="pluginsTab">Plugins</button>
           </nav>
+
+          <section id="overview-panel" class="workspace-panel" data-workspace-panel="overview" aria-labelledby="overview-title">
+            <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="overviewEyebrow">PROJECT OVERVIEW</p><h3 id="overview-title" data-i18n="overviewTitle">Project map</h3><p class="muted" data-i18n="overviewHint">See subprojects, active work, recent activity, blockers and next steps in one place.</p></div><div class="overview-toolbar"><label><span data-i18n="overviewFilterLabel">Filter</span><select id="overview-filter" aria-label="Filter overview" data-i18n-aria-label="overviewFilterLabel"><option value="all" data-i18n="overviewFilterAll">All</option><option value="blocked" data-i18n="overviewFilterBlocked">Blocked</option><option value="running" data-i18n="overviewFilterRunning">Running</option><option value="queued" data-i18n="overviewFilterQueued">Queued</option></select></label><button id="overview-refresh" class="quiet" type="button" data-i18n="refresh">Refresh</button></div></div>
+            <div id="project-overview" class="project-overview" aria-live="polite"></div>
+          </section>
 
           <section id="records-panel" class="workspace-panel" data-workspace-panel="records" aria-labelledby="records-title">
             <div class="section-heading-inline"><div><p class="eyebrow" data-i18n="recordsEyebrow">PROJECT RECORDS</p><h3 id="records-title" data-i18n="recordsTitle">Original records</h3><p class="muted" data-i18n="recordsHint">Append a note or log, then inspect immutable events, files, sources and references.</p></div></div>
@@ -257,14 +263,15 @@
       </section>
     </main>
     <template id="event-template"><article class="event"><div class="event-meta"><strong class="event-author"></strong><time class="event-time"></time><span class="event-kind"></span></div><p class="event-text"></p><a class="event-file hidden" target="_blank" rel="noopener" data-i18n="downloadOriginalFile">Download original file</a><pre class="event-json"></pre></article></template>
-    <script src="./i18n.js?v=48f989ccd156" defer></script>
-    <script src="./workspace-utils.js?v=48f989ccd156" defer></script>
-    <script src="./navigation.js?v=48f989ccd156" defer></script>
-    <script src="./vendor/code-editor.js?v=48f989ccd156" defer></script>
-    <script src="./file-tree.js?v=48f989ccd156" defer></script>
-    <script src="./workspace-files.js?v=48f989ccd156" defer></script>
-    <script src="./workspace-plugin-config.js?v=48f989ccd156" defer></script>
-    <script src="./app.js?v=48f989ccd156" defer></script>
-    <script src="./hub.js?v=48f989ccd156" defer></script>
+    <script src="./i18n.js?v=d458521913ce" defer></script>
+    <script src="./workspace-utils.js?v=d458521913ce" defer></script>
+    <script src="./navigation.js?v=d458521913ce" defer></script>
+    <script src="./vendor/code-editor.js?v=d458521913ce" defer></script>
+    <script src="./file-tree.js?v=d458521913ce" defer></script>
+    <script src="./workspace-files.js?v=d458521913ce" defer></script>
+    <script src="./workspace-plugin-config.js?v=d458521913ce" defer></script>
+    <script src="./project-overview.js?v=d458521913ce" defer></script>
+    <script src="./app.js?v=d458521913ce" defer></script>
+    <script src="./hub.js?v=d458521913ce" defer></script>
   </body>
 </html>
