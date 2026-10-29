@@ -321,6 +321,9 @@ function renderProject() {
 function overviewStatusLabel(status) {
   return t({ active: "overviewStatusActive", monitoring: "overviewStatusMonitoring", in_progress: "overviewTaskInProgress", queued: "overviewTaskQueued", blocked: "overviewTaskBlocked", running: "overviewTaskRunning", ready: "overviewTaskReady" }[status] || "overviewStatusActive");
 }
+function overviewDeploymentLabel(status) {
+  return t({ healthy: "overviewDeploymentHealthy", monitoring: "overviewDeploymentMonitoring", failed: "overviewDeploymentFailed", blocked: "overviewDeploymentBlocked", unknown: "overviewDeploymentUnknown" }[status] || "overviewDeploymentUnknown");
+}
 function renderProjectOverview() {
   const root = $("#project-overview");
   if (!root) return;
@@ -339,7 +342,33 @@ function renderProjectOverview() {
   for (const [label, value] of [[t("overviewSubprojects"), `${visibleChildren.length}/${overview.children.length}`], [t("overviewTasks"), visibleChildren.reduce((count, child) => count + child.tasks.length, 0)], [t("overviewBlockers"), visibleChildren.filter((child) => child.blocker).length]]) {
     const metric = document.createElement("span"); metric.className = "overview-metric"; metric.innerHTML = `<strong>${value}</strong><small>${label}</small>`; metrics.append(metric);
   }
-  summary.append(metrics); root.append(summary);
+  summary.append(metrics);
+  const deployment = document.createElement("section"); deployment.className = "overview-deployment";
+  const deploymentHeading = document.createElement("div"); deploymentHeading.className = "overview-deployment-heading";
+  const deploymentTitle = document.createElement("div");
+  const deploymentLabel = document.createElement("small"); deploymentLabel.textContent = t("overviewDeploymentEyebrow");
+  const deploymentName = document.createElement("h4"); deploymentName.textContent = t("overviewDeploymentTitle");
+  deploymentTitle.append(deploymentLabel, deploymentName);
+  const deploymentStatus = document.createElement("span"); deploymentStatus.className = `overview-deployment-status ${overview.deployment.status}`; deploymentStatus.textContent = overviewDeploymentLabel(overview.deployment.status);
+  deploymentHeading.append(deploymentTitle, deploymentStatus); deployment.append(deploymentHeading);
+  const deploymentDetails = document.createElement("div"); deploymentDetails.className = "overview-deployment-details";
+  const deploymentValues = [
+    [t("overviewDeploymentCommit"), overview.deployment.commit || t("overviewDeploymentCommitUnknown")],
+    [t("overviewDeploymentBranch"), overview.deployment.branch || t("overviewDeploymentUnknownValue")],
+    [t("overviewDeploymentRoute"), overview.deployment.route || t("overviewDeploymentUnknownValue")],
+    [t("overviewDeploymentChecked"), overview.deployment.checkedAt ? formatDate(overview.deployment.checkedAt) : t("overviewDeploymentUnknownValue")]
+  ];
+  for (const [label, value] of deploymentValues) {
+    const item = document.createElement("div"); item.className = "overview-deployment-detail";
+    const itemLabel = document.createElement("small"); itemLabel.textContent = label;
+    const itemValue = document.createElement("strong"); itemValue.textContent = value;
+    item.append(itemLabel, itemValue); deploymentDetails.append(item);
+  }
+  deployment.append(deploymentDetails);
+  const deploymentBlocker = document.createElement("p"); deploymentBlocker.className = `overview-deployment-blocker ${overview.deployment.status === "healthy" ? "clear" : ""}`;
+  deploymentBlocker.textContent = overview.deployment.status === "healthy" ? t("overviewDeploymentNoBlocker") : `${t("overviewDeploymentBlocker")}: ${overview.deployment.blocker}`;
+  deployment.append(deploymentBlocker);
+  summary.append(deployment); root.append(summary);
   const tree = document.createElement("div"); tree.className = "overview-tree";
   for (const child of visibleChildren) {
     const card = document.createElement("article"); card.className = "overview-child";
