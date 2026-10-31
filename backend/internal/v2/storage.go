@@ -8,8 +8,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -172,7 +174,7 @@ func (s *Service) persistSnapshotLocked(candidate snapshot) error {
 	if s.lockFile == nil {
 		return errors.New("v2 service is closed")
 	}
-	raw, err := json.MarshalIndent(candidate, "", "  ")
+	raw, err := json.Marshal(candidate)
 	if err != nil {
 		return err
 	}
@@ -200,30 +202,30 @@ func cloneRawMap(in map[string]json.RawMessage) map[string]json.RawMessage {
 func cloneEvent(in Event) Event {
 	in.Metadata = cloneRawMap(in.Metadata)
 	in.Source = cloneRawMap(in.Source)
-	in.Refs = append([]Ref(nil), in.Refs...)
+	in.Refs = slices.Clone(in.Refs)
 	return in
 }
 
 func cloneState(in State) State {
 	in.Data = cloneRawMessage(in.Data)
-	in.Refs = append([]string(nil), in.Refs...)
+	in.Refs = slices.Clone(in.Refs)
 	return in
 }
 
 func clonePermissions(in Permissions) Permissions {
-	in.ReadEvents = append([]string(nil), in.ReadEvents...)
-	in.WriteEvents = append([]string(nil), in.WriteEvents...)
-	in.WriteState = append([]string(nil), in.WriteState...)
+	in.ReadEvents = slices.Clone(in.ReadEvents)
+	in.WriteEvents = slices.Clone(in.WriteEvents)
+	in.WriteState = slices.Clone(in.WriteState)
 	return in
 }
 
 func cloneManifest(in Manifest) Manifest {
-	in.Skills = append([]string(nil), in.Skills...)
-	in.State = append([]StateDeclaration(nil), in.State...)
-	in.SessionContext = append([]string(nil), in.SessionContext...)
+	in.Skills = slices.Clone(in.Skills)
+	in.State = slices.Clone(in.State)
+	in.SessionContext = slices.Clone(in.SessionContext)
 	in.Processor = cloneRawMessage(in.Processor)
 	in.Config = cloneRawMessage(in.Config)
-	in.ConfigFields = append([]ConfigField(nil), in.ConfigFields...)
+	in.ConfigFields = slices.Clone(in.ConfigFields)
 	in.Permissions = clonePermissions(in.Permissions)
 	return in
 }
@@ -232,7 +234,7 @@ func cloneInstallation(in Installation) Installation {
 	in.Manifest = cloneManifest(in.Manifest)
 	in.Config = cloneRawMessage(in.Config)
 	in.Permissions = clonePermissions(in.Permissions)
-	in.ConfigRevisions = append([]PluginConfigRevision(nil), in.ConfigRevisions...)
+	in.ConfigRevisions = slices.Clone(in.ConfigRevisions)
 	for i := range in.ConfigRevisions {
 		in.ConfigRevisions[i].Config = cloneRawMessage(in.ConfigRevisions[i].Config)
 	}
@@ -240,23 +242,45 @@ func cloneInstallation(in Installation) Installation {
 }
 
 func cloneManualRun(in ManualRunRequest) ManualRunRequest {
-	in.SourceEventIDs = append([]string(nil), in.SourceEventIDs...)
+	in.SourceEventIDs = slices.Clone(in.SourceEventIDs)
 	return in
 }
 
-func cloneSnapshot(in snapshot) (snapshot, error) {
-	raw, err := json.Marshal(in)
-	if err != nil {
-		return snapshot{}, err
+// cloneSnapshotForProject isolates the only project a write may mutate. Other
+// projects remain shared and must be treated as read-only until publication.
+// Callers hold s.mu through candidate construction, persistence and publication.
+func cloneSnapshotForProject(in snapshot, projectID string) snapshot {
+	out := in
+	out.Projects = maps.Clone(in.Projects)
+	out.TokenHashes = maps.Clone(in.TokenHashes)
+	p := &projectData{}
+	if original := in.Projects[projectID]; original != nil {
+		*p = *original
+		p.Events = make([]Event, len(original.Events))
+		for i, event := range original.Events {
+			p.Events[i] = cloneEvent(event)
+		}
+		p.Files = maps.Clone(original.Files)
+		p.States = make(map[string][]State, len(original.States))
+		for key, versions := range original.States {
+			copied := make([]State, len(versions))
+			for i, state := range versions {
+				copied[i] = cloneState(state)
+			}
+			p.States[key] = copied
+		}
+		p.Installations = make(map[string]Installation, len(original.Installations))
+		for key, installation := range original.Installations {
+			p.Installations[key] = cloneInstallation(installation)
+		}
+		p.ManualRuns = make(map[string]ManualRunRequest, len(original.ManualRuns))
+		for key, run := range original.ManualRuns {
+			p.ManualRuns[key] = cloneManualRun(run)
+		}
 	}
-	var out snapshot
-	if err = json.Unmarshal(raw, &out); err != nil {
-		return snapshot{}, err
-	}
-	for _, p := range out.Projects {
-		normalizeProjectData(p)
-	}
-	return out, nil
+	normalizeProjectData(p)
+	out.Projects[projectID] = p
+	return out
 }
 
 func atomicWrite(path string, data []byte, mode os.FileMode) error {
