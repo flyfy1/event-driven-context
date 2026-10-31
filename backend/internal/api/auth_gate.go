@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -43,7 +44,8 @@ func newAuthGate(trustedProxies []netip.Prefix) *authGate {
 
 // allow evicts idle keys lazily and the least recently used key at capacity.
 // The list keeps cleanup proportional to evictions, not the size of the map.
-func (g *authGate) allow(key string, now time.Time) bool {
+// With debit false, it checks the budget without consuming a token.
+func (g *authGate) allow(key string, now time.Time, debit bool) bool {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	for e := g.recent.Back(); e != nil; e = g.recent.Back() {
@@ -67,7 +69,9 @@ func (g *authGate) allow(key string, now time.Time) bool {
 	if b.tokens < 1 {
 		return false
 	}
-	b.tokens--
+	if debit {
+		b.tokens--
+	}
 	return true
 }
 
@@ -85,12 +89,17 @@ func (g *authGate) login(fn func(context.Context, core.Credentials) (core.LoginR
 		}
 		// Match core.Store.Login normalization. Hash to bound retained key size.
 		username := sha256.Sum256([]byte(strings.ToLower(strings.TrimSpace(in.Username))))
-		if !g.allow(fmt.Sprintf("user:%x", username), time.Now()) {
+		key := fmt.Sprintf("user:%x", username)
+		if !g.allow(key, time.Now(), false) {
 			authRateLimited(w, "too many authentication requests")
 			return
 		}
 		out, err := fn(r.Context(), in)
 		if err != nil {
+			var authErr *core.Error
+			if errors.As(err, &authErr) && authErr.Code == "unauthenticated" {
+				g.allow(key, time.Now(), true)
+			}
 			fail(w, err)
 			return
 		}
@@ -100,7 +109,7 @@ func (g *authGate) login(fn func(context.Context, core.Credentials) (core.LoginR
 
 func (g *authGate) wrap(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !g.allow("ip:"+g.clientIP(r).String(), time.Now()) {
+		if !g.allow("ip:"+g.clientIP(r).String(), time.Now(), true) {
 			authRateLimited(w, "too many authentication requests")
 			return
 		}
