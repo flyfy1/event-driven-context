@@ -133,9 +133,9 @@ func TestRunProcessKillsProcessGroupOnTimeoutAndNormalExit(t *testing.T) {
 		exitDelay string
 		wantKind  ErrorKind
 	}{
-		{name: "timeout", timeout: 500 * time.Millisecond, exitDelay: "wait", wantKind: TimeoutError},
-		{name: "normal exit", timeout: 2 * time.Second, exitDelay: "exit 0", wantKind: ""},
-		{name: "failed exit", timeout: 2 * time.Second, exitDelay: "exit 3", wantKind: ExecutionError},
+		{name: "timeout", timeout: 30 * time.Second, exitDelay: "wait", wantKind: TimeoutError},
+		{name: "normal exit", timeout: 30 * time.Second, exitDelay: "exit 0", wantKind: ""},
+		{name: "failed exit", timeout: 30 * time.Second, exitDelay: "exit 3", wantKind: ExecutionError},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -145,10 +145,59 @@ func TestRunProcessKillsProcessGroupOnTimeoutAndNormalExit(t *testing.T) {
 set -eu
 /bin/sleep 30 </dev/null >/dev/null 2>&1 &
 child=$!
-printf '%s' "$child" > ` + shellQuote(pidPath) + `
+printf '%s\n' "$child" > ` + shellQuote(pidPath) + `
 ` + test.exitDelay + "\n"
 			path := writeExecutable(t, dir, "process-tree", script)
-			_, err := runProcess(context.Background(), test.timeout, path, nil, "", dir)
+			var err error
+			if test.wantKind == TimeoutError {
+				// Trigger a parent deadline only after the grandchild is alive.
+				// The runner's own timeout remains a watchdog for fixture failures.
+				expired := make(chan struct{})
+				deadlineCtx := &processTestDeadlineContext{Context: context.Background(), expired: expired}
+				result := make(chan error, 1)
+				go func() {
+					_, runErr := runProcess(deadlineCtx, test.timeout, path, nil, "", dir)
+					result <- runErr
+				}()
+				defer func() {
+					select {
+					case <-expired:
+					default:
+						close(expired)
+					}
+					// Join the runner before TempDir cleanup, including on failure.
+					if result != nil {
+						<-result
+					}
+				}()
+				for {
+					pidBytes, readErr := os.ReadFile(pidPath)
+					if readErr == nil && strings.HasSuffix(string(pidBytes), "\n") {
+						pid, parseErr := strconv.Atoi(strings.TrimSpace(string(pidBytes)))
+						if parseErr != nil {
+							t.Fatal(parseErr)
+						}
+						if !processAlive(pid) {
+							t.Fatalf("child process %d exited before timeout", pid)
+						}
+						break
+					}
+					if readErr != nil && !errors.Is(readErr, os.ErrNotExist) {
+						t.Fatal(readErr)
+					}
+					select {
+					case err = <-result:
+						result = nil
+						t.Fatalf("runner exited before child readiness: %v", err)
+					case <-time.After(10 * time.Millisecond):
+					}
+				}
+				close(expired)
+				err = <-result
+				result = nil
+			} else {
+				_, err = runProcess(context.Background(), test.timeout, path, nil, "", dir)
+			}
 			if test.wantKind == "" && err != nil {
 				t.Fatalf("runProcess: %v", err)
 			}
@@ -159,7 +208,7 @@ printf '%s' "$child" > ` + shellQuote(pidPath) + `
 			if readErr != nil {
 				t.Fatal(readErr)
 			}
-			pid, parseErr := strconv.Atoi(string(pidBytes))
+			pid, parseErr := strconv.Atoi(strings.TrimSpace(string(pidBytes)))
 			if parseErr != nil {
 				t.Fatal(parseErr)
 			}
@@ -171,6 +220,24 @@ printf '%s' "$child" > ` + shellQuote(pidPath) + `
 				t.Fatalf("child process %d survived runner cleanup", pid)
 			}
 		})
+	}
+}
+
+// processTestDeadlineContext lets the test expire a deadline after fixture readiness.
+// The runner's own timeout bounds startup failures before expired is closed.
+type processTestDeadlineContext struct {
+	context.Context
+	expired <-chan struct{}
+}
+
+func (c *processTestDeadlineContext) Done() <-chan struct{} { return c.expired }
+
+func (c *processTestDeadlineContext) Err() error {
+	select {
+	case <-c.expired:
+		return context.DeadlineExceeded
+	default:
+		return nil
 	}
 }
 
