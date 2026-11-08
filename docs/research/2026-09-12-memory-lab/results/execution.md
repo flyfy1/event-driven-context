@@ -1,5 +1,9 @@
 # 执行记录
 
+> Raw datasets, answers, snapshots, logs, and bundles referenced here now live in the
+> [release archive](../README.md#raw-artifact-archive). Extract it at the repository root
+> before following historical artifact paths or reproduction commands.
+
 仅对独立实验目录写入。主产品源码只读；首个读取快照与哈希保存在 sources/product-snapshot.json。用户报告中途断网，后续确认本地服务和主跑仍存活，未重复已完成阶段。
 
 | 阶段 | UTC 开始 | UTC 完成 | 原始回答数 | launch commit |

@@ -91,6 +91,65 @@ func TestAuthGateUsernameAcrossIPs(t *testing.T) {
 	}
 }
 
+func TestAuthGateUsernameOnlyChargesInvalidCredentials(t *testing.T) {
+	for _, tt := range []struct {
+		name string
+		err  error
+		want int
+	}{
+		{"success", nil, http.StatusOK},
+		{"internal error", fmt.Errorf("database unavailable"), http.StatusInternalServerError},
+		{"invalid input", core.Invalid("invalid input"), http.StatusBadRequest},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			h := newAuthGate(nil).login(func(context.Context, core.Credentials) (core.LoginResult, error) {
+				return core.LoginResult{}, tt.err
+			})
+			for i := 0; i < 2*authBurst; i++ {
+				if w := authRequest(h, fmt.Sprintf("192.0.2.%d:9000", i+1), "alice"); w.Code != tt.want {
+					t.Fatalf("attempt %d: %d, want %d", i, w.Code, tt.want)
+				}
+			}
+			// Every request still consumes the IP budget, including successful logins.
+			for i := 0; i < authBurst; i++ {
+				if w := authRequest(h, "198.51.100.1:9000", "alice"); w.Code != tt.want {
+					t.Fatalf("same IP attempt %d: %d, want %d", i, w.Code, tt.want)
+				}
+			}
+			if w := authRequest(h, "198.51.100.1:9000", "alice"); w.Code != http.StatusTooManyRequests {
+				t.Fatalf("IP limit: %d", w.Code)
+			}
+		})
+	}
+}
+
+func TestAuthGateUsernameRemainingBudgetAllowsLogin(t *testing.T) {
+	loginErr := fmt.Errorf("login: %w", core.ErrUnauthenticated)
+	h := newAuthGate(nil).login(func(context.Context, core.Credentials) (core.LoginResult, error) {
+		return core.LoginResult{}, loginErr
+	})
+	for i := 0; i < authBurst-1; i++ {
+		if w := authRequest(h, fmt.Sprintf("192.0.2.%d:9000", i+1), " ALICE "); w.Code != http.StatusUnauthorized {
+			t.Fatalf("failed attempt %d: %d", i, w.Code)
+		}
+	}
+	loginErr = nil
+	for i := 0; i < 2; i++ {
+		if w := authRequest(h, "198.51.100.1:9000", "alice"); w.Code != http.StatusOK {
+			t.Fatalf("legitimate login %d: %d", i, w.Code)
+		}
+	}
+	// Successful logins preserve, but do not reset, the remaining failure budget.
+	loginErr = core.ErrUnauthenticated
+	if w := authRequest(h, "198.51.100.2:9000", "alice"); w.Code != http.StatusUnauthorized {
+		t.Fatalf("last allowed failure: %d", w.Code)
+	}
+	loginErr = nil
+	if w := authRequest(h, "198.51.100.3:9000", "alice"); w.Code != http.StatusTooManyRequests {
+		t.Fatalf("exhausted username budget: %d", w.Code)
+	}
+}
+
 func TestAuthGateClientIP(t *testing.T) {
 	trusted := []netip.Prefix{netip.MustParsePrefix("127.0.0.1/32"), netip.MustParsePrefix("10.0.0.0/8"), netip.MustParsePrefix("::1/128")}
 	for _, tt := range []struct {
@@ -150,19 +209,19 @@ func TestAuthGateRefillAndEviction(t *testing.T) {
 	g := newAuthGate(nil)
 	now := time.Now()
 	for i := 0; i < authBurst; i++ {
-		if !g.allow("hot", now) {
+		if !g.allow("hot", now, true) {
 			t.Fatal("early limit")
 		}
 	}
-	if g.allow("hot", now.Add(time.Second)) {
+	if g.allow("hot", now.Add(time.Second), true) {
 		t.Fatal("early refill")
 	}
-	if !g.allow("hot", now.Add(2*time.Second)) {
+	if !g.allow("hot", now.Add(2*time.Second), true) {
 		t.Fatal("missing refill")
 	}
 	now = now.Add(3 * time.Second)
 	for i := 0; i < authMaxKeys; i++ {
-		g.allow(fmt.Sprint(i), now)
+		g.allow(fmt.Sprint(i), now, i%2 == 0)
 	}
 	if len(g.buckets) != authMaxKeys || g.recent.Len() != authMaxKeys {
 		t.Fatal("unbounded keys")
@@ -170,7 +229,7 @@ func TestAuthGateRefillAndEviction(t *testing.T) {
 	if _, ok := g.buckets["hot"]; ok {
 		t.Fatal("oldest key not evicted")
 	}
-	g.allow("fresh", now.Add(authIdleTTL))
+	g.allow("fresh", now.Add(authIdleTTL), false)
 	if len(g.buckets) != 1 || g.recent.Len() != 1 {
 		t.Fatal("idle keys not evicted")
 	}

@@ -1,5 +1,9 @@
 # Event-driven Context memory：研究与实验报告
 
+> Raw datasets, answers, snapshots, logs, and bundles referenced here now live in the
+> [release archive](README.md#raw-artifact-archive). Extract it at the repository root
+> before following historical artifact paths or reproduction commands.
+
 执行日期：2026-09-12。范围：公开数据与新生成的合成项目；现有产品仓库只读。正式四组实验、补充探针与复核已完成。
 
 ## 建议采用什么

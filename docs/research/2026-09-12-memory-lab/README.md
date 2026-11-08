@@ -1,5 +1,50 @@
 # Event-driven Context memory 实验
 
+## Raw artifact archive
+
+Raw artifacts are distributed as the GitHub release asset
+[`memory-lab-2026-09-12-raw.tar.gz`](https://github.com/flyfy1/event-driven-context/releases/download/research-memory-lab-2026-09-12/memory-lab-2026-09-12-raw.tar.gz)
+on release tag [`research-memory-lab-2026-09-12`](https://github.com/flyfy1/event-driven-context/releases/tag/research-memory-lab-2026-09-12)
+in `flyfy1/event-driven-context`. The asset is prepared for reviewer upload; this
+cleanup does not create or publish the release. The download becomes available
+after that upload.
+
+SHA-256: `29d4273f0661ae6696412971317ee8eff163fb9c9b46820752212a83a935f156`
+
+Download the asset to the repository root, then verify and extract there:
+
+```sh
+printf '%s  %s\n' '29d4273f0661ae6696412971317ee8eff163fb9c9b46820752212a83a935f156' 'memory-lab-2026-09-12-raw.tar.gz' | shasum -a 256 -c -
+tar -xzf memory-lab-2026-09-12-raw.tar.gz
+```
+
+The archive contains **844 files (24,702,073 uncompressed bytes)** with their
+repository-relative paths, selected exclusively from the Git index at commit
+`8face686e3cfa0acf43b0d84f8417ef07a862f30`. No ignored or untracked inputs are included.
+The repository retains 87 original files (427,650 bytes before these documentation
+updates): all Markdown and Python scripts, configuration, dependency pins,
+licenses, provenance, small Event examples, and small summary/metrics files.
+The archive holds raw datasets and expected answers, per-item answers and audits,
+snapshots, model-call caches, raw probes, logs, the large State example, the Git
+bundle, and the original `MANIFEST.sha256`.
+
+For byte-reproducible packaging, files are sorted by repository-relative path and
+read as Git index blobs. Python `tarfile` USTAR headers preserve indexed permission
+bits, set uid/gid/mtime to zero and owner/group names to empty strings, and contain
+only files (no directory entries). Python `gzip.GzipFile` uses compression level 9,
+mtime zero and an empty filename. Two independent builds were byte-identical;
+every extracted member was checked against its indexed blob.
+
+**Extract before using the historical reproduction or analysis scripts below.**
+Those scripts intentionally retain the original artifact paths; product code,
+tests, and build tooling do not depend on this archive. References below to raw
+files or result directories describe the restored layout. `data/upstream/` was
+ignored and is not part of this asset; recreate it with `src/download.py`.
+`archive.json`, `ARCHIVE-STATUS.md`, and the archived `MANIFEST.sha256` describe the
+original experiment export, not this reduced checkout. The old manifest includes
+original Markdown hashes and upstream files absent from the Git index; it cannot
+validate this edited checkout. Use the release asset checksum above instead.
+
 独立实验目录，仅公开/合成数据。实验期间主产品仓库只读，无生产、客户端配置或私人对话操作。用户随后追加授权，将全部材料归档到 `/Users/songyy/Documents/event-driven-context/docs/research/2026-09-12-memory-lab`；该新增研究目录是唯一向产品仓库写入的范围。推荐与结论见 [REPORT.md](REPORT.md)，结构建议见 [docs/structure.md](docs/structure.md)，公开研究见 [docs/sources.md](docs/sources.md)。
 
 ## 复现

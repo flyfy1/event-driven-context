@@ -1,5 +1,9 @@
 # 实测结果
 
+> Raw datasets, answers, snapshots, logs, and bundles referenced here now live in the
+> [release archive](../README.md#raw-artifact-archive). Extract it at the repository root
+> before following historical artifact paths or reproduction commands.
+
 主运行：main-v2。规则通过率不是官方榜单分数，也不是人类完整正确率。完整输入/回答在 answers.jsonl。
 
 | 基准 | 方法 | n | 规则通过 | 正确状态 | 禁用词命中 | 引用 gold 召回 | 检索 gold 召回 | 背景均值 | 回答 p50/p95 秒 |

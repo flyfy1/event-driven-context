@@ -1,5 +1,9 @@
 # 实验过程记录索引
 
+> Raw datasets, answers, snapshots, logs, and bundles referenced here now live in the
+> [release archive](../README.md#raw-artifact-archive). Extract it at the repository root
+> before following historical artifact paths or reproduction commands.
+
 执行过程通过以下原始工件重建，不依赖最终报告的叙述：
 
 1. `sources/product-snapshot.json` 与 `product-followup.json`：只读实现观察时刻、版本与文件哈希。
