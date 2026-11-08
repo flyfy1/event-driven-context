@@ -12,6 +12,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"maps"
 	"mime"
 	"os"
 	"path/filepath"
@@ -78,18 +79,10 @@ func (s *Service) PutFile(ctx context.Context, projectID string, in FileUpload) 
 	if err = atomicWrite(path, data, 0600); err != nil {
 		return FileInfo{}, err
 	}
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return FileInfo{}, err
-	}
+	candidate := cloneSnapshotForProject(s.data, projectID)
 	cp := candidate.Projects[projectID]
-	if cp == nil {
-		cp = &projectData{}
-		normalizeProjectData(cp)
-		candidate.Projects[projectID] = cp
-	}
 	cp.Files[id] = info
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return FileInfo{}, err
 	}
 	s.data = candidate
@@ -257,17 +250,18 @@ func (s *Service) CleanupUnreferencedFiles(ctx context.Context, before time.Time
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return CleanupResult{}, err
-	}
+	candidate := s.data
+	candidate.Projects = maps.Clone(s.data.Projects)
 	ids := []string{}
 	known := map[string]bool{}
-	for _, p := range candidate.Projects {
+	for projectID, original := range candidate.Projects {
+		p := *original
+		p.Files = maps.Clone(original.Files)
+		candidate.Projects[projectID] = &p
 		for id, info := range p.Files {
 			known[id] = true
 			uploaded, e := time.Parse(time.RFC3339Nano, info.UploadedAt)
-			if e == nil && uploaded.Before(before) && !fileReferenced(p, id) {
+			if e == nil && uploaded.Before(before) && !fileReferenced(&p, id) {
 				delete(p.Files, id)
 				ids = append(ids, id)
 			}
@@ -288,13 +282,13 @@ func (s *Service) CleanupUnreferencedFiles(ctx context.Context, before time.Time
 	if len(ids) == 0 {
 		return CleanupResult{}, nil
 	}
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return CleanupResult{}, err
 	}
 	s.data = candidate
 	removed := 0
 	for _, id := range ids {
-		if err = os.Remove(filepath.Join(s.root, "files", id)); err == nil || errors.Is(err, os.ErrNotExist) {
+		if err := os.Remove(filepath.Join(s.root, "files", id)); err == nil || errors.Is(err, os.ErrNotExist) {
 			removed++
 		} else {
 			return CleanupResult{Removed: removed}, err

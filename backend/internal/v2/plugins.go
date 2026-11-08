@@ -109,19 +109,11 @@ func (s *Service) InstallPlugin(ctx context.Context, projectID string, in Instal
 	if old, ok := p.Installations[m.ID]; ok && old.Status != "removed" {
 		return InstallPluginResult{}, v2err("conflict", "plugin is already installed")
 	}
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return InstallPluginResult{}, err
-	}
+	candidate := cloneSnapshotForProject(s.data, projectID)
 	cp := candidate.Projects[projectID]
-	if cp == nil {
-		cp = &projectData{}
-		normalizeProjectData(cp)
-		candidate.Projects[projectID] = cp
-	}
 	cp.Installations[m.ID] = cloneInstallation(installation)
 	candidate.TokenHashes[tokenDigest(token)] = id
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return InstallPluginResult{}, err
 	}
 	s.data = candidate
@@ -211,18 +203,10 @@ func (s *Service) ensureBuiltinPlugin(ctx context.Context, projectID string, man
 		current = cloneInstallation(current)
 		return PluginPrincipal{InstallationID: current.ID, ProjectID: projectID, PluginID: current.PluginID, Revision: current.ConfigRevision}, current, nil
 	}
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return PluginPrincipal{}, Installation{}, err
-	}
+	candidate := cloneSnapshotForProject(s.data, projectID)
 	cp := candidate.Projects[projectID]
-	if cp == nil {
-		cp = &projectData{}
-		normalizeProjectData(cp)
-		candidate.Projects[projectID] = cp
-	}
 	cp.Installations[manifest.ID] = cloneInstallation(installation)
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return PluginPrincipal{}, Installation{}, err
 	}
 	s.data = candidate
@@ -283,10 +267,7 @@ func (s *Service) RevisePlugin(ctx context.Context, projectID, pluginID string, 
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return Installation{}, err
-	}
+	candidate := cloneSnapshotForProject(s.data, projectID)
 	in := candidate.Projects[projectID].Installations[pluginID]
 	if in.Status == "removed" || in.ManagerUserID != core.UserID(ctx) {
 		return Installation{}, core.ErrNotFound
@@ -299,7 +280,7 @@ func (s *Service) RevisePlugin(ctx context.Context, projectID, pluginID string, 
 	in.UpdatedAt = nowUTC()
 	in.ConfigRevisions = append(in.ConfigRevisions, PluginConfigRevision{Revision: in.ConfigRevision, Config: config, CreatedAt: in.UpdatedAt, CreatedByUserID: core.UserID(ctx)})
 	candidate.Projects[projectID].Installations[pluginID] = in
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return Installation{}, err
 	}
 	s.data = candidate
@@ -315,10 +296,7 @@ func (s *Service) SetPluginStatus(ctx context.Context, projectID, pluginID, stat
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return Installation{}, err
-	}
+	candidate := cloneSnapshotForProject(s.data, projectID)
 	in := candidate.Projects[projectID].Installations[pluginID]
 	if in.ManagerUserID != core.UserID(ctx) || in.Status == "removed" {
 		return Installation{}, core.ErrNotFound
@@ -326,7 +304,7 @@ func (s *Service) SetPluginStatus(ctx context.Context, projectID, pluginID, stat
 	in.Status = status
 	in.UpdatedAt = nowUTC()
 	candidate.Projects[projectID].Installations[pluginID] = in
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return Installation{}, err
 	}
 	s.data = candidate
@@ -339,10 +317,7 @@ func (s *Service) RemovePlugin(ctx context.Context, projectID, pluginID string) 
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return Installation{}, err
-	}
+	candidate := cloneSnapshotForProject(s.data, projectID)
 	in := candidate.Projects[projectID].Installations[pluginID]
 	if in.ManagerUserID != core.UserID(ctx) || in.Status == "removed" {
 		return Installation{}, core.ErrNotFound
@@ -355,7 +330,7 @@ func (s *Service) RemovePlugin(ctx context.Context, projectID, pluginID string) 
 			delete(candidate.TokenHashes, hash)
 		}
 	}
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return Installation{}, err
 	}
 	s.data = candidate

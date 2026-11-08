@@ -159,12 +159,9 @@ func (s *Service) putStateLocked(projectID string, in PutStateInput, installatio
 		return State{}, v2err("state_version_mismatch", "expected state version does not match")
 	}
 	state := State{ProjectID: projectID, Key: in.Key, Version: current + 1, Content: normalized.Content, Data: normalized.Data, BasedOnSequence: normalized.BasedOnSequence, Refs: normalized.Refs, Producer: Producer{installation.PluginID, installation.PluginVersion}, UpdatedAt: nowUTC(), Lag: p.LatestSequence - normalized.BasedOnSequence}
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return State{}, err
-	}
+	candidate := cloneSnapshotForProject(s.data, projectID)
 	candidate.Projects[projectID].States[in.Key] = append(candidate.Projects[projectID].States[in.Key], state)
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return State{}, err
 	}
 	s.data = candidate
@@ -328,10 +325,7 @@ func (s *Service) RequestManualRun(ctx context.Context, projectID, pluginID stri
 		return ManualRunRequest{}, v2err("conflict", "request id reused with different inputs")
 	}
 	req := ManualRunRequest{RequestID: in.RequestID, ProjectID: projectID, PluginID: pluginID, SourceEventIDs: in.SourceEventIDs, Status: "accepted", CreatedAt: nowUTC()}
-	candidate, err := cloneSnapshot(s.data)
-	if err != nil {
-		return ManualRunRequest{}, err
-	}
+	candidate := cloneSnapshotForProject(s.data, projectID)
 	candidate.Projects[projectID].ManualRuns[mapKey] = req
 	// Publish an authenticated private mailbox version for the processor host.
 	items := make([]ManualRunRequest, 0)
@@ -364,7 +358,7 @@ func (s *Service) RequestManualRun(ctx context.Context, projectID, pluginID stri
 	sort.Strings(refs)
 	state := State{ProjectID: projectID, Key: key, Version: version, Content: StateContent{Format: "text", Text: "manual processing requests"}, Data: data, BasedOnSequence: candidate.Projects[projectID].LatestSequence, Refs: refs, Producer: Producer{pluginID, installation.PluginVersion}, UpdatedAt: nowUTC(), Lag: 0}
 	candidate.Projects[projectID].States[key] = append(versions, state)
-	if err = s.persistSnapshotLocked(candidate); err != nil {
+	if err := s.persistSnapshotLocked(candidate); err != nil {
 		return ManualRunRequest{}, err
 	}
 	s.data = candidate
