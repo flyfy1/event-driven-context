@@ -9,4 +9,4 @@ UMask=0077
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
-ReadWritePaths=/var/lib/event-driven-context
+ReadWritePaths=/var/lib/event-driven-context /var/spool/backup-sink/services/event-context

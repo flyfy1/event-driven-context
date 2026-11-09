@@ -90,6 +90,10 @@ if [[ -d "$remote_data/data" ]]; then
   chown "$runtime_user:$shared_group" "$data_backup"
   chmod 0600 "$data_backup"
 fi
+# Pre-deploy snapshots are rollback points only (not backed up, owner decision 2026-11-09):
+# keep the newest one of each kind, delete the older ones. Daily backups go through backup-sink.
+ls -1t "$backup_dir"/context-*.db 2>/dev/null | tail -n +2 | xargs -r rm -f --
+ls -1t "$backup_dir"/data-*.tar.gz 2>/dev/null | tail -n +2 | xargs -r rm -f --
 
 install -d -o "$runtime_user" -g "$shared_group" -m 2775 "$remote_root" "$remote_root/releases" "$release_dir"
 install -o "$runtime_user" -g "$shared_group" -m 0775 "$stage_dir/edc-server" "$release_dir/edc-server"
